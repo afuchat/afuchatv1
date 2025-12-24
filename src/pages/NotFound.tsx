@@ -9,6 +9,26 @@ const NotFound = () => {
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    
+    // Update meta tags to indicate 404 for crawlers
+    document.title = "Page Not Found - AfuChat";
+    
+    // Add noindex meta tag for 404 pages
+    let metaRobots = document.querySelector('meta[name="robots"]');
+    if (!metaRobots) {
+      metaRobots = document.createElement('meta');
+      metaRobots.setAttribute('name', 'robots');
+      document.head.appendChild(metaRobots);
+    }
+    metaRobots.setAttribute('content', 'noindex, nofollow');
+
+    // Cleanup on unmount
+    return () => {
+      document.title = "AfuChat — Post. Chat. Shop. AI. All in One.";
+      if (metaRobots) {
+        metaRobots.setAttribute('content', 'index, follow');
+      }
+    };
   }, [location.pathname]);
 
   return (
