@@ -241,12 +241,12 @@ export default function ShopCart() {
             </div>
             
             <Button 
-              className="w-full opacity-70" 
+              className="w-full" 
               size="lg"
-              disabled
+              onClick={proceedToCheckout}
             >
-              <Clock className="h-4 w-4 mr-2" />
-              Coming Soon
+              <CreditCard className="h-4 w-4 mr-2" />
+              Proceed to Checkout
             </Button>
           </div>
         )}

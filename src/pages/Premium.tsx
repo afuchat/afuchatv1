@@ -594,13 +594,25 @@ export default function Premium() {
                           </Button>
                         ) : (
                           <Button
-                            disabled
-                            className={`w-full h-12 text-base font-bold bg-gradient-to-r ${config.gradient} text-white border-0 shadow-lg transition-all duration-300 rounded-xl opacity-70`}
+                            onClick={() => handlePurchase(plan.id, plan.acoin_price)}
+                            disabled={!canAfford || purchasing === plan.id}
+                            className={`w-full h-12 text-base font-bold bg-gradient-to-r ${config.gradient} hover:opacity-90 text-white border-0 shadow-lg transition-all duration-300 rounded-xl ${
+                              canAfford ? 'hover:shadow-xl hover:scale-[1.02]' : ''
+                            }`}
                           >
-                            <span className="flex items-center justify-center gap-2">
-                              <Clock className="h-4 w-4" />
-                              Coming Soon
-                            </span>
+                            {purchasing === plan.id ? (
+                              <div className="flex items-center gap-2">
+                                <ButtonLoader />
+                                Processing...
+                              </div>
+                            ) : !canAfford ? (
+                              'Insufficient ACoin'
+                            ) : (
+                              <span className="flex items-center justify-center gap-2">
+                                Get {plan.name}
+                                <ArrowRight className="h-4 w-4" />
+                              </span>
+                            )}
                           </Button>
                         )}
 
