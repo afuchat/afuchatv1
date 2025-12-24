@@ -60,26 +60,10 @@ interface FeedNestedReplyItemProps {
   }>;
 }
 
-// Generate consistent ring color based on user handle
-const getAvatarRingColor = (handle: string): string => {
-  const colors = [
-    'ring-blue-500',
-    'ring-pink-500', 
-    'ring-purple-500',
-    'ring-orange-500',
-    'ring-green-500',
-    'ring-cyan-500',
-    'ring-rose-500',
-    'ring-indigo-500',
-  ];
-  
-  let hash = 0;
-  for (let i = 0; i < handle.length; i++) {
-    hash = handle.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  return colors[Math.abs(hash) % colors.length];
-};
+// Layout constants (px)
+const INDENT_PX = 44; // indentation per reply level
+const AVATAR_PX = 36; // h-9
+
 
 export const FeedNestedReplyItem = ({
   reply,
@@ -133,13 +117,13 @@ export const FeedNestedReplyItem = ({
 
   const displayContent = translatedContent || (typeof reply.content === 'string' ? reply.content : String(reply.content || ''));
   const hasNestedReplies = reply.nested_replies && reply.nested_replies.length > 0;
-  const ringColor = getAvatarRingColor(reply.profiles.handle);
-  
+
   // Check if we've reached max depth
   const atMaxDepth = depth >= maxDepth;
 
   // Calculate left margin based on depth (for nesting visual)
-  const nestingMargin = depth > 0 ? 44 : 0; // ~44px per level
+  const nestingMargin = depth * INDENT_PX;
+
 
   return (
     <div className="relative">
@@ -183,10 +167,7 @@ export const FeedNestedReplyItem = ({
             className="cursor-pointer"
             onClick={() => handleViewProfile(reply.author_id)}
           >
-            <Avatar className={cn(
-              "h-9 w-9 ring-2 ring-offset-2 ring-offset-background",
-              ringColor
-            )}>
+            <Avatar className="h-9 w-9 border border-border">
               <AvatarImage src={reply.profiles.avatar_url || undefined} />
               <AvatarFallback className="bg-muted text-muted-foreground text-sm font-semibold">
                 {reply.profiles.display_name?.charAt(0)?.toUpperCase() || '?'}
