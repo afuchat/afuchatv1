@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +16,12 @@ interface CommentInputProps {
   autoFocus?: boolean;
 }
 
+// Detect mobile devices
+const isMobile = () => {
+  if (typeof window === 'undefined') return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+};
+
 export const CommentInput = ({
   postId,
   replyingTo,
@@ -30,7 +36,16 @@ export const CommentInput = ({
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  const adjustTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    }
+  }, []);
 
   // Fetch user profile for avatar
   useEffect(() => {
@@ -45,10 +60,14 @@ export const CommentInput = ({
   }, [user]);
 
   useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus();
+    if (autoFocus && textareaRef.current) {
+      textareaRef.current.focus();
     }
   }, [autoFocus]);
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [commentText, adjustTextareaHeight]);
 
   const targetHandle = replyingTo?.authorHandle || postAuthorHandle;
 
@@ -57,11 +76,8 @@ export const CommentInput = ({
 
     setSubmitting(true);
     try {
-      // Build content - only add mention if replying to someone else
       let finalContent = commentText.trim();
       
-      // Only add mention at the end if we're replying to a specific comment
-      // and the mention isn't already in the text
       if (replyingTo) {
         const mention = `@${replyingTo.authorHandle}`;
         if (!finalContent.includes(mention)) {
@@ -81,6 +97,9 @@ export const CommentInput = ({
       if (error) throw error;
 
       setCommentText('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
       onCancelReply?.();
       onCommentSubmitted?.();
     } catch (error) {
@@ -90,8 +109,9 @@ export const CommentInput = ({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Only submit on Enter for desktop, not mobile
+    if (e.key === 'Enter' && !e.shiftKey && !isMobile()) {
       e.preventDefault();
       handleSubmit();
     }
@@ -119,19 +139,20 @@ export const CommentInput = ({
         </AvatarFallback>
       </Avatar>
       
-      {/* Input with mention placeholder */}
+      {/* Auto-expanding textarea */}
       <div className="flex-1 relative">
-        <input
-          ref={inputRef}
-          type="text"
+        <textarea
+          ref={textareaRef}
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={targetHandle ? `@${targetHandle}` : "Write a comment..."}
+          rows={1}
           className={cn(
-            "w-full bg-muted/50 border border-border/50 rounded-full px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50",
-            compact ? "h-9 py-2" : "h-11 py-2.5"
+            "w-full bg-muted/50 border border-border/50 rounded-2xl px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 resize-none overflow-hidden",
+            compact ? "py-2 min-h-[36px]" : "py-2.5 min-h-[44px]"
           )}
+          style={{ maxHeight: '120px' }}
         />
       </div>
       

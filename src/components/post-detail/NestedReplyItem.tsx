@@ -83,14 +83,6 @@ export const NestedReplyItem = ({
 
   return (
     <div className="relative">
-      {/* Twitter/X style thread line connecting to parent */}
-      {depth > 0 && (
-        <div 
-          className="absolute left-5 top-0 w-0.5 bg-border" 
-          style={{ height: '12px', transform: 'translateY(-12px)' }}
-        />
-      )}
-      
       {/* Pinned indicator */}
       {reply.is_pinned && (
         <div className="flex items-center gap-1.5 text-[11px] text-primary font-medium mb-1 ml-[52px]">
@@ -99,25 +91,17 @@ export const NestedReplyItem = ({
         </div>
       )}
       
-      <div className="flex gap-3 py-3">
-        {/* Avatar with thread line for nested replies */}
-        <div className="relative flex-shrink-0">
+      <div className="flex gap-3 py-2">
+        {/* Avatar */}
+        <div className="flex-shrink-0">
           <Link to={`/${reply.author.handle}`}>
-            <Avatar className="h-10 w-10 border border-border/50">
+            <Avatar className="h-8 w-8 border border-border/50">
               <AvatarImage src={reply.author.avatar_url || undefined} />
-              <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+              <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                 {reply.author.display_name?.charAt(0)?.toUpperCase() || '?'}
               </AvatarFallback>
             </Avatar>
           </Link>
-          
-          {/* Thread line connecting to nested replies */}
-          {reply.nested_replies && reply.nested_replies.length > 0 && (
-            <div 
-              className="absolute left-1/2 top-12 w-0.5 bg-border -translate-x-1/2"
-              style={{ height: 'calc(100% - 48px)' }}
-            />
-          )}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -245,9 +229,9 @@ export const NestedReplyItem = ({
         </div>
       </div>
 
-      {/* Nested replies - unlimited depth, Twitter-style threading */}
+      {/* Nested replies - with small indent */}
       {reply.nested_replies && reply.nested_replies.length > 0 && (
-        <div className="ml-[52px]">
+        <div className="ml-10 border-l-2 border-border/30 pl-3 mt-1">
           {reply.nested_replies.map(nestedReply => (
             <NestedReplyItem
               key={nestedReply.id}
