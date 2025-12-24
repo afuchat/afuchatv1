@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAITranslation } from '@/hooks/useAITranslation';
-import { MessageCircle, Pin, Trash2, Heart, MoreHorizontal } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Pin, Trash2, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WarningBadge } from '@/components/WarningBadge';
 
@@ -19,6 +19,7 @@ interface Reply {
   pinned_by?: string | null;
   pinned_at?: string | null;
   nested_replies?: Reply[];
+  likes_count?: number;
   profiles: {
     display_name: string;
     handle: string;
@@ -56,6 +57,37 @@ interface FeedNestedReplyItemProps {
   }>;
 }
 
+// Generate consistent color based on user ID
+const getAvatarRingColor = (userId: string) => {
+  const colors = [
+    'ring-blue-500',
+    'ring-pink-500',
+    'ring-purple-500',
+    'ring-emerald-500',
+    'ring-orange-500',
+    'ring-cyan-500',
+    'ring-rose-500',
+    'ring-indigo-500',
+  ];
+  const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+};
+
+const getAvatarBgColor = (userId: string) => {
+  const colors = [
+    'bg-blue-500',
+    'bg-pink-500',
+    'bg-purple-500',
+    'bg-emerald-500',
+    'bg-orange-500',
+    'bg-cyan-500',
+    'bg-rose-500',
+    'bg-indigo-500',
+  ];
+  const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+};
+
 export const FeedNestedReplyItem = ({
   reply,
   depth,
@@ -77,7 +109,8 @@ export const FeedNestedReplyItem = ({
   const [isTranslating, setIsTranslating] = useState(false);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState('');
-  const [showMoreActions, setShowMoreActions] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(reply.likes_count || 0);
 
   const handleTranslate = async () => {
     if (translatedContent) {
@@ -99,146 +132,160 @@ export const FeedNestedReplyItem = ({
     }
   };
 
+  const handleLike = () => {
+    setLiked(!liked);
+    setLikesCount(prev => liked ? prev - 1 : prev + 1);
+  };
+
   const displayContent = translatedContent || (typeof reply.content === 'string' ? reply.content : String(reply.content || ''));
+  const ringColor = getAvatarRingColor(reply.author_id);
+  const bgColor = getAvatarBgColor(reply.author_id);
+  const hasNestedReplies = reply.nested_replies && reply.nested_replies.length > 0;
 
   return (
     <div className="relative">
+      {/* Curved thread line connecting to parent */}
+      {depth > 0 && (
+        <svg
+          className="absolute left-0 top-0 pointer-events-none"
+          width="32"
+          height="40"
+          style={{ transform: 'translate(-32px, -8px)' }}
+        >
+          <path
+            d="M 16 0 L 16 20 Q 16 32 28 32 L 32 32"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="text-border"
+          />
+        </svg>
+      )}
+
       {/* Pinned indicator */}
       {reply.is_pinned && (
-        <div className="flex items-center gap-1 text-[11px] text-primary font-medium mb-1 ml-10">
+        <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-1 ml-12">
           <Pin className="h-3 w-3" />
           <span>Pinned</span>
         </div>
       )}
       
-      <div className="flex gap-2 py-2">
-        {/* Avatar */}
-        <div className="flex-shrink-0">
+      <div className="flex gap-3 py-3">
+        {/* Avatar with colorful ring */}
+        <div className="relative flex-shrink-0">
           <div
             className="cursor-pointer"
             onClick={() => handleViewProfile(reply.author_id)}
           >
-            <Avatar className="h-8 w-8 border border-border/50">
+            <Avatar className={cn("h-10 w-10 ring-2 ring-offset-2 ring-offset-background", ringColor)}>
               <AvatarImage src={reply.profiles.avatar_url || undefined} />
-              <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+              <AvatarFallback className={cn("text-white font-semibold", bgColor)}>
                 {reply.profiles.display_name?.charAt(0)?.toUpperCase() || '?'}
               </AvatarFallback>
             </Avatar>
           </div>
+          
+          {/* Vertical line to nested replies */}
+          {hasNestedReplies && (
+            <div 
+              className="absolute left-1/2 top-12 w-0.5 bg-border -translate-x-1/2"
+              style={{ height: 'calc(100% - 32px)' }}
+            />
+          )}
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Header row - Twitter style */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 flex-wrap min-w-0">
-              <span
-                className="font-bold text-foreground text-[15px] cursor-pointer hover:underline truncate"
-                onClick={() => handleViewProfile(reply.author_id)}
-              >
-                {reply.profiles.display_name}
-              </span>
-              <VerifiedBadge 
-                isVerified={reply.profiles.is_verified} 
-                isOrgVerified={reply.profiles.is_organization_verified} 
-              />
-              {reply.profiles.is_warned && (
-                <WarningBadge size="sm" reason={reply.profiles.warning_reason} variant="post" />
-              )}
-              <span
-                className="text-muted-foreground text-[15px] cursor-pointer hover:underline truncate"
-                onClick={() => handleViewProfile(reply.author_id)}
-              >
-                @{reply.profiles.handle}
-              </span>
-              <span className="text-muted-foreground text-[15px]">·</span>
-              <span className="text-muted-foreground text-[15px] hover:underline cursor-pointer">
-                {formatTime(reply.created_at)}
-              </span>
-            </div>
-            
-            {/* More actions button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMoreActions(!showMoreActions)}
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full"
+          {/* Header */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className="font-semibold text-foreground cursor-pointer hover:underline"
+              onClick={() => handleViewProfile(reply.author_id)}
             >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+              {reply.profiles.display_name}
+            </span>
+            <VerifiedBadge 
+              isVerified={reply.profiles.is_verified} 
+              isOrgVerified={reply.profiles.is_organization_verified} 
+            />
+            {reply.profiles.is_warned && (
+              <WarningBadge size="sm" reason={reply.profiles.warning_reason} variant="post" />
+            )}
+            <span className="text-muted-foreground text-sm">
+              {formatTime(reply.created_at)}
+            </span>
           </div>
 
-          {/* Reply content */}
-          <div className="text-foreground text-[15px] leading-[1.4] whitespace-pre-wrap break-words mt-0.5">
+          {/* Content */}
+          <div className="text-foreground text-[15px] leading-relaxed mt-1 whitespace-pre-wrap break-words">
             {parsePostContent(displayContent, navigate)}
           </div>
 
-          {/* Action buttons - Twitter style */}
-          <div className="flex items-center gap-1 mt-3 -ml-2">
-            {/* Reply button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowReplyInput(!showReplyInput)}
-              className="h-8 px-3 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full gap-1.5 group"
+          {/* Action buttons */}
+          <div className="flex items-center gap-4 mt-2">
+            {/* Like button */}
+            <button
+              onClick={handleLike}
+              className={cn(
+                "flex items-center gap-1.5 text-sm transition-colors",
+                liked ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}
             >
-              <MessageCircle className="h-[18px] w-[18px] group-hover:text-primary" />
-              <span className="text-[13px]">Reply</span>
-            </Button>
+              <ThumbsUp className={cn("h-4 w-4", liked && "fill-current")} />
+              {likesCount > 0 && <span>{likesCount}</span>}
+            </button>
+            
+            {/* Reply button */}
+            <button
+              onClick={() => setShowReplyInput(!showReplyInput)}
+              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+            >
+              Reply
+            </button>
             
             {/* Translate button */}
             {i18n.language !== 'en' && (
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={handleTranslate}
                 disabled={isTranslating}
-                className="h-8 px-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full text-[13px]"
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               >
                 {isTranslating ? t('common.translating') : translatedContent ? t('common.showOriginal') : t('common.translate')}
-              </Button>
+              </button>
             )}
             
-            {/* Pin button - only for post author on top-level replies */}
+            {/* Pin button */}
             {isPostAuthor && depth === 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={() => onPinReply(reply.id, reply.is_pinned || false)}
                 className={cn(
-                  "h-8 px-3 rounded-full gap-1.5",
-                  reply.is_pinned 
-                    ? "text-primary hover:text-primary hover:bg-primary/10" 
-                    : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                  "text-sm transition-colors",
+                  reply.is_pinned ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Pin className="h-[18px] w-[18px]" />
-                <span className="text-[13px]">{reply.is_pinned ? 'Unpin' : 'Pin'}</span>
-              </Button>
+                {reply.is_pinned ? 'Unpin' : 'Pin'}
+              </button>
             )}
             
             {/* Delete button */}
             {currentUserId && (currentUserId === reply.author_id || isPostAuthor) && (
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={() => {
                   if (confirm('Delete this reply?')) {
                     onDeleteReply(reply.id);
                   }
                 }}
-                className="h-8 px-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full gap-1.5"
+                className="text-muted-foreground hover:text-destructive text-sm transition-colors"
               >
-                <Trash2 className="h-[18px] w-[18px]" />
-                <span className="text-[13px]">Delete</span>
-              </Button>
+                Delete
+              </button>
             )}
           </div>
 
           {/* Reply input */}
           {showReplyInput && (
-            <div className="mt-2 flex items-start gap-2 pt-2 border-t border-border/30">
-              <Avatar className="h-6 w-6 flex-shrink-0">
-                <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+            <div className="mt-3 flex items-start gap-3 pt-3 border-t border-border/30">
+              <Avatar className="h-8 w-8 ring-2 ring-primary ring-offset-2 ring-offset-background">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                   Y
                 </AvatarFallback>
               </Avatar>
@@ -251,15 +298,14 @@ export const FeedNestedReplyItem = ({
                     e.target.style.height = `${Math.min(e.target.scrollHeight, 100)}px`;
                   }}
                   onKeyDown={(e) => {
-                    // Only submit on Enter for desktop
                     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
                     if (e.key === 'Enter' && !e.shiftKey && !isMobileDevice) {
                       e.preventDefault();
                       handleReplySubmit();
                     }
                   }}
-                  placeholder={`Reply to @${reply.profiles.handle}`}
-                  className="w-full bg-muted/50 rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none overflow-hidden min-h-[36px]"
+                  placeholder={`Reply to @${reply.profiles.handle}...`}
+                  className="w-full bg-muted/50 rounded-xl px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none overflow-hidden min-h-[40px]"
                   style={{ maxHeight: '100px' }}
                   rows={1}
                   autoFocus
@@ -269,7 +315,7 @@ export const FeedNestedReplyItem = ({
                     size="sm"
                     variant="ghost"
                     onClick={() => setShowReplyInput(false)}
-                    className="rounded-full px-3 h-7 text-xs"
+                    className="rounded-full px-4 h-8 text-sm"
                   >
                     Cancel
                   </Button>
@@ -277,7 +323,7 @@ export const FeedNestedReplyItem = ({
                     size="sm"
                     onClick={handleReplySubmit}
                     disabled={!replyText.trim()}
-                    className="rounded-full px-3 h-7 text-xs font-semibold"
+                    className="rounded-full px-4 h-8 text-sm font-semibold"
                   >
                     Reply
                   </Button>
@@ -288,10 +334,10 @@ export const FeedNestedReplyItem = ({
         </div>
       </div>
 
-      {/* Nested replies with subtle indent */}
-      {reply.nested_replies && reply.nested_replies.length > 0 && (
-        <div className="ml-10 border-l-2 border-border/30 pl-2">
-          {reply.nested_replies.map((nestedReply) => (
+      {/* Nested replies */}
+      {hasNestedReplies && (
+        <div className="ml-12 relative">
+          {reply.nested_replies!.map((nestedReply, index) => (
             <FeedNestedReplyItem
               key={nestedReply.id}
               reply={nestedReply}
