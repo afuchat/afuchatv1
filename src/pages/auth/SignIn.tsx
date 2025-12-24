@@ -12,7 +12,7 @@ import { emailSchema, passwordSchema } from '@/lib/validation';
 import { AfuMailTermsDialog } from '@/components/afumail/AfuMailTermsDialog';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
 
 // AfuMail OAuth configuration
 const AFUMAIL_CLIENT_ID_PREVIEW = '404c5ec3776ecbb26809295a7eace970';
@@ -33,11 +33,7 @@ const SignIn = () => {
 
   // Redirect logged-in users
   if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <CustomLoader size="lg" />
-      </div>
-    );
+    return <PageSkeleton variant="centered" />;
   }
 
   if (user) {

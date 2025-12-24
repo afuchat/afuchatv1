@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
 import { supabase } from '@/integrations/supabase/client';
 
 // Import onboarding images
@@ -106,11 +106,7 @@ const Welcome = () => {
 
   // Show loader while checking auth state
   if (loading || checkingProfile) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <CustomLoader size="lg" />
-      </div>
-    );
+    return <PageSkeleton variant="centered" />;
   }
 
   // Redirect logged-in users

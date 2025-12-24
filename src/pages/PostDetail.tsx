@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
 import { ArrowLeft, User as UserIcon, TrendingUp, MessageCircle, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -453,11 +453,7 @@ const PostDetail = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <CustomLoader size="lg" text="Loading post..." />
-      </div>
-    );
+    return <PageSkeleton variant="centered" />;
   }
 
   if (!post) {
