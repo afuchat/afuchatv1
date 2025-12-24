@@ -543,7 +543,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				.from('profiles')
 				.select('avatar_url, display_name')
 				.eq('id', profileData.affiliated_business_id)
-				.single();
+				.maybeSingle();
 			
 			if (businessData) {
 				profileData.affiliated_business = {
@@ -762,7 +762,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				.from('profiles')
 				.select('is_verified, is_organization_verified')
 				.eq('id', user.id)
-				.single();
+				.maybeSingle();
 
 			if (!error && data) {
 				setCurrentUserIsVerified(data.is_verified || data.is_organization_verified || false);
