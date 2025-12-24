@@ -103,44 +103,28 @@ export const FeedNestedReplyItem = ({
 
   return (
     <div className="relative">
-      {/* Twitter/X style thread line connecting avatars */}
-      {depth > 0 && (
-        <div 
-          className="absolute left-5 top-0 w-0.5 bg-border" 
-          style={{ height: '12px', transform: 'translateY(-12px)' }}
-        />
-      )}
-      
       {/* Pinned indicator */}
       {reply.is_pinned && (
-        <div className="flex items-center gap-1 text-[11px] text-primary font-medium mb-1 ml-12">
+        <div className="flex items-center gap-1 text-[11px] text-primary font-medium mb-1 ml-10">
           <Pin className="h-3 w-3" />
           <span>Pinned</span>
         </div>
       )}
       
-      <div className="flex gap-3 py-3">
-        {/* Avatar with thread line below for nested replies */}
-        <div className="relative flex-shrink-0">
+      <div className="flex gap-2 py-2">
+        {/* Avatar */}
+        <div className="flex-shrink-0">
           <div
             className="cursor-pointer"
             onClick={() => handleViewProfile(reply.author_id)}
           >
-            <Avatar className="h-10 w-10 border border-border/50">
+            <Avatar className="h-8 w-8 border border-border/50">
               <AvatarImage src={reply.profiles.avatar_url || undefined} />
-              <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+              <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                 {reply.profiles.display_name?.charAt(0)?.toUpperCase() || '?'}
               </AvatarFallback>
             </Avatar>
           </div>
-          
-          {/* Thread line connecting to nested replies */}
-          {reply.nested_replies && reply.nested_replies.length > 0 && (
-            <div 
-              className="absolute left-1/2 top-12 w-0.5 bg-border -translate-x-1/2"
-              style={{ height: 'calc(100% - 48px)' }}
-            />
-          )}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -250,35 +234,50 @@ export const FeedNestedReplyItem = ({
             )}
           </div>
 
-          {/* Reply input - Twitter style */}
+          {/* Reply input */}
           {showReplyInput && (
-            <div className="mt-3 flex items-start gap-3 pt-3 border-t border-border/50">
-              <Avatar className="h-8 w-8 flex-shrink-0">
+            <div className="mt-2 flex items-start gap-2 pt-2 border-t border-border/30">
+              <Avatar className="h-6 w-6 flex-shrink-0">
                 <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                   Y
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <input
-                  type="text"
+                <textarea
                   value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
+                  onChange={(e) => {
+                    setReplyText(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${Math.min(e.target.scrollHeight, 100)}px`;
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    // Only submit on Enter for desktop
+                    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+                    if (e.key === 'Enter' && !e.shiftKey && !isMobileDevice) {
                       e.preventDefault();
                       handleReplySubmit();
                     }
                   }}
                   placeholder={`Reply to @${reply.profiles.handle}`}
-                  className="w-full bg-transparent text-[15px] placeholder:text-muted-foreground focus:outline-none py-2"
+                  className="w-full bg-muted/50 rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none overflow-hidden min-h-[36px]"
+                  style={{ maxHeight: '100px' }}
+                  rows={1}
                   autoFocus
                 />
-                <div className="flex justify-end mt-2">
+                <div className="flex justify-end mt-2 gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowReplyInput(false)}
+                    className="rounded-full px-3 h-7 text-xs"
+                  >
+                    Cancel
+                  </Button>
                   <Button
                     size="sm"
                     onClick={handleReplySubmit}
                     disabled={!replyText.trim()}
-                    className="rounded-full px-4 h-8 font-bold text-sm"
+                    className="rounded-full px-3 h-7 text-xs font-semibold"
                   >
                     Reply
                   </Button>
@@ -286,31 +285,31 @@ export const FeedNestedReplyItem = ({
               </div>
             </div>
           )}
-
-          {/* Nested replies - no depth limit, Twitter-style threading */}
-          {reply.nested_replies && reply.nested_replies.length > 0 && (
-            <div className="mt-1">
-              {reply.nested_replies.map((nestedReply) => (
-                <FeedNestedReplyItem
-                  key={nestedReply.id}
-                  reply={nestedReply}
-                  depth={depth + 1}
-                  handleViewProfile={handleViewProfile}
-                  onReplyToReply={onReplyToReply}
-                  onPinReply={onPinReply}
-                  onDeleteReply={onDeleteReply}
-                  isPostAuthor={isPostAuthor}
-                  currentUserId={currentUserId}
-                  parsePostContent={parsePostContent}
-                  formatTime={formatTime}
-                  UserAvatarSmall={UserAvatarSmall}
-                  VerifiedBadge={VerifiedBadge}
-                />
-              ))}
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Nested replies with subtle indent */}
+      {reply.nested_replies && reply.nested_replies.length > 0 && (
+        <div className="ml-10 border-l-2 border-border/30 pl-2">
+          {reply.nested_replies.map((nestedReply) => (
+            <FeedNestedReplyItem
+              key={nestedReply.id}
+              reply={nestedReply}
+              depth={depth + 1}
+              handleViewProfile={handleViewProfile}
+              onReplyToReply={onReplyToReply}
+              onPinReply={onPinReply}
+              onDeleteReply={onDeleteReply}
+              isPostAuthor={isPostAuthor}
+              currentUserId={currentUserId}
+              parsePostContent={parsePostContent}
+              formatTime={formatTime}
+              UserAvatarSmall={UserAvatarSmall}
+              VerifiedBadge={VerifiedBadge}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
