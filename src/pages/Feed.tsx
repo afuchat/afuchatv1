@@ -1676,8 +1676,10 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     
     try {
       const POSTS_PER_PAGE = 30; // Reduced from 50 to save data
-      const from = page * POSTS_PER_PAGE;
-      const to = from + POSTS_PER_PAGE - 1;
+      const CANDIDATE_MULTIPLIER = user ? 5 : 1; // fetch a bigger pool for personalization
+      const poolSize = POSTS_PER_PAGE * CANDIDATE_MULTIPLIER;
+      const from = page * poolSize;
+      const to = from + poolSize - 1;
 
       // Fetch posts with optimized query - only essential fields
       const { data: postData, error: postsError } = await supabase
@@ -1701,7 +1703,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       if (postsError) throw postsError;
       if (!postData) throw new Error('No posts data received');
 
-      setHasMore(postData.length === POSTS_PER_PAGE);
+      setHasMore(postData.length === poolSize);
 
       // Fetch following posts efficiently - only if user is logged in
       let followingPostData: any[] = [];
@@ -1879,8 +1881,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       const mappedPosts = postData.map(mapPost);
       const mappedFollowingPosts = followingPostData.map(mapPost);
       
-      // Sort "For You" posts using personalized algorithm
-      const finalPosts = user ? sortPosts(mappedPosts) : mappedPosts;
+      // Sort + choose a user-specific set of posts from the larger pool
+      const finalPosts = user ? sortPosts(mappedPosts).slice(0, POSTS_PER_PAGE) : mappedPosts;
       
       // Following posts stay chronological (already sorted by created_at desc)
       const finalFollowingPosts = mappedFollowingPosts;
@@ -1914,7 +1916,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [user]);
+   }, [user, sortPosts]);
 
   // Manually load next page of posts (used by scroll + button)
   const handleLoadMore = useCallback(() => {

@@ -52,28 +52,44 @@ const DEFAULT_INTERESTS: UserInterests = {
   lastUpdated: Date.now(),
 };
 
-const CACHE_KEY = 'userFeedInterests';
+const getCacheKey = (userId: string) => `userFeedInterests:${userId}`;
 const CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
 export function useFeedAlgorithm() {
   const { user } = useAuth();
-  const [interests, setInterests] = useState<UserInterests>(() => {
+
+  const [interests, setInterests] = useState<UserInterests>(() => ({
+    ...DEFAULT_INTERESTS,
+    // Force first-time learning per user unless we restore from cache
+    lastUpdated: 0,
+  }));
+
+  const [isLoading, setIsLoading] = useState(false);
+  const recentlyShownAuthors = useRef<Set<string>>(new Set());
+
+  // Load cached interests per-user whenever the user changes
+  useEffect(() => {
+    if (!user) {
+      setInterests({ ...DEFAULT_INTERESTS, lastUpdated: 0 });
+      return;
+    }
+
     try {
-      const cached = localStorage.getItem(CACHE_KEY);
+      const cached = localStorage.getItem(getCacheKey(user.id));
       if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.lastUpdated < CACHE_TTL) {
-          return parsed;
+        const parsed = JSON.parse(cached) as UserInterests;
+        // If cache is fresh, restore; otherwise keep lastUpdated=0 to trigger re-learn
+        if (parsed?.lastUpdated && Date.now() - parsed.lastUpdated < CACHE_TTL) {
+          setInterests(parsed);
+          return;
         }
       }
     } catch (e) {
       console.debug('Failed to parse cached interests');
     }
-    return DEFAULT_INTERESTS;
-  });
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const recentlyShownAuthors = useRef<Set<string>>(new Set());
+
+    setInterests({ ...DEFAULT_INTERESTS, lastUpdated: 0 });
+  }, [user]);
 
   // Learn from user's past interactions
   const learnUserInterests = useCallback(async () => {
@@ -203,7 +219,9 @@ export function useFeedAlgorithm() {
       }
 
       setInterests(newInterests);
-      localStorage.setItem(CACHE_KEY, JSON.stringify(newInterests));
+      if (user) {
+        localStorage.setItem(getCacheKey(user.id), JSON.stringify(newInterests));
+      }
     } catch (error) {
       console.error('Failed to learn user interests:', error);
     } finally {
@@ -297,11 +315,12 @@ export function useFeedAlgorithm() {
     // Reset recently shown authors for new sort
     recentlyShownAuthors.current.clear();
 
-    // Generate session-stable random seed (changes on page refresh)
-    let sessionSeed = parseInt(sessionStorage.getItem('feedSortSeed') || '0');
+    // Generate stable seed per-user per-session (changes on refresh, differs across users)
+    const seedKey = user ? `feedSortSeed:${user.id}` : 'feedSortSeed:guest';
+    let sessionSeed = parseInt(sessionStorage.getItem(seedKey) || '0');
     if (!sessionSeed) {
       sessionSeed = Math.floor(Math.random() * 1000) + 1;
-      sessionStorage.setItem('feedSortSeed', sessionSeed.toString());
+      sessionStorage.setItem(seedKey, sessionSeed.toString());
     }
 
     // Score all posts with randomization
@@ -339,7 +358,7 @@ export function useFeedAlgorithm() {
     }
 
     return result;
-  }, [scorePost]);
+  }, [scorePost, user]);
 
   // Record an interaction for learning
   const recordInteraction = useCallback((
@@ -373,7 +392,9 @@ export function useFeedAlgorithm() {
       
       // Debounced save to localStorage
       setTimeout(() => {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(newInterests));
+        if (user) {
+          localStorage.setItem(getCacheKey(user.id), JSON.stringify(newInterests));
+        }
       }, 1000);
 
       return newInterests;
@@ -382,7 +403,8 @@ export function useFeedAlgorithm() {
 
   // Learn interests on mount if user is logged in
   useEffect(() => {
-    if (user && Date.now() - interests.lastUpdated > CACHE_TTL) {
+    // If we don't have fresh cached interests for this user, learn immediately
+    if (user && (interests.lastUpdated === 0 || Date.now() - interests.lastUpdated > CACHE_TTL)) {
       learnUserInterests();
     }
   }, [user, interests.lastUpdated, learnUserInterests]);
