@@ -262,12 +262,17 @@ const AppRoutes = () => {
 
 const AppWithDesktopCheck = () => {
   const isMobile = useIsMobile();
-  
-  // Block desktop users
-  if (!isMobile) {
+
+  // Lovable preview is often rendered in a desktop-sized iframe;
+  // allow it so you can see the bottom navigation in Preview.
+  const isLovablePreview =
+    typeof window !== 'undefined' && /lovable(app|project)\.com$/i.test(window.location.hostname);
+
+  // Block desktop users (except Lovable preview)
+  if (!isMobile && !isLovablePreview) {
     return <DesktopBlocker />;
   }
-  
+
   return <AppRoutes />;
 };
 

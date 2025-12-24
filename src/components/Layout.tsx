@@ -43,6 +43,8 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   
   // Detect if running in iframe (embedded mini program)
   const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+  // NOTE: We no longer hide navigation just because we're in an iframe.
+  // (Lovable preview + in-app webviews are iframes; hiding nav breaks the app.)
   
   // Initialize push notifications listener
   usePushNotifications();
@@ -276,10 +278,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     return location.pathname.startsWith(path);
   };
   
-  // Hide bottom navigation in chat rooms, when hideNav is true, or when in iframe
+  // Hide bottom navigation in chat rooms or when hideNav is true.
   const isChatRoom = location.pathname.startsWith('/chat/');
-  const shouldHideNav = isChatRoom || hideNav || isInIframe;
-  const shouldHideUI = hideNav || isInIframe;
+  const shouldHideNav = isChatRoom || hideNav;
+  const shouldHideUI = hideNav;
 
   return (
     <div className="min-h-screen bg-background select-none overflow-y-auto">
