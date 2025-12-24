@@ -49,26 +49,10 @@ interface NestedReplyItemProps {
   onCommentSubmitted?: () => void;
 }
 
-// Generate consistent ring color based on user handle
-const getAvatarRingColor = (handle: string): string => {
-  const colors = [
-    'ring-blue-500',
-    'ring-pink-500', 
-    'ring-purple-500',
-    'ring-orange-500',
-    'ring-green-500',
-    'ring-cyan-500',
-    'ring-rose-500',
-    'ring-indigo-500',
-  ];
-  
-  let hash = 0;
-  for (let i = 0; i < handle.length; i++) {
-    hash = handle.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  return colors[Math.abs(hash) % colors.length];
-};
+// Layout constants (px)
+const INDENT_PX = 48; // indentation per reply level
+const AVATAR_PX = 40; // h-10
+
 
 export const NestedReplyItem = ({
   reply,
@@ -115,10 +99,10 @@ export const NestedReplyItem = ({
   };
 
   const hasNestedReplies = reply.nested_replies && reply.nested_replies.length > 0;
-  const ringColor = getAvatarRingColor(reply.author.handle);
 
   // Calculate left margin based on depth (for nesting visual)
-  const nestingMargin = depth > 0 ? 48 : 0; // ~48px per level
+  const nestingMargin = depth * INDENT_PX;
+
 
   return (
     <div className="relative">
@@ -159,10 +143,7 @@ export const NestedReplyItem = ({
         {/* Avatar */}
         <div className="flex-shrink-0">
           <Link to={`/${reply.author.handle}`}>
-            <Avatar className={cn(
-              "h-10 w-10 ring-2 ring-offset-2 ring-offset-background",
-              ringColor
-            )}>
+            <Avatar className="h-10 w-10 border border-border">
               <AvatarImage src={reply.author.avatar_url || undefined} />
               <AvatarFallback className="bg-muted text-muted-foreground text-sm font-semibold">
                 {reply.author.display_name?.charAt(0)?.toUpperCase() || '?'}
