@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAITranslation } from '@/hooks/useAITranslation';
-import { Heart, MessageCircle, BarChart2, Pin, Trash2 } from 'lucide-react';
+import { Heart, Pin, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WarningBadge } from '@/components/WarningBadge';
 
@@ -60,6 +60,27 @@ interface FeedNestedReplyItemProps {
   }>;
 }
 
+// Generate consistent ring color based on user handle
+const getAvatarRingColor = (handle: string): string => {
+  const colors = [
+    'ring-blue-500',
+    'ring-pink-500', 
+    'ring-purple-500',
+    'ring-orange-500',
+    'ring-green-500',
+    'ring-cyan-500',
+    'ring-rose-500',
+    'ring-indigo-500',
+  ];
+  
+  let hash = 0;
+  for (let i = 0; i < handle.length; i++) {
+    hash = handle.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  return colors[Math.abs(hash) % colors.length];
+};
+
 export const FeedNestedReplyItem = ({
   reply,
   depth,
@@ -112,8 +133,7 @@ export const FeedNestedReplyItem = ({
 
   const displayContent = translatedContent || (typeof reply.content === 'string' ? reply.content : String(reply.content || ''));
   const hasNestedReplies = reply.nested_replies && reply.nested_replies.length > 0;
-  const replyCount = reply.reply_count || reply.nested_replies?.length || 0;
-  const viewCount = reply.view_count || 0;
+  const ringColor = getAvatarRingColor(reply.profiles.handle);
   
   // Check if we've reached max depth
   const atMaxDepth = depth >= maxDepth;
@@ -122,22 +142,39 @@ export const FeedNestedReplyItem = ({
     <div className="relative">
       {/* Pinned indicator */}
       {reply.is_pinned && (
-        <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-1 ml-10">
+        <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-1 ml-14">
           <Pin className="h-3 w-3" />
           <span>Pinned</span>
         </div>
       )}
       
-      <div className="flex gap-2.5 py-2.5">
-        {/* Avatar */}
-        <div className="flex-shrink-0">
+      <div className={cn("flex gap-3 py-3", depth === 0 ? "px-0" : "px-0")}>
+        {/* Avatar with curved connector */}
+        <div className="flex-shrink-0 relative">
+          {depth > 0 && (
+            <svg
+              className="absolute -left-4 top-0 w-6 h-10"
+              viewBox="0 0 24 40"
+              fill="none"
+            >
+              <path
+                d="M0 0 L0 20 Q0 32 12 32 L24 32"
+                className="stroke-muted-foreground/40"
+                strokeWidth="1.5"
+                fill="none"
+              />
+            </svg>
+          )}
           <div
             className="cursor-pointer"
             onClick={() => handleViewProfile(reply.author_id)}
           >
-            <Avatar className="h-9 w-9 border border-border">
+            <Avatar className={cn(
+              "h-9 w-9 ring-2 ring-offset-2 ring-offset-background",
+              ringColor
+            )}>
               <AvatarImage src={reply.profiles.avatar_url || undefined} />
-              <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+              <AvatarFallback className="bg-muted text-muted-foreground text-sm font-semibold">
                 {reply.profiles.display_name?.charAt(0)?.toUpperCase() || '?'}
               </AvatarFallback>
             </Avatar>
@@ -148,7 +185,7 @@ export const FeedNestedReplyItem = ({
           {/* Header */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <span
-              className="font-semibold text-foreground text-sm cursor-pointer hover:underline"
+              className="font-bold text-foreground cursor-pointer hover:underline"
               onClick={() => handleViewProfile(reply.author_id)}
             >
               {reply.profiles.display_name}
@@ -160,8 +197,8 @@ export const FeedNestedReplyItem = ({
             {reply.profiles.is_warned && (
               <WarningBadge size="sm" reason={reply.profiles.warning_reason} variant="post" />
             )}
-            <span className="text-muted-foreground text-xs">
-              · {formatTime(reply.created_at)}
+            <span className="text-muted-foreground text-sm">
+              {formatTime(reply.created_at)}
             </span>
           </div>
 
@@ -170,34 +207,35 @@ export const FeedNestedReplyItem = ({
             {parsePostContent(displayContent, navigate)}
           </div>
 
-          {/* Interactive action icons */}
+          {/* Interactive action icons - ThumbsUp style */}
           <div className="flex items-center gap-5 mt-2">
-            {/* Like button */}
+            {/* Like button - ThumbsUp style */}
             <button
               onClick={handleLike}
               className={cn(
-                "flex items-center gap-1 text-xs transition-colors group",
-                liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+                "flex items-center gap-1.5 transition-colors group",
+                liked ? "text-primary" : "text-muted-foreground hover:text-primary"
               )}
             >
-              <Heart className={cn("h-4 w-4", liked && "fill-current")} />
-              {likesCount > 0 && <span>{likesCount}</span>}
+              <svg 
+                viewBox="0 0 24 24" 
+                className={cn("h-4 w-4", liked && "fill-current")}
+                fill={liked ? "currentColor" : "none"}
+                stroke="currentColor" 
+                strokeWidth="1.5"
+              >
+                <path d="M7 22V11M2 13V20C2 21.1 2.9 22 4 22H17.4C18.1 22 18.7 21.6 19 21L21.9 14C22 13.7 22 13.3 21.9 13C21.8 12.7 21.5 12.4 21.2 12.2C20.9 12.1 20.6 12 20.3 12H14L15.3 6.5C15.4 6.1 15.3 5.7 15.1 5.3C14.9 5 14.5 4.7 14 4.6C13.7 4.5 13.3 4.5 13 4.7C12.7 4.8 12.5 5.1 12.3 5.4L7 11" />
+              </svg>
+              {likesCount > 0 && <span className="text-sm">{likesCount}</span>}
             </button>
             
             {/* Reply button */}
             <button
               onClick={() => setShowReplyInput(!showReplyInput)}
-              className="flex items-center gap-1 text-muted-foreground hover:text-primary text-xs transition-colors"
+              className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
             >
-              <MessageCircle className="h-4 w-4" />
-              {replyCount > 0 && <span>{replyCount}</span>}
+              Reply
             </button>
-            
-            {/* View count */}
-            <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <BarChart2 className="h-4 w-4" />
-              {viewCount > 0 && <span>{viewCount}</span>}
-            </div>
             
             {/* Delete button - only show for author or post owner */}
             {currentUserId && (currentUserId === reply.author_id || isPostAuthor) && (
@@ -267,9 +305,12 @@ export const FeedNestedReplyItem = ({
         </div>
       </div>
 
-      {/* Nested replies - limit to maxDepth */}
+      {/* Nested replies with vertical line connector - limit to maxDepth */}
       {hasNestedReplies && !atMaxDepth && (
-        <div className="ml-11 border-l border-border/40 pl-3">
+        <div className="relative ml-8 pl-6">
+          {/* Vertical line for nested content */}
+          <div className="absolute left-[18px] top-0 bottom-0 w-[1.5px] bg-muted-foreground/30" />
+          
           {reply.nested_replies!.map((nestedReply) => (
             <FeedNestedReplyItem
               key={nestedReply.id}
@@ -295,7 +336,7 @@ export const FeedNestedReplyItem = ({
       {hasNestedReplies && atMaxDepth && (
         <Link 
           to={`/post/${reply.post_id}`}
-          className="ml-11 mt-1 text-primary text-sm font-medium hover:underline block"
+          className="ml-14 mt-1 text-primary text-sm font-medium hover:underline block"
         >
           View {reply.nested_replies!.length} more {reply.nested_replies!.length === 1 ? 'reply' : 'replies'} →
         </Link>

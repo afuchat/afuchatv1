@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Helper function to fetch comprehensive context for the reply
-async function fetchReplyContext(supabase: any, postId: string, mentioningUserId: string | null) {
+async function fetchReplyContext(supabase: any, postId: string, mentioningUserId: string | null, triggerReplyId: string | null) {
   try {
     // Get the post with author details
     const { data: post } = await supabase
@@ -23,12 +23,26 @@ async function fetchReplyContext(supabase: any, postId: string, mentioningUserId
     const { data: replies } = await supabase
       .from('post_replies')
       .select(`
-        id, content, created_at,
+        id, content, created_at, parent_reply_id,
         author:profiles!post_replies_author_id_fkey(display_name, handle)
       `)
       .eq('post_id', postId)
       .order('created_at', { ascending: true })
       .limit(20);
+
+    // Get the specific trigger reply if it exists (the comment that tagged @afuai)
+    let triggerReply = null;
+    if (triggerReplyId) {
+      const { data: replyData } = await supabase
+        .from('post_replies')
+        .select(`
+          id, content, created_at, parent_reply_id,
+          author:profiles!post_replies_author_id_fkey(display_name, handle)
+        `)
+        .eq('id', triggerReplyId)
+        .single();
+      triggerReply = replyData;
+    }
 
     // Get mentioning user's profile if available
     let mentioningUser = null;
@@ -55,6 +69,7 @@ async function fetchReplyContext(supabase: any, postId: string, mentioningUserId
     return {
       post,
       replies,
+      triggerReply,
       mentioningUser,
       engagement: {
         likes: likeCount || 0,
@@ -69,7 +84,7 @@ async function fetchReplyContext(supabase: any, postId: string, mentioningUserId
 }
 
 // Build context-aware system prompt
-function buildReplySystemPrompt(context: any) {
+function buildReplySystemPrompt(context: any, isReplyingToComment: boolean) {
   const postInfo = context?.post ? `
 POST CONTEXT:
 - Author: @${context.post.author?.handle || 'unknown'} (${context.post.author?.display_name || 'User'})
@@ -91,16 +106,30 @@ USER WHO MENTIONED YOU:
 - Country: ${context.mentioningUser.country || 'Unknown'}
 ` : '';
 
+  const triggerReplyInfo = context?.triggerReply ? `
+THE COMMENT THAT TAGGED YOU:
+- Author: @${context.triggerReply.author?.handle || 'unknown'}
+- Content: "${context.triggerReply.content}"
+- This is ${context.triggerReply.parent_reply_id ? 'a reply to another comment' : 'a direct reply to the post'}
+` : '';
+
   const conversationContext = context?.replies?.length > 0 ? `
 CONVERSATION THREAD (recent replies):
 ${context.replies.slice(-5).map((r: any) => `@${r.author?.handle || 'user'}: "${r.content.substring(0, 100)}"`).join('\n')}
 ` : '';
 
+  const replyBehavior = isReplyingToComment 
+    ? `You are replying DIRECTLY to the comment that mentioned you, NOT to the original post. Address the commenter's question/statement specifically.`
+    : `You are replying to the original post that mentioned you.`;
+
   return `You are AfuAI, the exclusive AI assistant for AfuChat social platform. You have FULL ACCESS to platform and user data.
 
 ${postInfo}
 ${mentioningUserInfo}
+${triggerReplyInfo}
 ${conversationContext}
+
+IMPORTANT: ${replyBehavior}
 
 AFUCHAT PLATFORM KNOWLEDGE:
 - Nexa (XP): Platform currency earned through engagement
@@ -112,7 +141,7 @@ AFUCHAT PLATFORM KNOWLEDGE:
 RESPONSE GUIDELINES:
 - Keep replies under 200 characters (platform limit)
 - Be helpful, friendly, and contextually aware
-- Reference the post content or user when relevant
+- Reference the comment content or user when relevant
 - Use emojis sparingly for engagement
 - Provide actionable advice when asked questions
 - If asked about AfuChat features, explain clearly`;
@@ -167,13 +196,17 @@ serve(async (req) => {
 
     // Get the user who mentioned AfuAI to check premium status
     let mentioningUserId: string | null = null;
+    let parentReplyId: string | null = null;
+    
     if (triggerReplyId) {
       const { data: replyData } = await supabase
         .from('post_replies')
-        .select('author_id')
+        .select('author_id, parent_reply_id')
         .eq('id', triggerReplyId)
         .single();
       mentioningUserId = replyData?.author_id || null;
+      // The AI should reply to the comment that tagged it, so parentReplyId is the triggerReplyId
+      parentReplyId = triggerReplyId;
     }
 
     // Check premium subscription for the mentioning user
@@ -195,8 +228,11 @@ serve(async (req) => {
     }
 
     // Fetch comprehensive context for the reply
-    console.log('Fetching reply context for post:', postId);
-    const context = await fetchReplyContext(supabase, postId, mentioningUserId);
+    console.log('Fetching reply context for post:', postId, 'triggerReply:', triggerReplyId);
+    const context = await fetchReplyContext(supabase, postId, mentioningUserId, triggerReplyId);
+
+    // Determine if we're replying to a comment or the original post
+    const isReplyingToComment = !!triggerReplyId;
 
     // Get or create AfuAI user profile
     let afuAiProfileId: string;
@@ -229,7 +265,7 @@ serve(async (req) => {
     }
 
     // Build context-aware system prompt
-    const systemPrompt = buildReplySystemPrompt(context);
+    const systemPrompt = buildReplySystemPrompt(context, isReplyingToComment);
 
     const userPrompt = `User's mention/question: "${replyContent}"
 
@@ -237,7 +273,7 @@ ${originalPostContent && originalPostContent !== replyContent ? `Original post t
 
 Please provide a helpful, contextually aware response. Keep it under 200 characters.`;
 
-    console.log('Calling Lovable AI with full context');
+    console.log('Calling Lovable AI with full context, isReplyingToComment:', isReplyingToComment);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -296,13 +332,15 @@ Please provide a helpful, contextually aware response. Keep it under 200 charact
       });
     }
 
-    // Post AI reply
+    // Post AI reply - CRITICAL: Use parent_reply_id to reply to the exact comment
+    console.log('Posting AI reply with parent_reply_id:', parentReplyId);
     const { error: replyError } = await supabase
       .from('post_replies')
       .insert({
         post_id: postId,
         author_id: afuAiProfileId,
         content: aiReply,
+        parent_reply_id: parentReplyId, // This makes the AI reply to the exact comment
       });
 
     if (replyError) {
@@ -310,7 +348,7 @@ Please provide a helpful, contextually aware response. Keep it under 200 charact
       throw replyError;
     }
 
-    console.log('AfuAI reply posted successfully');
+    console.log('AfuAI reply posted successfully as a reply to:', parentReplyId || 'original post');
 
     return new Response(JSON.stringify({ success: true, reply: aiReply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

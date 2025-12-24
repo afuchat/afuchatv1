@@ -49,6 +49,49 @@ interface NestedReplyItemProps {
   onCommentSubmitted?: () => void;
 }
 
+// Generate consistent ring color based on user id/handle
+const getAvatarRingColor = (handle: string): string => {
+  const colors = [
+    'ring-blue-500',
+    'ring-pink-500', 
+    'ring-purple-500',
+    'ring-orange-500',
+    'ring-green-500',
+    'ring-cyan-500',
+    'ring-rose-500',
+    'ring-indigo-500',
+  ];
+  
+  let hash = 0;
+  for (let i = 0; i < handle.length; i++) {
+    hash = handle.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  return colors[Math.abs(hash) % colors.length];
+};
+
+// SVG Curved connector line component
+const CurvedConnector = ({ depth }: { depth: number }) => {
+  if (depth === 0) return null;
+  
+  return (
+    <svg
+      className="absolute left-[20px] -top-3 w-6 h-8"
+      viewBox="0 0 24 32"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      style={{ transform: 'translateX(-100%)' }}
+    >
+      <path
+        d="M12 0 L12 16 Q12 24 20 24"
+        className="text-muted-foreground/40"
+        fill="none"
+      />
+    </svg>
+  );
+};
+
 export const NestedReplyItem = ({
   reply,
   postId,
@@ -78,9 +121,9 @@ export const NestedReplyItem = ({
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     
     if (minutes < 1) return 'now';
-    if (minutes < 60) return `${minutes}m`;
-    if (hours < 24) return `${hours}h`;
-    if (days < 7) return `${days}d`;
+    if (minutes < 60) return `${minutes}min ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
@@ -96,24 +139,42 @@ export const NestedReplyItem = ({
   const hasNestedReplies = reply.nested_replies && reply.nested_replies.length > 0;
   const replyCount = reply.reply_count || reply.nested_replies?.length || 0;
   const viewCount = reply.view_count || 0;
+  const ringColor = getAvatarRingColor(reply.author.handle);
 
   return (
     <div className="relative">
       {/* Pinned indicator */}
       {reply.is_pinned && (
-        <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-1 ml-12">
+        <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-1 ml-14">
           <Pin className="h-3 w-3" />
           <span>Pinned</span>
         </div>
       )}
       
-      <div className="flex gap-3 py-3 px-4">
-        {/* Avatar */}
-        <div className="flex-shrink-0">
+      <div className={cn("flex gap-3 py-3", depth === 0 ? "px-4" : "px-0")}>
+        {/* Avatar with curved connector */}
+        <div className="flex-shrink-0 relative">
+          {depth > 0 && (
+            <svg
+              className="absolute -left-4 top-0 w-6 h-10"
+              viewBox="0 0 24 40"
+              fill="none"
+            >
+              <path
+                d="M0 0 L0 20 Q0 32 12 32 L24 32"
+                className="stroke-muted-foreground/40"
+                strokeWidth="1.5"
+                fill="none"
+              />
+            </svg>
+          )}
           <Link to={`/${reply.author.handle}`}>
-            <Avatar className="h-10 w-10 border border-border">
+            <Avatar className={cn(
+              "h-10 w-10 ring-2 ring-offset-2 ring-offset-background",
+              ringColor
+            )}>
               <AvatarImage src={reply.author.avatar_url || undefined} />
-              <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+              <AvatarFallback className="bg-muted text-muted-foreground text-sm font-semibold">
                 {reply.author.display_name?.charAt(0)?.toUpperCase() || '?'}
               </AvatarFallback>
             </Avatar>
@@ -125,7 +186,7 @@ export const NestedReplyItem = ({
           <div className="flex items-center gap-1.5 flex-wrap">
             <Link 
               to={`/${reply.author.handle}`} 
-              className="font-semibold text-foreground hover:underline"
+              className="font-bold text-foreground hover:underline"
             >
               {reply.author.display_name}
             </Link>
@@ -136,13 +197,7 @@ export const NestedReplyItem = ({
             {reply.author.is_warned && (
               <WarningBadge size="sm" reason={reply.author.warning_reason} variant="post" />
             )}
-            <Link 
-              to={`/${reply.author.handle}`}
-              className="text-muted-foreground text-sm hover:underline"
-            >
-              @{reply.author.handle}
-            </Link>
-            <span className="text-muted-foreground text-sm">· {formatTime(reply.created_at)}</span>
+            <span className="text-muted-foreground text-sm">{formatTime(reply.created_at)}</span>
           </div>
 
           {/* Content */}
@@ -150,41 +205,42 @@ export const NestedReplyItem = ({
             {renderContentWithMentions(translatedReplies[reply.id] || (typeof reply.content === 'string' ? reply.content : String(reply.content || '')))}
           </div>
 
-          {/* Interactive action icons - like post interactions */}
-          <div className="flex items-center gap-6 mt-3 pt-2">
-            {/* Like button */}
+          {/* Interactive action icons - ThumbsUp style */}
+          <div className="flex items-center gap-6 mt-2.5">
+            {/* Like button - ThumbsUp style */}
             <button
               onClick={handleLike}
               className={cn(
                 "flex items-center gap-1.5 transition-colors group",
-                liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+                liked ? "text-primary" : "text-muted-foreground hover:text-primary"
               )}
             >
-              <Heart className={cn("h-[18px] w-[18px]", liked && "fill-current")} />
-              {likesCount > 0 && <span className="text-sm">{likesCount}</span>}
+              <svg 
+                viewBox="0 0 24 24" 
+                className={cn("h-[18px] w-[18px]", liked && "fill-current")}
+                fill={liked ? "currentColor" : "none"}
+                stroke="currentColor" 
+                strokeWidth="1.5"
+              >
+                <path d="M7 22V11M2 13V20C2 21.1 2.9 22 4 22H17.4C18.1 22 18.7 21.6 19 21L21.9 14C22 13.7 22 13.3 21.9 13C21.8 12.7 21.5 12.4 21.2 12.2C20.9 12.1 20.6 12 20.3 12H14L15.3 6.5C15.4 6.1 15.3 5.7 15.1 5.3C14.9 5 14.5 4.7 14 4.6C13.7 4.5 13.3 4.5 13 4.7C12.7 4.8 12.5 5.1 12.3 5.4L7 11" />
+              </svg>
+              {likesCount > 0 && <span className="text-sm font-medium">{likesCount}</span>}
             </button>
             
             {/* Reply button */}
             <button
               onClick={handleReplyClick}
-              className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+              className="text-muted-foreground hover:text-primary transition-colors text-sm font-medium"
             >
-              <MessageCircle className="h-[18px] w-[18px]" />
-              {replyCount > 0 && <span className="text-sm">{replyCount}</span>}
+              Reply
             </button>
-            
-            {/* View count */}
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <BarChart2 className="h-[18px] w-[18px]" />
-              {viewCount > 0 && <span className="text-sm">{viewCount}</span>}
-            </div>
             
             {/* Pin button */}
             {onPinReply && isPostAuthor && depth === 0 && (
               <button
                 onClick={() => onPinReply(reply.id, reply.is_pinned || false)}
                 className={cn(
-                  "flex items-center gap-1.5 transition-colors",
+                  "transition-colors",
                   reply.is_pinned ? "text-primary" : "text-muted-foreground hover:text-primary"
                 )}
               >
@@ -227,9 +283,12 @@ export const NestedReplyItem = ({
         </div>
       </div>
 
-      {/* Nested replies */}
+      {/* Nested replies with vertical line connector */}
       {hasNestedReplies && (
-        <div className="ml-12 border-l border-border/40 pl-1">
+        <div className="relative ml-8 pl-6">
+          {/* Vertical line for nested content */}
+          <div className="absolute left-[20px] top-0 bottom-0 w-[1.5px] bg-muted-foreground/30" />
+          
           {reply.nested_replies!.map(nestedReply => (
             <NestedReplyItem
               key={nestedReply.id}
