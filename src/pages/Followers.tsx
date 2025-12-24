@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { BusinessBadge } from "@/components/BusinessBadge";
 import { WarningBadge } from "@/components/WarningBadge";
 import { toast } from "sonner";
 
@@ -307,10 +306,11 @@ export default function Followers() {
                         : (profile.display_name || profile.handle || 'User')}
                     </span>
                     {profile.is_warned && <WarningBadge size="sm" reason={profile.warning_reason} variant="post" />}
-                    {profile.is_verified && <VerifiedBadge size="sm" userId={profile.id} verificationSource={profile.verification_source} />}
-                    {profile.is_organization_verified && (
-                      <BusinessBadge size="sm" />
-                    )}
+                    <VerifiedBadge 
+                      isVerified={profile.is_verified} 
+                      isOrgVerified={profile.is_organization_verified}
+                      size="sm" 
+                    />
                   </div>
                   <span className="text-xs text-muted-foreground">@{profile.handle || profile.id}</span>
                   {profile.bio && (
