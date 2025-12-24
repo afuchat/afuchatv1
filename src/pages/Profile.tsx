@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { MessageSquare, UserPlus, Calendar, Lock, Camera, Building2, UserX, Clock, Users, MoreVertical } from 'lucide-react';
+import { MessageSquare, UserPlus, Calendar, Lock, Camera, Building2, UserX, Clock, Users, MoreVertical, Share2, Footprints } from 'lucide-react';
 import { ButtonLoader } from '@/components/ui/CustomLoader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -41,6 +41,7 @@ import { FollowRequestsSheet } from '@/components/FollowRequestsSheet';
 import UserActionsSheet from '@/components/UserActionsSheet';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 import { WarningBadge } from '@/components/WarningBadge';
+import { ProfileViewsSheet } from '@/components/ProfileViewsSheet';
 
 interface Profile {
 	id: string;
@@ -319,6 +320,8 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	const [isUserActionsSheetOpen, setIsUserActionsSheetOpen] = useState(false);
 	const [isBlocked, setIsBlocked] = useState(false);
 	const [isChatLoading, setIsChatLoading] = useState(false);
+	const [isProfileViewsOpen, setIsProfileViewsOpen] = useState(false);
+	const [profileViewsCount, setProfileViewsCount] = useState(0);
 
 
 	const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -811,6 +814,39 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 		fetchPendingRequestsCount();
 	}, [user, profileId]);
 
+	// Record profile view and fetch views count for own profile
+	useEffect(() => {
+		const recordProfileView = async () => {
+			if (!user || !profileId || user.id === profileId) return;
+			
+			// Record the view (upsert to update timestamp if already exists)
+			await supabase
+				.from('profile_views')
+				.upsert(
+					{ profile_id: profileId, viewer_id: user.id, viewed_at: new Date().toISOString() },
+					{ onConflict: 'profile_id,viewer_id' }
+				);
+		};
+
+		const fetchProfileViewsCount = async () => {
+			if (!user || profileId !== user.id) return;
+			
+			const thirtyDaysAgo = new Date();
+			thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+			
+			const { count } = await supabase
+				.from('profile_views')
+				.select('id', { count: 'exact', head: true })
+				.eq('profile_id', user.id)
+				.gte('viewed_at', thirtyDaysAgo.toISOString());
+			
+			setProfileViewsCount(count || 0);
+		};
+
+		recordProfileView();
+		fetchProfileViewsCount();
+	}, [user, profileId]);
+
 
 	const handleFollowRequest = async () => {
 		if (!user || !profileId) {
@@ -1055,22 +1091,61 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						/>
 					) : null}
 					
-					{user && user.id === profileId && (
-						<label className="absolute top-4 right-4 p-2 rounded-full bg-background/80 hover:bg-background cursor-pointer transition-colors backdrop-blur-sm">
-							<input
-								type="file"
-								accept="image/*"
-								onChange={handleBannerUpload}
-								disabled={isUploadingBanner}
-								className="hidden"
-							/>
-							{isUploadingBanner ? (
-								<ButtonLoader className="h-5 w-5" />
-							) : (
-								<Camera className="h-5 w-5 text-foreground" />
-							)}
-						</label>
-					)}
+					{/* Top right action buttons */}
+					<div className="absolute top-4 right-4 flex items-center gap-2">
+						{/* Profile Views - only for own profile */}
+						{user && user.id === profileId && (
+							<button
+								onClick={() => setIsProfileViewsOpen(true)}
+								className="relative p-2 rounded-full bg-background/80 hover:bg-background cursor-pointer transition-colors backdrop-blur-sm"
+							>
+								<Footprints className="h-5 w-5 text-foreground" />
+								{profileViewsCount > 0 && (
+									<span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+										{profileViewsCount > 99 ? '99+' : profileViewsCount}
+									</span>
+								)}
+							</button>
+						)}
+						
+						{/* Share Profile Button */}
+						<button
+							onClick={() => {
+								const profileUrl = `${window.location.origin}/${profile?.handle}`;
+								if (navigator.share) {
+									navigator.share({
+										title: `${profile?.display_name} on AfuChat`,
+										text: `Check out ${profile?.display_name}'s profile on AfuChat`,
+										url: profileUrl,
+									}).catch(() => {});
+								} else {
+									navigator.clipboard.writeText(profileUrl);
+									toast.success(t('profile.linkCopied', 'Profile link copied!'));
+								}
+							}}
+							className="p-2 rounded-full bg-background/80 hover:bg-background cursor-pointer transition-colors backdrop-blur-sm"
+						>
+							<Share2 className="h-5 w-5 text-foreground" />
+						</button>
+						
+						{/* Banner Upload - only for own profile */}
+						{user && user.id === profileId && (
+							<label className="p-2 rounded-full bg-background/80 hover:bg-background cursor-pointer transition-colors backdrop-blur-sm">
+								<input
+									type="file"
+									accept="image/*"
+									onChange={handleBannerUpload}
+									disabled={isUploadingBanner}
+									className="hidden"
+								/>
+								{isUploadingBanner ? (
+									<ButtonLoader className="h-5 w-5" />
+								) : (
+									<Camera className="h-5 w-5 text-foreground" />
+								)}
+							</label>
+						)}
+					</div>
 				</div>
 
 				<div className="p-4 relative">
@@ -1660,6 +1735,12 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 					onBlockChange={setIsBlocked}
 				/>
 			)}
+
+			{/* Profile Views Sheet - only for own profile */}
+			<ProfileViewsSheet
+				isOpen={isProfileViewsOpen}
+				onClose={() => setIsProfileViewsOpen(false)}
+			/>
 		</div>
 	);
 };
