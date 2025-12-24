@@ -5,8 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search as SearchIcon, User, MessageSquare, Users, Clock, X, Trash2, MoreHorizontal, Hash, Radio, Crown, Lock, Megaphone } from 'lucide-react';
 import { PostInteractionButtons } from '@/components/feed/PostInteractionButtons';
-import { useAds } from '@/hooks/useAds';
-import { SponsoredAdCard } from '@/components/ads/SponsoredAdCard';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CustomLoader } from '@/components/ui/CustomLoader';
@@ -858,8 +856,6 @@ const Search = () => {
   const messageResults = safeResults.filter(r => r.type === 'message');
   const hasAnyResults = safeResults.length > 0;
 
-  // Fetch search ads
-  const { ads: searchAds } = useAds('search', 3);
 
   // Get filtered results based on active tab
   const getFilteredResults = () => {
@@ -1029,14 +1025,7 @@ const Search = () => {
           </div>
         ) : (
           <div>
-            {/* Sponsored Ads - Always First */}
-            {searchAds.length > 0 && (
-              <div>
-                {searchAds.map((ad) => (
-                  <SponsoredAdCard key={ad.id} ad={ad} placement="search" variant="search" />
-                ))}
-              </div>
-            )}
+            {/* Ads removed - coming soon */}
 
             {/* AI Search Summary for Premium Users */}
             <AISearchSummary query={query} resultsCount={safeResults.length} />

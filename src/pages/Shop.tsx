@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Store, Package } from 'lucide-react';
+import { Store, Package, Clock } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { PageSkeleton } from '@/components/skeletons';
 import { useNavigate } from 'react-router-dom';
@@ -437,22 +437,12 @@ export default function Shop() {
               <div className="flex-shrink-0 border-t border-border/40 p-4 pb-6 bg-background/95 backdrop-blur-xl">
                 {!isOwnListing && (
                   <Button
-                    onClick={handlePurchase}
-                    disabled={purchasing || !user || userXP < selectedListing.asking_price}
-                    className="w-full h-10 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                    disabled
+                    className="w-full h-10 text-sm font-semibold shadow-lg opacity-70"
                     size="sm"
                   >
-                    {purchasing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="mr-2 h-4 w-4" />
-                        Complete Purchase
-                      </>
-                    )}
+                    <Clock className="mr-2 h-4 w-4" />
+                    Coming Soon
                   </Button>
                 )}
 

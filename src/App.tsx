@@ -13,6 +13,8 @@ import { RequireCountry } from "./components/RequireCountry";
 import { RequireDateOfBirth } from "./components/RequireDateOfBirth";
 import { RequireBanCheck } from "./components/RequireBanCheck";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { DesktopBlocker } from "./components/DesktopBlocker";
+import { useIsMobile } from "./hooks/use-mobile";
 
 import { useDailyLogin } from "./hooks/useDailyLogin";
 import { useLanguageSync } from "./hooks/useLanguageSync";
@@ -258,6 +260,17 @@ const AppRoutes = () => {
   );
 };
 
+const AppWithDesktopCheck = () => {
+  const isMobile = useIsMobile();
+  
+  // Block desktop users
+  if (!isMobile) {
+    return <DesktopBlocker />;
+  }
+  
+  return <AppRoutes />;
+};
+
 const App = () => (
   <div className="select-none">
     <ErrorBoundary>
@@ -271,7 +284,7 @@ const App = () => (
                   <Sonner />
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <AnimatePresence mode="wait">
-                      <AppRoutes />
+                      <AppWithDesktopCheck />
                     </AnimatePresence>
                     <SettingsSheet />
                   </BrowserRouter>

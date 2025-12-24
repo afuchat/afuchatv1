@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, MapPin, CreditCard, Package, Check, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Package, Check, ChevronRight, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -571,12 +571,12 @@ export default function Checkout() {
 
             {step === 'review' ? (
               <Button
-                className="w-full"
+                className="w-full opacity-70"
                 size="lg"
-                onClick={placeOrder}
-                disabled={isOrdering}
+                disabled
               >
-                {isOrdering ? <CustomLoader size="sm" /> : 'Place Order'}
+                <Clock className="h-4 w-4 mr-2" />
+                Coming Soon
               </Button>
             ) : (
               <Button
