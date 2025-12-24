@@ -3,6 +3,23 @@
 
 export type ContentCategory = 'news' | 'sports' | 'entertainment' | 'technology' | 'politics' | 'business' | 'lifestyle' | 'general';
 
+// Media/Content Type Detection
+export type MediaType = 'text' | 'image' | 'video' | 'gif' | 'link' | 'poll' | 'mixed';
+
+export interface ContentTypeInfo {
+  mediaType: MediaType;
+  hasImages: boolean;
+  hasVideo: boolean;
+  hasGif: boolean;
+  hasLink: boolean;
+  hasPoll: boolean;
+  imageCount: number;
+  linkCount: number;
+  textLength: number;
+  isTextOnly: boolean;
+  isMediaHeavy: boolean;
+}
+
 interface CategoryRule {
   keywords: string[];
   phrases: string[];
@@ -14,6 +31,122 @@ interface CategoryScore {
   category: ContentCategory;
   score: number;
   confidence: number;
+}
+
+// Detect media type from post content and metadata
+export function detectContentType(post: {
+  content?: string;
+  image_url?: string | null;
+  video_url?: string | null;
+  post_images?: { id: string; image_url: string }[];
+  poll_id?: string | null;
+}): ContentTypeInfo {
+  const content = post.content || '';
+  
+  // Count images
+  const imageCount = (post.post_images?.length || 0) + (post.image_url ? 1 : 0);
+  const hasImages = imageCount > 0;
+  
+  // Check for video
+  const hasVideo = !!(post.video_url) || 
+    /\.(mp4|webm|mov|avi|mkv)(\?|$)/i.test(content) ||
+    /(youtube\.com|youtu\.be|vimeo\.com|tiktok\.com)/i.test(content);
+  
+  // Check for GIF
+  const hasGif = /\.gif(\?|$)/i.test(content) || 
+    /\.gif(\?|$)/i.test(post.image_url || '') ||
+    /(giphy\.com|tenor\.com)/i.test(content);
+  
+  // Check for links
+  const linkMatches = content.match(/https?:\/\/[^\s]+/gi) || [];
+  const linkCount = linkMatches.length;
+  const hasLink = linkCount > 0;
+  
+  // Check for poll
+  const hasPoll = !!post.poll_id;
+  
+  // Text analysis
+  const textLength = content.replace(/https?:\/\/[^\s]+/gi, '').trim().length;
+  const isTextOnly = !hasImages && !hasVideo && !hasGif && !hasPoll && textLength > 0;
+  const isMediaHeavy = hasImages || hasVideo || hasGif;
+  
+  // Determine primary media type
+  let mediaType: MediaType = 'text';
+  if (hasVideo) {
+    mediaType = 'video';
+  } else if (hasGif) {
+    mediaType = 'gif';
+  } else if (hasImages && imageCount > 0) {
+    mediaType = 'image';
+  } else if (hasLink && textLength < 100) {
+    mediaType = 'link';
+  } else if (hasPoll) {
+    mediaType = 'poll';
+  } else if ((hasImages || hasLink) && textLength > 50) {
+    mediaType = 'mixed';
+  }
+  
+  return {
+    mediaType,
+    hasImages,
+    hasVideo,
+    hasGif,
+    hasLink,
+    hasPoll,
+    imageCount,
+    linkCount,
+    textLength,
+    isTextOnly,
+    isMediaHeavy,
+  };
+}
+
+// Filter posts by media type
+export function filterByMediaType<T extends {
+  content?: string;
+  image_url?: string | null;
+  video_url?: string | null;
+  post_images?: { id: string; image_url: string }[];
+  poll_id?: string | null;
+}>(posts: T[], mediaType: MediaType | 'all'): T[] {
+  if (mediaType === 'all') return posts;
+  
+  return posts.filter(post => {
+    const info = detectContentType(post);
+    
+    switch (mediaType) {
+      case 'image':
+        return info.hasImages && !info.hasVideo;
+      case 'video':
+        return info.hasVideo;
+      case 'gif':
+        return info.hasGif;
+      case 'link':
+        return info.hasLink && !info.hasImages && !info.hasVideo;
+      case 'text':
+        return info.isTextOnly;
+      case 'poll':
+        return info.hasPoll;
+      case 'mixed':
+        return info.mediaType === 'mixed';
+      default:
+        return true;
+    }
+  });
+}
+
+// Get media type label for display
+export function getMediaTypeLabel(mediaType: MediaType): string {
+  const labels: Record<MediaType, string> = {
+    text: 'Text',
+    image: 'Photos',
+    video: 'Videos',
+    gif: 'GIFs',
+    link: 'Links',
+    poll: 'Polls',
+    mixed: 'Mixed',
+  };
+  return labels[mediaType] || 'All';
 }
 
 // Category definitions with keywords, phrases, and patterns

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { MediaType, detectContentType } from '@/lib/contentCategorization';
 
 // Types for behavioral tracking
 interface ContentInteraction {
@@ -14,7 +15,9 @@ interface ContentInteraction {
     category?: string;
     hashtags?: string[];
     hasMedia?: boolean;
+    mediaType?: MediaType;
     contentLength?: number;
+    imageCount?: number;
   };
 }
 
@@ -25,6 +28,9 @@ interface UserPreferences {
     image: number;
     video: number;
     link: number;
+    gif: number;
+    poll: number;
+    mixed: number;
   };
   
   // Category affinities
@@ -35,6 +41,16 @@ interface UserPreferences {
   
   // Hashtag interests
   hashtags: Record<string, number>;
+  
+  // Media preferences (learned from what user engages with)
+  mediaPreferences: {
+    prefersImages: number; // 0-1 scale
+    prefersVideo: number;
+    prefersTextOnly: number;
+    prefersLinks: number;
+    avgImageEngagement: number;
+    avgTextEngagement: number;
+  };
   
   // Behavioral patterns
   patterns: {
@@ -61,10 +77,18 @@ const DWELL_THRESHOLD_MS = 2000; // 2 seconds to count as meaningful view
 
 // Default preferences for new users
 const getDefaultPreferences = (): UserPreferences => ({
-  contentTypes: { text: 0.5, image: 0.5, video: 0.5, link: 0.5 },
+  contentTypes: { text: 0.5, image: 0.5, video: 0.5, link: 0.5, gif: 0.5, poll: 0.5, mixed: 0.5 },
   categories: {},
   authors: {},
   hashtags: {},
+  mediaPreferences: {
+    prefersImages: 0.5,
+    prefersVideo: 0.5,
+    prefersTextOnly: 0.5,
+    prefersLinks: 0.5,
+    avgImageEngagement: 0.5,
+    avgTextEngagement: 0.5,
+  },
   patterns: {
     avgDwellTime: 3000,
     preferredContentLength: 'medium',
@@ -191,8 +215,25 @@ export function useBehavioralLearning() {
       }
     }
 
-    // Update content type preferences
-    if (interaction.metadata?.hasMedia !== undefined) {
+    // Update content type preferences based on media type
+    if (interaction.metadata?.mediaType) {
+      const mediaType = interaction.metadata.mediaType;
+      updated.contentTypes = {
+        ...updated.contentTypes,
+        [mediaType]: Math.min(1, (updated.contentTypes[mediaType as keyof typeof updated.contentTypes] || 0.5) + weight * 0.1),
+      };
+      
+      // Update media preferences
+      if (mediaType === 'image' || mediaType === 'video' || mediaType === 'gif') {
+        updated.mediaPreferences.prefersImages = Math.min(1, updated.mediaPreferences.prefersImages + weight * 0.05);
+        updated.mediaPreferences.avgImageEngagement = updated.mediaPreferences.avgImageEngagement * 0.9 + weight * 0.1;
+      } else if (mediaType === 'text') {
+        updated.mediaPreferences.prefersTextOnly = Math.min(1, updated.mediaPreferences.prefersTextOnly + weight * 0.05);
+        updated.mediaPreferences.avgTextEngagement = updated.mediaPreferences.avgTextEngagement * 0.9 + weight * 0.1;
+      } else if (mediaType === 'link') {
+        updated.mediaPreferences.prefersLinks = Math.min(1, updated.mediaPreferences.prefersLinks + weight * 0.05);
+      }
+    } else if (interaction.metadata?.hasMedia !== undefined) {
       const typeKey = interaction.metadata.hasMedia ? 'image' : 'text';
       updated.contentTypes = {
         ...updated.contentTypes,
