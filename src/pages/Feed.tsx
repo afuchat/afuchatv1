@@ -28,7 +28,6 @@ import { FeedNestedReplyItem } from '@/components/feed/FeedNestedReplyItem';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SendGiftDialog } from '@/components/gifts/SendGiftDialog';
 import { ReadMoreText } from '@/components/ui/ReadMoreText';
-import { TipButton } from '@/components/tips/TipButton';
 import { ImageCarousel } from '@/components/ui/ImageCarousel';
 import { LinkPreviewCard } from '@/components/ui/LinkPreviewCard';
 import { MentionInput } from '@/components/MentionInput';
@@ -1058,14 +1057,50 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                   </Button>
                 }
               />
-              <TipButton
-                receiverId={post.author_id}
-                receiverName={post.profiles.display_name}
-                postId={post.id}
-                variant="ghost"
-                size="sm"
-                showLabel={false}
-              />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3"
+                onClick={async () => {
+                  // Create or find existing chat with post author
+                  const { data: existingChat } = await supabase
+                    .from('chats')
+                    .select('id')
+                    .or(`and(user_id.eq.${user.id},created_by.eq.${post.author_id}),and(user_id.eq.${post.author_id},created_by.eq.${user.id})`)
+                    .eq('is_group', false)
+                    .maybeSingle();
+                  
+                  if (existingChat) {
+                    navigate(`/chat/${existingChat.id}`);
+                  } else {
+                    // Create new chat
+                    const { data: newChat, error } = await supabase
+                      .from('chats')
+                      .insert({
+                        user_id: post.author_id,
+                        created_by: user.id,
+                        is_group: false
+                      })
+                      .select('id')
+                      .single();
+                    
+                    if (error) {
+                      toast.error('Failed to start chat');
+                      return;
+                    }
+                    
+                    // Add both users as members
+                    await supabase.from('chat_members').insert([
+                      { chat_id: newChat.id, user_id: user.id },
+                      { chat_id: newChat.id, user_id: post.author_id }
+                    ]);
+                    
+                    navigate(`/chat/${newChat.id}`);
+                  }
+                }}
+              >
+                <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-primary transition-colors" />
+              </Button>
             </>
           )}
         </div>
