@@ -1,7 +1,5 @@
-import { SectionLoader } from '@/components/ui/CustomLoader';
+import { ChatListContentSkeleton } from '@/components/skeletons';
 
 export const ChatListSkeleton = () => (
-  <div className="min-h-[50vh]">
-    <SectionLoader text="Loading chats..." />
-  </div>
+  <ChatListContentSkeleton />
 );

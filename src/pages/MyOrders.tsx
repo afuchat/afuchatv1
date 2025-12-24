@@ -9,7 +9,7 @@ import { ArrowLeft, Package, ShoppingBag, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { OrderListSkeleton } from '@/components/skeletons';
 
 interface Order {
   id: string;
@@ -81,9 +81,7 @@ export default function MyOrders() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <CustomLoader size="lg" />
-        </div>
+        <OrderListSkeleton />
       </Layout>
     );
   }

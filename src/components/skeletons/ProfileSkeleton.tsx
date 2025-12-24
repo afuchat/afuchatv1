@@ -1,7 +1,5 @@
-import { SectionLoader } from '@/components/ui/CustomLoader';
+import { ProfileContentSkeleton } from './ContentSkeletons';
 
 export const ProfileSkeleton = () => (
-  <div className="min-h-screen bg-background">
-    <SectionLoader text="Loading profile..." />
-  </div>
+  <ProfileContentSkeleton />
 );

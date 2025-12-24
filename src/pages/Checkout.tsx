@@ -12,7 +12,7 @@ import { ArrowLeft, MapPin, CreditCard, Package, Check, ChevronRight, Clock } fr
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { CheckoutContentSkeleton } from '@/components/skeletons';
 import { formatPriceForCountry } from '@/lib/currencyUtils';
 
 
@@ -272,9 +272,7 @@ export default function Checkout() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <CustomLoader size="lg" />
-        </div>
+        <CheckoutContentSkeleton />
       </Layout>
     );
   }
@@ -576,7 +574,7 @@ export default function Checkout() {
                 onClick={placeOrder}
                 disabled={isOrdering}
               >
-                {isOrdering ? <CustomLoader size="sm" /> : 'Place Order'}
+                {isOrdering ? <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" /> : 'Place Order'}
               </Button>
             ) : (
               <Button

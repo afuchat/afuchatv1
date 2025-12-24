@@ -1,7 +1,5 @@
-import { SectionLoader } from '@/components/ui/CustomLoader';
+import { NotificationsContentSkeleton } from './ContentSkeletons';
 
 export const NotificationsSkeleton = () => (
-  <div className="min-h-screen bg-background">
-    <SectionLoader text="Loading notifications..." />
-  </div>
+  <NotificationsContentSkeleton />
 );
