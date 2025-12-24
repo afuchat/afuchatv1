@@ -1192,6 +1192,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									size="xl"
 									showStoryRing={true}
 									isBusiness={profile?.is_business_mode}
+									enableLightbox={true}
 								/>
 								<PinnedGiftsDisplay userId={profileId} />
 								<OnlineStatus lastSeen={profile.last_seen} showOnlineStatus={profile.show_online_status} />

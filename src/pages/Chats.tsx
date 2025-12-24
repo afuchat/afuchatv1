@@ -465,6 +465,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
                       name={chatName}
                       size={48}
                       isBusiness={chat.other_user?.is_business_mode}
+                      enableLightbox={true}
                     />
                   )}
                 </div>

@@ -1686,6 +1686,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
               avatarUrl={chatInfo?.is_group ? chatInfo.avatar_url : otherUser?.avatar_url} 
               name={chatInfo?.is_group ? (chatInfo.name || 'Group') : (otherUser?.display_name || 'Chat')} 
               size={40}
+              enableLightbox={true}
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
