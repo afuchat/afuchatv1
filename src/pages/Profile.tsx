@@ -1180,7 +1180,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				<div className="flex items-end -mt-20 sm:-mt-16">
 					<div className="relative">
 						{isPrivateAccount ? (
-							<div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-muted/70 border-4 border-background flex items-center justify-center">
+							<div className={`w-24 h-24 sm:w-28 sm:h-28 ${profile?.is_business_mode ? 'rounded-lg' : 'rounded-full'} bg-muted/70 border-4 border-background flex items-center justify-center`}>
 								<UserX className="h-10 w-10 text-muted-foreground/50" />
 							</div>
 						) : (
@@ -1191,6 +1191,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									name={profile.display_name}
 									size="xl"
 									showStoryRing={true}
+									isBusiness={profile?.is_business_mode}
 								/>
 								<PinnedGiftsDisplay userId={profileId} />
 								<OnlineStatus lastSeen={profile.last_seen} showOnlineStatus={profile.show_online_status} />
@@ -1574,6 +1575,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 												name={profile.display_name}
 												size="md"
 												showStoryRing={true}
+												isBusiness={profile?.is_business_mode}
 											/>
 											<div className="flex-1 min-w-0">
 											<ContentParser content={post.content} />
@@ -1641,6 +1643,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 											size="lg"
 											className="flex-shrink-0"
 											showStoryRing={true}
+											isBusiness={false}
 										/>
 											<div className="flex-1 min-w-0">
 												<div className="flex items-center gap-1">

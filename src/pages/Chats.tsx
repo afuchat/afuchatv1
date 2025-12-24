@@ -36,6 +36,7 @@ interface Chat {
     is_organization_verified: boolean | null;
     is_warned?: boolean | null;
     warning_reason?: string | null;
+    is_business_mode?: boolean | null;
   };
   is_muted?: boolean;
   is_pinned?: boolean;
@@ -160,7 +161,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
               updated_at,
               chat_members!inner(
                 user_id,
-                profiles(id, display_name, handle, avatar_url, is_verified, is_organization_verified, is_warned, warning_reason)
+                profiles(id, display_name, handle, avatar_url, is_verified, is_organization_verified, is_warned, warning_reason, is_business_mode)
               )
             )
           `)
@@ -463,6 +464,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
                       avatarUrl={chat.other_user?.avatar_url}
                       name={chatName}
                       size={48}
+                      isBusiness={chat.other_user?.is_business_mode}
                     />
                   )}
                 </div>

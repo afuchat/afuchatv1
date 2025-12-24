@@ -270,13 +270,15 @@ const UserAvatarSmall = ({
   name, 
   avatarUrl, 
   lastSeen, 
-  showOnlineStatus 
+  showOnlineStatus,
+  isBusiness = false
 }: { 
   userId: string; 
   name: string; 
   avatarUrl?: string | null;
   lastSeen?: string | null;
   showOnlineStatus?: boolean;
+  isBusiness?: boolean;
 }) => {
   return (
     <div className="relative">
@@ -286,6 +288,7 @@ const UserAvatarSmall = ({
         name={name}
         size="sm"
         showStoryRing={true}
+        isBusiness={isBusiness}
       />
       <OnlineStatus 
         lastSeen={lastSeen} 
@@ -301,13 +304,15 @@ const UserAvatarMedium = ({
   name, 
   avatarUrl, 
   lastSeen, 
-  showOnlineStatus 
+  showOnlineStatus,
+  isBusiness = false
 }: { 
   userId: string; 
   name: string; 
   avatarUrl?: string | null;
   lastSeen?: string | null;
   showOnlineStatus?: boolean;
+  isBusiness?: boolean;
 }) => {
   return (
     <div className="relative">
@@ -317,6 +322,7 @@ const UserAvatarMedium = ({
         name={name}
         size="md"
         showStoryRing={true}
+        isBusiness={isBusiness}
       />
       <OnlineStatus 
         lastSeen={lastSeen}
@@ -849,6 +855,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           avatarUrl={post.profiles.avatar_url}
           lastSeen={post.profiles.last_seen}
           showOnlineStatus={post.profiles.show_online_status}
+          isBusiness={post.profiles.is_business_mode}
         />
       </div>
 
