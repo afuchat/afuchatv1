@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, MessageCircle, BarChart2, Pin, Trash2 } from 'lucide-react';
+import { Pin, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CommentInput } from '@/components/feed/CommentInput';
 import { WarningBadge } from '@/components/WarningBadge';
@@ -49,7 +49,7 @@ interface NestedReplyItemProps {
   onCommentSubmitted?: () => void;
 }
 
-// Generate consistent ring color based on user id/handle
+// Generate consistent ring color based on user handle
 const getAvatarRingColor = (handle: string): string => {
   const colors = [
     'ring-blue-500',
@@ -68,28 +68,6 @@ const getAvatarRingColor = (handle: string): string => {
   }
   
   return colors[Math.abs(hash) % colors.length];
-};
-
-// SVG Curved connector line component
-const CurvedConnector = ({ depth }: { depth: number }) => {
-  if (depth === 0) return null;
-  
-  return (
-    <svg
-      className="absolute left-[20px] -top-3 w-6 h-8"
-      viewBox="0 0 24 32"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      style={{ transform: 'translateX(-100%)' }}
-    >
-      <path
-        d="M12 0 L12 16 Q12 24 20 24"
-        className="text-muted-foreground/40"
-        fill="none"
-      />
-    </svg>
-  );
 };
 
 export const NestedReplyItem = ({
@@ -137,37 +115,46 @@ export const NestedReplyItem = ({
   };
 
   const hasNestedReplies = reply.nested_replies && reply.nested_replies.length > 0;
-  const replyCount = reply.reply_count || reply.nested_replies?.length || 0;
-  const viewCount = reply.view_count || 0;
   const ringColor = getAvatarRingColor(reply.author.handle);
+
+  // Calculate left margin based on depth (for nesting visual)
+  const nestingMargin = depth > 0 ? 48 : 0; // ~48px per level
 
   return (
     <div className="relative">
       {/* Pinned indicator */}
       {reply.is_pinned && (
-        <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-1 ml-14">
+        <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-1" style={{ marginLeft: nestingMargin + 16 }}>
           <Pin className="h-3 w-3" />
           <span>Pinned</span>
         </div>
       )}
       
-      <div className={cn("flex gap-3 py-3", depth === 0 ? "px-4" : "px-0")}>
-        {/* Avatar with curved connector */}
-        <div className="flex-shrink-0 relative">
-          {depth > 0 && (
-            <svg
-              className="absolute -left-4 top-0 w-6 h-10"
-              viewBox="0 0 24 40"
+      <div className="flex gap-3 py-3 px-4" style={{ marginLeft: nestingMargin }}>
+        {/* Curved connector line for nested replies - only short curve from parent */}
+        {depth > 0 && (
+          <svg
+            className="absolute text-muted-foreground/40"
+            style={{ 
+              left: nestingMargin - 8,
+              top: 4,
+              width: 28,
+              height: 44
+            }}
+            viewBox="0 0 28 44"
+            fill="none"
+          >
+            <path
+              d="M0 0 L0 26 Q0 36 10 36 L28 36"
+              stroke="currentColor"
+              strokeWidth="1.5"
               fill="none"
-            >
-              <path
-                d="M0 0 L0 20 Q0 32 12 32 L24 32"
-                className="stroke-muted-foreground/40"
-                strokeWidth="1.5"
-                fill="none"
-              />
-            </svg>
-          )}
+            />
+          </svg>
+        )}
+
+        {/* Avatar */}
+        <div className="flex-shrink-0">
           <Link to={`/${reply.author.handle}`}>
             <Avatar className={cn(
               "h-10 w-10 ring-2 ring-offset-2 ring-offset-background",
@@ -283,12 +270,9 @@ export const NestedReplyItem = ({
         </div>
       </div>
 
-      {/* Nested replies with vertical line connector */}
+      {/* Nested replies - NO long vertical lines, just individual curved connectors */}
       {hasNestedReplies && (
-        <div className="relative ml-8 pl-6">
-          {/* Vertical line for nested content */}
-          <div className="absolute left-[20px] top-0 bottom-0 w-[1.5px] bg-muted-foreground/30" />
-          
+        <div>
           {reply.nested_replies!.map(nestedReply => (
             <NestedReplyItem
               key={nestedReply.id}
