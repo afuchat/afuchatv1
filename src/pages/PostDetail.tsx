@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { PageSkeleton } from '@/components/skeletons';
-import { ArrowLeft, User as UserIcon, TrendingUp, MessageCircle, Heart } from 'lucide-react';
+import { ArrowLeft, TrendingUp, MessageCircle, Heart } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -152,6 +153,7 @@ interface Post {
     is_organization_verified: boolean;
     is_warned?: boolean;
     warning_reason?: string | null;
+    avatar_url?: string | null;
   };
 }
 
@@ -216,7 +218,7 @@ const PostDetail = () => {
         .from('posts')
         .select(`
           id, content, created_at, image_url, view_count, quoted_post_id,
-          profiles!inner (id, display_name, handle, is_verified, is_organization_verified, is_warned, warning_reason),
+          profiles!inner (id, display_name, handle, is_verified, is_organization_verified, is_warned, warning_reason, avatar_url),
           post_images(image_url, display_order, alt_text),
           post_link_previews(url, title, description, image_url, site_name)
         `)
@@ -286,6 +288,7 @@ const PostDetail = () => {
           is_organization_verified: postData.profiles.is_organization_verified,
           is_warned: postData.profiles.is_warned,
           warning_reason: postData.profiles.warning_reason,
+          avatar_url: postData.profiles.avatar_url,
         },
       });
 
@@ -478,13 +481,18 @@ const PostDetail = () => {
         <div className="p-4 border-b border-border">
             {/* AUTHOR BLOCK */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xl font-bold flex-shrink-0">
-                <UserIcon className="h-6 w-6" />
-              </div>
-              <Link to={`/profile/${post.author.handle}`} className="flex-1 min-w-0">
-                <div className="flex items-center">
-                  <span className="text-xl font-bold hover:underline truncate max-w-[180px]" title={post.author.display_name}>
-                    {post.author.display_name.length > 15 ? `${post.author.display_name.slice(0, 13)}...` : post.author.display_name}
+              <Link to={`/${post.author.handle}`}>
+                <Avatar className="h-12 w-12 border border-border">
+                  <AvatarImage src={post.author.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
+                    {post.author.display_name?.charAt(0)?.toUpperCase() || '?'}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <Link to={`/${post.author.handle}`} className="flex-1 min-w-0">
+                <div className="flex items-center gap-1">
+                  <span className="text-lg font-bold hover:underline truncate">
+                    {post.author.display_name}
                   </span>
                   <VerifiedBadge 
                     isVerified={post.author.is_verified} 
@@ -494,7 +502,7 @@ const PostDetail = () => {
                     <WarningBadge size="sm" reason={post.author.warning_reason} variant="post" />
                   )}
                 </div>
-                <p className="text-base text-muted-foreground truncate">@{post.author.handle}</p>
+                <p className="text-sm text-muted-foreground">@{post.author.handle}</p>
               </Link>
             </div>
 
