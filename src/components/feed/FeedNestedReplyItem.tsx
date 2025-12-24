@@ -151,28 +151,31 @@ export const FeedNestedReplyItem = ({
         </div>
       )}
       
-      <div className="flex gap-3 py-2.5" style={{ marginLeft: nestingMargin }}>
-        {/* Curved connector line for nested replies */}
-        {depth > 0 && (
-          <svg
-            className="absolute text-muted-foreground/40"
-            style={{ 
-              left: nestingMargin - 24,
-              top: 0,
-              width: 28,
-              height: 40
-            }}
-            viewBox="0 0 28 40"
+      {/* Curved connector line - connects parent avatar to child avatar */}
+      {depth > 0 && (
+        <svg
+          className="absolute text-muted-foreground/50"
+          style={{ 
+            left: nestingMargin - 26,
+            top: -16,
+            width: 32,
+            height: 52,
+            pointerEvents: 'none'
+          }}
+          viewBox="0 0 32 52"
+          fill="none"
+        >
+          <path
+            d="M8 0 L8 36 Q8 44 16 44 L32 44"
+            stroke="currentColor"
+            strokeWidth="2"
             fill="none"
-          >
-            <path
-              d="M0 0 L0 24 Q0 32 8 32 L28 32"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              fill="none"
-            />
-          </svg>
-        )}
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
+      
+      <div className="flex gap-3 py-2.5" style={{ marginLeft: nestingMargin }}>
 
         {/* Avatar */}
         <div className="flex-shrink-0">
