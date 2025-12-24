@@ -18,6 +18,7 @@ import { TrendingInfoSheet } from '@/components/search/TrendingInfoSheet';
 import { HashtagsSection } from '@/components/search/HashtagsSection';
 import { AISearchSummary } from '@/components/search/AISearchSummary';
 import { VerifiedBadge as PlatformVerifiedBadge } from '@/components/VerifiedBadge';
+import { SearchSuggestions } from '@/components/search/SearchSuggestions';
 import { 
   ContentCategory, 
   categorizeContent, 
@@ -584,8 +585,11 @@ const Search = () => {
   const [activeTab, setActiveTab] = useState<TabType>('For You');
   const [activeResultTab, setActiveResultTab] = useState<SearchResultTabType>('All');
   const [userProfile, setUserProfile] = useState<{ avatar_url?: string | null; display_name?: string } | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch current user profile
   useEffect(() => {
@@ -601,6 +605,22 @@ const Search = () => {
     fetchUserProfile();
   }, [user]);
 
+  // Load recent searches on mount
+  useEffect(() => {
+    setRecentSearches(getSearchHistory());
+  }, [historyKey]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const urlQuery = params.get('q') || '';
@@ -613,6 +633,19 @@ const Search = () => {
     const timer = setTimeout(() => setDebouncedQuery(query), 300);
     return () => clearTimeout(timer);
   }, [query]);
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = (suggestion: { type: string; id: string; text: string }) => {
+    setShowSuggestions(false);
+    
+    if (suggestion.type === 'user') {
+      navigate(`/profile/${suggestion.id}`);
+    } else if (suggestion.type === 'hashtag') {
+      setQuery(suggestion.text);
+    } else {
+      setQuery(suggestion.text);
+    }
+  };
 
   const handleSearch = useCallback(async () => {
     const trimmedQuery = debouncedQuery.trim();
@@ -903,25 +936,46 @@ const Search = () => {
               </button>
             }
           />
-          <div className="flex-1 relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex-1 relative" ref={searchContainerRef}>
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
             <Input
               ref={inputRef}
               placeholder={t('search.placeholder')}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-full bg-muted/70 border-0 focus-visible:ring-1 focus-visible:ring-primary h-10 pl-10 pr-4 text-[15px]"
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setShowSuggestions(false);
+                } else if (e.key === 'Escape') {
+                  setShowSuggestions(false);
+                  inputRef.current?.blur();
+                }
+              }}
+              className="w-full rounded-full bg-muted/70 border-0 focus-visible:ring-1 focus-visible:ring-primary h-10 pl-10 pr-10 text-[15px]"
             />
             {query && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                onClick={() => setQuery('')}
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 z-10"
+                onClick={() => {
+                  setQuery('');
+                  setShowSuggestions(false);
+                }}
               >
                 <X className="h-4 w-4" />
               </Button>
             )}
+            <SearchSuggestions
+              query={query}
+              onSelect={handleSuggestionSelect}
+              recentSearches={recentSearches}
+              isVisible={showSuggestions && !loading}
+            />
           </div>
         </div>
 
