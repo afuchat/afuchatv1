@@ -1,7 +1,5 @@
-import { SectionLoader } from '@/components/ui/CustomLoader';
+import { FeedContentSkeleton } from '@/components/skeletons';
 
 export const FeedSkeleton = () => (
-  <div className="min-h-[50vh]">
-    <SectionLoader text="Loading feed..." />
-  </div>
+  <FeedContentSkeleton />
 );

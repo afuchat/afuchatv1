@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Feed from './Feed';
 import NewPostModal from '@/components/ui/NewPostModal';
 import FloatingActionButton from '@/components/ui/FloatingActionButton';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { HomeContentSkeleton } from '@/components/skeletons';
 import { ProfileCompletionBanner } from '@/components/ProfileCompletionBanner';
 import { GuestAuthBanner } from '@/components/GuestAuthBanner';
 
@@ -69,11 +69,7 @@ const Home = () => {
   };
 
   if (loading || (user && checkingFollows)) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <CustomLoader size="lg" />
-      </div>
-    );
+    return <HomeContentSkeleton />;
   }
 
   // No Layout wrapper here - Layout is applied at router level in App.tsx

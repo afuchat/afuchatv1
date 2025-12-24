@@ -1,7 +1,5 @@
-import { SectionLoader } from '@/components/ui/CustomLoader';
+import { GiftsContentSkeleton } from './ContentSkeletons';
 
 export const GiftsSkeleton = () => (
-  <div className="min-h-screen bg-background">
-    <SectionLoader text="Loading gifts..." />
-  </div>
+  <GiftsContentSkeleton />
 );

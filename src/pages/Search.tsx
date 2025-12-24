@@ -7,7 +7,7 @@ import { Search as SearchIcon, User, MessageSquare, Users, Clock, X, Trash2, Mor
 import { PostInteractionButtons } from '@/components/feed/PostInteractionButtons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { SearchContentSkeleton, PostSkeleton } from '@/components/skeletons';
 import { toast } from 'sonner';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTranslation } from 'react-i18next';
@@ -436,8 +436,10 @@ const TrendingSection = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <CustomLoader size="sm" />
+      <div className="py-8">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <PostSkeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -1144,8 +1146,10 @@ const Search = () => {
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {loading && isSearchActive ? (
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <CustomLoader size="md" text="Searching..." />
+          <div className="divide-y divide-border">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <PostSkeleton key={i} />
+            ))}
           </div>
         ) : !isSearchActive ? (
           <>
