@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
@@ -19,11 +19,15 @@ import { HashtagsSection } from '@/components/search/HashtagsSection';
 import { AISearchSummary } from '@/components/search/AISearchSummary';
 import { VerifiedBadge as PlatformVerifiedBadge } from '@/components/VerifiedBadge';
 import { SearchSuggestions } from '@/components/search/SearchSuggestions';
+import { AdvancedSearchFilters, SearchFilters, DEFAULT_FILTERS } from '@/components/search/AdvancedSearchFilters';
 import { 
   ContentCategory, 
   categorizeContent, 
   getPrimaryCategory,
-  mapTabToCategory 
+  mapTabToCategory,
+  detectContentType,
+  filterByMediaType,
+  MediaType
 } from '@/lib/contentCategorization';
 
 const SEARCH_HISTORY_KEY = 'afuchat_search_history';
@@ -587,6 +591,7 @@ const Search = () => {
   const [userProfile, setUserProfile] = useState<{ avatar_url?: string | null; display_name?: string } | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -885,10 +890,85 @@ const Search = () => {
   const safeResults = results || [];
   const userResults = safeResults.filter(r => r.type === 'user');
   const groupResults = safeResults.filter(r => r.type === 'group');
-  const postResults = safeResults.filter(r => r.type === 'post');
   const messageResults = safeResults.filter(r => r.type === 'message');
+  
+  // Apply advanced filters to post results
+  const postResults = useMemo(() => {
+    let posts = safeResults.filter(r => r.type === 'post');
+    
+    // Apply media type filter
+    if (searchFilters.mediaTypes.length > 0) {
+      posts = posts.filter(post => {
+        const contentInfo = detectContentType({
+          content: post.content,
+          image_url: post.image_url,
+          post_images: post.post_images,
+        });
+        return searchFilters.mediaTypes.includes(contentInfo.mediaType);
+      });
+    }
+    
+    // Apply verified filter
+    if (searchFilters.verified === true) {
+      posts = posts.filter(post => 
+        post.author_profiles?.is_verified || post.author_profiles?.is_organization_verified
+      );
+    }
+    
+    // Apply engagement filter
+    if (searchFilters.hasEngagement) {
+      posts = posts.filter(post => 
+        (post.like_count || 0) > 0 || (post.reply_count || 0) > 0
+      );
+    }
+    
+    // Apply min likes filter
+    if (searchFilters.minLikes > 0) {
+      posts = posts.filter(post => (post.like_count || 0) >= searchFilters.minLikes);
+    }
+    
+    // Apply date range filter
+    if (searchFilters.dateRange !== 'all' && posts.length > 0) {
+      const now = new Date();
+      let cutoffDate: Date;
+      
+      switch (searchFilters.dateRange) {
+        case 'today':
+          cutoffDate = new Date(now.setHours(0, 0, 0, 0));
+          break;
+        case 'week':
+          cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case 'year':
+          cutoffDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          cutoffDate = new Date(0);
+      }
+      
+      posts = posts.filter(post => 
+        post.created_at && new Date(post.created_at) >= cutoffDate
+      );
+    }
+    
+    // Apply sorting
+    if (searchFilters.sortBy === 'recent') {
+      posts.sort((a, b) => 
+        new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+      );
+    } else if (searchFilters.sortBy === 'popular') {
+      posts.sort((a, b) => 
+        ((b.like_count || 0) + (b.view_count || 0)) - ((a.like_count || 0) + (a.view_count || 0))
+      );
+    }
+    
+    return posts;
+  }, [safeResults, searchFilters]);
+  
   const hasAnyResults = safeResults.length > 0;
-
 
   // Get filtered results based on active tab
   const getFilteredResults = () => {
@@ -1049,6 +1129,15 @@ const Search = () => {
             </div>
             <ScrollBar orientation="horizontal" className="invisible" />
           </ScrollArea>
+        )}
+        
+        {/* Advanced Search Filters - shown when searching */}
+        {isSearchActive && (
+          <AdvancedSearchFilters
+            filters={searchFilters}
+            onFiltersChange={setSearchFilters}
+            resultCount={postResults.length}
+          />
         )}
       </div>
 
