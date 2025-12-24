@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, CreditCard } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, CreditCard, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -241,12 +241,12 @@ export default function ShopCart() {
             </div>
             
             <Button 
-              className="w-full" 
+              className="w-full opacity-70" 
               size="lg"
-              onClick={proceedToCheckout}
+              disabled
             >
-              <CreditCard className="h-4 w-4 mr-2" />
-              Proceed to Checkout
+              <Clock className="h-4 w-4 mr-2" />
+              Coming Soon
             </Button>
           </div>
         )}

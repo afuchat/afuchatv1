@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
   Crown, Check, Coins, Calendar, Sparkles, Gift, Users, Radio, 
-  MessageSquare, Image, Ban, Eye, Palette, Shield, Star, Zap, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, XCircle, RefreshCw
+  MessageSquare, Image, Ban, Eye, Palette, Shield, Star, Zap, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, XCircle, RefreshCw, Clock
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
@@ -594,25 +594,13 @@ export default function Premium() {
                           </Button>
                         ) : (
                           <Button
-                            onClick={() => handlePurchase(plan.id, plan.acoin_price)}
-                            disabled={!canAfford || purchasing === plan.id}
-                            className={`w-full h-12 text-base font-bold bg-gradient-to-r ${config.gradient} hover:opacity-90 text-white border-0 shadow-lg transition-all duration-300 rounded-xl ${
-                              canAfford ? 'hover:shadow-xl hover:scale-[1.02]' : ''
-                            }`}
+                            disabled
+                            className={`w-full h-12 text-base font-bold bg-gradient-to-r ${config.gradient} text-white border-0 shadow-lg transition-all duration-300 rounded-xl opacity-70`}
                           >
-                            {purchasing === plan.id ? (
-                              <div className="flex items-center gap-2">
-                                <ButtonLoader />
-                                Processing...
-                              </div>
-                            ) : !canAfford ? (
-                              'Insufficient ACoin'
-                            ) : (
-                              <span className="flex items-center justify-center gap-2">
-                                Get {plan.name}
-                                <ArrowRight className="h-4 w-4" />
-                              </span>
-                            )}
+                            <span className="flex items-center justify-center gap-2">
+                              <Clock className="h-4 w-4" />
+                              Coming Soon
+                            </span>
                           </Button>
                         )}
 

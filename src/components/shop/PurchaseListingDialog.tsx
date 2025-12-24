@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Coins, Loader2, ShoppingCart, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Coins, Loader2, ShoppingCart, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface PurchaseListingDialogProps {
@@ -175,15 +175,10 @@ export function PurchaseListingDialog({ open, onOpenChange, listing, onSuccess }
             </Button>
             <Button
               className="flex-1 gap-2"
-              onClick={handlePurchase}
-              disabled={loading || !hasEnoughBalance || fetchingBalance}
+              disabled
             >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Coins className="h-4 w-4" />
-              )}
-              {loading ? 'Processing...' : 'Confirm Purchase'}
+              <Clock className="h-4 w-4" />
+              Coming Soon
             </Button>
           </div>
 

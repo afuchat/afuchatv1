@@ -7,7 +7,6 @@ import { Package, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPriceForCountry } from '@/lib/currencyUtils';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
-import { AdsterraBannerAd } from '@/components/ads/AdsterraBannerAd';
 
 const shopshackLogo = '/shopshack-logo.png';
 
@@ -102,11 +101,7 @@ export default function FeaturedProducts() {
 
   // Only show featured products to Ugandan users
   if (!isUgandan) {
-    // Non-Ugandan non-premium users see banner ad instead
-    if (!isPremium) {
-      return <AdsterraBannerAd />;
-    }
-    // Non-Ugandan premium users see nothing (no products, no ads)
+    // Non-Ugandan users see nothing (ads removed)
     return null;
   }
 

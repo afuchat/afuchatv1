@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { ShoppingCart, User } from 'lucide-react';
+import { ShoppingCart, User, Clock } from 'lucide-react';
 import { ButtonLoader, CustomLoader } from '@/components/ui/CustomLoader';
 import { motion } from 'framer-motion';
 
@@ -197,21 +197,11 @@ export const GiftMarketplaceCard = ({ listing, onPurchaseComplete }: GiftMarketp
           {/* Purchase Button */}
           {!isOwnListing && (
             <Button
-              onClick={handlePurchase}
-              disabled={purchasing || !user || userXP < listing.asking_price}
-              className="w-full"
+              disabled
+              className="w-full opacity-70"
             >
-              {purchasing ? (
-                <>
-                  <ButtonLoader className="mr-2" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  Purchase Gift
-                </>
-              )}
+              <Clock className="mr-2 h-4 w-4" />
+              Coming Soon
             </Button>
           )}
 

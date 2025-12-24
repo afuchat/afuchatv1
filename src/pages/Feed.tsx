@@ -41,9 +41,6 @@ import { OnlineStatus } from '@/components/OnlineStatus';
 import { StoryAvatar } from '@/components/moments/StoryAvatar';
 import { ViewsAnalyticsSheet } from '@/components/ViewsAnalyticsSheet';
 import { SEO } from '@/components/SEO';
-import { AdsterraNativeAdCard } from '@/components/ads/AdsterraNativeAdCard';
-import { SponsoredAdCard } from '@/components/ads/SponsoredAdCard';
-import { useAds } from '@/hooks/useAds';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 import { cn } from '@/lib/utils';
@@ -1167,8 +1164,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   // Personalized feed algorithm
   const { sortPosts, recordInteraction, learnUserInterests } = useFeedAlgorithm();
   
-  // Get sponsored ads for feed placement
-  const { ads: sponsoredAds } = useAds('feed', 2);
   // All useState hooks first
   const [posts, setPosts] = useState<Post[]>([]);
   const [followingPosts, setFollowingPosts] = useState<Post[]>([]);
@@ -2350,7 +2345,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   }
 
   const currentPosts = activeTab === 'foryou' ? posts : followingPosts;
-  const adNativeIndex = currentPosts.length > 0 ? Math.min(9, currentPosts.length - 1) : -1;
 
   return (
     <div className="max-w-4xl mx-auto pb-20">
@@ -2495,18 +2489,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                           guestMode={guestMode}
                         />
                         
-                        {/* Sponsored user ads after posts 3 and 7 */}
-                        {!isPremium && index === 3 && sponsoredAds[0] && (
-                          <SponsoredAdCard ad={sponsoredAds[0]} placement="feed" variant="feed" />
-                        )}
-                        {!isPremium && index === 7 && sponsoredAds[1] && (
-                          <SponsoredAdCard ad={sponsoredAds[1]} placement="feed" variant="feed" />
-                        )}
-                        
-                        {/* Single Adsterra Native Ad after the 10th post (or last post if fewer) */}
-                        {index === adNativeIndex && !isPremium && (
-                          <AdsterraNativeAdCard />
-                        )}
+                        {/* Ads removed - coming soon */}
                       </motion.div>
                     ))}
                   </AnimatePresence>
