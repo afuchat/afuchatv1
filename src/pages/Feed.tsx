@@ -1894,9 +1894,17 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         setPosts(finalPosts);
         setFollowingPosts(finalFollowingPosts);
       } else {
-        // For pagination, append and re-sort to maintain personalization
-        setPosts(prev => user ? sortPosts([...prev, ...finalPosts]) : [...prev, ...finalPosts]);
-        setFollowingPosts(prev => [...prev, ...finalFollowingPosts]);
+        // For pagination, append only NEW posts (deduplicate by id)
+        setPosts(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const newUniquePosts = finalPosts.filter(p => !existingIds.has(p.id));
+          return [...prev, ...newUniquePosts];
+        });
+        setFollowingPosts(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const newUniquePosts = finalFollowingPosts.filter(p => !existingIds.has(p.id));
+          return [...prev, ...newUniquePosts];
+        });
       }
     } catch (err) {
       console.error('[Feed] Error fetching posts:', err);

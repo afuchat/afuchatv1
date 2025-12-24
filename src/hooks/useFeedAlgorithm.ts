@@ -32,6 +32,7 @@ interface PostScore {
     recencyScore: number;
     verifiedBoost: number;
     diversityPenalty: number;
+    randomFactor: number;
   };
 }
 
@@ -223,7 +224,7 @@ export function useFeedAlgorithm() {
       is_verified: boolean;
       is_organization_verified: boolean;
     };
-  }): PostScore => {
+  }, randomSeed: number): PostScore => {
     const factors = {
       categoryMatch: 0,
       authorAffinity: 0,
@@ -231,27 +232,28 @@ export function useFeedAlgorithm() {
       recencyScore: 0,
       verifiedBoost: 0,
       diversityPenalty: 0,
+      randomFactor: 0,
     };
 
-    // 1. Category match score (0-30 points)
+    // 1. Category match score (0-25 points)
     const categories = categorizeContent(post.content);
     categories.forEach(cat => {
       const userInterest = interests.categories[cat.category] || 1;
-      factors.categoryMatch += (cat.confidence / 100) * userInterest * 3;
+      factors.categoryMatch += (cat.confidence / 100) * userInterest * 2.5;
     });
-    factors.categoryMatch = Math.min(factors.categoryMatch, 30);
+    factors.categoryMatch = Math.min(factors.categoryMatch, 25);
 
-    // 2. Author affinity (0-25 points)
+    // 2. Author affinity (0-20 points)
     const authorScore = interests.authors[post.author_id] || 0;
-    factors.authorAffinity = Math.min(authorScore * 2.5, 25);
+    factors.authorAffinity = Math.min(authorScore * 2, 20);
 
-    // 3. Engagement score (0-20 points)
+    // 3. Engagement score (0-15 points)
     const engagementRatio = (post.like_count * 2 + post.reply_count * 3) / Math.max(post.view_count, 1);
-    factors.engagementScore = Math.min(engagementRatio * 100, 20);
+    factors.engagementScore = Math.min(engagementRatio * 75, 15);
 
-    // 4. Recency score (0-15 points) - exponential decay
+    // 4. Recency score (0-10 points) - reduced to allow more mixing
     const ageHours = (Date.now() - new Date(post.created_at).getTime()) / (1000 * 60 * 60);
-    factors.recencyScore = Math.max(0, 15 * Math.exp(-ageHours / TIME_DECAY_HOURS));
+    factors.recencyScore = Math.max(0, 10 * Math.exp(-ageHours / TIME_DECAY_HOURS));
 
     // 5. Verified boost (0-5 points)
     if (post.profiles.is_verified || post.profiles.is_organization_verified) {
@@ -260,8 +262,13 @@ export function useFeedAlgorithm() {
 
     // 6. Diversity penalty - reduce score if we've shown this author recently
     if (recentlyShownAuthors.current.has(post.author_id)) {
-      factors.diversityPenalty = -10;
+      factors.diversityPenalty = -15;
     }
+
+    // 7. Random factor for variety (0-25 points) - ensures posts aren't always in same order
+    // Use post id hash combined with seed for consistent-per-session but varied ordering
+    const postHash = post.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    factors.randomFactor = ((postHash * randomSeed) % 100) / 4; // 0-25 points
 
     // Calculate final score
     const score = Object.values(factors).reduce((sum, val) => sum + val, 0);
@@ -273,7 +280,7 @@ export function useFeedAlgorithm() {
     };
   }, [interests]);
 
-  // Sort posts by personalized score
+  // Sort posts by personalized score with variety
   const sortPosts = useCallback(<T extends {
     id: string;
     content: string;
@@ -290,32 +297,43 @@ export function useFeedAlgorithm() {
     // Reset recently shown authors for new sort
     recentlyShownAuthors.current.clear();
 
-    // Score all posts
+    // Generate session-stable random seed (changes on page refresh)
+    let sessionSeed = parseInt(sessionStorage.getItem('feedSortSeed') || '0');
+    if (!sessionSeed) {
+      sessionSeed = Math.floor(Math.random() * 1000) + 1;
+      sessionStorage.setItem('feedSortSeed', sessionSeed.toString());
+    }
+
+    // Score all posts with randomization
     const scoredPosts = posts.map(post => ({
       post,
-      ...scorePost(post),
+      ...scorePost(post, sessionSeed),
     }));
 
     // Sort by score descending
     scoredPosts.sort((a, b) => b.score - a.score);
 
-    // Apply diversity: don't show same author too often in sequence
+    // Apply diversity: limit consecutive posts from same author
     const result: T[] = [];
-    const authorCounts = new Map<string, number>();
-    const maxPerAuthor = 3;
+    const authorPositions = new Map<string, number[]>();
+    const minGapBetweenSameAuthor = 4;
 
     for (const { post } of scoredPosts) {
-      const count = authorCounts.get(post.author_id) || 0;
-      if (count < maxPerAuthor) {
+      const positions = authorPositions.get(post.author_id) || [];
+      const lastPosition = positions[positions.length - 1];
+      
+      // Check if we can add this post at current position
+      if (lastPosition === undefined || result.length - lastPosition >= minGapBetweenSameAuthor) {
         result.push(post);
-        authorCounts.set(post.author_id, count + 1);
+        positions.push(result.length - 1);
+        authorPositions.set(post.author_id, positions);
         recentlyShownAuthors.current.add(post.author_id);
       }
     }
 
-    // Add remaining posts at the end
+    // Add remaining posts that were skipped due to diversity rules
     for (const { post } of scoredPosts) {
-      if (!result.includes(post)) {
+      if (!result.find(p => p.id === post.id)) {
         result.push(post);
       }
     }
