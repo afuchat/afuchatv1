@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, Send, Check, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
-import { BusinessBadge } from '@/components/BusinessBadge';
 import { AffiliatedBadge } from '@/components/AffiliatedBadge';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -185,8 +184,7 @@ export const SelectRecipientDialog = ({
                     <p className="font-bold text-foreground truncate">
                       {selectedProfile.display_name}
                     </p>
-                    {selectedProfile.is_verified && <VerifiedBadge size="sm" />}
-                    {selectedProfile.is_organization_verified && <BusinessBadge size="sm" />}
+                    <VerifiedBadge isVerified={selectedProfile.is_verified} isOrgVerified={selectedProfile.is_organization_verified} size="sm" />
                   </div>
                   <p className="text-sm text-muted-foreground truncate">
                     @{selectedProfile.handle}
@@ -255,8 +253,7 @@ export const SelectRecipientDialog = ({
                         <p className="font-semibold truncate text-sm">
                           {profile.display_name}
                         </p>
-                        {profile.is_verified && <VerifiedBadge size="sm" />}
-                        {profile.is_organization_verified && <BusinessBadge size="sm" />}
+                        <VerifiedBadge isVerified={profile.is_verified} isOrgVerified={profile.is_organization_verified} size="sm" />
                         {profile.affiliated_business_id && <AffiliatedBadge size="sm" />}
                       </div>
                       <p className="text-xs text-muted-foreground truncate">
