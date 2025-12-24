@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
 import { toast } from 'sonner';
 
 const AfuMailCallback = () => {
@@ -228,7 +228,7 @@ const AfuMailCallback = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-      <CustomLoader size="lg" />
+      <PageSkeleton variant="centered" />
       <p className="mt-4 text-muted-foreground">Authenticating with AfuMail...</p>
     </div>
   );

@@ -15,7 +15,8 @@ import { countries } from '@/lib/countries';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { getCountryFlag } from '@/lib/countryFlags';
-import { CustomLoader, ButtonLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
+import { ButtonLoader } from '@/components/ui/CustomLoader';
 import { ReferralWelcomeBanner } from '@/components/gamification/ReferralWelcomeBanner';
 import { clearProfileCache } from '@/hooks/useProfileCheck';
 
@@ -24,11 +25,7 @@ const CompleteProfile = () => {
 
   // Redirect non-authenticated users
   if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <CustomLoader size="lg" />
-      </div>
-    );
+    return <PageSkeleton variant="centered" />;
   }
 
   if (!user) {
@@ -535,11 +532,7 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
   };
 
   if (initialLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <CustomLoader size="lg" text="Loading profile..." />
-      </div>
-    );
+    return <PageSkeleton variant="centered" />;
   }
 
   return (

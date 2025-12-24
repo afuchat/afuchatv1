@@ -100,12 +100,17 @@ export default function FeaturedProducts() {
     return null;
   }
 
-  // Non-Ugandan non-premium users see banner ad instead
-  if (!isUgandan && !isPremium) {
-    return <AdsterraBannerAd />;
+  // Only show featured products to Ugandan users
+  if (!isUgandan) {
+    // Non-Ugandan non-premium users see banner ad instead
+    if (!isPremium) {
+      return <AdsterraBannerAd />;
+    }
+    // Non-Ugandan premium users see nothing (no products, no ads)
+    return null;
   }
 
-  // Ugandan users or premium users: show featured products (if available)
+  // Ugandan users: show featured products (if available)
   if (products.length === 0) {
     return null;
   }

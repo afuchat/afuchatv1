@@ -9,7 +9,8 @@ import { ArrowLeft, Package, CheckCircle, Clock, XCircle, Truck, MessageCircle, 
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import Layout from '@/components/Layout';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
+import { ButtonLoader } from '@/components/ui/CustomLoader';
 
 interface OrderItem {
   id: string;
@@ -352,9 +353,7 @@ export default function OrderDetail() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <CustomLoader size="lg" />
-        </div>
+        <PageSkeleton variant="full" />
       </Layout>
     );
   }
@@ -464,7 +463,7 @@ export default function OrderDetail() {
                         disabled={updatingStatus}
                         className="col-span-2"
                       >
-                        {updatingStatus ? <CustomLoader size="sm" /> : (
+                        {updatingStatus ? <ButtonLoader /> : (
                           <>
                             {statusConfig[nextStatus]?.icon}
                             <span className="ml-2">Mark as {statusConfig[nextStatus]?.label}</span>
@@ -505,7 +504,7 @@ export default function OrderDetail() {
                   disabled={contactingSupport}
                 >
                   {contactingSupport ? (
-                    <CustomLoader size="sm" />
+                    <ButtonLoader />
                   ) : (
                     <>
                       <MessageCircle className="h-4 w-4 mr-2" />

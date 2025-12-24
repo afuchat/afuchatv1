@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { ListSkeleton } from '@/components/skeletons';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 
 interface SuggestedUser {
@@ -239,8 +239,10 @@ export default function SuggestedUsers() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <CustomLoader size="lg" text="Loading suggested users..." />
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-2xl mx-auto">
+          <ListSkeleton rows={8} />
+        </div>
       </div>
     );
   }

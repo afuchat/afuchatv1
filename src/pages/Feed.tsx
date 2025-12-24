@@ -12,7 +12,7 @@ import aiSparkIcon from '@/assets/ai-chat-icon.ico';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useFeedAlgorithm } from '@/hooks/useFeedAlgorithm';
 
-import { CustomLoader, InlineLoader } from '@/components/ui/CustomLoader';
+import { InlineSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -2505,9 +2505,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                   
                   {/* Loading more indicator */}
                   {loadingMore && (
-                    <div className="py-8 flex justify-center">
-                      <CustomLoader size="sm" text="Loading more..." />
-                    </div>
+                    <InlineSkeleton className="py-8" />
                   )}
 
                   {/* Manual load more button as fallback */}

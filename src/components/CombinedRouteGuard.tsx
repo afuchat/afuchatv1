@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useProfileCheck } from '@/hooks/useProfileCheck';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
 
 interface CombinedRouteGuardProps {
   children: ReactNode;
@@ -11,13 +11,9 @@ export const CombinedRouteGuard = ({ children }: CombinedRouteGuardProps) => {
   const location = useLocation();
   const { loading, isBanned, hasCountry, hasDateOfBirth } = useProfileCheck();
 
-  // Show loader while checking
+  // Show skeleton while checking
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <CustomLoader size="lg" />
-      </div>
-    );
+    return <PageSkeleton variant="centered" />;
   }
 
   // Banned users go to banned page

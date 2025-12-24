@@ -1,18 +1,13 @@
-import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
 
 const Index = () => {
   const { user, loading } = useAuth();
 
-  // Show loader only while checking auth state
+  // Show skeleton while checking auth state
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <CustomLoader size="lg" />
-      </div>
-    );
+    return <PageSkeleton variant="centered" />;
   }
 
   // Immediate redirect - no useEffect delay

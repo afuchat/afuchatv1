@@ -8,7 +8,8 @@ import { ArrowLeft, ShoppingCart, Plus, Minus, Package, Store, Share2, Heart } f
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
+import { ButtonLoader } from '@/components/ui/CustomLoader';
 import { formatPriceForCountry } from '@/lib/currencyUtils';
 const shopshackLogo = '/shopshack-logo.png';
 
@@ -183,9 +184,7 @@ export default function ProductDetail() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <CustomLoader size="lg" />
-        </div>
+        <PageSkeleton variant="full" />
       </Layout>
     );
   }
@@ -400,7 +399,7 @@ export default function ProductDetail() {
                 disabled={addingToCart}
               >
                 {addingToCart ? (
-                  <CustomLoader size="sm" />
+                  <ButtonLoader />
                 ) : (
                   <>
                     <ShoppingCart className="h-5 w-5 mr-2" />

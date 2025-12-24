@@ -10,7 +10,7 @@ import { ArrowLeft, ShoppingCart, Plus, Minus, Store, Package, Ban, MapPin, Mess
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
 import { formatPriceForCountry } from '@/lib/currencyUtils';
 const shopshackLogo = '/shopshack-logo.png';
 
@@ -238,9 +238,7 @@ export default function MerchantShop() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <CustomLoader size="lg" />
-        </div>
+        <PageSkeleton variant="full" />
       </Layout>
     );
   }

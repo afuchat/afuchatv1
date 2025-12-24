@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Store, Package } from 'lucide-react';
 import { SEO } from '@/components/SEO';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { PageSkeleton } from '@/components/skeletons';
 import { useNavigate } from 'react-router-dom';
 import {
   Sheet,
@@ -178,11 +178,7 @@ export default function Shop() {
   const isOwnListing = selectedListing && user?.id === selectedListing.user_id;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <CustomLoader />
-      </div>
-    );
+    return <PageSkeleton variant="centered" />;
   }
 
   return (
