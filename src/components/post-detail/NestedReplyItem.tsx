@@ -130,28 +130,31 @@ export const NestedReplyItem = ({
         </div>
       )}
       
-      <div className="flex gap-3 py-3 px-4" style={{ marginLeft: nestingMargin }}>
-        {/* Curved connector line for nested replies - only short curve from parent */}
-        {depth > 0 && (
-          <svg
-            className="absolute text-muted-foreground/40"
-            style={{ 
-              left: nestingMargin - 8,
-              top: 4,
-              width: 28,
-              height: 44
-            }}
-            viewBox="0 0 28 44"
+      {/* Curved connector line - connects parent avatar to child avatar */}
+      {depth > 0 && (
+        <svg
+          className="absolute text-muted-foreground/50"
+          style={{ 
+            left: nestingMargin - 28,
+            top: -16,
+            width: 32,
+            height: 56,
+            pointerEvents: 'none'
+          }}
+          viewBox="0 0 32 56"
+          fill="none"
+        >
+          <path
+            d="M8 0 L8 40 Q8 48 16 48 L32 48"
+            stroke="currentColor"
+            strokeWidth="2"
             fill="none"
-          >
-            <path
-              d="M0 0 L0 26 Q0 36 10 36 L28 36"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              fill="none"
-            />
-          </svg>
-        )}
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
+      
+      <div className="flex gap-3 py-3 px-4" style={{ marginLeft: nestingMargin }}>
 
         {/* Avatar */}
         <div className="flex-shrink-0">
