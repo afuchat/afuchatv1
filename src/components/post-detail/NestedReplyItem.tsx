@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { UserAvatar } from '@/components/avatar/UserAvatar';
-import { MessageCircle, Pin, Trash2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MessageCircle, Pin, Trash2, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CommentInput } from '@/components/feed/CommentInput';
 import { WarningBadge } from '@/components/WarningBadge';
@@ -45,8 +46,6 @@ interface NestedReplyItemProps {
   onCommentSubmitted?: () => void;
 }
 
-const MAX_DEPTH = 3;
-
 export const NestedReplyItem = ({
   reply,
   postId,
@@ -64,7 +63,6 @@ export const NestedReplyItem = ({
 }: NestedReplyItemProps) => {
   const { t, i18n } = useTranslation();
   const [showReplyInput, setShowReplyInput] = useState(false);
-  const shouldShowReplyButton = depth < MAX_DEPTH;
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -84,47 +82,53 @@ export const NestedReplyItem = ({
   };
 
   return (
-    <div className={cn(
-      "relative",
-      depth > 0 && "ml-10 mt-2"
-    )}>
-      {/* Thread line for nested replies */}
+    <div className="relative">
+      {/* Twitter/X style thread line connecting to parent */}
       {depth > 0 && (
-        <div className="absolute left-[-20px] top-0 bottom-0 w-[2px] bg-border" />
+        <div 
+          className="absolute left-5 top-0 w-0.5 bg-border" 
+          style={{ height: '12px', transform: 'translateY(-12px)' }}
+        />
       )}
       
-      <div className={cn(
-        "py-3 px-4 rounded-xl transition-colors",
-        reply.is_pinned ? "bg-primary/5 border border-primary/20" : "hover:bg-muted/50",
-        depth > 0 && "bg-muted/30"
-      )}>
-        {/* Pinned indicator */}
-        {reply.is_pinned && (
-          <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-2">
-            <Pin className="h-3 w-3" />
-            <span>Pinned by author</span>
-          </div>
-        )}
-        
-        <div className="flex items-start gap-3">
-          <Link to={`/${reply.author.handle}`} className="flex-shrink-0">
-            <UserAvatar
-              userId={reply.author.handle}
-              avatarUrl={reply.author.avatar_url}
-              name={reply.author.display_name}
-              size={depth === 0 ? 40 : 32}
-            />
+      {/* Pinned indicator */}
+      {reply.is_pinned && (
+        <div className="flex items-center gap-1.5 text-[11px] text-primary font-medium mb-1 ml-[52px]">
+          <Pin className="h-3 w-3" />
+          <span>Pinned</span>
+        </div>
+      )}
+      
+      <div className="flex gap-3 py-3">
+        {/* Avatar with thread line for nested replies */}
+        <div className="relative flex-shrink-0">
+          <Link to={`/${reply.author.handle}`}>
+            <Avatar className="h-10 w-10 border border-border/50">
+              <AvatarImage src={reply.author.avatar_url || undefined} />
+              <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+                {reply.author.display_name?.charAt(0)?.toUpperCase() || '?'}
+              </AvatarFallback>
+            </Avatar>
           </Link>
           
-          <div className="flex-1 min-w-0">
-            {/* Header with name, handle, time */}
-            <div className="flex items-center gap-2 flex-wrap">
+          {/* Thread line connecting to nested replies */}
+          {reply.nested_replies && reply.nested_replies.length > 0 && (
+            <div 
+              className="absolute left-1/2 top-12 w-0.5 bg-border -translate-x-1/2"
+              style={{ height: 'calc(100% - 48px)' }}
+            />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          {/* Header row - Twitter style */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1 flex-wrap min-w-0">
               <Link 
                 to={`/${reply.author.handle}`} 
-                className="font-bold text-base hover:underline truncate max-w-[120px]"
-                title={reply.author.display_name}
+                className="font-bold text-foreground text-[15px] hover:underline truncate"
               >
-                {reply.author.display_name.length > 12 ? `${reply.author.display_name.slice(0, 10)}...` : reply.author.display_name}
+                {reply.author.display_name}
               </Link>
               <VerifiedBadge 
                 isVerified={reply.author.is_verified} 
@@ -133,104 +137,117 @@ export const NestedReplyItem = ({
               {reply.author.is_warned && (
                 <WarningBadge size="sm" reason={reply.author.warning_reason} variant="post" />
               )}
-              <span className="text-xs text-muted-foreground">
+              <Link 
+                to={`/${reply.author.handle}`}
+                className="text-muted-foreground text-[15px] hover:underline truncate"
+              >
                 @{reply.author.handle}
-              </span>
-              <span className="text-xs text-muted-foreground">·</span>
-              <span className="text-xs text-muted-foreground">
+              </Link>
+              <span className="text-muted-foreground text-[15px]">·</span>
+              <span className="text-muted-foreground text-[15px] hover:underline cursor-pointer">
                 {formatTime(reply.created_at)}
               </span>
             </div>
             
-            {/* Content */}
-            <div className="mt-1.5 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-              {renderContentWithMentions(translatedReplies[reply.id] || (typeof reply.content === 'string' ? reply.content : String(reply.content || '')))}
-            </div>
-            
-            {/* Action buttons */}
-            <div className="flex items-center gap-1 mt-2">
-              {shouldShowReplyButton && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleReplyClick}
-                  className={cn(
-                    "h-7 px-2 text-xs gap-1",
-                    showReplyInput ? "text-primary" : "text-muted-foreground hover:text-primary"
-                  )}
-                >
-                  <MessageCircle className="h-3.5 w-3.5" />
-                  Reply
-                </Button>
-              )}
-              
-              {i18n.language !== 'en' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onTranslate(reply.id, reply.content)}
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
-                >
-                  {translatedReplies[reply.id] ? t('common.showOriginal') : t('common.translate')}
-                </Button>
-              )}
-              
-              {onPinReply && isPostAuthor && depth === 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onPinReply(reply.id, reply.is_pinned || false)}
-                  className={cn(
-                    "h-7 px-2 text-xs gap-1",
-                    reply.is_pinned ? "text-primary" : "text-muted-foreground hover:text-primary"
-                  )}
-                >
-                  <Pin className="h-3.5 w-3.5" />
-                  {reply.is_pinned ? 'Unpin' : 'Pin'}
-                </Button>
-              )}
-              
-              {onDeleteReply && currentUserId && (currentUserId === reply.author.handle || isPostAuthor) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    if (confirm('Delete this comment?')) {
-                      onDeleteReply(reply.id);
-                    }
-                  }}
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive gap-1"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Delete
-                </Button>
-              )}
-            </div>
+            {/* More actions button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
 
-            {/* Inline Reply Input */}
-            {showReplyInput && (
-              <div className="mt-3 -mx-1">
-                <CommentInput
-                  postId={postId}
-                  replyingTo={{ replyId: reply.id, authorHandle: reply.author.handle }}
-                  onCancelReply={() => setShowReplyInput(false)}
-                  onCommentSubmitted={() => {
-                    setShowReplyInput(false);
-                    onCommentSubmitted?.();
-                  }}
-                  compact
-                  autoFocus
-                  className="border-0 px-1 py-0"
-                />
-              </div>
+          {/* Reply content */}
+          <div className="text-foreground text-[15px] leading-[1.4] whitespace-pre-wrap break-words mt-0.5">
+            {renderContentWithMentions(translatedReplies[reply.id] || (typeof reply.content === 'string' ? reply.content : String(reply.content || '')))}
+          </div>
+
+          {/* Action buttons - Twitter style */}
+          <div className="flex items-center gap-1 mt-3 -ml-2">
+            {/* Reply button - always available, no depth limit */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleReplyClick}
+              className="h-8 px-3 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full gap-1.5 group"
+            >
+              <MessageCircle className="h-[18px] w-[18px] group-hover:text-primary" />
+              <span className="text-[13px]">Reply</span>
+            </Button>
+            
+            {/* Translate button */}
+            {i18n.language !== 'en' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onTranslate(reply.id, reply.content)}
+                className="h-8 px-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full text-[13px]"
+              >
+                {translatedReplies[reply.id] ? t('common.showOriginal') : t('common.translate')}
+              </Button>
+            )}
+            
+            {/* Pin button - only for post author on top-level replies */}
+            {onPinReply && isPostAuthor && depth === 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onPinReply(reply.id, reply.is_pinned || false)}
+                className={cn(
+                  "h-8 px-3 rounded-full gap-1.5",
+                  reply.is_pinned 
+                    ? "text-primary hover:text-primary hover:bg-primary/10" 
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                )}
+              >
+                <Pin className="h-[18px] w-[18px]" />
+                <span className="text-[13px]">{reply.is_pinned ? 'Unpin' : 'Pin'}</span>
+              </Button>
+            )}
+            
+            {/* Delete button */}
+            {onDeleteReply && currentUserId && (currentUserId === reply.author.handle || isPostAuthor) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (confirm('Delete this reply?')) {
+                    onDeleteReply(reply.id);
+                  }
+                }}
+                className="h-8 px-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full gap-1.5"
+              >
+                <Trash2 className="h-[18px] w-[18px]" />
+                <span className="text-[13px]">Delete</span>
+              </Button>
             )}
           </div>
+
+          {/* Inline Reply Input - Twitter style */}
+          {showReplyInput && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <CommentInput
+                postId={postId}
+                replyingTo={{ replyId: reply.id, authorHandle: reply.author.handle }}
+                onCancelReply={() => setShowReplyInput(false)}
+                onCommentSubmitted={() => {
+                  setShowReplyInput(false);
+                  onCommentSubmitted?.();
+                }}
+                compact
+                autoFocus
+                className="border-0 px-0 py-0 bg-transparent"
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Nested replies */}
+      {/* Nested replies - unlimited depth, Twitter-style threading */}
       {reply.nested_replies && reply.nested_replies.length > 0 && (
-        <div className="relative">
+        <div className="ml-[52px]">
           {reply.nested_replies.map(nestedReply => (
             <NestedReplyItem
               key={nestedReply.id}
@@ -240,6 +257,10 @@ export const NestedReplyItem = ({
               onTranslate={onTranslate}
               translatedReplies={translatedReplies}
               onReplyClick={onReplyClick}
+              onPinReply={onPinReply}
+              onDeleteReply={onDeleteReply}
+              isPostAuthor={isPostAuthor}
+              currentUserId={currentUserId}
               VerifiedBadge={VerifiedBadge}
               renderContentWithMentions={renderContentWithMentions}
               onCommentSubmitted={onCommentSubmitted}
