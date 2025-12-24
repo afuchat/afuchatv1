@@ -12,6 +12,7 @@ interface StoryAvatarProps {
   className?: string;
   showStoryRing?: boolean;
   onClick?: () => void;
+  isBusiness?: boolean;
 }
 
 const sizeMap = {
@@ -35,7 +36,8 @@ export const StoryAvatar = memo(({
   size = 'md',
   className = '',
   showStoryRing = true,
-  onClick
+  onClick,
+  isBusiness = false
 }: StoryAvatarProps) => {
   const { hasActiveStories } = useUserStories(userId);
   const navigate = useNavigate();
@@ -54,14 +56,21 @@ export const StoryAvatar = memo(({
 
   const initials = name?.substring(0, 2).toUpperCase() || '';
 
+  // Business accounts get rounded-lg (square with rounded corners)
+  const shapeClass = isBusiness ? 'rounded-lg' : 'rounded-full';
+
   const avatarContent = (
-    <Avatar className={cn(sizeMap[size], 'flex-shrink-0')}>
+    <Avatar className={cn(sizeMap[size], 'flex-shrink-0', isBusiness && 'rounded-lg')}>
       <AvatarImage 
         src={avatarUrl || undefined} 
         alt={name}
         loading="lazy"
+        className={cn(isBusiness && 'rounded-lg')}
       />
-      <AvatarFallback className={size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'}>
+      <AvatarFallback className={cn(
+        size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base',
+        isBusiness && 'rounded-lg'
+      )}>
         {initials}
       </AvatarFallback>
     </Avatar>
@@ -71,7 +80,8 @@ export const StoryAvatar = memo(({
     return (
       <div
         className={cn(
-          'rounded-full bg-gradient-to-tr from-cyan-400 to-teal-500 cursor-pointer transition-all duration-200 hover:scale-105',
+          'bg-gradient-to-tr from-cyan-400 to-teal-500 cursor-pointer transition-all duration-200 hover:scale-105',
+          isBusiness ? 'rounded-lg' : 'rounded-full',
           ringMap[size],
           className
         )}

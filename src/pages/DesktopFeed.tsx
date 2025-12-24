@@ -419,6 +419,7 @@ const DesktopFeed = ({ guestMode = false }: DesktopFeedProps = {}) => {
                     className="cursor-pointer"
                     showStoryRing={true}
                     onClick={() => navigate(`/${suggestedUser.id}`)}
+                    isBusiness={suggestedUser.is_business_mode}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
