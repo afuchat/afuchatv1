@@ -10,6 +10,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import platformLogo from '@/assets/ai-chat-icon.ico';
 import aiSparkIcon from '@/assets/ai-chat-icon.ico';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { useFeedAlgorithm } from '@/hooks/useFeedAlgorithm';
 
 import { CustomLoader, InlineLoader } from '@/components/ui/CustomLoader';
 import { Button } from '@/components/ui/button';
@@ -1163,6 +1164,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   // Premium status - must be at top level with other hooks
   const { isPremium, loading: premiumLoading, expiresAt } = usePremiumStatus();
   
+  // Personalized feed algorithm
+  const { sortPosts, recordInteraction, learnUserInterests } = useFeedAlgorithm();
+  
   // Get sponsored ads for feed placement
   const { ads: sponsoredAds } = useAds('feed', 2);
   // All useState hooks first
@@ -1556,8 +1560,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         // Award Nexa for giving a reaction
         awardNexa('give_reaction', { post_id: postId });
         
-        // Award Nexa to post author for receiving a reaction
+        // Record interaction for personalized feed algorithm
         const post = posts.find(p => p.id === postId) || followingPosts.find(p => p.id === postId);
+        if (post) {
+          recordInteraction('like', post.content, post.author_id);
+        }
+        
+        // Award Nexa to post author for receiving a reaction
         if (post && post.author_id !== currentUserId) {
           fetch('https://rhnsjqqtdzlkvqazfcbg.supabase.co/functions/v1/award-xp', {
             method: 'POST',
@@ -1575,7 +1584,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         }
       }
     }
-  }, [user, guestMode, navigate, posts, followingPosts, awardNexa]);
+  }, [user, guestMode, navigate, posts, followingPosts, awardNexa, recordInteraction]);
 
   // NEW: Delete Post Handler - Opens confirmation sheet
   const handleDeletePost = useCallback((postId: string) => {
@@ -1870,41 +1879,23 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         } as Post;
       };
 
-      // Personalized sorting: Mix chronological with randomization
-      // Use a session-based seed that changes on refresh for variety
-      const getShuffleSeed = () => {
-        let seed = sessionStorage.getItem('feedShuffleSeed');
-        if (!seed) {
-          seed = Date.now().toString();
-          sessionStorage.setItem('feedShuffleSeed', seed);
-        }
-        return parseInt(seed);
-      };
-
-      // Seeded shuffle function for consistent randomization within session
-      const shuffleWithSeed = (array: any[], seed: number) => {
-        const shuffled = [...array];
-        let currentSeed = seed;
-        
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          // Simple seeded random number generator
-          currentSeed = (currentSeed * 9301 + 49297) % 233280;
-          const random = currentSeed / 233280;
-          const j = Math.floor(random * (i + 1));
-          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled;
-      };
-
-      const seed = getShuffleSeed();
-      const finalPosts = shuffleWithSeed(postData.map(mapPost), seed);
-      const finalFollowingPosts = shuffleWithSeed(followingPostData.map(mapPost), seed + 1);
+      // Apply personalized feed algorithm for "For You" tab
+      // Following tab stays chronological for fresh content from followed users
+      const mappedPosts = postData.map(mapPost);
+      const mappedFollowingPosts = followingPostData.map(mapPost);
+      
+      // Sort "For You" posts using personalized algorithm
+      const finalPosts = user ? sortPosts(mappedPosts) : mappedPosts;
+      
+      // Following posts stay chronological (already sorted by created_at desc)
+      const finalFollowingPosts = mappedFollowingPosts;
       
       if (isInitial) {
         setPosts(finalPosts);
         setFollowingPosts(finalFollowingPosts);
       } else {
-        setPosts(prev => [...prev, ...finalPosts]);
+        // For pagination, append and re-sort to maintain personalization
+        setPosts(prev => user ? sortPosts([...prev, ...finalPosts]) : [...prev, ...finalPosts]);
         setFollowingPosts(prev => [...prev, ...finalFollowingPosts]);
       }
     } catch (err) {
@@ -2263,8 +2254,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   // Listen for feed refresh order event (when clicking home button while on home)
   useEffect(() => {
     const handleRefreshFeedOrder = () => {
-      // Clear shuffle seed and refetch with new order
-      sessionStorage.removeItem('feedShuffleSeed');
+      // Re-learn interests and refetch with new personalized order
+      learnUserInterests();
       setCurrentPage(0);
       setHasMore(true);
       fetchPosts(0, true);
@@ -2275,18 +2266,18 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     return () => {
       window.removeEventListener('refresh-feed-order', handleRefreshFeedOrder);
     };
-  }, [fetchPosts]);
+  }, [fetchPosts, learnUserInterests]);
 
   // Pull to refresh - enhanced hook
   const handlePullRefresh = useCallback(async () => {
-    // Clear session seed to get fresh order
-    sessionStorage.removeItem('feedShuffleSeed');
+    // Re-learn user interests for personalized feed
+    learnUserInterests();
     setCurrentPage(0);
     setHasMore(true);
     setPosts([]);
     setFollowingPosts([]);
     await fetchPosts(0, true);
-  }, [fetchPosts]);
+  }, [fetchPosts, learnUserInterests]);
 
   const { 
     isRefreshing, 
@@ -2466,38 +2457,51 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                 </div>
               ) : (
                 <>
-                  {currentPosts.filter(post => post.profiles).map((post, index) => (
-                    <div key={post.id}>
-                      <PostCard
-                        post={post}
-                        addReply={addReply}
-                        user={user as AuthUser | null}
-                        navigate={navigate}
-                        onAcknowledge={handleAcknowledge}
-                        onDeletePost={handleDeletePost}
-                        onReportPost={handleReportPost}
-                        onEditPost={handleEditPost}
-                        onQuotePost={handleQuotePost}
-                        userProfile={userProfile}
-                        expandedPosts={expandedPosts}
-                        setExpandedPosts={setExpandedPosts}
-                        guestMode={guestMode}
-                      />
-                      
-                      {/* Sponsored user ads after posts 3 and 7 */}
-                      {!isPremium && index === 3 && sponsoredAds[0] && (
-                        <SponsoredAdCard ad={sponsoredAds[0]} placement="feed" variant="feed" />
-                      )}
-                      {!isPremium && index === 7 && sponsoredAds[1] && (
-                        <SponsoredAdCard ad={sponsoredAds[1]} placement="feed" variant="feed" />
-                      )}
-                      
-                      {/* Single Adsterra Native Ad after the 10th post (or last post if fewer) */}
-                      {index === adNativeIndex && !isPremium && (
-                        <AdsterraNativeAdCard />
-                      )}
-                    </div>
-                  ))}
+                  <AnimatePresence mode="popLayout">
+                    {currentPosts.filter(post => post.profiles).map((post, index) => (
+                      <motion.div 
+                        key={post.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ 
+                          duration: 0.3, 
+                          delay: index < 10 ? index * 0.05 : 0,
+                          ease: [0.4, 0, 0.2, 1]
+                        }}
+                        layout
+                      >
+                        <PostCard
+                          post={post}
+                          addReply={addReply}
+                          user={user as AuthUser | null}
+                          navigate={navigate}
+                          onAcknowledge={handleAcknowledge}
+                          onDeletePost={handleDeletePost}
+                          onReportPost={handleReportPost}
+                          onEditPost={handleEditPost}
+                          onQuotePost={handleQuotePost}
+                          userProfile={userProfile}
+                          expandedPosts={expandedPosts}
+                          setExpandedPosts={setExpandedPosts}
+                          guestMode={guestMode}
+                        />
+                        
+                        {/* Sponsored user ads after posts 3 and 7 */}
+                        {!isPremium && index === 3 && sponsoredAds[0] && (
+                          <SponsoredAdCard ad={sponsoredAds[0]} placement="feed" variant="feed" />
+                        )}
+                        {!isPremium && index === 7 && sponsoredAds[1] && (
+                          <SponsoredAdCard ad={sponsoredAds[1]} placement="feed" variant="feed" />
+                        )}
+                        
+                        {/* Single Adsterra Native Ad after the 10th post (or last post if fewer) */}
+                        {index === adNativeIndex && !isPremium && (
+                          <AdsterraNativeAdCard />
+                        )}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                   
                   {/* Loading more indicator */}
                   {loadingMore && (
