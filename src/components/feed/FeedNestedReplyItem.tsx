@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAITranslation } from '@/hooks/useAITranslation';
-import { Heart, Pin, Trash2 } from 'lucide-react';
+import { Pin, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WarningBadge } from '@/components/WarningBadge';
 
@@ -138,33 +138,44 @@ export const FeedNestedReplyItem = ({
   // Check if we've reached max depth
   const atMaxDepth = depth >= maxDepth;
 
+  // Calculate left margin based on depth (for nesting visual)
+  const nestingMargin = depth > 0 ? 44 : 0; // ~44px per level
+
   return (
     <div className="relative">
       {/* Pinned indicator */}
       {reply.is_pinned && (
-        <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-1 ml-14">
+        <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-1" style={{ marginLeft: nestingMargin + 14 }}>
           <Pin className="h-3 w-3" />
           <span>Pinned</span>
         </div>
       )}
       
-      <div className={cn("flex gap-3 py-3", depth === 0 ? "px-0" : "px-0")}>
-        {/* Avatar with curved connector */}
-        <div className="flex-shrink-0 relative">
-          {depth > 0 && (
-            <svg
-              className="absolute -left-4 top-0 w-6 h-10"
-              viewBox="0 0 24 40"
+      <div className="flex gap-3 py-2.5" style={{ marginLeft: nestingMargin }}>
+        {/* Curved connector line for nested replies */}
+        {depth > 0 && (
+          <svg
+            className="absolute text-muted-foreground/40"
+            style={{ 
+              left: nestingMargin - 24,
+              top: 0,
+              width: 28,
+              height: 40
+            }}
+            viewBox="0 0 28 40"
+            fill="none"
+          >
+            <path
+              d="M0 0 L0 24 Q0 32 8 32 L28 32"
+              stroke="currentColor"
+              strokeWidth="1.5"
               fill="none"
-            >
-              <path
-                d="M0 0 L0 20 Q0 32 12 32 L24 32"
-                className="stroke-muted-foreground/40"
-                strokeWidth="1.5"
-                fill="none"
-              />
-            </svg>
-          )}
+            />
+          </svg>
+        )}
+
+        {/* Avatar */}
+        <div className="flex-shrink-0">
           <div
             className="cursor-pointer"
             onClick={() => handleViewProfile(reply.author_id)}
@@ -305,12 +316,9 @@ export const FeedNestedReplyItem = ({
         </div>
       </div>
 
-      {/* Nested replies with vertical line connector - limit to maxDepth */}
+      {/* Nested replies - NO long vertical lines, just individual curved connectors */}
       {hasNestedReplies && !atMaxDepth && (
-        <div className="relative ml-8 pl-6">
-          {/* Vertical line for nested content */}
-          <div className="absolute left-[18px] top-0 bottom-0 w-[1.5px] bg-muted-foreground/30" />
-          
+        <div>
           {reply.nested_replies!.map((nestedReply) => (
             <FeedNestedReplyItem
               key={nestedReply.id}
@@ -336,7 +344,8 @@ export const FeedNestedReplyItem = ({
       {hasNestedReplies && atMaxDepth && (
         <Link 
           to={`/post/${reply.post_id}`}
-          className="ml-14 mt-1 text-primary text-sm font-medium hover:underline block"
+          className="text-primary text-sm font-medium hover:underline block mt-1"
+          style={{ marginLeft: nestingMargin + 52 }}
         >
           View {reply.nested_replies!.length} more {reply.nested_replies!.length === 1 ? 'reply' : 'replies'} →
         </Link>
