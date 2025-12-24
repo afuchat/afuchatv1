@@ -437,12 +437,22 @@ export default function Shop() {
               <div className="flex-shrink-0 border-t border-border/40 p-4 pb-6 bg-background/95 backdrop-blur-xl">
                 {!isOwnListing && (
                   <Button
-                    disabled
-                    className="w-full h-10 text-sm font-semibold shadow-lg opacity-70"
+                    onClick={handlePurchase}
+                    disabled={purchasing || !user || userXP < selectedListing.asking_price}
+                    className="w-full h-10 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                     size="sm"
                   >
-                    <Clock className="mr-2 h-4 w-4" />
-                    Coming Soon
+                    {purchasing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        Complete Purchase
+                      </>
+                    )}
                   </Button>
                 )}
 

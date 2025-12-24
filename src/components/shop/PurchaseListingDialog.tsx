@@ -175,10 +175,15 @@ export function PurchaseListingDialog({ open, onOpenChange, listing, onSuccess }
             </Button>
             <Button
               className="flex-1 gap-2"
-              disabled
+              onClick={handlePurchase}
+              disabled={loading || !hasEnoughBalance || fetchingBalance}
             >
-              <Clock className="h-4 w-4" />
-              Coming Soon
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Coins className="h-4 w-4" />
+              )}
+              {loading ? 'Processing...' : 'Confirm Purchase'}
             </Button>
           </div>
 

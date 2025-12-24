@@ -571,12 +571,12 @@ export default function Checkout() {
 
             {step === 'review' ? (
               <Button
-                className="w-full opacity-70"
+                className="w-full"
                 size="lg"
-                disabled
+                onClick={placeOrder}
+                disabled={isOrdering}
               >
-                <Clock className="h-4 w-4 mr-2" />
-                Coming Soon
+                {isOrdering ? <CustomLoader size="sm" /> : 'Place Order'}
               </Button>
             ) : (
               <Button

@@ -197,11 +197,21 @@ export const GiftMarketplaceCard = ({ listing, onPurchaseComplete }: GiftMarketp
           {/* Purchase Button */}
           {!isOwnListing && (
             <Button
-              disabled
-              className="w-full opacity-70"
+              onClick={handlePurchase}
+              disabled={purchasing || !user || userXP < listing.asking_price}
+              className="w-full"
             >
-              <Clock className="mr-2 h-4 w-4" />
-              Coming Soon
+              {purchasing ? (
+                <>
+                  <ButtonLoader className="mr-2" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Purchase Gift
+                </>
+              )}
             </Button>
           )}
 
