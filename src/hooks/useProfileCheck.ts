@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -12,46 +12,24 @@ interface ProfileCheckResult {
 }
 
 const CACHE_KEY_PREFIX = 'profile_check_';
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// Global state to prevent duplicate requests
-let globalPromise: Promise<any> | null = null;
-let globalUserId: string | null = null;
-let globalData: {
-  isBanned: boolean;
-  hasCountry: boolean;
-  hasDateOfBirth: boolean;
-  profileComplete: boolean;
-} | null = null;
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes (reduced from 5)
 
 export const useProfileCheck = (): ProfileCheckResult => {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
     isBanned: false,
-    hasCountry: true,
-    hasDateOfBirth: true,
-    profileComplete: true,
+    hasCountry: false,
+    hasDateOfBirth: false,
+    profileComplete: false,
   });
+  const fetchedRef = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
 
   const fetchProfile = useCallback(async (userId: string, forceRefresh = false) => {
-    // If we already have data for this user and not forcing refresh, use it
-    if (!forceRefresh && globalUserId === userId && globalData) {
-      setData(globalData);
-      setLoading(false);
+    // Avoid duplicate fetches for the same user in the same component instance
+    if (!forceRefresh && fetchedRef.current === userId) {
       return;
-    }
-
-    // If there's already a request in flight for this user, wait for it
-    if (globalUserId === userId && globalPromise) {
-      try {
-        const result = await globalPromise;
-        setData(result);
-        setLoading(false);
-        return;
-      } catch {
-        // Continue to fetch
-      }
     }
 
     const cacheKey = `${CACHE_KEY_PREFIX}${userId}`;
@@ -62,22 +40,23 @@ export const useProfileCheck = (): ProfileCheckResult => {
       if (cached) {
         try {
           const { data: cachedData, timestamp } = JSON.parse(cached);
-          if (cachedData.profileComplete && Date.now() - timestamp < CACHE_DURATION) {
-            globalData = cachedData;
-            globalUserId = userId;
-            setData(cachedData);
-            setLoading(false);
+          // Only use cache if profile is complete AND not banned AND cache is fresh
+          if (cachedData.profileComplete && !cachedData.isBanned && Date.now() - timestamp < CACHE_DURATION) {
+            if (isMountedRef.current) {
+              setData(cachedData);
+              setLoading(false);
+              fetchedRef.current = userId;
+            }
             return;
           }
         } catch {
-          // Invalid cache, continue to check
+          // Invalid cache, continue to fetch
+          sessionStorage.removeItem(cacheKey);
         }
       }
     }
 
-    // Create a new promise for this request
-    globalUserId = userId;
-    globalPromise = (async () => {
+    try {
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('is_banned, country, date_of_birth, display_name, handle, avatar_url')
@@ -86,12 +65,17 @@ export const useProfileCheck = (): ProfileCheckResult => {
 
       if (error) {
         console.error('Error checking profile:', error);
-        return {
-          isBanned: false,
-          hasCountry: true,
-          hasDateOfBirth: true,
-          profileComplete: true,
-        };
+        if (isMountedRef.current) {
+          // On error, assume incomplete to be safe - redirect to complete profile
+          setData({
+            isBanned: false,
+            hasCountry: false,
+            hasDateOfBirth: false,
+            profileComplete: false,
+          });
+          setLoading(false);
+        }
+        return;
       }
 
       const banned = profile?.is_banned === true;
@@ -105,51 +89,62 @@ export const useProfileCheck = (): ProfileCheckResult => {
         profile?.date_of_birth
       );
 
-      return {
+      const result = {
         isBanned: banned,
         hasCountry: countrySet,
         hasDateOfBirth: dobSet,
         profileComplete: complete,
       };
-    })();
 
-    try {
-      const result = await globalPromise;
-      globalData = result;
-      
       // Cache only if profile is complete and not banned
-      if (result.profileComplete && !result.isBanned) {
+      if (complete && !banned) {
         sessionStorage.setItem(cacheKey, JSON.stringify({
           data: result,
           timestamp: Date.now()
         }));
       } else {
+        // Remove stale cache for incomplete profiles
         sessionStorage.removeItem(cacheKey);
       }
-      
-      setData(result);
+
+      if (isMountedRef.current) {
+        setData(result);
+        fetchedRef.current = userId;
+      }
     } catch (error) {
       console.error('Error checking profile:', error);
-      setData({
-        isBanned: false,
-        hasCountry: true,
-        hasDateOfBirth: true,
-        profileComplete: true,
-      });
+      if (isMountedRef.current) {
+        setData({
+          isBanned: false,
+          hasCountry: false,
+          hasDateOfBirth: false,
+          profileComplete: false,
+        });
+      }
     } finally {
-      globalPromise = null;
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
   const refetch = useCallback(() => {
     if (user) {
       setLoading(true);
-      globalData = null;
-      globalPromise = null;
+      fetchedRef.current = null;
+      // Clear cache for this user
+      sessionStorage.removeItem(`${CACHE_KEY_PREFIX}${user.id}`);
       fetchProfile(user.id, true);
     }
   }, [user, fetchProfile]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (authLoading) {
@@ -182,8 +177,4 @@ export const clearProfileCache = (userId: string) => {
   sessionStorage.removeItem(`${CACHE_KEY_PREFIX}${userId}`);
   sessionStorage.removeItem(`profile_country_${userId}`);
   sessionStorage.removeItem(`profile_dob_${userId}`);
-  // Clear global cache
-  globalData = null;
-  globalPromise = null;
-  globalUserId = null;
 };
