@@ -441,7 +441,7 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: {
 
 // --- POST CARD (Updated to accept and pass through new props) ---
 
-const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost, onReportPost, onEditPost, onQuotePost, userProfile, expandedPosts, setExpandedPosts, guestMode = false }:
+const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost, onReportPost, onEditPost, onQuotePost, onHidePost, userProfile, expandedPosts, setExpandedPosts, guestMode = false }:
   { 
     post: Post;
     addReply: (postId: string, newReply: Reply) => void;
@@ -452,6 +452,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     onReportPost: (postId: string) => void;
     onEditPost: (postId: string) => void;
     onQuotePost: (post: Post) => void;
+    onHidePost: (postId: string) => void;
     userProfile: { display_name: string; avatar_url: string | null } | null;
     expandedPosts: Set<string>;
     setExpandedPosts: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -922,6 +923,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 onReport={onReportPost}
                 onEdit={onEditPost}
                 onQuote={onQuotePost}
+                onHidePost={onHidePost}
             />
           </div>
         </div>
@@ -1623,6 +1625,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
       // In a real app, you would insert a record into a 'post_reports' table here.
   }, [user]);
+
+  // Hide Post Handler - Removes post from local view
+  const handleHidePost = useCallback((postId: string) => {
+    setPosts(currentPosts => currentPosts.filter(p => p.id !== postId));
+    setFollowingPosts(currentPosts => currentPosts.filter(p => p.id !== postId));
+  }, []);
 
   // Edit Post Handler - Opens edit modal
   const handleEditPost = useCallback((postId: string) => {
@@ -2466,6 +2474,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                           onReportPost={handleReportPost}
                           onEditPost={handleEditPost}
                           onQuotePost={handleQuotePost}
+                          onHidePost={handleHidePost}
                           userProfile={userProfile}
                           expandedPosts={expandedPosts}
                           setExpandedPosts={setExpandedPosts}
