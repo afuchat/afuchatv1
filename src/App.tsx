@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,7 +23,7 @@ import { preloadAllGiftImages } from "./hooks/useGiftImageCache";
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { LoadingBar } from '@/components/LoadingBar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect } from 'react';
+
 
 // Eager load critical pages
 import Home from "./pages/Home";
