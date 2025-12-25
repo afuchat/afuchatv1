@@ -1277,48 +1277,24 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     };
   }, [lastScrollY]);
 
-  // Load cached data immediately on mount
+  // Load fresh data on mount - clear caches to ensure new posts show
   useEffect(() => {
-    // Try to load from cache first for instant display
-    const cachedPosts = sessionStorage.getItem('feedPosts');
-    const cachedFollowing = sessionStorage.getItem('feedFollowingPosts');
+    // Clear all feed caches on page load to ensure fresh posts
+    sessionStorage.removeItem('feedPosts');
+    sessionStorage.removeItem('feedFollowingPosts');
+    sessionStorage.removeItem('feedShuffleSeed');
+    
+    // Clear algorithm sort seed to get fresh ordering
+    if (user) {
+      sessionStorage.removeItem(`feedSortSeed:${user.id}`);
+    } else {
+      sessionStorage.removeItem('feedSortSeed:guest');
+    }
+    
+    // Restore active tab preference
     const cachedTab = sessionStorage.getItem('feedActiveTab');
-    
-    let hasCachedData = false;
-    
-    if (cachedPosts) {
-      try {
-        const parsed = JSON.parse(cachedPosts);
-        if (parsed && parsed.length > 0) {
-          setPosts(parsed);
-          hasCachedData = true;
-        }
-      } catch (e) {
-        console.error('Failed to parse cached posts:', e);
-        sessionStorage.removeItem('feedPosts');
-      }
-    }
-    
-    if (cachedFollowing) {
-      try {
-        const parsed = JSON.parse(cachedFollowing);
-        if (parsed && parsed.length > 0) {
-          setFollowingPosts(parsed);
-          hasCachedData = true;
-        }
-      } catch (e) {
-        console.error('Failed to parse cached following posts:', e);
-        sessionStorage.removeItem('feedFollowingPosts');
-      }
-    }
-    
     if (cachedTab) {
       setActiveTab(cachedTab as 'foryou' | 'following');
-    }
-    
-    // Show cached content immediately if available
-    if (hasCachedData) {
-      setLoading(false);
     }
     
     // Clean up old viewed posts data (keep only last 500 views)
@@ -1334,14 +1310,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       }
     }
     
-    // Fetch fresh data in background - always clear shuffle seed for fresh order on page load
-    sessionStorage.removeItem('feedShuffleSeed');
+    // Fetch fresh data
     setCurrentPage(0);
     setHasMore(true);
     fetchPosts(0, true);
-  }, []);
+  }, [user]);
 
-  // Fetch current user profile and refetch posts when user changes
+  // Refetch posts when user changes to get correct has_liked status
   useEffect(() => {
     if (user) {
       // Fetch user profile
@@ -1355,46 +1330,10 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             setUserProfile(data);
           }
         });
-      
-      // Refetch posts to get correct has_liked status
-      setCurrentPage(0);
-      setHasMore(true);
-      fetchPosts(0, true);
     }
   }, [user]);
 
-  // Save to cache whenever posts change (debounced to reduce writes)
-  useEffect(() => {
-    if (posts.length > 0) {
-      const timer = setTimeout(() => {
-        try {
-          sessionStorage.setItem('feedPosts', JSON.stringify(posts));
-        } catch (e) {
-          // Clear old data if storage is full
-          sessionStorage.removeItem('feedPosts');
-          console.debug('Session storage full, cleared cache');
-        }
-      }, 1000); // Debounce by 1 second
-      
-      return () => clearTimeout(timer);
-    }
-  }, [posts]);
-
-  useEffect(() => {
-    if (followingPosts.length > 0) {
-      const timer = setTimeout(() => {
-        try {
-          sessionStorage.setItem('feedFollowingPosts', JSON.stringify(followingPosts));
-        } catch (e) {
-          sessionStorage.removeItem('feedFollowingPosts');
-          console.debug('Session storage full, cleared cache');
-        }
-      }, 1000); // Debounce by 1 second
-      
-      return () => clearTimeout(timer);
-    }
-  }, [followingPosts]);
-
+  // Save active tab preference
   useEffect(() => {
     sessionStorage.setItem('feedActiveTab', activeTab);
   }, [activeTab]);
