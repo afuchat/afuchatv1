@@ -315,13 +315,9 @@ export function useFeedAlgorithm() {
     // Reset recently shown authors for new sort
     recentlyShownAuthors.current.clear();
 
-    // Generate stable seed per-user per-session (changes on refresh, differs across users)
-    const seedKey = user ? `feedSortSeed:${user.id}` : 'feedSortSeed:guest';
-    let sessionSeed = parseInt(sessionStorage.getItem(seedKey) || '0');
-    if (!sessionSeed) {
-      sessionSeed = Math.floor(Math.random() * 1000) + 1;
-      sessionStorage.setItem(seedKey, sessionSeed.toString());
-    }
+    // Generate fresh random seed on each sort for variety
+    // This ensures users see different post orderings each time they refresh
+    const sessionSeed = Math.floor(Math.random() * 1000) + 1;
 
     // Score all posts with randomization
     const scoredPosts = posts.map(post => ({
