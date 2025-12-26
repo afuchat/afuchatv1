@@ -142,12 +142,12 @@ export const PostAutocomplete: React.FC<PostAutocompleteProps> = ({
     const fetchHashtags = async () => {
       setIsLoading(true);
       try {
-        // Get hashtags from posts
+        // Get hashtags from posts (include posts where is_blocked is false or null)
         const { data } = await supabase
           .from('posts')
           .select('content')
-          .ilike('content', `%#${searchTerm}%`)
-          .eq('is_blocked', false)
+          .ilike('content', `%#%`)
+          .or('is_blocked.is.null,is_blocked.eq.false')
           .limit(100);
         
         if (data) {
