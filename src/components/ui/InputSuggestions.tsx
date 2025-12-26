@@ -251,33 +251,39 @@ export const InputSuggestions = ({
   }, [triggerInfo, onSelect]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (suggestions.length === 0) return;
+    // Only handle keyboard when we have suggestions AND a valid trigger
+    if (suggestions.length === 0 || !triggerInfo) return;
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
+      e.stopPropagation();
       setActiveIndex(prev => (prev + 1) % suggestions.length);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
+      e.stopPropagation();
       setActiveIndex(prev => (prev - 1 + suggestions.length) % suggestions.length);
-    } else if (e.key === 'Enter' || e.key === 'Tab') {
+    } else if (e.key === 'Tab') {
+      // Only Tab selects from suggestions, not Enter (so Enter can still submit)
       if (suggestions[activeIndex]) {
         e.preventDefault();
+        e.stopPropagation();
         handleSelect(suggestions[activeIndex]);
       }
     } else if (e.key === 'Escape') {
       e.preventDefault();
+      e.stopPropagation();
       setSuggestions([]);
       setTriggerInfo(null);
     }
-  }, [suggestions, activeIndex, handleSelect]);
+  }, [suggestions, activeIndex, handleSelect, triggerInfo]);
 
   // Attach keyboard listener to container or document
   useEffect(() => {
-    if (suggestions.length === 0) return;
+    if (suggestions.length === 0 || !triggerInfo) return;
 
     const target = containerRef?.current || document;
-    target.addEventListener('keydown', handleKeyDown as EventListener);
-    return () => target.removeEventListener('keydown', handleKeyDown as EventListener);
+    target.addEventListener('keydown', handleKeyDown as EventListener, true);
+    return () => target.removeEventListener('keydown', handleKeyDown as EventListener, true);
   }, [suggestions.length, handleKeyDown, containerRef]);
 
   if (suggestions.length === 0 && !loading) return null;
