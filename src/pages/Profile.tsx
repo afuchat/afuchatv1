@@ -666,6 +666,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				content, 
 				created_at,
 				quoted_post_id,
+				is_blocked,
 				post_images (
 					image_url,
 					alt_text,
@@ -680,6 +681,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				)
 			`)
 			.eq('author_id', id)
+			.eq('is_blocked', false)
 			.order('created_at', { ascending: false })
 			.limit(20);
 
