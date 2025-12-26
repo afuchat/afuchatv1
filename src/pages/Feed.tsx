@@ -932,45 +932,12 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           className="block cursor-pointer"
           onClick={() => navigate(`/post/${post.id}`)}
         >
-          <div className="text-foreground whitespace-pre-wrap">
-            {expandedPosts.has(post.id) ? (
-              <>
-                {parsePostContent(translatedContent || post.content, post.id, navigate)}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setExpandedPosts(prev => {
-                      const newSet = new Set(prev);
-                      newSet.delete(post.id);
-                      return newSet;
-                    });
-                  }}
-                  className="text-primary hover:text-primary/80 p-0 h-auto font-normal mt-1"
-                >
-                  Show less
-                </Button>
-              </>
-            ) : (
-              <>
-                <div className="line-clamp-4">
-                  {parsePostContent(translatedContent || post.content, post.id, navigate)}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setExpandedPosts(prev => new Set(prev).add(post.id));
-                  }}
-                  className="text-primary hover:text-primary/80 p-0 h-auto font-normal mt-1"
-                >
-                  Read more
-                </Button>
-              </>
-            )}
-          </div>
+          <ReadMoreText
+            text={parsePostContent(translatedContent || post.content, post.id, navigate)}
+            maxLines={4}
+            minCharsToShow={0}
+            className="text-foreground whitespace-pre-wrap"
+          />
           {((post.post_images && post.post_images.length > 0) || post.image_url) && (
             <ImageCarousel 
               images={
