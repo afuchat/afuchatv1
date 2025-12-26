@@ -26,6 +26,7 @@ import { useChatPreferences } from '@/hooks/useChatPreferences';
 import { SendGiftDialog } from '@/components/gifts/SendGiftDialog';
 import { ClearHistoryDialog } from '@/components/chat/ClearHistoryDialog';
 import { GifPicker } from '@/components/chat/GifPicker';
+import { checkContentAllowed } from '@/lib/contentModeration';
 
 interface ChatTheme {
   id: string;
@@ -1078,6 +1079,13 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       }
     } catch (error) {
       toast.error('Message is too long or invalid');
+      return;
+    }
+
+    // Content moderation - check for blocked links
+    const contentError = checkContentAllowed(newMessage);
+    if (contentError) {
+      toast.error(contentError, { duration: 5000 });
       return;
     }
 

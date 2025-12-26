@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { X, Sparkles, Image as ImageIcon, Globe, Wand2, CheckCircle, RefreshCw } from 'lucide-react';
+import { X, Sparkles, Image as ImageIcon, Globe, Wand2, CheckCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { ImageEditor } from '@/components/image-editor/ImageEditor';
 import { BatchImageEditor } from '@/components/image-editor/BatchImageEditor';
 import { postSchema } from '@/lib/validation';
@@ -19,9 +19,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useLinkPreview } from '@/hooks/useLinkPreview';
 import { LinkPreviewCard } from '@/components/ui/LinkPreviewCard';
-import { extractUrls } from '@/lib/postUtils';
 import { useNavigate } from 'react-router-dom';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
+import { checkContentAllowed, getPreviewableLinks, validateLinks } from '@/lib/contentModeration';
 
 interface QuotedPost {
     id: string;
@@ -135,6 +135,16 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
         const validation = postSchema.safeParse(newPost);
         if (!validation.success) {
             toast.error(validation.error.errors[0].message);
+            return;
+        }
+
+        // Content moderation - check for blocked links
+        const contentError = checkContentAllowed(newPost);
+        if (contentError) {
+            toast.error(contentError, {
+                duration: 5000,
+                icon: <AlertTriangle className="h-5 w-5 text-destructive" />,
+            });
             return;
         }
 
@@ -339,7 +349,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
         const text = e.target.value;
         setNewPost(text);
         
-        const urls = extractUrls(text);
+        // Only fetch previews for allowed links (Telegram and AfuChat only)
+        const urls = getPreviewableLinks(text);
         for (const url of urls) {
             if (!linkPreviews.find(p => p.url === url)) {
                 const preview = await fetchPreview(url);
