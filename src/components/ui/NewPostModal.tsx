@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNexa } from '@/hooks/useNexa';
@@ -22,7 +22,7 @@ import { LinkPreviewCard } from '@/components/ui/LinkPreviewCard';
 import { useNavigate } from 'react-router-dom';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 import { checkContentAllowed, getPreviewableLinks, validateLinks } from '@/lib/contentModeration';
-
+import { InputSuggestions, useCursorPosition } from '@/components/ui/InputSuggestions';
 interface QuotedPost {
     id: string;
     content: string;
@@ -345,6 +345,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
         setImageAltTexts(prev => prev.filter((_, i) => i !== index));
     };
 
+    const cursorPosition = useCursorPosition(textareaRef);
+
     const handleTextChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const text = e.target.value;
         setNewPost(text);
@@ -360,6 +362,26 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
             }
         }
     };
+
+    const handleSuggestionSelect = useCallback((
+        suggestion: { type: 'hashtag' | 'user'; value: string },
+        startIndex: number,
+        endIndex: number
+    ) => {
+        const prefix = suggestion.type === 'hashtag' ? '#' : '@';
+        const replacement = `${prefix}${suggestion.value} `;
+        const newText = newPost.slice(0, startIndex) + replacement + newPost.slice(endIndex);
+        setNewPost(newText);
+        
+        // Move cursor to after the inserted text
+        setTimeout(() => {
+            if (textareaRef.current) {
+                const newCursorPos = startIndex + replacement.length;
+                textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+                textareaRef.current.focus();
+            }
+        }, 0);
+    }, [newPost]);
 
     if (!isOpen) return null;
 
@@ -407,7 +429,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
                             </Avatar>
 
                             {/* Post Content */}
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 relative">
                                 <Textarea
                                     ref={textareaRef}
                                     value={newPost}
@@ -418,6 +440,14 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
                                         WebkitUserSelect: 'text',
                                         userSelect: 'text'
                                     }}
+                                />
+                                
+                                {/* Input Suggestions for # and @ */}
+                                <InputSuggestions
+                                    text={newPost}
+                                    cursorPosition={cursorPosition}
+                                    onSelect={handleSuggestionSelect}
+                                    className="top-full left-0 mt-1"
                                 />
 
                                 {/* Quoted Post Preview */}
