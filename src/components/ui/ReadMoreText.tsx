@@ -56,8 +56,14 @@ export const ReadMoreText = ({
     }
 
     const evaluate = () => {
-      // When collapsed, check if content overflows
-      const isOverflowing = el.scrollHeight > el.clientHeight + 1;
+      // When collapsed, check if content overflows (use a small tolerance to avoid false positives)
+      if (isExpanded) {
+        setShouldShowButton(true);
+        return;
+      }
+
+      const delta = el.scrollHeight - el.clientHeight;
+      const isOverflowing = delta > 6; // tolerance for sub-pixel rounding/margins
       setShouldShowButton(isOverflowing);
     };
 
