@@ -22,6 +22,7 @@ import { LinkPreviewCard } from '@/components/ui/LinkPreviewCard';
 import { useNavigate } from 'react-router-dom';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 import { checkContentAllowed, getPreviewableLinks, validateLinks } from '@/lib/contentModeration';
+import { PostAutocomplete } from '@/components/ui/PostAutocomplete';
 
 interface QuotedPost {
     id: string;
@@ -345,8 +346,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
         setImageAltTexts(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleTextChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const text = e.target.value;
+    const handleTextChange = async (text: string) => {
         setNewPost(text);
         
         // Only fetch previews for allowed links (Telegram and AfuChat only)
@@ -408,16 +408,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
 
                             {/* Post Content */}
                             <div className="flex-1 min-w-0">
-                                <Textarea
-                                    ref={textareaRef}
+                                <PostAutocomplete
                                     value={newPost}
                                     onChange={handleTextChange}
                                     placeholder="What's happening?"
-                                    className="min-h-[120px] text-lg border-0 shadow-none resize-none focus-visible:ring-0 p-0 placeholder:text-muted-foreground/50"
-                                    style={{
-                                        WebkitUserSelect: 'text',
-                                        userSelect: 'text'
-                                    }}
+                                    textareaRef={textareaRef}
                                 />
 
                                 {/* Quoted Post Preview */}
