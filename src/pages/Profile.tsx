@@ -703,11 +703,23 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				}
 			}
 
+			const postIds = data.map(p => p.id);
+			const [likeCountsRes, replyCountsRes] = await Promise.all([
+				supabase.rpc('get_post_like_counts', { post_ids: postIds }),
+				supabase.rpc('get_post_reply_counts', { post_ids: postIds }),
+			]);
+
+			const likeCountMap = new Map<string, number>();
+			(likeCountsRes.data || []).forEach((row: any) => likeCountMap.set(row.post_id, Number(row.like_count || 0)));
+
+			const replyCountMap = new Map<string, number>();
+			(replyCountsRes.data || []).forEach((row: any) => replyCountMap.set(row.post_id, Number(row.reply_count || 0)));
+
 			const processedPosts = data.map(p => ({
 				...p,
 				quoted_post: p.quoted_post_id ? quotedPostsMap.get(p.quoted_post_id) : null,
-				acknowledgment_count: Math.floor(Math.random() * 100),
-				reply_count: Math.floor(Math.random() * 10),
+				acknowledgment_count: likeCountMap.get(p.id) ?? 0,
+				reply_count: replyCountMap.get(p.id) ?? 0,
 			} as Post));
 			setPosts(processedPosts);
 			sessionStorage.setItem(cacheKey, JSON.stringify(processedPosts));

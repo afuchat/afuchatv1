@@ -43,7 +43,7 @@ export const PostInteractionButtons = ({
 
   const handleLike = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!user) {
       navigate('/auth/signin');
       return;
@@ -55,29 +55,38 @@ export const PostInteractionButtons = ({
     // Optimistic update
     const wasLiked = isLiked;
     setIsLiked(!wasLiked);
-    setLikeCount(prev => wasLiked ? prev - 1 : prev + 1);
+    setLikeCount((prev) => (wasLiked ? prev - 1 : prev + 1));
 
     try {
       if (wasLiked) {
-        await supabase
+        const { error } = await supabase
           .from('post_acknowledgments')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', user.id);
+        if (error) throw error;
       } else {
-        await supabase
+        const { error } = await supabase
           .from('post_acknowledgments')
-          .insert({ post_id: postId, user_id: user.id });
+          .upsert({ post_id: postId, user_id: user.id }, { onConflict: 'post_id,user_id', ignoreDuplicates: true });
+        if (error) throw error;
+      }
+
+      // Always sync to the real DB count (prevents “1 like” vs “4 likes” mismatches)
+      const { data: counts, error: countErr } = await supabase.rpc('get_post_like_counts', { post_ids: [postId] });
+      if (!countErr && Array.isArray(counts) && counts[0]?.like_count != null) {
+        setLikeCount(Number(counts[0].like_count));
       }
     } catch (error) {
       // Revert on error
       setIsLiked(wasLiked);
-      setLikeCount(prev => wasLiked ? prev + 1 : prev - 1);
+      setLikeCount((prev) => (wasLiked ? prev + 1 : prev - 1));
       console.error('Like error:', error);
+      toast.error(t('common.likeError', wasLiked ? 'Failed to unlike post' : 'Failed to like post'));
     } finally {
       setIsLiking(false);
     }
-  }, [user, postId, isLiked, isLiking, navigate]);
+  }, [user, postId, isLiked, isLiking, navigate, t]);
 
   const handleCommentClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
