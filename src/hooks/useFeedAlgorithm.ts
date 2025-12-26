@@ -238,6 +238,7 @@ export function useFeedAlgorithm() {
     like_count: number;
     reply_count: number;
     view_count: number;
+    has_liked?: boolean;
     profiles: {
       is_verified: boolean;
       is_organization_verified: boolean;
@@ -251,25 +252,32 @@ export function useFeedAlgorithm() {
       verifiedBoost: 0,
       diversityPenalty: 0,
       randomFactor: 0,
+      unlikedBoost: 0, // NEW: Boost for posts user hasn't liked
     };
 
-    // 1. Category match score (0-25 points)
+    // NEW: Strong boost for posts user hasn't liked yet (0-30 points)
+    // This ensures users see fresh content they haven't interacted with
+    if (!post.has_liked) {
+      factors.unlikedBoost = 30;
+    }
+
+    // 1. Category match score (0-20 points) - reduced to make room for unliked boost
     const categories = categorizeContent(post.content);
     categories.forEach(cat => {
       const userInterest = interests.categories[cat.category] || 1;
-      factors.categoryMatch += (cat.confidence / 100) * userInterest * 2.5;
+      factors.categoryMatch += (cat.confidence / 100) * userInterest * 2;
     });
-    factors.categoryMatch = Math.min(factors.categoryMatch, 25);
+    factors.categoryMatch = Math.min(factors.categoryMatch, 20);
 
-    // 2. Author affinity (0-20 points)
+    // 2. Author affinity (0-15 points) - reduced
     const authorScore = interests.authors[post.author_id] || 0;
-    factors.authorAffinity = Math.min(authorScore * 2, 20);
+    factors.authorAffinity = Math.min(authorScore * 1.5, 15);
 
-    // 3. Engagement score (0-15 points)
+    // 3. Engagement score (0-10 points) - reduced
     const engagementRatio = (post.like_count * 2 + post.reply_count * 3) / Math.max(post.view_count, 1);
-    factors.engagementScore = Math.min(engagementRatio * 75, 15);
+    factors.engagementScore = Math.min(engagementRatio * 50, 10);
 
-    // 4. Recency score (0-10 points) - reduced to allow more mixing
+    // 4. Recency score (0-10 points) - favor newer posts
     const ageHours = (Date.now() - new Date(post.created_at).getTime()) / (1000 * 60 * 60);
     factors.recencyScore = Math.max(0, 10 * Math.exp(-ageHours / TIME_DECAY_HOURS));
 
@@ -283,10 +291,10 @@ export function useFeedAlgorithm() {
       factors.diversityPenalty = -15;
     }
 
-    // 7. Random factor for variety (0-25 points) - ensures posts aren't always in same order
+    // 7. Random factor for variety (0-20 points) - ensures posts aren't always in same order
     // Use post id hash combined with seed for consistent-per-session but varied ordering
     const postHash = post.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    factors.randomFactor = ((postHash * randomSeed) % 100) / 4; // 0-25 points
+    factors.randomFactor = ((postHash * randomSeed) % 100) / 5; // 0-20 points
 
     // Calculate final score
     const score = Object.values(factors).reduce((sum, val) => sum + val, 0);
@@ -307,6 +315,7 @@ export function useFeedAlgorithm() {
     like_count: number;
     reply_count: number;
     view_count: number;
+    has_liked?: boolean;
     profiles: {
       is_verified: boolean;
       is_organization_verified: boolean;
