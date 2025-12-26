@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { PageSkeleton } from '@/components/skeletons';
-import { ArrowLeft, TrendingUp, MessageCircle, Heart, Pencil, MoreHorizontal } from 'lucide-react';
+import { TrendingUp, MessageCircle, Heart, Pencil, Send, Repeat2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -175,6 +175,99 @@ const PostDetail = () => {
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const [showViewsSheet, setShowViewsSheet] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
+
+  // Check if user has liked the post
+  useEffect(() => {
+    const checkUserInteractions = async () => {
+      if (!user || !postId) return;
+      
+      const { data } = await supabase
+        .from('post_acknowledgments')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      setIsLiked(!!data);
+    };
+    
+    checkUserInteractions();
+  }, [user, postId]);
+
+  const handleLike = useCallback(async () => {
+    if (!user) {
+      navigate('/auth/signin');
+      return;
+    }
+    
+    if (isLiking) return;
+    setIsLiking(true);
+    
+    const wasLiked = isLiked;
+    setIsLiked(!wasLiked);
+    setPost(prev => prev ? { ...prev, likes_count: wasLiked ? prev.likes_count - 1 : prev.likes_count + 1 } : null);
+    
+    try {
+      if (wasLiked) {
+        await supabase
+          .from('post_acknowledgments')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+      } else {
+        await supabase
+          .from('post_acknowledgments')
+          .upsert({ post_id: postId, user_id: user.id }, { onConflict: 'post_id,user_id', ignoreDuplicates: true });
+      }
+    } catch (error) {
+      setIsLiked(wasLiked);
+      setPost(prev => prev ? { ...prev, likes_count: wasLiked ? prev.likes_count + 1 : prev.likes_count - 1 } : null);
+      toast.error('Failed to update like');
+    } finally {
+      setIsLiking(false);
+    }
+  }, [user, postId, isLiked, isLiking, navigate]);
+
+  const handleShare = useCallback(() => {
+    const url = `${window.location.origin}/post/${postId}`;
+    
+    if (navigator.share) {
+      navigator.share({ 
+        title: post?.author.display_name ? `Post by ${post.author.display_name}` : 'Check out this post',
+        url 
+      });
+    } else {
+      navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard!');
+    }
+  }, [postId, post]);
+
+  const handleRepost = useCallback(async () => {
+    if (!user) {
+      navigate('/auth/signin');
+      return;
+    }
+    
+    if (!post) return;
+    
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .insert({
+          author_id: user.id,
+          content: '',
+          quoted_post_id: post.id,
+        });
+      
+      if (error) throw error;
+      toast.success('Post reposted!');
+    } catch (error) {
+      toast.error('Failed to repost');
+    }
+  }, [user, post, navigate]);
+
 
   // Track post view when it becomes visible
   useEffect(() => {
@@ -577,15 +670,42 @@ const PostDetail = () => {
             </p>
 
             {/* STATS SECTION - Interactive buttons */}
-            <div className="flex items-center gap-6 py-3 border-t border-border">
-                <button className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors">
-                  <Heart className="h-5 w-5" />
+            <div className="flex items-center justify-between py-3 border-t border-border">
+              <div className="flex items-center gap-6">
+                {/* Like Button */}
+                <button 
+                  onClick={handleLike}
+                  disabled={isLiking}
+                  className={cn(
+                    "flex items-center gap-2 transition-colors",
+                    isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+                  )}
+                >
+                  <Heart className={cn("h-5 w-5", isLiked && "fill-red-500")} />
                   <span className="text-sm font-semibold">{post.likes_count}</span>
                 </button>
-                <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+                
+                {/* Comment Button */}
+                <button 
+                  onClick={() => {
+                    const input = document.querySelector('textarea[placeholder]') as HTMLTextAreaElement;
+                    input?.focus();
+                  }}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                >
                   <MessageCircle className="h-5 w-5" />
                   <span className="text-sm font-semibold">{post.replies_count}</span>
                 </button>
+                
+                {/* Repost Button */}
+                <button 
+                  onClick={handleRepost}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-green-500 transition-colors"
+                >
+                  <Repeat2 className="h-5 w-5" />
+                </button>
+                
+                {/* Views Button */}
                 <button 
                   onClick={() => setShowViewsSheet(true)}
                   className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
@@ -593,9 +713,15 @@ const PostDetail = () => {
                   <TrendingUp className="h-5 w-5" />
                   <span className="text-sm font-semibold">{post.view_count}</span>
                 </button>
-                <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors ml-auto">
-                  <MessageCircle className="h-5 w-5" />
-                </button>
+              </div>
+              
+              {/* Share Button */}
+              <button 
+                onClick={handleShare}
+                className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Send className="h-5 w-5" />
+              </button>
             </div>
         </div>
 
