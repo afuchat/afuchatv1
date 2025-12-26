@@ -83,6 +83,8 @@ interface Post {
 	created_at: string;
 	acknowledgment_count: number;
 	reply_count: number;
+	is_blocked?: boolean;
+	blocked_reason?: string;
 	quoted_post_id?: string | null;
 	quoted_post?: {
 		id: string;
@@ -659,7 +661,11 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 			return;
 		}
 		
-		const { data, error } = await supabase
+		// For own profile, show all posts including blocked ones
+		// For others, only show non-blocked posts
+		const isOwnProfile = user?.id === id;
+		
+		let query = supabase
 			.from('posts')
 			.select(`
 				id, 
@@ -667,6 +673,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				created_at,
 				quoted_post_id,
 				is_blocked,
+				blocked_reason,
 				post_images (
 					image_url,
 					alt_text,
@@ -681,9 +688,15 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				)
 			`)
 			.eq('author_id', id)
-			.eq('is_blocked', false)
 			.order('created_at', { ascending: false })
 			.limit(20);
+		
+		// Only filter out blocked posts for other users' profiles
+		if (!isOwnProfile) {
+			query = query.eq('is_blocked', false);
+		}
+		
+		const { data, error } = await query;
 
 		if (!error && data) {
 			// Fetch quoted posts if any
@@ -1583,11 +1596,28 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 								{posts.map((post) => (
 									<Card
 										key={post.id}
-										className="p-4 rounded-none border-x-0 border-t-0 hover:bg-muted/10 cursor-pointer transition-colors relative group"
-										onClick={() => navigate(`/post/${post.id}`)}
+										className={`p-4 rounded-none border-x-0 border-t-0 hover:bg-muted/10 cursor-pointer transition-colors relative group ${post.is_blocked ? 'opacity-60' : ''}`}
+										onClick={() => !post.is_blocked && navigate(`/post/${post.id}`)}
 									>
+										{/* Blocked post warning banner */}
+										{post.is_blocked && (
+											<div className="mb-3 p-2.5 bg-destructive/10 border border-destructive/20 rounded-lg">
+												<div className="flex items-center gap-2 text-destructive">
+													<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+														<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+														<line x1="12" y1="9" x2="12" y2="13"></line>
+														<line x1="12" y1="17" x2="12.01" y2="17"></line>
+													</svg>
+													<span className="text-xs font-medium">Post Hidden</span>
+												</div>
+												<p className="text-xs text-muted-foreground mt-1">
+													{post.blocked_reason || 'This post contains content that violates our guidelines. Only you can see it.'}
+												</p>
+											</div>
+										)}
+										
 										{/* Edit button for own posts */}
-										{user?.id === profileId && (
+										{user?.id === profileId && !post.is_blocked && (
 											<Button
 												variant="ghost"
 												size="icon"
@@ -1632,6 +1662,13 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 															month: 'short',
 														})}
 													</span>
+													{/* Hide engagement stats for blocked posts */}
+													{!post.is_blocked && (
+														<div className="flex items-center gap-3">
+															<span>{post.acknowledgment_count} likes</span>
+															<span>{post.reply_count} replies</span>
+														</div>
+													)}
 												</div>
 											</div>
 										</div>
