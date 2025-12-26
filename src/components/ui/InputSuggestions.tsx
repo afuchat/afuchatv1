@@ -292,24 +292,25 @@ export const InputSuggestions = ({
     <div
       ref={suggestionsRef}
       className={cn(
-        "absolute z-50 w-full max-w-xs bg-background border border-border rounded-xl shadow-lg overflow-hidden",
+        "absolute z-[100] w-full max-w-sm bg-background border border-border/60 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm",
         className
       )}
     >
       {loading && suggestions.length === 0 ? (
-        <div className="flex items-center justify-center py-4">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
       ) : (
-        <ul className="max-h-64 overflow-y-auto py-1">
+        <ul className="max-h-72 overflow-y-auto py-2">
           {suggestions.map((suggestion, index) => (
             <li key={`${suggestion.type}-${suggestion.value}`}>
               <button
                 type="button"
                 onClick={() => handleSelect(suggestion)}
+                onMouseEnter={() => setActiveIndex(index)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
-                  index === activeIndex ? "bg-muted" : "hover:bg-muted/50"
+                  "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors",
+                  index === activeIndex ? "bg-primary/10" : "hover:bg-muted/60"
                 )}
               >
                 {suggestion.type === 'hashtag' ? (

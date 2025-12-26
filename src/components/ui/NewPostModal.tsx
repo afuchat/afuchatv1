@@ -447,9 +447,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
                                     text={newPost}
                                     cursorPosition={cursorPosition}
                                     onSelect={handleSuggestionSelect}
-                                    className="top-full left-0 mt-1"
+                                    className="top-[130px] left-0"
                                 />
-
                                 {/* Quoted Post Preview */}
                                 {quotedPost && (
                                     <QuotedPostCard quotedPost={quotedPost} className="mt-0" />
