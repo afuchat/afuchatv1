@@ -191,6 +191,7 @@ export const CommentInput = ({
           text={commentText}
           cursorPosition={cursorPosition}
           onSelect={handleSuggestionSelect}
+          containerRef={textareaRef as any}
           className="bottom-full left-0 mb-1"
         />
       </div>

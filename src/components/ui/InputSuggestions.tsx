@@ -277,14 +277,14 @@ export const InputSuggestions = ({
     }
   }, [suggestions, activeIndex, handleSelect, triggerInfo]);
 
-  // Attach keyboard listener to container or document
+  // Attach keyboard listener to the input element when possible (avoid global listeners)
   useEffect(() => {
     if (suggestions.length === 0 || !triggerInfo) return;
 
     const target = containerRef?.current || document;
-    target.addEventListener('keydown', handleKeyDown as EventListener, true);
-    return () => target.removeEventListener('keydown', handleKeyDown as EventListener, true);
-  }, [suggestions.length, handleKeyDown, containerRef]);
+    target.addEventListener('keydown', handleKeyDown as EventListener);
+    return () => target.removeEventListener('keydown', handleKeyDown as EventListener);
+  }, [suggestions.length, handleKeyDown, containerRef, triggerInfo]);
 
   if (suggestions.length === 0 && !loading) return null;
 
