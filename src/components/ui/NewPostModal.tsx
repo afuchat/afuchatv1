@@ -447,6 +447,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
                                     text={newPost}
                                     cursorPosition={cursorPosition}
                                     onSelect={handleSuggestionSelect}
+                                    containerRef={textareaRef as any}
                                     className="top-[130px] left-0"
                                 />
                                 {/* Quoted Post Preview */}
