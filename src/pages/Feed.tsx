@@ -1736,68 +1736,74 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       const postIds = postData.map((p) => p.id);
 
       // Batch fetch all data in parallel
-      const [businessData, affiliationData, repliesData, ackData, quotedPostsData] = await Promise.all([
+      const [businessData, affiliationData, repliesData, likedData, likeCountsData, quotedPostsData] = await Promise.all([
         // Business profiles
         (async () => {
           const businessIds = Array.from(new Set([
             ...postData.map(p => p.profiles?.affiliated_business_id),
             ...followingPostData.map(p => p.profiles?.affiliated_business_id)
           ].filter(Boolean))) as string[];
-          
+
           if (businessIds.length === 0) return new Map();
-          
+
           const { data } = await supabase
             .from('profiles')
             .select('id, avatar_url, display_name')
             .in('id', businessIds);
-          
+
           const map = new Map();
           (data || []).forEach((b: any) => map.set(b.id, { avatar_url: b.avatar_url, display_name: b.display_name }));
           return map;
         })(),
-        
+
         // Affiliation dates
         (async () => {
           const authorIds = Array.from(new Set([
             ...postData.filter(p => p.profiles?.is_affiliate).map(p => p.author_id),
             ...followingPostData.filter(p => p.profiles?.is_affiliate).map(p => p.author_id)
           ])) as string[];
-          
+
           if (authorIds.length === 0) return new Map();
-          
+
           const { data } = await supabase
             .from('affiliate_requests')
             .select('user_id, reviewed_at')
             .in('user_id', authorIds)
             .eq('status', 'approved');
-          
+
           const map = new Map();
           (data || []).forEach((a: any) => map.set(a.user_id, a.reviewed_at));
           return map;
         })(),
-        
-        // Replies
+
+        // Replies (needed for preview + reply list)
         supabase
           .from('post_replies')
           .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason, verification_source)')
           .in('post_id', postIds)
           .order('created_at', { ascending: true }),
-        
-        // Acknowledgments
-        supabase
-          .from('post_acknowledgments')
-          .select('post_id, user_id')
-          .in('post_id', postIds),
-        
+
+        // Current user's likes only (for has_liked)
+        user
+          ? supabase
+              .from('post_acknowledgments')
+              .select('post_id')
+              .in('post_id', postIds)
+              .eq('user_id', user.id)
+          : Promise.resolve({ data: [] as any[] }),
+
+        // Aggregate like counts (prevents PostgREST row-limit truncation)
+        supabase.rpc('get_post_like_counts', { post_ids: postIds }),
+
         // Quoted posts
         (async () => {
           const quotedPostIds = Array.from(new Set([
             ...postData.map(p => p.quoted_post_id),
             ...followingPostData.map(p => p.quoted_post_id)
           ].filter(Boolean))) as string[];
-          
+
           if (quotedPostIds.length === 0) return new Map();
-          
+
           const { data } = await supabase
             .from('posts')
             .select(`
@@ -1810,7 +1816,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
               profiles(display_name, handle, is_verified, is_organization_verified, avatar_url)
             `)
             .in('id', quotedPostIds);
-          
+
           const map = new Map();
           (data || []).forEach((qp: any) => {
             // Ensure profiles fallback for quoted posts
@@ -1837,19 +1843,16 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         repliesByPostId.get(r.post_id)!.push(reply);
       });
 
-      // Process acknowledgments
-      const acksByPostId = new Map<string, string[]>();
-      (ackData.data || []).forEach((ack) => {
-        if (!acksByPostId.has(ack.post_id)) acksByPostId.set(ack.post_id, []);
-        acksByPostId.get(ack.post_id)!.push(ack.user_id);
-      });
+      // Like counts map
+      const likeCountByPostId = new Map<string, number>();
+      (likeCountsData.data || []).forEach((row: any) => likeCountByPostId.set(row.post_id, Number(row.like_count || 0)));
 
-      const currentUserId = user?.id || null;
-      
+      // Current user liked set
+      const likedSet = new Set<string>((likedData as any)?.data?.map((r: any) => r.post_id) || []);
+
       // Map posts
       const mapPost = (post: any) => {
         const replies = repliesByPostId.get(post.id) || [];
-        const acks = acksByPostId.get(post.id) || [];
 
         if (post.profiles?.affiliated_business_id) {
           post.profiles.affiliated_business = businessData.get(post.profiles.affiliated_business_id) || null;
@@ -1864,9 +1867,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           quoted_post: quotedPost,
           replies,
           reply_count: replies.length,
-          like_count: acks.length,
+          like_count: likeCountByPostId.get(post.id) ?? 0,
           view_count: post.view_count || 0,
-          has_liked: currentUserId ? acks.includes(currentUserId) : false,
+          has_liked: user ? likedSet.has(post.id) : false,
           affiliation_date: post.profiles?.is_affiliate && post.author_id ? affiliationData.get(post.author_id) : undefined,
         } as Post;
       };

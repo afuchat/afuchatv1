@@ -201,29 +201,41 @@ const PostDetail = () => {
       navigate('/auth/signin');
       return;
     }
-    
+
     if (isLiking) return;
     setIsLiking(true);
-    
+
     const wasLiked = isLiked;
     setIsLiked(!wasLiked);
-    setPost(prev => prev ? { ...prev, likes_count: wasLiked ? prev.likes_count - 1 : prev.likes_count + 1 } : null);
-    
+    setPost((prev) =>
+      prev ? { ...prev, likes_count: Math.max(0, prev.likes_count + (wasLiked ? -1 : 1)) } : null
+    );
+
     try {
       if (wasLiked) {
-        await supabase
+        const { error } = await supabase
           .from('post_acknowledgments')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', user.id);
+        if (error) throw error;
       } else {
-        await supabase
+        const { error } = await supabase
           .from('post_acknowledgments')
           .upsert({ post_id: postId, user_id: user.id }, { onConflict: 'post_id,user_id', ignoreDuplicates: true });
+        if (error) throw error;
+      }
+
+      // Sync with the true count from DB
+      const { data: counts } = await supabase.rpc('get_post_like_counts', { post_ids: [postId] });
+      if (Array.isArray(counts) && counts[0]?.like_count != null) {
+        setPost((prev) => (prev ? { ...prev, likes_count: Number(counts[0].like_count) } : prev));
       }
     } catch (error) {
       setIsLiked(wasLiked);
-      setPost(prev => prev ? { ...prev, likes_count: wasLiked ? prev.likes_count + 1 : prev.likes_count - 1 } : null);
+      setPost((prev) =>
+        prev ? { ...prev, likes_count: Math.max(0, prev.likes_count + (wasLiked ? 1 : -1)) } : null
+      );
       toast.error('Failed to update like');
     } finally {
       setIsLiking(false);
@@ -308,7 +320,7 @@ const PostDetail = () => {
 
     const fetchPostAndReplies = async () => {
       setLoading(true);
-      
+
       const postPromise = supabase
         .from('posts')
         .select(`
@@ -320,10 +332,8 @@ const PostDetail = () => {
         .eq('id', postId)
         .single();
 
-      const likesPromise = supabase
-        .from('post_acknowledgments')
-        .select('id', { count: 'exact', head: true })
-        .eq('post_id', postId);
+      const likesPromise = supabase.rpc('get_post_like_counts', { post_ids: [postId] });
+      const repliesCountPromise = supabase.rpc('get_post_reply_counts', { post_ids: [postId] });
 
       const repliesPromise = supabase
         .from('post_replies')
@@ -334,7 +344,12 @@ const PostDetail = () => {
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-      const [postResult, likesResult, repliesResult] = await Promise.all([postPromise, likesPromise, repliesPromise]);
+      const [postResult, likesResult, repliesCountResult, repliesResult] = await Promise.all([
+        postPromise,
+        likesPromise,
+        repliesCountPromise,
+        repliesPromise,
+      ]);
 
       if (postResult.error) {
         console.error('Error fetching post:', postResult.error);
@@ -343,8 +358,9 @@ const PostDetail = () => {
       }
 
       const postData = postResult.data;
-      const likesCount = likesResult.count || 0;
-      const repliesCount = repliesResult.data?.length || 0;
+      const likesCount = Array.isArray(likesResult.data) && likesResult.data[0]?.like_count != null ? Number(likesResult.data[0].like_count) : 0;
+      const repliesCount = Array.isArray(repliesCountResult.data) && repliesCountResult.data[0]?.reply_count != null ? Number(repliesCountResult.data[0].reply_count) : (repliesResult.data?.length || 0);
+
 
       // Fetch quoted post if exists
       let quotedPost = null;

@@ -4339,6 +4339,20 @@ export type Database = {
         }[]
       }
       get_pool_status: { Args: never; Returns: Json }
+      get_post_like_counts: {
+        Args: { post_ids: string[] }
+        Returns: {
+          like_count: number
+          post_id: string
+        }[]
+      }
+      get_post_reply_counts: {
+        Args: { post_ids: string[] }
+        Returns: {
+          post_id: string
+          reply_count: number
+        }[]
+      }
       get_protected_profile_fields: {
         Args: { p_user_id: string }
         Returns: {
