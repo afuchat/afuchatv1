@@ -1670,8 +1670,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     }, 30000);
     
     try {
-      const POSTS_PER_PAGE = 30; // Reduced from 50 to save data
-      const CANDIDATE_MULTIPLIER = user ? 5 : 1; // fetch a bigger pool for personalization
+      const POSTS_PER_PAGE = 25; // Posts to display per page
+      const CANDIDATE_MULTIPLIER = user ? 6 : 1; // fetch a bigger pool for personalization (prioritize unliked posts)
       const poolSize = POSTS_PER_PAGE * CANDIDATE_MULTIPLIER;
       const from = page * poolSize;
       const to = from + poolSize - 1;
@@ -1927,13 +1927,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       // Save scroll position
       sessionStorage.setItem('feedScrollPosition', window.scrollY.toString());
       
-      // Check if near bottom for pagination
+      // Check if near bottom for pagination - trigger earlier for smoother experience
       const scrollTop = window.scrollY;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = window.innerHeight;
-      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 400;
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 800; // Trigger 800px before bottom
       
-      if (isNearBottom && !loadingMore && hasMore) {
+      if (isNearBottom && !loadingMore && hasMore && !loading) {
         handleLoadMore();
       }
     };
@@ -1943,7 +1943,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     return () => {
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [handleLoadMore, loadingMore, hasMore]);
+  }, [handleLoadMore, loadingMore, hasMore, loading]);
 
 
   useEffect(() => {
