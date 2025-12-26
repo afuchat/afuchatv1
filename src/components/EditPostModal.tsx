@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { postSchema } from '@/lib/validation';
 import { ImageEditor } from '@/components/image-editor/ImageEditor';
 import { useTranslation } from 'react-i18next';
+import { checkContentAllowed } from '@/lib/contentModeration';
 
 interface EditPostModalProps {
   isOpen: boolean;
@@ -62,6 +63,14 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ isOpen, onClose, p
   const handleUpdate = async () => {
     if (!user) return;
     try { postSchema.parse(content); } catch { toast.error(t('validation.required')); return; }
+    
+    // Content moderation - check for blocked links
+    const contentError = checkContentAllowed(content);
+    if (contentError) {
+      toast.error(contentError, { duration: 5000 });
+      return;
+    }
+    
     setIsUpdating(true);
     try {
       const allImages = [...existingImages];

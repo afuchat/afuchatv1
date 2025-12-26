@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { checkContentAllowed } from '@/lib/contentModeration';
 
 interface CommentInputProps {
   postId: string;
@@ -73,6 +75,13 @@ export const CommentInput = ({
 
   const handleSubmit = async () => {
     if (!commentText.trim() || !user) return;
+
+    // Content moderation - check for blocked links
+    const contentError = checkContentAllowed(commentText);
+    if (contentError) {
+      toast.error(contentError, { duration: 5000 });
+      return;
+    }
 
     setSubmitting(true);
     try {
