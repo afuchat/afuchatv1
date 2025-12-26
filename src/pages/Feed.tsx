@@ -1507,7 +1507,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         .match({ post_id: postId, user_id: currentUserId });
 
       if (error) {
-        toast.error('Failed to unacknowledge post');
+        console.error('Unlike error:', error);
+        toast.error('Failed to unlike post');
         // Revert both
         const revertPosts = (currentPosts: Post[]) =>
           currentPosts.map((p) =>
@@ -1519,12 +1520,17 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         setFollowingPosts(revertPosts);
       }
     } else {
+      // Use upsert with onConflict to handle duplicate likes gracefully
       const { error } = await supabase
         .from('post_acknowledgments')
-        .insert({ post_id: postId, user_id: currentUserId });
+        .upsert(
+          { post_id: postId, user_id: currentUserId },
+          { onConflict: 'post_id,user_id', ignoreDuplicates: true }
+        );
 
       if (error) {
-        toast.error('Failed to acknowledge post');
+        console.error('Like error:', error);
+        toast.error('Failed to like post');
         // Revert both
         const revertPosts = (currentPosts: Post[]) =>
           currentPosts.map((p) =>
