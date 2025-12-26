@@ -1642,7 +1642,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       const from = page * POSTS_PER_PAGE;
       const to = from + POSTS_PER_PAGE - 1;
 
-      // Fetch posts with optimized query - only essential fields
+      // Fetch posts with optimized query - only essential fields, exclude blocked posts
       const { data: postData, error: postsError } = await supabase
         .from('posts')
         .select(`
@@ -1654,10 +1654,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           view_count,
           image_url,
           quoted_post_id,
+          is_blocked,
           profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason, verification_source),
           post_images(image_url, display_order, alt_text),
           post_link_previews(url, title, description, image_url, site_name)
         `)
+        .eq('is_blocked', false)
         .order('created_at', { ascending: false })
         .range(from, to);
       
@@ -1689,11 +1691,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
               view_count,
               image_url,
               quoted_post_id,
+              is_blocked,
               profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason, verification_source),
               post_images(image_url, display_order, alt_text),
               post_link_previews(url, title, description, image_url, site_name)
             `)
             .in('author_id', followingIds)
+            .eq('is_blocked', false)
             .order('created_at', { ascending: false })
             .limit(50); // Limit following posts
           followingPostData = data || [];

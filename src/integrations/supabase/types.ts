@@ -2721,10 +2721,12 @@ export type Database = {
       posts: {
         Row: {
           author_id: string | null
+          blocked_reason: string | null
           content: string
           created_at: string | null
           id: string
           image_url: string | null
+          is_blocked: boolean | null
           language_code: string | null
           quoted_post_id: string | null
           updated_at: string | null
@@ -2732,10 +2734,12 @@ export type Database = {
         }
         Insert: {
           author_id?: string | null
+          blocked_reason?: string | null
           content: string
           created_at?: string | null
           id?: string
           image_url?: string | null
+          is_blocked?: boolean | null
           language_code?: string | null
           quoted_post_id?: string | null
           updated_at?: string | null
@@ -2743,10 +2747,12 @@ export type Database = {
         }
         Update: {
           author_id?: string | null
+          blocked_reason?: string | null
           content?: string
           created_at?: string | null
           id?: string
           image_url?: string | null
+          is_blocked?: boolean | null
           language_code?: string | null
           quoted_post_id?: string | null
           updated_at?: string | null
