@@ -1638,10 +1638,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     
     try {
       const POSTS_PER_PAGE = 25; // Posts to display per page
-      const CANDIDATE_MULTIPLIER = user ? 6 : 1; // fetch a bigger pool for personalization (prioritize unliked posts)
-      const poolSize = POSTS_PER_PAGE * CANDIDATE_MULTIPLIER;
-      const from = page * poolSize;
-      const to = from + poolSize - 1;
+      // For pagination, calculate proper offset based on displayed posts count
+      const from = page * POSTS_PER_PAGE;
+      const to = from + POSTS_PER_PAGE - 1;
 
       // Fetch posts with optimized query - only essential fields
       const { data: postData, error: postsError } = await supabase
@@ -1665,7 +1664,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       if (postsError) throw postsError;
       if (!postData) throw new Error('No posts data received');
 
-      setHasMore(postData.length === poolSize);
+      // Check if there are more posts to load
+      setHasMore(postData.length === POSTS_PER_PAGE);
 
       // Fetch following posts efficiently - only if user is logged in
       let followingPostData: any[] = [];
@@ -1846,8 +1846,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       const mappedPosts = postData.map(mapPost);
       const mappedFollowingPosts = followingPostData.map(mapPost);
       
-      // Sort + choose a user-specific set of posts from the larger pool
-      const finalPosts = user ? sortPosts(mappedPosts).slice(0, POSTS_PER_PAGE) : mappedPosts;
+      // Sort posts with personalization when logged in
+      const finalPosts = user ? sortPosts(mappedPosts) : mappedPosts;
       
       // Following posts stay chronological (already sorted by created_at desc)
       const finalFollowingPosts = mappedFollowingPosts;
