@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { checkContentAllowed } from '@/lib/contentModeration';
-import { InputSuggestions, useCursorPosition } from '@/components/ui/InputSuggestions';
 
 interface CommentInputProps {
   postId: string;
@@ -40,7 +39,6 @@ export const CommentInput = ({
   const [submitting, setSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const cursorPosition = useCursorPosition(textareaRef);
 
   // Auto-resize textarea
   const adjustTextareaHeight = useCallback(() => {
@@ -50,26 +48,6 @@ export const CommentInput = ({
       textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
     }
   }, []);
-
-  const handleSuggestionSelect = useCallback((
-    suggestion: { type: 'hashtag' | 'user'; value: string },
-    startIndex: number,
-    endIndex: number
-  ) => {
-    const prefix = suggestion.type === 'hashtag' ? '#' : '@';
-    const replacement = `${prefix}${suggestion.value} `;
-    const newText = commentText.slice(0, startIndex) + replacement + commentText.slice(endIndex);
-    setCommentText(newText);
-    
-    // Move cursor to after the inserted text
-    setTimeout(() => {
-      if (textareaRef.current) {
-        const newCursorPos = startIndex + replacement.length;
-        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
-        textareaRef.current.focus();
-      }
-    }, 0);
-  }, [commentText]);
 
   // Fetch user profile for avatar
   useEffect(() => {
@@ -184,15 +162,6 @@ export const CommentInput = ({
             compact ? "py-2 min-h-[36px]" : "py-2.5 min-h-[44px]"
           )}
           style={{ maxHeight: '120px' }}
-        />
-        
-        {/* Input Suggestions for # and @ */}
-        <InputSuggestions
-          text={commentText}
-          cursorPosition={cursorPosition}
-          onSelect={handleSuggestionSelect}
-          containerRef={textareaRef as any}
-          className="bottom-full left-0 mb-1"
         />
       </div>
       
