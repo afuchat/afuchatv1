@@ -5,26 +5,38 @@ import { toRenderableText } from '@/lib/textUtils';
 interface ReadMoreTextProps {
   text: React.ReactNode;
   maxLines?: number;
+  minCharsToShow?: number; // Minimum characters before showing Read more
   className?: string;
 }
 
-export const ReadMoreText = ({ text, maxLines = 4, className = '' }: ReadMoreTextProps) => {
+export const ReadMoreText = ({ 
+  text, 
+  maxLines = 4, 
+  minCharsToShow = 200, // Default: only show Read more for content > 200 chars
+  className = '' 
+}: ReadMoreTextProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [shouldShowButton, setShouldShowButton] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Ensure text is safely renderable
   const safeText = toRenderableText(text);
+  
+  // Get plain text length for minimum threshold check
+  const plainTextLength = typeof text === 'string' 
+    ? text.length 
+    : (typeof safeText === 'string' ? safeText.length : 0);
 
   useEffect(() => {
     if (contentRef.current) {
-      const lineHeight = parseInt(window.getComputedStyle(contentRef.current).lineHeight);
+      const lineHeight = parseInt(window.getComputedStyle(contentRef.current).lineHeight) || 20;
       const height = contentRef.current.scrollHeight;
       const lines = height / lineHeight;
       
-      setShouldShowButton(lines > maxLines);
+      // Only show button if content exceeds maxLines AND exceeds minimum character threshold
+      setShouldShowButton(lines > maxLines && plainTextLength > minCharsToShow);
     }
-  }, [safeText, maxLines]);
+  }, [safeText, maxLines, plainTextLength, minCharsToShow]);
 
   return (
     <div className={className}>

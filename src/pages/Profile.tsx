@@ -42,6 +42,8 @@ import UserActionsSheet from '@/components/UserActionsSheet';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 import { WarningBadge } from '@/components/WarningBadge';
 import { ProfileViewsSheet } from '@/components/ProfileViewsSheet';
+import { EditPostModal } from '@/components/EditPostModal';
+import { Ellipsis, Pencil } from 'lucide-react';
 
 interface Profile {
 	id: string;
@@ -322,6 +324,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	const [isChatLoading, setIsChatLoading] = useState(false);
 	const [isProfileViewsOpen, setIsProfileViewsOpen] = useState(false);
 	const [profileViewsCount, setProfileViewsCount] = useState(0);
+	const [editingPost, setEditingPost] = useState<Post | null>(null);
 
 
 	const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1566,9 +1569,23 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 								{posts.map((post) => (
 									<Card
 										key={post.id}
-										className="p-4 rounded-none border-x-0 border-t-0 hover:bg-muted/10 cursor-pointer transition-colors"
+										className="p-4 rounded-none border-x-0 border-t-0 hover:bg-muted/10 cursor-pointer transition-colors relative group"
 										onClick={() => navigate(`/post/${post.id}`)}
 									>
+										{/* Edit button for own posts */}
+										{user?.id === profileId && (
+											<Button
+												variant="ghost"
+												size="icon"
+												className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+												onClick={(e) => {
+													e.stopPropagation();
+													setEditingPost(post);
+												}}
+											>
+												<Pencil className="h-4 w-4" />
+											</Button>
+										)}
 										<div className="flex items-start gap-3">
 											<StoryAvatar
 												userId={profileId!}
@@ -1745,6 +1762,27 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				isOpen={isProfileViewsOpen}
 				onClose={() => setIsProfileViewsOpen(false)}
 			/>
+
+			{/* Edit Post Modal */}
+			{editingPost && (
+				<EditPostModal
+					isOpen={!!editingPost}
+					onClose={() => setEditingPost(null)}
+					post={{
+						id: editingPost.id,
+						content: editingPost.content,
+						image_url: null,
+						post_images: editingPost.post_images?.map(img => ({
+							image_url: img.image_url,
+							display_order: img.display_order
+						}))
+					}}
+					onPostUpdated={() => {
+						setEditingPost(null);
+						if (profileId) fetchUserPosts(profileId);
+					}}
+				/>
+			)}
 		</div>
 	);
 };

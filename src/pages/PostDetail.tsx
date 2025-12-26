@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { PageSkeleton } from '@/components/skeletons';
-import { ArrowLeft, TrendingUp, MessageCircle, Heart } from 'lucide-react';
+import { ArrowLeft, TrendingUp, MessageCircle, Heart, Pencil, MoreHorizontal } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,7 @@ import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 import { CommentInput } from '@/components/feed/CommentInput';
 import { WarningBadge } from '@/components/WarningBadge';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
+import { EditPostModal } from '@/components/EditPostModal';
 
 
 // --- Utility to render text with clickable mentions, hashtags, and links ---
@@ -173,6 +174,7 @@ const PostDetail = () => {
   const postRef = useRef<HTMLDivElement>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const [showViewsSheet, setShowViewsSheet] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Track post view when it becomes visible
   useEffect(() => {
@@ -504,6 +506,17 @@ const PostDetail = () => {
                 </div>
                 <p className="text-sm text-muted-foreground">@{post.author.handle}</p>
               </Link>
+              {/* Edit button for own posts */}
+              {user?.id === post.author.id && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => setIsEditModalOpen(true)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
             {/* POST TEXT */}
@@ -700,6 +713,28 @@ const PostDetail = () => {
         totalViews={post?.view_count || 0}
         isPostOwner={user?.id === post?.author.id}
       />
+
+      {/* Edit Post Modal */}
+      {post && (
+        <EditPostModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          post={{
+            id: post.id,
+            content: post.content,
+            image_url: post.image_url,
+            post_images: post.post_images?.map(img => ({
+              image_url: img.image_url,
+              display_order: img.display_order
+            }))
+          }}
+          onPostUpdated={() => {
+            setIsEditModalOpen(false);
+            // Refresh post data
+            window.location.reload();
+          }}
+        />
+      )}
     </div>
   );
 };
