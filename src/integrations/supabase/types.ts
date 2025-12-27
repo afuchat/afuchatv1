@@ -994,6 +994,78 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_applications: {
+        Row: {
+          created_at: string
+          experience_level: string | null
+          github_username: string | null
+          id: string
+          portfolio_url: string | null
+          reason: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          skills: string[] | null
+          status: Database["public"]["Enums"]["developer_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          experience_level?: string | null
+          github_username?: string | null
+          id?: string
+          portfolio_url?: string | null
+          reason: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          skills?: string[] | null
+          status?: Database["public"]["Enums"]["developer_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          experience_level?: string | null
+          github_username?: string | null
+          id?: string
+          portfolio_url?: string | null
+          reason?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          skills?: string[] | null
+          status?: Database["public"]["Enums"]["developer_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      developer_roles: {
+        Row: {
+          features_enabled: string[] | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          features_enabled?: string[] | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          features_enabled?: string[] | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       follow_requests: {
         Row: {
           created_at: string
@@ -4221,6 +4293,10 @@ export type Database = {
             }
             Returns: Json
           }
+      approve_developer_application: {
+        Args: { p_application_id: string }
+        Returns: Json
+      }
       award_xp: {
         Args: {
           p_action_type: string
@@ -4287,6 +4363,10 @@ export type Database = {
       credit_daily_creator_earnings: { Args: never; Returns: Json }
       deactivate_expired_subscriptions: { Args: never; Returns: undefined }
       delete_chat_for_both: { Args: { p_chat_id: string }; Returns: boolean }
+      developer_has_feature: {
+        Args: { p_feature: string; p_user_id: string }
+        Returns: boolean
+      }
       distribute_daily_creator_rewards: { Args: never; Returns: Json }
       expire_subscriptions: { Args: never; Returns: number }
       generate_order_number: { Args: never; Returns: string }
@@ -4441,6 +4521,7 @@ export type Database = {
         Args: { _chat_id: string; _user_id: string }
         Returns: boolean
       }
+      is_developer: { Args: { p_user_id: string }; Returns: boolean }
       is_group_creator: {
         Args: { _chat_id: string; _user_id: string }
         Returns: boolean
@@ -4501,6 +4582,10 @@ export type Database = {
       }
       reject_affiliate_by_business: {
         Args: { p_notes?: string; p_request_id: string }
+        Returns: Json
+      }
+      reject_developer_application: {
+        Args: { p_application_id: string; p_reason?: string }
         Returns: Json
       }
       rejoin_group_with_admin_check: {
@@ -4576,6 +4661,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      developer_status: "none" | "pending" | "approved" | "rejected"
       notification_type:
         | "new_follower"
         | "new_like"
@@ -4711,6 +4797,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      developer_status: ["none", "pending", "approved", "rejected"],
       notification_type: [
         "new_follower",
         "new_like",
