@@ -95,11 +95,22 @@ export const ChristmasGiftsBanner = () => {
       const { data, error } = await supabase
         .from('gifts')
         .select('id, name, emoji, rarity, base_xp_cost')
-        .or('season.eq.christmas,season.eq.winter,name.ilike.%christmas%,name.ilike.%xmas%')
+        .or('season.eq.christmas,season.eq.winter')
         .limit(6);
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         setGifts(data);
+      } else {
+        // Fallback: fetch any gifts with Christmas-related names
+        const { data: fallbackData } = await supabase
+          .from('gifts')
+          .select('id, name, emoji, rarity, base_xp_cost')
+          .or('name.ilike.%christmas%,name.ilike.%xmas%,name.ilike.%winter%,name.ilike.%snow%')
+          .limit(6);
+        
+        if (fallbackData && fallbackData.length > 0) {
+          setGifts(fallbackData);
+        }
       }
     } catch (error) {
       console.error('Error fetching Christmas gifts:', error);
