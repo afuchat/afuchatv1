@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -327,6 +328,9 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	const [isProfileViewsOpen, setIsProfileViewsOpen] = useState(false);
 	const [profileViewsCount, setProfileViewsCount] = useState(0);
 	const [editingPost, setEditingPost] = useState<Post | null>(null);
+
+	// Check if the profile user is a developer
+	const { isDeveloper } = useDeveloperStatus(profileId || undefined);
 
 	// Scroll-based avatar animation
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1403,6 +1407,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 										isVerified={profile.is_verified}
 										isOrgVerified={profile.is_organization_verified}
 										isAffiliate={profile.is_affiliate}
+										isDeveloper={isDeveloper}
 										affiliateBusinessLogo={profile.affiliated_business?.avatar_url}
 										affiliateBusinessName={profile.affiliated_business?.display_name}
 									/>
@@ -1416,7 +1421,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 								
 								<UserPremiumBadge userId={profileId} />
 							</div>
-					) : (profile.is_verified || profile.is_organization_verified || profile.is_business_mode) ? (
+					) : (profile.is_verified || profile.is_organization_verified || profile.is_business_mode || isDeveloper) ? (
 						<div className="flex items-center gap-1">
 							<button 
 								className="text-xl font-extrabold leading-tight hover:underline"
@@ -1443,6 +1448,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									isVerified={profile.is_verified}
 									isOrgVerified={profile.is_organization_verified}
 									isAffiliate={profile.is_affiliate}
+									isDeveloper={isDeveloper}
 									affiliateBusinessLogo={profile.affiliated_business?.avatar_url}
 									affiliateBusinessName={profile.affiliated_business?.display_name}
 								/>
