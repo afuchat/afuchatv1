@@ -332,6 +332,21 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const [scrollProgress, setScrollProgress] = useState(0);
 
+	useEffect(() => {
+		const container = scrollContainerRef.current;
+		if (!container) return;
+
+		const handleScroll = () => {
+			const scrollTop = container.scrollTop;
+			// Animate between 0-150px of scroll
+			const progress = Math.min(scrollTop / 150, 1);
+			setScrollProgress(progress);
+		};
+
+		container.addEventListener('scroll', handleScroll, { passive: true });
+		return () => container.removeEventListener('scroll', handleScroll);
+	}, []);
+
 	const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (!e.target.files || e.target.files.length === 0 || !user || !profileId) return;
 
@@ -1102,21 +1117,6 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	// Check if users are mutual friends (both follow each other)
 	const areFriends = isFollowing && isFollowedByProfile;
 
-	// Scroll animation effect
-	useEffect(() => {
-		const container = scrollContainerRef.current;
-		if (!container) return;
-		
-		const handleScroll = () => {
-			const scrollTop = container.scrollTop;
-			// Animate between 0-150px of scroll
-			const progress = Math.min(scrollTop / 150, 1);
-			setScrollProgress(progress);
-		};
-		
-		container.addEventListener('scroll', handleScroll, { passive: true });
-		return () => container.removeEventListener('scroll', handleScroll);
-	}, []);
 
 	// Calculate avatar scale and position based on scroll
 	const avatarScale = 1 - (scrollProgress * 0.5); // Scale from 1 to 0.5
