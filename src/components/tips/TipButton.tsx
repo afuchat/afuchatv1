@@ -23,6 +23,7 @@ interface TipButtonProps {
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   showLabel?: boolean;
+  className?: string;
 }
 
 export const TipButton = ({
@@ -32,6 +33,7 @@ export const TipButton = ({
   variant = 'ghost',
   size = 'sm',
   showLabel = true,
+  className,
 }: TipButtonProps) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -122,7 +124,7 @@ export const TipButton = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant={variant} size={size} className="gap-2 group">
+        <Button variant={variant} size={size} className={`gap-2 group ${className || ''}`}>
           <Banknote className="w-5 h-5 text-green-500 money-pulse group-hover:animate-none group-hover:scale-125 transition-transform" />
           {showLabel && <span className="text-green-500 font-semibold">Tip</span>}
         </Button>
