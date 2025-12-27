@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Share2, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
@@ -28,10 +29,23 @@ export const ImageLightbox = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [showControls, setShowControls] = useState(true);
+  const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef({ x: 0, y: 0, distance: 0 });
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    const node = document.createElement('div');
+    node.setAttribute('data-image-lightbox-portal', '');
+    document.body.appendChild(node);
+    setPortalNode(node);
+
+    return () => {
+      document.body.removeChild(node);
+      setPortalNode(null);
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -269,7 +283,9 @@ export const ImageLightbox = ({
       })
     : null;
 
-  return (
+  if (!portalNode) return null;
+
+  const content = (
     <AnimatePresence>
       <motion.div 
         initial={{ opacity: 0 }}
@@ -481,4 +497,6 @@ export const ImageLightbox = ({
       </motion.div>
     </AnimatePresence>
   );
+
+  return createPortal(content, portalNode);
 };
