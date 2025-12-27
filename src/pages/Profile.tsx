@@ -332,11 +332,26 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const [scrollProgress, setScrollProgress] = useState(0);
 
-	const handleProfileScroll = (e: React.UIEvent<HTMLDivElement>) => {
-		const scrollTop = e.currentTarget.scrollTop;
-		const progress = Math.min(scrollTop / 150, 1);
+	const updateScrollProgress = useCallback((scrollTop: number) => {
+		const progress = Math.min(Math.max(scrollTop, 0) / 150, 1);
 		setScrollProgress(progress);
+	}, []);
+
+	const handleProfileScroll = (e: React.UIEvent<HTMLDivElement>) => {
+		updateScrollProgress(e.currentTarget.scrollTop);
 	};
+
+	useEffect(() => {
+		// Fallback for layouts where the page scrolls on window instead of the container
+		const handleWindowScroll = () => {
+			updateScrollProgress(window.scrollY || 0);
+		};
+
+		window.addEventListener('scroll', handleWindowScroll, { passive: true });
+		// initialize
+		handleWindowScroll();
+		return () => window.removeEventListener('scroll', handleWindowScroll);
+	}, [updateScrollProgress]);
 
 
 	const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1111,8 +1126,8 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 
 
 	// Calculate avatar scale and position based on scroll
-	const avatarScale = 1 - (scrollProgress * 0.5); // 1 -> 0.5
-	const avatarTranslateY = -scrollProgress * 24; // move up as it shrinks
+	const avatarScale = 1 - (scrollProgress * 0.45); // 1 -> 0.55
+	const avatarTranslateY = -scrollProgress * 36; // move up as it shrinks
 
 	return (
 		<div className="h-full flex flex-col">
