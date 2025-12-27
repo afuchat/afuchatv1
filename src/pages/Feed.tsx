@@ -118,6 +118,7 @@ interface Post {
   view_count: number;
   has_liked: boolean;
   affiliation_date?: string;
+  is_developer?: boolean;
 }
 
 interface Reply {
@@ -151,6 +152,7 @@ interface Reply {
     verification_source?: 'manual' | 'premium' | null;
   };
   affiliation_date?: string;
+  is_developer?: boolean;
 }
 
 
@@ -394,9 +396,10 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: {
                     )}
                     
                     <VerifiedBadge 
-                      isVerified={reply.profiles.is_verified}
+                      isVerified={reply.profiles.is_verified || reply.is_developer}
                       isOrgVerified={reply.profiles.is_organization_verified}
                       isAffiliate={reply.profiles.is_affiliate}
+                      isDeveloper={reply.is_developer}
                       affiliateBusinessLogo={reply.profiles.affiliated_business?.avatar_url}
                       affiliateBusinessName={reply.profiles.affiliated_business?.display_name}
                       size="sm"
@@ -880,9 +883,10 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             )}
             
             <VerifiedBadge 
-              isVerified={post.profiles.is_verified}
+              isVerified={post.profiles.is_verified || post.is_developer}
               isOrgVerified={post.profiles.is_organization_verified}
               isAffiliate={post.profiles.is_affiliate}
+              isDeveloper={post.is_developer}
               affiliateBusinessLogo={post.profiles.affiliated_business?.avatar_url}
               affiliateBusinessName={post.profiles.affiliated_business?.display_name}
               size="sm"
@@ -1707,7 +1711,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       const postIds = postData.map((p) => p.id);
 
       // Batch fetch all data in parallel
-      const [businessData, affiliationData, repliesData, likedData, likeCountsData, quotedPostsData] = await Promise.all([
+      const [businessData, affiliationData, repliesData, likedData, likeCountsData, quotedPostsData, developerData] = await Promise.all([
         // Business profiles
         (async () => {
           const businessIds = Array.from(new Set([
@@ -1797,6 +1801,23 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             map.set(qp.id, qp);
           });
           return map;
+        })(),
+
+        // Developer roles
+        (async () => {
+          const authorIds = Array.from(new Set([
+            ...postData.map(p => p.author_id),
+            ...followingPostData.map(p => p.author_id)
+          ])) as string[];
+
+          if (authorIds.length === 0) return new Set<string>();
+
+          const { data } = await supabase
+            .from('developer_roles')
+            .select('user_id')
+            .in('user_id', authorIds);
+
+          return new Set((data || []).map((d: any) => d.user_id));
         })()
       ]);
 
@@ -1810,6 +1831,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         if (reply.profiles?.is_affiliate && reply.author_id) {
           reply.affiliation_date = affiliationData.get(reply.author_id);
         }
+        // Add developer status to reply
+        reply.is_developer = developerData.has(reply.author_id);
         if (!repliesByPostId.has(r.post_id)) repliesByPostId.set(r.post_id, []);
         repliesByPostId.get(r.post_id)!.push(reply);
       });
@@ -1842,6 +1865,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           view_count: post.view_count || 0,
           has_liked: user ? likedSet.has(post.id) : false,
           affiliation_date: post.profiles?.is_affiliate && post.author_id ? affiliationData.get(post.author_id) : undefined,
+          is_developer: developerData.has(post.author_id),
         } as Post;
       };
 
