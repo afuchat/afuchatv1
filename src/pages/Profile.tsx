@@ -299,6 +299,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 		userName: string;
 		isVerified: boolean;
 		isOrgVerified: boolean;
+		isDeveloper?: boolean;
 		createdAt?: string;
 	} | null>(null);
 	const [affiliatedUsers, setAffiliatedUsers] = useState<Array<{
@@ -1427,8 +1428,9 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 								className="text-xl font-extrabold leading-tight hover:underline"
 								onClick={() => setSelectedVerified({
 									userName: profile.display_name,
-									isVerified: profile.is_verified || false,
+									isVerified: profile.is_verified || isDeveloper || false,
 									isOrgVerified: profile.is_organization_verified || false,
+									isDeveloper: isDeveloper,
 									createdAt: profile.created_at
 								})}
 							>
@@ -1438,8 +1440,9 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							<div 
 								onClick={() => setSelectedVerified({
 									userName: profile.display_name,
-									isVerified: profile.is_verified || false,
+									isVerified: profile.is_verified || isDeveloper || false,
 									isOrgVerified: profile.is_organization_verified || false,
+									isDeveloper: isDeveloper,
 									createdAt: profile.created_at
 								})}
 								className="cursor-pointer"
@@ -1819,6 +1822,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 					userName={selectedVerified.userName}
 					isVerified={selectedVerified.isVerified}
 					isOrgVerified={selectedVerified.isOrgVerified}
+					isDeveloper={selectedVerified.isDeveloper}
 					createdAt={selectedVerified.createdAt}
 					viewerIsVerified={currentUserIsVerified}
 				/>
