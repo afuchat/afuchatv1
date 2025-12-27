@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -29,6 +30,7 @@ interface BusinessProfile {
 const AffiliateRequest = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isDeveloper, loading: devLoading } = useDeveloperStatus();
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [selectedBusiness, setSelectedBusiness] = useState('');
   const [notes, setNotes] = useState('');
@@ -38,19 +40,31 @@ const AffiliateRequest = () => {
   const [isAlreadyAffiliated, setIsAlreadyAffiliated] = useState(false);
   const [isBusinessAccount, setIsBusinessAccount] = useState(false);
 
+  // Redirect developers away - they can't be affiliates
   useEffect(() => {
-    checkBusinessMode();
-    fetchBusinessProfiles();
-    checkExistingRequest();
+    if (!devLoading && isDeveloper) {
+      toast.error('Developers cannot apply for the affiliate program');
+      navigate('/home');
+    }
+  }, [isDeveloper, devLoading, navigate]);
+
+  useEffect(() => {
+    if (!devLoading && !isDeveloper) {
+      checkBusinessMode();
+      fetchBusinessProfiles();
+      checkExistingRequest();
+    }
     
     // Refresh status when component mounts
     const handleFocus = () => {
-      checkExistingRequest();
+      if (!isDeveloper) {
+        checkExistingRequest();
+      }
     };
     
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [user]);
+  }, [user, devLoading, isDeveloper]);
 
   const checkBusinessMode = async () => {
     if (!user) return;
