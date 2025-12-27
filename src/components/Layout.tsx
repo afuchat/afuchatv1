@@ -18,6 +18,7 @@ import { motion } from 'framer-motion';
 import { DesktopHybridLayout } from '@/components/DesktopHybridLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 
 interface LayoutProps {
   children: ReactNode;
@@ -40,6 +41,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   const [chatScrollHide, setChatScrollHide] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
+  const { isDeveloper } = useDeveloperStatus();
   
   // Detect if running in iframe (embedded mini program)
   const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
@@ -257,7 +259,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     navItems.push({ path: `/${user.id}`, icon: User, label: t('common.profile'), badge: false });
   }
 
-  if (isAffiliate) {
+  if (isAffiliate && !isDeveloper) {
     navItems.push({ path: '/affiliate-dashboard', icon: TrendingUp, label: 'Affiliate', badge: false });
   }
 

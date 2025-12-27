@@ -34,6 +34,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
+import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 
 interface MenuItem {
   icon: React.ElementType;
@@ -59,6 +60,7 @@ export function MobileMenuSheet({ trigger }: MobileMenuSheetProps) {
   const [isBusinessMode, setIsBusinessMode] = useState(false);
   const [isAffiliate, setIsAffiliate] = useState(false);
   const [hasAffiliateRequest, setHasAffiliateRequest] = useState(false);
+  const { isDeveloper } = useDeveloperStatus();
 
   useEffect(() => {
     if (user) {
@@ -136,25 +138,27 @@ export function MobileMenuSheet({ trigger }: MobileMenuSheetProps) {
     });
   }
 
-  // Affiliate navigation - conditional based on status
-  if (isAffiliate) {
-    // User is approved affiliate - show dashboard
-    menuItems.splice(10, 0, { 
-      icon: TrendingUp, 
-      label: 'Affiliate Dashboard', 
-      path: '/affiliate-dashboard', 
-      requiresAffiliate: true 
-    });
-  } else if (!isAffiliate && !hasAffiliateRequest && !isBusinessMode) {
-    // User hasn't requested yet and is not business - show request option
-    menuItems.splice(10, 0, { 
-      icon: Briefcase, 
-      label: 'Become Affiliate', 
-      path: '/affiliate-request', 
-      requiresAuth: true 
-    });
+  // Affiliate navigation - conditional based on status (hide for developers)
+  if (!isDeveloper) {
+    if (isAffiliate) {
+      // User is approved affiliate - show dashboard
+      menuItems.splice(10, 0, { 
+        icon: TrendingUp, 
+        label: 'Affiliate Dashboard', 
+        path: '/affiliate-dashboard', 
+        requiresAffiliate: true 
+      });
+    } else if (!isAffiliate && !hasAffiliateRequest && !isBusinessMode) {
+      // User hasn't requested yet and is not business - show request option
+      menuItems.splice(10, 0, { 
+        icon: Briefcase, 
+        label: 'Become Affiliate', 
+        path: '/affiliate-request', 
+        requiresAuth: true 
+      });
+    }
+    // If hasAffiliateRequest is true, don't show anything (request is pending)
   }
-  // If hasAffiliateRequest is true, don't show anything (request is pending)
 
   // Admin navigation
   if (isAdmin) {
@@ -196,7 +200,7 @@ export function MobileMenuSheet({ trigger }: MobileMenuSheetProps) {
       >
         <SheetHeader className="pb-6">
           <SheetTitle className="text-xl font-bold">Quick Access</SheetTitle>
-          {hasAffiliateRequest && !isAffiliate && (
+          {hasAffiliateRequest && !isAffiliate && !isDeveloper && (
             <div className="mt-2 px-3 py-2 bg-muted/50 rounded-lg border border-border/50">
               <p className="text-xs text-muted-foreground">
                 ⏳ Affiliate request pending review
