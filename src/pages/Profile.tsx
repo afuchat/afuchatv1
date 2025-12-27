@@ -44,6 +44,7 @@ import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 import { WarningBadge } from '@/components/WarningBadge';
 import { ProfileViewsSheet } from '@/components/ProfileViewsSheet';
 import { EditPostModal } from '@/components/EditPostModal';
+import { DeveloperProfileSection } from '@/components/developer/DeveloperProfileSection';
 import { Ellipsis, Pencil } from 'lucide-react';
 
 interface Profile {
@@ -65,6 +66,9 @@ interface Profile {
 	banner_url?: string | null;
 	website_url?: string | null;
 	github_url?: string | null;
+	portfolio_url?: string | null;
+	developer_tagline?: string | null;
+	available_for_hire?: boolean;
 	is_business_mode?: boolean;
 	business_category?: string | null;
 	country?: string | null;
@@ -545,7 +549,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 
 		let query = supabase
 			.from('profiles')
-			.select('*, created_at, last_seen, show_online_status, banner_url, show_balance, github_url')
+			.select('*, created_at, last_seen, show_online_status, banner_url, show_balance, github_url, portfolio_url, developer_tagline, available_for_hire')
 			.limit(1);
 
 		if (isParamUUID) {
@@ -1553,19 +1557,17 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 					</a>
 				)}
 
-				{/* GitHub URL - Show for developers */}
-				{!isPrivateAccount && isDeveloper && profile.github_url && (
-					<a
-						href={profile.github_url.startsWith('http://') || profile.github_url.startsWith('https://') 
-							? profile.github_url 
-							: `https://${profile.github_url}`}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 mt-2 transition-colors"
-					>
-						<Github className="h-4 w-4" />
-						<span>{profile.github_url.replace(/^https?:\/\/(www\.)?github\.com\/?/, '')}</span>
-					</a>
+				{/* Developer Profile Section - Enhanced showcase for developers */}
+				{!isPrivateAccount && isDeveloper && (
+					<DeveloperProfileSection
+						githubUrl={profile.github_url}
+						portfolioUrl={profile.portfolio_url}
+						tagline={profile.developer_tagline}
+						availableForHire={profile.available_for_hire}
+						displayName={profile.display_name}
+						handle={profile.handle}
+						onContact={user && user.id !== profileId ? handleStartChat : undefined}
+					/>
 				)}
 
 				{/* Nexa Progress Bar - hide for private accounts */}

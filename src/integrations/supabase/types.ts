@@ -2918,6 +2918,7 @@ export type Database = {
           affiliated_business_id: string | null
           ai_chat_id: string | null
           available_balance_ugx: number
+          available_for_hire: boolean | null
           avatar_url: string | null
           ban_reason: string | null
           banned_at: string | null
@@ -2929,6 +2930,7 @@ export type Database = {
           created_at: string | null
           current_grade: string | null
           date_of_birth: string | null
+          developer_tagline: string | null
           display_name: string
           github_url: string | null
           handle: string
@@ -2950,6 +2952,7 @@ export type Database = {
           login_streak: number | null
           missed_earnings_total: number | null
           phone_number: string | null
+          portfolio_url: string | null
           profile_completion_rewarded: boolean | null
           show_balance: boolean | null
           show_online_status: boolean | null
@@ -2970,6 +2973,7 @@ export type Database = {
           affiliated_business_id?: string | null
           ai_chat_id?: string | null
           available_balance_ugx?: number
+          available_for_hire?: boolean | null
           avatar_url?: string | null
           ban_reason?: string | null
           banned_at?: string | null
@@ -2981,6 +2985,7 @@ export type Database = {
           created_at?: string | null
           current_grade?: string | null
           date_of_birth?: string | null
+          developer_tagline?: string | null
           display_name: string
           github_url?: string | null
           handle: string
@@ -3002,6 +3007,7 @@ export type Database = {
           login_streak?: number | null
           missed_earnings_total?: number | null
           phone_number?: string | null
+          portfolio_url?: string | null
           profile_completion_rewarded?: boolean | null
           show_balance?: boolean | null
           show_online_status?: boolean | null
@@ -3022,6 +3028,7 @@ export type Database = {
           affiliated_business_id?: string | null
           ai_chat_id?: string | null
           available_balance_ugx?: number
+          available_for_hire?: boolean | null
           avatar_url?: string | null
           ban_reason?: string | null
           banned_at?: string | null
@@ -3033,6 +3040,7 @@ export type Database = {
           created_at?: string | null
           current_grade?: string | null
           date_of_birth?: string | null
+          developer_tagline?: string | null
           display_name?: string
           github_url?: string | null
           handle?: string
@@ -3054,6 +3062,7 @@ export type Database = {
           login_streak?: number | null
           missed_earnings_total?: number | null
           phone_number?: string | null
+          portfolio_url?: string | null
           profile_completion_rewarded?: boolean | null
           show_balance?: boolean | null
           show_online_status?: boolean | null
