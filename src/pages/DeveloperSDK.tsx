@@ -11,18 +11,23 @@ import {
   Shield, Terminal, Smartphone, Globe, Lock, Zap, Bell, CreditCard, 
   BarChart3, Upload, Play, Settings, Package, GitBranch, AlertTriangle,
   Users, MessageSquare, Image, Database, Palette, Navigation, Hammer,
-  CheckCircle2, Circle, FileCode, FolderOpen, TestTube, Send
+  CheckCircle2, Circle, FileCode, FolderOpen, TestTube, Send, Github
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
+import DeveloperApplicationForm from '@/components/developer/DeveloperApplicationForm';
+import DeveloperFeatures from '@/components/developer/DeveloperFeatures';
+import DeveloperBadge from '@/components/DeveloperBadge';
 
 const DeveloperSDK = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { isDeveloper, applicationStatus, featuresEnabled, refetch } = useDeveloperStatus();
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -431,6 +436,11 @@ if (payment.status === 'completed') {
                 <TabsTrigger value="api" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
                   <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
                   <span>API Ref</span>
+                </TabsTrigger>
+                <TabsTrigger value="developer" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                  <Github className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span>Developer</span>
+                  {isDeveloper && <DeveloperBadge size="sm" showTooltip={false} />}
                 </TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger value="launch-guide" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 text-primary whitespace-nowrap">
@@ -1355,6 +1365,44 @@ fetch('https://api.afuchat.com/api/v1/storage/get/key', {
                 </Card>
               </TabsContent>
             )}
+
+            {/* Developer Tab */}
+            <TabsContent value="developer" className="space-y-6">
+              {isDeveloper ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-gray-800/20 to-gray-900/20 rounded-lg border">
+                    <DeveloperBadge size="lg" />
+                    <div>
+                      <h3 className="font-semibold">AfuChat Developer</h3>
+                      <p className="text-sm text-muted-foreground">You have access to exclusive developer features</p>
+                    </div>
+                  </div>
+                  <DeveloperFeatures featuresEnabled={featuresEnabled} />
+                </div>
+              ) : applicationStatus === 'pending' ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                      <Github className="w-8 h-8 text-yellow-500" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Application Pending</h3>
+                    <p className="text-muted-foreground">Your developer application is being reviewed. We'll notify you once it's approved.</p>
+                  </CardContent>
+                </Card>
+              ) : applicationStatus === 'rejected' ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/20 flex items-center justify-center">
+                      <Github className="w-8 h-8 text-destructive" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Application Not Approved</h3>
+                    <p className="text-muted-foreground">Unfortunately your application wasn't approved. You can reapply after improving your profile.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <DeveloperApplicationForm onSuccess={refetch} />
+              )}
+            </TabsContent>
           </Tabs>
         </main>
       </div>

@@ -1,9 +1,11 @@
 import React from 'react';
+import { Github } from 'lucide-react';
 
 interface VerifiedBadgeProps {
   isVerified?: boolean;
   isOrgVerified?: boolean;
   isAffiliate?: boolean;
+  isDeveloper?: boolean;
   affiliateBusinessLogo?: string | null;
   affiliateBusinessName?: string | null;
   size?: 'sm' | 'md' | 'lg';
@@ -15,6 +17,7 @@ export function VerifiedBadge({
   isVerified,
   isOrgVerified,
   isAffiliate,
+  isDeveloper,
   affiliateBusinessLogo,
   affiliateBusinessName,
   size = 'sm',
@@ -65,6 +68,18 @@ export function VerifiedBadge({
           alt={affiliateBusinessName || 'Business Partner'} 
           className={`${logoSize} rounded-full object-cover border border-border`}
         />
+      </div>
+    );
+  }
+
+  // Developer badge - GitHub icon
+  if (isDeveloper) {
+    return (
+      <div 
+        className={`${iconSize} ml-0.5 flex-shrink-0 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center ring-1 ring-gray-600/50`}
+        aria-label="AfuChat Developer"
+      >
+        <Github className="w-2.5 h-2.5 text-white" />
       </div>
     );
   }
