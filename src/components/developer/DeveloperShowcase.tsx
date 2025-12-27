@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ExternalLink, Github, Plus, Trash2, Eye, Star } from 'lucide-react';
+import { ExternalLink, Github, Plus, Trash2, Eye, Star, Upload, X, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -30,10 +30,13 @@ interface DeveloperShowcaseProps {
 export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, isOwnProfile }) => {
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [newProject, setNewProject] = useState({
     title: '',
     description: '',
-    image_url: '',
     project_url: '',
     github_url: '',
     technologies: ''
@@ -54,13 +57,55 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
     }
   });
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be less than 5MB');
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return null;
+    
+    const fileExt = imageFile.name.split('.').pop();
+    const fileName = `${userId}/${Date.now()}.${fileExt}`;
+    
+    const { error } = await supabase.storage
+      .from('developer-showcase')
+      .upload(fileName, imageFile);
+    
+    if (error) throw error;
+    
+    const { data: { publicUrl } } = supabase.storage
+      .from('developer-showcase')
+      .getPublicUrl(fileName);
+    
+    return publicUrl;
+  };
+
   const addProjectMutation = useMutation({
     mutationFn: async () => {
+      setIsUploading(true);
+      const imageUrl = await uploadImage();
+      
       const { error } = await supabase.from('developer_showcase').insert({
         user_id: userId,
         title: newProject.title,
         description: newProject.description || null,
-        image_url: newProject.image_url || null,
+        image_url: imageUrl,
         project_url: newProject.project_url || null,
         github_url: newProject.github_url || null,
         technologies: newProject.technologies ? newProject.technologies.split(',').map(t => t.trim()) : null
@@ -70,10 +115,12 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['developer-showcase', userId] });
       setIsAddDialogOpen(false);
-      setNewProject({ title: '', description: '', image_url: '', project_url: '', github_url: '', technologies: '' });
+      setNewProject({ title: '', description: '', project_url: '', github_url: '', technologies: '' });
+      clearImage();
       toast.success('Project added to showcase!');
     },
-    onError: () => toast.error('Failed to add project')
+    onError: () => toast.error('Failed to add project'),
+    onSettled: () => setIsUploading(false)
   });
 
   const deleteProjectMutation = useMutation({
@@ -139,11 +186,38 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
                   onChange={e => setNewProject(p => ({ ...p, description: e.target.value }))}
                   rows={3}
                 />
-                <Input
-                  placeholder="Image URL (optional)"
-                  value={newProject.image_url}
-                  onChange={e => setNewProject(p => ({ ...p, image_url: e.target.value }))}
-                />
+                
+                {/* Image Upload */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Project Image</label>
+                  {imagePreview ? (
+                    <div className="relative w-full h-32 rounded-lg overflow-hidden bg-muted">
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        onClick={clearImage}
+                        className="absolute top-2 right-2 p-1 rounded-full bg-background/80 hover:bg-background"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                    >
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Click to upload image</span>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </div>
+
                 <Input
                   placeholder="Live project URL"
                   value={newProject.project_url}
@@ -161,10 +235,10 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
                 />
                 <Button
                   onClick={() => addProjectMutation.mutate()}
-                  disabled={!newProject.title || addProjectMutation.isPending}
+                  disabled={!newProject.title || addProjectMutation.isPending || isUploading}
                   className="w-full"
                 >
-                  {addProjectMutation.isPending ? 'Adding...' : 'Add Project'}
+                  {isUploading ? 'Uploading...' : addProjectMutation.isPending ? 'Adding...' : 'Add Project'}
                 </Button>
               </div>
             </DialogContent>
