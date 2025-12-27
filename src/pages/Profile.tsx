@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -1099,6 +1099,29 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	// Check if users are mutual friends (both follow each other)
 	const areFriends = isFollowing && isFollowedByProfile;
 
+	// Scroll-based avatar animation
+	const scrollContainerRef = useRef<HTMLDivElement>(null);
+	const [scrollProgress, setScrollProgress] = useState(0);
+	
+	useEffect(() => {
+		const container = scrollContainerRef.current;
+		if (!container) return;
+		
+		const handleScroll = () => {
+			const scrollTop = container.scrollTop;
+			// Animate between 0-150px of scroll
+			const progress = Math.min(scrollTop / 150, 1);
+			setScrollProgress(progress);
+		};
+		
+		container.addEventListener('scroll', handleScroll, { passive: true });
+		return () => container.removeEventListener('scroll', handleScroll);
+	}, []);
+
+	// Calculate avatar scale and position based on scroll
+	const avatarScale = 1 - (scrollProgress * 0.5); // Scale from 1 to 0.5
+	const avatarTranslateY = scrollProgress * 40; // Move up as it shrinks
+
 	return (
 		<div className="h-full flex flex-col">
 			<SEO 
@@ -1106,7 +1129,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				description={isPrivateAccount ? 'This account is private. Follow to see their content.' : `View ${profile?.display_name}'s profile on AfuChat. ${profile?.bio ? profile.bio.substring(0, 150) : `Follow ${profile?.display_name} to see their posts, updates, and connect with them on the social platform.`} Join AfuChat to discover profiles, connect with people, and stay updated.`}
 				keywords={`${profile?.handle} profile, ${profile?.display_name}, user profile, social profile, follow ${profile?.handle}, ${profile?.display_name} posts, connect with ${profile?.display_name}, user page, profile page, social media profile`}
 			/>
-			<div className="flex-1 overflow-y-auto">
+			<div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
 				<div className="relative h-36 bg-gray-300 dark:bg-gray-700 w-full">
 					{/* Show blurred/hidden banner for private accounts */}
 					{isPrivateAccount ? (
@@ -1208,7 +1231,12 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				)}
 					
 				<div className="flex items-end -mt-20 sm:-mt-16">
-					<div className="relative">
+					<div 
+						className="relative origin-bottom-left transition-transform duration-150 ease-out"
+						style={{
+							transform: `scale(${avatarScale}) translateY(${avatarTranslateY}px)`,
+						}}
+					>
 						{isPrivateAccount ? (
 							<div className={`w-24 h-24 sm:w-28 sm:h-28 ${profile?.is_business_mode ? 'rounded-lg' : 'rounded-full'} bg-muted/70 border-4 border-background flex items-center justify-center`}>
 								<UserX className="h-10 w-10 text-muted-foreground/50" />
