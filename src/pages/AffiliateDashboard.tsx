@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -35,14 +36,25 @@ interface AffiliateInfo {
 const AffiliateDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isDeveloper, loading: devLoading } = useDeveloperStatus();
   const [loading, setLoading] = useState(true);
   const [affiliateInfo, setAffiliateInfo] = useState<AffiliateInfo | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
+  // Redirect developers away - they can't be affiliates
   useEffect(() => {
-    fetchAffiliateInfo();
-  }, [user]);
+    if (!devLoading && isDeveloper) {
+      toast.error('Developers cannot access the affiliate program');
+      navigate('/home');
+    }
+  }, [isDeveloper, devLoading, navigate]);
+
+  useEffect(() => {
+    if (!devLoading && !isDeveloper) {
+      fetchAffiliateInfo();
+    }
+  }, [user, devLoading, isDeveloper]);
 
   const fetchAffiliateInfo = async () => {
     if (!user) return;
