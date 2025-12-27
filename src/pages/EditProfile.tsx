@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator'; 
-import { User, Lock, Eye, MessageCircle, Upload, X, Building2, Github } from 'lucide-react';
+import { User, Lock, Eye, MessageCircle, Upload, X, Building2, Github, Globe, Code2, Briefcase, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { handleSchema, displayNameSchema, bioSchema } from '@/lib/validation';
 import { useNexa } from '@/hooks/useNexa';
@@ -33,6 +33,9 @@ interface EditProfileForm {
   bio: string;
   website_url: string;
   github_url: string;
+  portfolio_url: string;
+  developer_tagline: string;
+  available_for_hire: boolean;
   is_private: boolean;
   show_online_status: boolean;
   show_read_receipts: boolean;
@@ -57,6 +60,9 @@ const EditProfile: React.FC = () => {
     bio: '',
     website_url: '',
     github_url: '',
+    portfolio_url: '',
+    developer_tagline: '',
+    available_for_hire: false,
     is_private: false,
     show_online_status: true,
     show_read_receipts: true,
@@ -112,6 +118,9 @@ const EditProfile: React.FC = () => {
             bio: data.bio || '',
             website_url: data.website_url || '',
             github_url: (data as any).github_url || '',
+            portfolio_url: (data as any).portfolio_url || '',
+            developer_tagline: (data as any).developer_tagline || '',
+            available_for_hire: (data as any).available_for_hire || false,
             is_private: data.is_private || false,
             show_online_status: data.show_online_status || true,
             show_read_receipts: data.show_read_receipts || true,
@@ -130,6 +139,9 @@ const EditProfile: React.FC = () => {
             bio: '',
             website_url: '',
             github_url: '',
+            portfolio_url: '',
+            developer_tagline: '',
+            available_for_hire: false,
             is_private: false,
             show_online_status: true,
             show_read_receipts: true,
@@ -224,9 +236,12 @@ const EditProfile: React.FC = () => {
         updated_at: new Date().toISOString(),
       };
 
-      // Add github_url for developers
+      // Add developer fields
       if (isDeveloper) {
         (updateData as any).github_url = profile.github_url.trim() || null;
+        (updateData as any).portfolio_url = profile.portfolio_url.trim() || null;
+        (updateData as any).developer_tagline = profile.developer_tagline.trim() || null;
+        (updateData as any).available_for_hire = profile.available_for_hire;
       }
 
       const { error } = await supabase
@@ -600,26 +615,98 @@ const EditProfile: React.FC = () => {
                 </div>
               )}
 
-              {/* GitHub URL - Only for developers */}
+              {/* Developer Section - Only for developers */}
               {isDeveloper && (
-                <div className="space-y-2">
-                  <Label htmlFor="github_url" className="text-sm font-medium flex items-center gap-2">
-                    <Github className="h-4 w-4 text-muted-foreground" />
-                    GitHub Profile
-                  </Label>
-                  <Input
-                    id="github_url"
-                    name="github_url"
-                    value={profile.github_url}
-                    onChange={handleInputChange}
-                    placeholder="https://github.com/username"
-                    disabled={saving}
-                    className="h-11"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Your GitHub profile URL will be shown on your profile
-                  </p>
-                </div>
+                <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg">
+                        <Code2 className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                      Developer Profile
+                      <Sparkles className="h-4 w-4 text-amber-400" />
+                    </CardTitle>
+                    <CardDescription>
+                      Showcase your work and get discovered by potential clients
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Developer Tagline */}
+                    <div className="space-y-2">
+                      <Label htmlFor="developer_tagline" className="text-sm font-medium">
+                        Tagline / Specialty
+                      </Label>
+                      <Input
+                        id="developer_tagline"
+                        name="developer_tagline"
+                        value={profile.developer_tagline}
+                        onChange={handleInputChange}
+                        placeholder="e.g., Full-Stack Developer | React & Node.js Expert"
+                        disabled={saving}
+                        className="h-11"
+                        maxLength={80}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        A short description of your expertise (max 80 chars)
+                      </p>
+                    </div>
+
+                    {/* GitHub URL */}
+                    <div className="space-y-2">
+                      <Label htmlFor="github_url" className="text-sm font-medium flex items-center gap-2">
+                        <Github className="h-4 w-4 text-muted-foreground" />
+                        GitHub Profile
+                      </Label>
+                      <Input
+                        id="github_url"
+                        name="github_url"
+                        value={profile.github_url}
+                        onChange={handleInputChange}
+                        placeholder="https://github.com/username"
+                        disabled={saving}
+                        className="h-11"
+                      />
+                    </div>
+
+                    {/* Portfolio URL */}
+                    <div className="space-y-2">
+                      <Label htmlFor="portfolio_url" className="text-sm font-medium flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        Portfolio Website
+                      </Label>
+                      <Input
+                        id="portfolio_url"
+                        name="portfolio_url"
+                        value={profile.portfolio_url}
+                        onChange={handleInputChange}
+                        placeholder="https://yourportfolio.com"
+                        disabled={saving}
+                        className="h-11"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Your portfolio or personal website to showcase your work
+                      </p>
+                    </div>
+
+                    {/* Available for Hire Toggle */}
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                      <div className="flex-1 pr-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Briefcase className="h-4 w-4 text-emerald-500" />
+                          <Label className="text-sm font-medium cursor-pointer">Available for Hire</Label>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Show a badge on your profile indicating you're open to work
+                        </p>
+                      </div>
+                      <Switch
+                        checked={profile.available_for_hire}
+                        onCheckedChange={() => setProfile(prev => ({ ...prev, available_for_hire: !prev.available_for_hire }))}
+                        disabled={saving}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </CardContent>
           </Card>
