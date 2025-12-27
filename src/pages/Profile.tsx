@@ -1127,7 +1127,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						{user && user.id === profileId && (
 							<button
 								onClick={() => setIsProfileViewsOpen(true)}
-								className="relative p-2 rounded-full bg-background/80 hover:bg-background cursor-pointer transition-colors backdrop-blur-sm"
+								className="relative p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors shadow-sm"
 							>
 								<Footprints className="h-5 w-5 text-foreground" />
 								{profileViewsCount > 0 && (
@@ -1153,14 +1153,14 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									toast.success(t('profile.linkCopied', 'Profile link copied!'));
 								}
 							}}
-							className="p-2 rounded-full bg-background/80 hover:bg-background cursor-pointer transition-colors backdrop-blur-sm"
+							className="p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors shadow-sm"
 						>
 							<Share2 className="h-5 w-5 text-foreground" />
 						</button>
 						
 						{/* Banner Upload - only for own profile */}
 						{user && user.id === profileId && (
-							<label className="p-2 rounded-full bg-background/80 hover:bg-background cursor-pointer transition-colors backdrop-blur-sm">
+							<label className="p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors shadow-sm">
 								<input
 									type="file"
 									accept="image/*"
