@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 
 interface DesktopHybridLayoutProps {
   children: ReactNode;
@@ -38,6 +39,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const { isDeveloper } = useDeveloperStatus();
 
   // Hide right sidebar on certain pages
   const hideRightSidebar = ['/chats', '/chat/', '/settings', '/admin', '/wallet', '/ai-chat'].some(
@@ -126,7 +128,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
     { path: '/mini-programs', icon: Grid3x3, label: 'Mini Programs' },
   ];
 
-  if (isAffiliate) {
+  if (isAffiliate && !isDeveloper) {
     navItems.push({ path: '/affiliate-dashboard', icon: TrendingUp, label: 'Affiliate' });
   }
 

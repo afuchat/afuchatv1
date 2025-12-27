@@ -46,6 +46,7 @@ import { VerifiedBadge } from './VerifiedBadge';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { AddAccountSheet } from './AddAccountSheet';
 import { toast } from 'sonner';
+import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 
 interface LinkedAccount {
   id: string;
@@ -77,6 +78,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
   const navigate = useNavigate();
   const { resolvedTheme, setTheme } = useTheme();
   const { isPremium } = usePremiumStatus();
+  const { isDeveloper } = useDeveloperStatus();
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountsDrawerOpen, setAccountsDrawerOpen] = useState(false);
@@ -285,20 +287,22 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
     });
   }
   
-  if (profile?.is_affiliate) {
-    dynamicItems.push({ 
-      icon: TrendingUp, 
-      label: 'Affiliate Dashboard', 
-      path: '/affiliate-dashboard', 
-      requiresAffiliate: true 
-    });
-  } else if (!profile?.is_affiliate && !hasAffiliateRequest && !profile?.is_business_mode) {
-    dynamicItems.push({ 
-      icon: Briefcase, 
-      label: 'Become Affiliate', 
-      path: '/affiliate-request', 
-      requiresAuth: true 
-    });
+  if (!isDeveloper) {
+    if (profile?.is_affiliate) {
+      dynamicItems.push({ 
+        icon: TrendingUp, 
+        label: 'Affiliate Dashboard', 
+        path: '/affiliate-dashboard', 
+        requiresAffiliate: true 
+      });
+    } else if (!profile?.is_affiliate && !hasAffiliateRequest && !profile?.is_business_mode) {
+      dynamicItems.push({ 
+        icon: Briefcase, 
+        label: 'Become Affiliate', 
+        path: '/affiliate-request', 
+        requiresAuth: true 
+      });
+    }
   }
   
   if (isAdmin) {
