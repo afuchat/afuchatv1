@@ -7,7 +7,7 @@ import { AdminDashboardSkeleton } from '@/components/skeletons';
 import { 
   Users, MessageSquare, Package, Activity, Shield, Gift, Coins, 
   TrendingUp, Globe, Briefcase, Wallet, AlertTriangle, Eye, 
-  Heart, UserPlus, FileText, Image, Gamepad2, RefreshCw, Store
+  Heart, UserPlus, FileText, Image, Gamepad2, RefreshCw, Store, Github
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,6 +23,7 @@ import { AdminReportsPanel } from '@/components/admin/AdminReportsPanel';
 import { AdminGroupChannelVerification } from '@/components/admin/AdminGroupChannelVerification';
 import { AdminMiniProgramsPanel } from '@/components/admin/AdminMiniProgramsPanel';
 import { PageHeader } from '@/components/PageHeader';
+import AdminDeveloperPanel from '@/components/admin/AdminDeveloperPanel';
 
 interface DashboardStats {
   totalUsers: number;
@@ -707,6 +708,10 @@ const AdminDashboard = () => {
           <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
             <TabsTrigger value="analytics" className="text-xs">Analytics</TabsTrigger>
             <TabsTrigger value="users" className="text-xs">Users</TabsTrigger>
+            <TabsTrigger value="developers" className="text-xs gap-1">
+              <Github className="h-3 w-3" />
+              Developers
+            </TabsTrigger>
             <TabsTrigger value="mini-programs" className="text-xs">Mini Apps</TabsTrigger>
             <TabsTrigger value="withdrawals" className="text-xs">Withdrawals</TabsTrigger>
             <TabsTrigger value="reports" className="text-xs">Reports</TabsTrigger>
@@ -752,6 +757,14 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <AdminUserManagement users={users} onRefresh={fetchUsers} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="developers" className="mt-6">
+            <Card>
+              <CardContent className="pt-6">
+                <AdminDeveloperPanel />
               </CardContent>
             </Card>
           </TabsContent>
