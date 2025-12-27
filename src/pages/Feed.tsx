@@ -77,6 +77,7 @@ interface Post {
     author_id: string;
     image_url?: string | null;
     post_images?: Array<{ image_url: string; display_order: number; alt_text?: string }>;
+    is_developer?: boolean;
     profiles: {
       display_name: string;
       handle: string;
@@ -1852,8 +1853,11 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           post.profiles.affiliated_business = businessData.get(post.profiles.affiliated_business_id) || null;
         }
 
-        // Get quoted post data if exists
+        // Get quoted post data if exists and add developer status
         const quotedPost = post.quoted_post_id ? quotedPostsData.get(post.quoted_post_id) : null;
+        if (quotedPost && quotedPost.author_id) {
+          quotedPost.is_developer = developerData.has(quotedPost.author_id);
+        }
 
         return {
           ...post,

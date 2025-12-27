@@ -6,7 +6,7 @@ import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { MessageSquare, UserPlus, Calendar, Lock, Camera, Building2, UserX, Clock, Users, MoreVertical, Share2, Footprints } from 'lucide-react';
+import { MessageSquare, UserPlus, Calendar, Lock, Camera, Building2, UserX, Clock, Users, MoreVertical, Share2, Footprints, Github } from 'lucide-react';
 import { ButtonLoader } from '@/components/ui/CustomLoader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -64,6 +64,7 @@ interface Profile {
 	avatar_url?: string | null;
 	banner_url?: string | null;
 	website_url?: string | null;
+	github_url?: string | null;
 	is_business_mode?: boolean;
 	business_category?: string | null;
 	country?: string | null;
@@ -94,6 +95,7 @@ interface Post {
 		author_id: string;
 		image_url?: string | null;
 		post_images?: Array<{ image_url: string; display_order: number; alt_text?: string }>;
+		is_developer?: boolean;
 		profiles: {
 			display_name: string;
 			handle: string;
@@ -543,7 +545,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 
 		let query = supabase
 			.from('profiles')
-			.select('*, created_at, last_seen, show_online_status, banner_url, show_balance')
+			.select('*, created_at, last_seen, show_online_status, banner_url, show_balance, github_url')
 			.limit(1);
 
 		if (isParamUUID) {
@@ -743,8 +745,19 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 					`)
 					.in('id', quotedPostIds);
 				
+				// Fetch developer status for quoted post authors
+				const quotedAuthorIds = (quotedPostsData || []).map((qp: any) => qp.author_id);
+				const { data: quotedDevData } = await supabase
+					.from('developer_roles')
+					.select('user_id')
+					.in('user_id', quotedAuthorIds);
+				const quotedDevSet = new Set((quotedDevData || []).map((d: any) => d.user_id));
+				
 				if (quotedPostsData) {
-					quotedPostsData.forEach((qp: any) => quotedPostsMap.set(qp.id, qp));
+					quotedPostsData.forEach((qp: any) => {
+						qp.is_developer = quotedDevSet.has(qp.author_id);
+						quotedPostsMap.set(qp.id, qp);
+					});
 				}
 			}
 
@@ -1537,6 +1550,21 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						className="text-sm text-primary hover:underline flex items-center gap-1 mt-2"
 					>
 						🌐 {profile.website_url}
+					</a>
+				)}
+
+				{/* GitHub URL - Show for developers */}
+				{!isPrivateAccount && isDeveloper && profile.github_url && (
+					<a
+						href={profile.github_url.startsWith('http://') || profile.github_url.startsWith('https://') 
+							? profile.github_url 
+							: `https://${profile.github_url}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 mt-2 transition-colors"
+					>
+						<Github className="h-4 w-4" />
+						<span>{profile.github_url.replace(/^https?:\/\/(www\.)?github\.com\/?/, '')}</span>
 					</a>
 				)}
 

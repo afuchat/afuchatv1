@@ -134,6 +134,7 @@ interface Post {
     author_id: string;
     image_url?: string | null;
     post_images?: Array<{ image_url: string; display_order: number; alt_text?: string }>;
+    is_developer?: boolean;
     profiles: {
       display_name: string;
       handle: string;
@@ -376,7 +377,17 @@ const PostDetail = () => {
           .single();
         
         if (quotedPostData) {
-          quotedPost = quotedPostData;
+          // Check if quoted post author is a developer
+          const { data: devData } = await supabase
+            .from('developer_roles')
+            .select('user_id')
+            .eq('user_id', quotedPostData.author_id)
+            .maybeSingle();
+          
+          quotedPost = {
+            ...quotedPostData,
+            is_developer: !!devData
+          };
         }
       }
 

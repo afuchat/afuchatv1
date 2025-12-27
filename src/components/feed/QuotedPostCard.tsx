@@ -11,6 +11,7 @@ interface QuotedPost {
   author_id: string;
   image_url?: string | null;
   post_images?: Array<{ image_url: string; display_order: number; alt_text?: string }>;
+  is_developer?: boolean;
   profiles: {
     display_name: string;
     handle: string;
@@ -82,8 +83,9 @@ export const QuotedPostCard: React.FC<QuotedPostCardProps> = ({ quotedPost, clas
         </span>
         
         <VerifiedBadge 
-          isVerified={quotedPost.profiles.is_verified}
+          isVerified={quotedPost.profiles.is_verified || quotedPost.is_developer}
           isOrgVerified={quotedPost.profiles.is_organization_verified}
+          isDeveloper={quotedPost.is_developer}
           size="sm"
         />
         

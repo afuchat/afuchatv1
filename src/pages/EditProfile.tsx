@@ -11,10 +11,11 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator'; 
-import { User, Lock, Eye, MessageCircle, Upload, X, Building2 } from 'lucide-react';
+import { User, Lock, Eye, MessageCircle, Upload, X, Building2, Github } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { handleSchema, displayNameSchema, bioSchema } from '@/lib/validation';
 import { useNexa } from '@/hooks/useNexa';
+import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CircularImageCrop } from '@/components/profile/CircularImageCrop';
 import { countries } from '@/lib/countries';
@@ -31,6 +32,7 @@ interface EditProfileForm {
   handle: string;
   bio: string;
   website_url: string;
+  github_url: string;
   is_private: boolean;
   show_online_status: boolean;
   show_read_receipts: boolean;
@@ -47,12 +49,14 @@ const EditProfile: React.FC = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const { checkProfileCompletion } = useNexa();
+  const { isDeveloper } = useDeveloperStatus();
 
   const [profile, setProfile] = useState<EditProfileForm>({
     display_name: '',
     handle: '',
     bio: '',
     website_url: '',
+    github_url: '',
     is_private: false,
     show_online_status: true,
     show_read_receipts: true,
@@ -107,6 +111,7 @@ const EditProfile: React.FC = () => {
             handle: data.handle,
             bio: data.bio || '',
             website_url: data.website_url || '',
+            github_url: (data as any).github_url || '',
             is_private: data.is_private || false,
             show_online_status: data.show_online_status || true,
             show_read_receipts: data.show_read_receipts || true,
@@ -124,6 +129,7 @@ const EditProfile: React.FC = () => {
             handle: user.user_metadata?.user_name || '',
             bio: '',
             website_url: '',
+            github_url: '',
             is_private: false,
             show_online_status: true,
             show_read_receipts: true,
@@ -217,6 +223,11 @@ const EditProfile: React.FC = () => {
         business_category: isBusiness ? (profile.business_category.trim() || null) : null,
         updated_at: new Date().toISOString(),
       };
+
+      // Add github_url for developers
+      if (isDeveloper) {
+        (updateData as any).github_url = profile.github_url.trim() || null;
+      }
 
       const { error } = await supabase
         .from('profiles')
@@ -585,6 +596,28 @@ const EditProfile: React.FC = () => {
                   />
                   <p className="text-xs text-muted-foreground">
                     Your business website or portfolio
+                  </p>
+                </div>
+              )}
+
+              {/* GitHub URL - Only for developers */}
+              {isDeveloper && (
+                <div className="space-y-2">
+                  <Label htmlFor="github_url" className="text-sm font-medium flex items-center gap-2">
+                    <Github className="h-4 w-4 text-muted-foreground" />
+                    GitHub Profile
+                  </Label>
+                  <Input
+                    id="github_url"
+                    name="github_url"
+                    value={profile.github_url}
+                    onChange={handleInputChange}
+                    placeholder="https://github.com/username"
+                    disabled={saving}
+                    className="h-11"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your GitHub profile URL will be shown on your profile
                   </p>
                 </div>
               )}

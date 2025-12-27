@@ -2930,6 +2930,7 @@ export type Database = {
           current_grade: string | null
           date_of_birth: string | null
           display_name: string
+          github_url: string | null
           handle: string
           hide_followers_list: boolean | null
           hide_following_list: boolean | null
@@ -2981,6 +2982,7 @@ export type Database = {
           current_grade?: string | null
           date_of_birth?: string | null
           display_name: string
+          github_url?: string | null
           handle: string
           hide_followers_list?: boolean | null
           hide_following_list?: boolean | null
@@ -3032,6 +3034,7 @@ export type Database = {
           current_grade?: string | null
           date_of_birth?: string | null
           display_name?: string
+          github_url?: string | null
           handle?: string
           hide_followers_list?: boolean | null
           hide_following_list?: boolean | null
