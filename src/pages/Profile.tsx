@@ -1236,7 +1236,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						) : (
 							<div className="flex gap-2 flex-1 justify-end">
 								{isFollowing && (
-									<Button onClick={handleStartChat} variant="outline" size="icon" className="rounded-full" disabled={isChatLoading}>
+									<Button onClick={handleStartChat} variant="outline" size="icon" className="rounded-full bg-card border-border" disabled={isChatLoading}>
 										<MessageSquare className="h-5 w-5" />
 									</Button>
 								)}
@@ -1247,6 +1247,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 										variant="outline"
 										size="default"
 										showLabel={true}
+										className="bg-card border-border"
 									/>
 								)}
 								{/* Show appropriate button based on follow state and private status */}
@@ -1264,7 +1265,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									) : followRequestStatus === 'pending' ? (
 										<Button
 											variant="outline"
-											className="rounded-full font-bold px-4"
+											className="rounded-full font-bold px-4 bg-card border-border"
 											disabled
 										>
 											<Clock className="h-4 w-4 mr-2" />
@@ -1293,7 +1294,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									<Button
 										onClick={handleFollow}
 										variant={isFollowing ? "outline" : "default"}
-										className={`rounded-full font-bold transition-colors ${isFollowing ? 'px-4' : 'flex-1 px-8'}`}
+										className={`rounded-full font-bold transition-colors ${isFollowing ? 'px-4 bg-card border-border' : 'flex-1 px-8'}`}
 										onMouseEnter={e => isFollowing && !areFriends && (e.currentTarget.textContent = t('profile.unfollow'))}
 										onMouseLeave={e => isFollowing && !areFriends && (e.currentTarget.textContent = areFriends ? 'Friends' : t('profile.following'))}
 									>
@@ -1316,7 +1317,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 								<Button 
 									variant="outline" 
 									size="icon" 
-									className="rounded-full"
+									className="rounded-full bg-card border-border"
 									onClick={() => setIsUserActionsSheetOpen(true)}
 								>
 									<MoreVertical className="h-5 w-5" />
