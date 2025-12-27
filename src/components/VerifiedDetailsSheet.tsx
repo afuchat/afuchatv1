@@ -3,7 +3,7 @@ import {
   SheetContent,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { BadgeCheck, ShieldCheck, Calendar, CheckCircle2 } from "lucide-react";
+import { BadgeCheck, ShieldCheck, Calendar, CheckCircle2, Code } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
@@ -13,6 +13,7 @@ interface VerifiedDetailsSheetProps {
   userName: string;
   isVerified: boolean;
   isOrgVerified: boolean;
+  isDeveloper?: boolean;
   createdAt?: string;
   viewerIsVerified?: boolean;
 }
@@ -23,6 +24,7 @@ export function VerifiedDetailsSheet({
   userName,
   isVerified,
   isOrgVerified,
+  isDeveloper,
   createdAt,
   viewerIsVerified = false,
 }: VerifiedDetailsSheetProps) {
@@ -33,6 +35,46 @@ export function VerifiedDetailsSheet({
     navigate('/verification-request');
   };
 
+  const getVerificationReason = () => {
+    if (isDeveloper) {
+      return "This account is verified because they are an official AfuChat Developer.";
+    }
+    if (isOrgVerified) {
+      return "This account is verified because it's an official organization on AfuChat.";
+    }
+    return "This account is verified through premium subscription on AfuChat.";
+  };
+
+  const getAccountType = () => {
+    if (isDeveloper) {
+      return "This account has developer privileges and verified status.";
+    }
+    if (isOrgVerified) {
+      return "This account is organization verified.";
+    }
+    return "This account is user verified.";
+  };
+
+  const getIcon = () => {
+    if (isDeveloper) {
+      return <Code className="w-7 h-7 text-emerald-500" />;
+    }
+    if (isOrgVerified) {
+      return <ShieldCheck className="w-7 h-7 text-primary" />;
+    }
+    return <BadgeCheck className="w-7 h-7 text-primary" />;
+  };
+
+  const getSecondaryIcon = () => {
+    if (isDeveloper) {
+      return <Code className="w-6 h-6 text-muted-foreground" />;
+    }
+    if (isOrgVerified) {
+      return <ShieldCheck className="w-6 h-6 text-muted-foreground" />;
+    }
+    return <BadgeCheck className="w-6 h-6 text-muted-foreground" />;
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
@@ -41,27 +83,21 @@ export function VerifiedDetailsSheet({
       >
         {/* Header */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold">Verified account</h2>
+          <h2 className="text-2xl font-bold">
+            {isDeveloper ? 'Developer Account' : 'Verified account'}
+          </h2>
         </div>
           
           {/* Verification Info */}
           <div className="space-y-6">
             {/* Main verification reason */}
             <div className="flex gap-4 items-start">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mt-1">
-                {isOrgVerified ? (
-                  <ShieldCheck className="w-7 h-7 text-primary" />
-                ) : (
-                  <BadgeCheck className="w-7 h-7 text-primary" />
-                )}
+              <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mt-1 ${isDeveloper ? 'bg-emerald-500/10' : 'bg-primary/10'}`}>
+                {getIcon()}
               </div>
               <div className="flex-1 pt-1">
                 <p className="text-base leading-relaxed text-foreground">
-                  {isOrgVerified ? (
-                    <>This account is verified because it's an official organization on AfuChat.</>
-                  ) : (
-                    <>This account is verified through premium subscription on AfuChat.</>
-                  )}
+                  {getVerificationReason()}
                 </p>
               </div>
             </div>
@@ -69,18 +105,28 @@ export function VerifiedDetailsSheet({
             {/* Account type */}
             <div className="flex gap-4 items-start">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-muted flex items-center justify-center mt-1">
-                {isOrgVerified ? (
-                  <ShieldCheck className="w-6 h-6 text-muted-foreground" />
-                ) : (
-                  <BadgeCheck className="w-6 h-6 text-muted-foreground" />
-                )}
+                {getSecondaryIcon()}
               </div>
               <div className="flex-1 pt-1">
                 <p className="text-base leading-relaxed text-foreground">
-                  This account is {isOrgVerified ? 'organization' : 'user'} verified.
+                  {getAccountType()}
                 </p>
               </div>
             </div>
+
+            {/* Developer benefits */}
+            {isDeveloper && (
+              <div className="flex gap-4 items-start">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mt-1">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                </div>
+                <div className="flex-1 pt-1">
+                  <p className="text-base leading-relaxed text-foreground">
+                    Developers are trusted members who help build and improve AfuChat.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Joined date */}
             {createdAt && (
@@ -97,7 +143,7 @@ export function VerifiedDetailsSheet({
             )}
 
             {/* How to get verified section - Only show if viewer is not verified */}
-            {!viewerIsVerified && (
+            {!viewerIsVerified && !isDeveloper && (
               <div className="border-t pt-6 space-y-4">
                 <h3 className="text-lg font-semibold">Want to get verified?</h3>
                 
