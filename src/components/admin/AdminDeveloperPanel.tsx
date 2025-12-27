@@ -228,16 +228,10 @@ const AdminDeveloperPanel = () => {
                   <CardContent className="space-y-3">
                     <div className="flex flex-wrap gap-2">
                       {app.github_username && (
-                        <a 
-                          href={`https://github.com/${app.github_username}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                        >
+                        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
                           <Github className="w-3 h-3" />
                           {app.github_username}
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
+                        </span>
                       )}
                       {app.portfolio_url && (
                         <a 
