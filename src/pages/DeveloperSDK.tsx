@@ -401,12 +401,6 @@ if (payment.status === 'completed') {
                 <Download className="mr-2 h-4 w-4" />
                 Download SDK
               </Button>
-              <Button size="sm" variant="outline" className="sm:h-10 sm:px-4 sm:text-sm" asChild>
-                <a href="https://github.com/afuchat/mini-sdk" target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  View on GitHub
-                </a>
-              </Button>
             </div>
           </div>
 
