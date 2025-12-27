@@ -45,6 +45,7 @@ import { WarningBadge } from '@/components/WarningBadge';
 import { ProfileViewsSheet } from '@/components/ProfileViewsSheet';
 import { EditPostModal } from '@/components/EditPostModal';
 import { DeveloperProfileSection } from '@/components/developer/DeveloperProfileSection';
+import { DeveloperShowcase } from '@/components/developer/DeveloperShowcase';
 import { Ellipsis, Pencil } from 'lucide-react';
 
 interface Profile {
@@ -1639,10 +1640,15 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 					</div>
 				) : (
 				<Tabs defaultValue="posts" className="w-full">
-					<TabsList className={`grid ${profile.is_business_mode && user?.id === profileId ? 'grid-cols-5' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-4' : 'grid-cols-3'} w-full h-12 rounded-none bg-background`}>
+					<TabsList className={`grid ${isDeveloper ? (profile.is_business_mode && user?.id === profileId ? 'grid-cols-6' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-5' : 'grid-cols-4') : (profile.is_business_mode && user?.id === profileId ? 'grid-cols-5' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-4' : 'grid-cols-3')} w-full h-12 rounded-none bg-background`}>
 						<TabsTrigger value="posts" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground text-xs sm:text-sm">
 							{t('profile.posts')}
 						</TabsTrigger>
+						{isDeveloper && (
+							<TabsTrigger value="showcase" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground text-xs sm:text-sm">
+								Showcase
+							</TabsTrigger>
+						)}
 						<TabsTrigger value="achievements" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground text-xs sm:text-sm">
 							Badges
 						</TabsTrigger>
@@ -1752,6 +1758,14 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							</div>
 						)}
 					</TabsContent>
+
+					{isDeveloper && (
+						<TabsContent value="showcase">
+							<div className="p-4">
+								<DeveloperShowcase userId={profileId!} isOwnProfile={user?.id === profileId} />
+							</div>
+						</TabsContent>
+					)}
 
 					<TabsContent value="achievements">
 						<div className="p-4">
