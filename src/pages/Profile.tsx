@@ -328,6 +328,9 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	const [profileViewsCount, setProfileViewsCount] = useState(0);
 	const [editingPost, setEditingPost] = useState<Post | null>(null);
 
+	// Scroll-based avatar animation
+	const scrollContainerRef = useRef<HTMLDivElement>(null);
+	const [scrollProgress, setScrollProgress] = useState(0);
 
 	const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (!e.target.files || e.target.files.length === 0 || !user || !profileId) return;
@@ -1099,10 +1102,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	// Check if users are mutual friends (both follow each other)
 	const areFriends = isFollowing && isFollowedByProfile;
 
-	// Scroll-based avatar animation
-	const scrollContainerRef = useRef<HTMLDivElement>(null);
-	const [scrollProgress, setScrollProgress] = useState(0);
-	
+	// Scroll animation effect
 	useEffect(() => {
 		const container = scrollContainerRef.current;
 		if (!container) return;
