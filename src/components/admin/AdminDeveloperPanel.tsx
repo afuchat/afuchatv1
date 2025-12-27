@@ -3,55 +3,44 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Github, Check, X, Clock, User, ExternalLink, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { Code, Search, User, Loader2, Shield, X } from 'lucide-react';
 
-interface DeveloperApplication {
+interface UserProfile {
+  id: string;
+  display_name: string;
+  handle: string;
+  avatar_url: string | null;
+}
+
+interface Developer {
   id: string;
   user_id: string;
-  github_username: string | null;
-  portfolio_url: string | null;
-  experience_level: string | null;
-  reason: string;
-  skills: string[] | null;
-  status: string;
-  created_at: string;
-  rejection_reason: string | null;
-  user?: {
-    display_name: string;
-    handle: string;
-    avatar_url: string;
-  };
+  granted_at: string;
+  features_enabled: string[] | null;
+  user?: UserProfile;
 }
 
 const AdminDeveloperPanel = () => {
-  const [applications, setApplications] = useState<DeveloperApplication[]>([]);
+  const [developers, setDevelopers] = useState<Developer[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
-  const [rejectDialog, setRejectDialog] = useState<{ open: boolean; applicationId: string | null }>({
-    open: false,
-    applicationId: null
-  });
-  const [rejectReason, setRejectReason] = useState('');
-  const [activeTab, setActiveTab] = useState('pending');
 
-  const fetchApplications = async () => {
+  const fetchDevelopers = async () => {
     try {
       const { data, error } = await supabase
-        .from('developer_applications')
+        .from('developer_roles')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('granted_at', { ascending: false });
 
       if (error) throw error;
 
-      // Fetch user profiles
       if (data && data.length > 0) {
-        const userIds = data.map(app => app.user_id);
+        const userIds = data.map(dev => dev.user_id);
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, display_name, handle, avatar_url')
@@ -59,99 +48,109 @@ const AdminDeveloperPanel = () => {
 
         const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
         
-        const appsWithUsers = data.map(app => ({
-          ...app,
-          user: profileMap.get(app.user_id)
+        const devsWithUsers = data.map(dev => ({
+          ...dev,
+          user: profileMap.get(dev.user_id)
         }));
 
-        setApplications(appsWithUsers);
+        setDevelopers(devsWithUsers);
       } else {
-        setApplications([]);
+        setDevelopers([]);
       }
     } catch (error) {
-      console.error('Error fetching applications:', error);
-      toast.error('Failed to load applications');
+      console.error('Error fetching developers:', error);
+      toast.error('Failed to load developers');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchApplications();
+    fetchDevelopers();
   }, []);
 
-  const handleApprove = async (applicationId: string) => {
-    setProcessing(applicationId);
+  const searchUsers = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
     try {
       const { data, error } = await supabase
-        .rpc('approve_developer_application', { p_application_id: applicationId });
+        .from('profiles')
+        .select('id, display_name, handle, avatar_url')
+        .or(`handle.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%`)
+        .limit(10);
 
       if (error) throw error;
-      
-      const result = data as { success: boolean; message: string };
-      if (!result.success) {
-        toast.error(result.message);
-        return;
-      }
 
-      toast.success('Developer application approved!');
-      fetchApplications();
+      // Filter out users who are already developers
+      const developerIds = new Set(developers.map(d => d.user_id));
+      const filtered = (data || []).filter(u => !developerIds.has(u.id));
+      
+      setSearchResults(filtered);
     } catch (error) {
-      console.error('Error approving application:', error);
-      toast.error('Failed to approve application');
+      console.error('Error searching users:', error);
+      toast.error('Failed to search users');
     } finally {
-      setProcessing(null);
+      setSearching(false);
     }
   };
 
-  const handleReject = async () => {
-    if (!rejectDialog.applicationId) return;
-    
-    setProcessing(rejectDialog.applicationId);
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      if (searchQuery) {
+        searchUsers();
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(debounce);
+  }, [searchQuery, developers]);
+
+  const promoteToDeveloper = async (userId: string) => {
+    setProcessing(userId);
     try {
-      const { data, error } = await supabase
-        .rpc('reject_developer_application', { 
-          p_application_id: rejectDialog.applicationId,
-          p_reason: rejectReason || null
+      const { error } = await supabase
+        .from('developer_roles')
+        .insert({
+          user_id: userId,
+          features_enabled: ['api_access', 'beta_features', 'custom_integrations', 'developer_analytics']
         });
 
       if (error) throw error;
-      
-      const result = data as { success: boolean; message: string };
-      if (!result.success) {
-        toast.error(result.message);
-        return;
-      }
 
-      toast.success('Application rejected');
-      setRejectDialog({ open: false, applicationId: null });
-      setRejectReason('');
-      fetchApplications();
+      toast.success('User promoted to developer!');
+      setSearchQuery('');
+      setSearchResults([]);
+      fetchDevelopers();
     } catch (error) {
-      console.error('Error rejecting application:', error);
-      toast.error('Failed to reject application');
+      console.error('Error promoting user:', error);
+      toast.error('Failed to promote user');
     } finally {
       setProcessing(null);
     }
   };
 
-  const filteredApplications = applications.filter(app => {
-    if (activeTab === 'pending') return app.status === 'pending';
-    if (activeTab === 'approved') return app.status === 'approved';
-    if (activeTab === 'rejected') return app.status === 'rejected';
-    return true;
-  });
+  const revokeDeveloper = async (userId: string) => {
+    setProcessing(userId);
+    try {
+      const { error } = await supabase
+        .from('developer_roles')
+        .delete()
+        .eq('user_id', userId);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="text-yellow-600"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
-      case 'approved':
-        return <Badge className="bg-green-500"><Check className="w-3 h-3 mr-1" />Approved</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive"><X className="w-3 h-3 mr-1" />Rejected</Badge>;
-      default:
-        return null;
+      if (error) throw error;
+
+      toast.success('Developer access revoked');
+      fetchDevelopers();
+    } catch (error) {
+      console.error('Error revoking developer:', error);
+      toast.error('Failed to revoke access');
+    } finally {
+      setProcessing(null);
     }
   };
 
@@ -164,171 +163,143 @@ const AdminDeveloperPanel = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold flex items-center gap-2">
-          <Github className="w-5 h-5" />
-          Developer Applications
+          <Code className="w-5 h-5" />
+          Developer Management
         </h2>
         <Badge variant="outline">
-          {applications.filter(a => a.status === 'pending').length} pending
+          {developers.length} developers
         </Badge>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="pending">
-            Pending ({applications.filter(a => a.status === 'pending').length})
-          </TabsTrigger>
-          <TabsTrigger value="approved">
-            Approved ({applications.filter(a => a.status === 'approved').length})
-          </TabsTrigger>
-          <TabsTrigger value="rejected">
-            Rejected ({applications.filter(a => a.status === 'rejected').length})
-          </TabsTrigger>
-        </TabsList>
+      {/* Search & Promote Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Shield className="w-4 h-4" />
+            Promote User to Developer
+          </CardTitle>
+          <CardDescription>
+            Search for a trusted user and grant them developer access
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by username or display name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+            {searching && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin" />
+            )}
+          </div>
 
-        <TabsContent value={activeTab} className="mt-4">
-          {filteredApplications.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center text-muted-foreground">
-                No {activeTab} applications
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {filteredApplications.map(app => (
-                <Card key={app.id}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        {app.user?.avatar_url ? (
-                          <img 
-                            src={app.user.avatar_url} 
-                            alt="" 
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                            <User className="w-5 h-5" />
-                          </div>
-                        )}
-                        <div>
-                          <CardTitle className="text-base">
-                            {app.user?.display_name || 'Unknown User'}
-                          </CardTitle>
-                          <CardDescription>
-                            @{app.user?.handle || 'unknown'} • {app.experience_level}
-                          </CardDescription>
-                        </div>
-                      </div>
-                      {getStatusBadge(app.status)}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      {app.github_username && (
-                        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                          <Github className="w-3 h-3" />
-                          {app.github_username}
-                        </span>
-                      )}
-                      {app.portfolio_url && (
-                        <a 
-                          href={app.portfolio_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                        >
-                          Portfolio
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
-                    </div>
-
-                    {app.skills && app.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {app.skills.map(skill => (
-                          <Badge key={skill} variant="secondary" className="text-xs">
-                            {skill}
-                          </Badge>
-                        ))}
+          {searchResults.length > 0 && (
+            <div className="border rounded-lg divide-y">
+              {searchResults.map(user => (
+                <div key={user.id} className="flex items-center justify-between p-3">
+                  <div className="flex items-center gap-3">
+                    {user.avatar_url ? (
+                      <img 
+                        src={user.avatar_url} 
+                        alt="" 
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                        <User className="w-4 h-4" />
                       </div>
                     )}
-
-                    <p className="text-sm text-muted-foreground">{app.reason}</p>
-
-                    <div className="text-xs text-muted-foreground">
-                      Applied {format(new Date(app.created_at), 'MMM d, yyyy')}
+                    <div>
+                      <p className="font-medium text-sm">{user.display_name}</p>
+                      <p className="text-xs text-muted-foreground">@{user.handle}</p>
                     </div>
-
-                    {app.status === 'rejected' && app.rejection_reason && (
-                      <div className="p-2 bg-destructive/10 rounded text-sm text-destructive">
-                        Rejection reason: {app.rejection_reason}
-                      </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => promoteToDeveloper(user.id)}
+                    disabled={processing === user.id}
+                  >
+                    {processing === user.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Promote'
                     )}
-
-                    {app.status === 'pending' && (
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleApprove(app.id)}
-                          disabled={processing === app.id}
-                        >
-                          {processing === app.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Check className="w-4 h-4 mr-1" />
-                              Approve
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => setRejectDialog({ open: true, applicationId: app.id })}
-                          disabled={processing === app.id}
-                        >
-                          <X className="w-4 h-4 mr-1" />
-                          Reject
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  </Button>
+                </div>
               ))}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
 
-      <Dialog open={rejectDialog.open} onOpenChange={(open) => setRejectDialog({ ...rejectDialog, open })}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Application</DialogTitle>
-            <DialogDescription>
-              Optionally provide a reason for rejection
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label>Rejection Reason (optional)</Label>
-            <Textarea
-              placeholder="Explain why the application was rejected..."
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectDialog({ open: false, applicationId: null })}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleReject} disabled={!!processing}>
-              {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Reject'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {searchQuery && !searching && searchResults.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-2">
+              No users found
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Current Developers List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Current Developers</CardTitle>
+          <CardDescription>
+            Users with developer access
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {developers.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No developers yet
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {developers.map(dev => (
+                <div key={dev.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {dev.user?.avatar_url ? (
+                      <img 
+                        src={dev.user.avatar_url} 
+                        alt="" 
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                        <User className="w-4 h-4" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-sm">{dev.user?.display_name || 'Unknown'}</p>
+                      <p className="text-xs text-muted-foreground">@{dev.user?.handle || 'unknown'}</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => revokeDeveloper(dev.user_id)}
+                    disabled={processing === dev.user_id}
+                  >
+                    {processing === dev.user_id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <X className="w-4 h-4 mr-1" />
+                        Revoke
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
