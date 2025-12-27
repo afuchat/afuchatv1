@@ -44,7 +44,7 @@ import { ProfileDrawer } from '@/components/ProfileDrawer';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 import { cn } from '@/lib/utils';
 import { AIPostSummary } from '@/components/feed/AIPostSummary';
-import FeaturedProducts from '@/components/home/FeaturedProducts';
+
 import { FeedSkeleton } from '@/components/feed/FeedSkeleton';
 import { SubscriptionExpiryBanner } from '@/components/SubscriptionExpiryBanner';
 import { ChristmasGiftsBanner } from '@/components/home/ChristmasGiftsBanner';
@@ -2400,8 +2400,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         {/* Subscription Expiry Reminder Banner */}
         {user && <SubscriptionExpiryBanner daysThreshold={7} />}
 
-        {/* Featured Products */}
-        <FeaturedProducts />
 
         {/* Content area */}
         <TabsContent value={activeTab} className="m-0" ref={feedRef} forceMount>
