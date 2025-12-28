@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, MessageCircle, HelpCircle, Send } from 'lucide-react';
+import { Mail, MessageCircle, HelpCircle, Send, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { PageHeader } from '@/components/PageHeader';
@@ -35,6 +36,7 @@ const contactSchema = z.object({
 type ContactFormData = z.infer<typeof contactSchema>;
 
 const Support = () => {
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ContactFormData>({
@@ -238,9 +240,13 @@ const Support = () => {
           <p className="text-muted-foreground text-lg mb-2">
             We're here to help you get the most out of AfuChat
           </p>
-          <p className="text-muted-foreground text-sm">
-            Platform Version 2.2.0 | Last Updated: December 28, 2025
-          </p>
+          <button
+            onClick={() => navigate('/whats-new')}
+            className="inline-flex items-center gap-2 text-primary hover:underline text-sm mb-2"
+          >
+            <Sparkles className="h-4 w-4" />
+            See what's new in v2.2.0
+          </button>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 mb-12">

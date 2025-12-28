@@ -90,6 +90,7 @@ const CreatorEarnings = lazy(() => import("./pages/CreatorEarnings"));
 const AdminCreatorWithdrawals = lazy(() => import("./pages/AdminCreatorWithdrawals"));
 const AdManager = lazy(() => import("./pages/AdManager"));
 const AfuMail = lazy(() => import("./pages/AfuMail"));
+const WhatsNew = lazy(() => import("./pages/WhatsNew"));
 
 const FoodDelivery = lazy(() => import("./pages/FoodDelivery"));
 const Bookings = lazy(() => import("./pages/Bookings"));
@@ -191,6 +192,7 @@ const AppRoutes = () => {
       <Route path="/change-password" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><ChangePassword /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/whats-new" element={<WhatsNew />} />
       <Route path="/suggested-users" element={<SuggestedUsers />} />
       <Route path="/trending" element={<Layout><TrendingHashtags /></Layout>} />
       <Route path="/admin/affiliate-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminAffiliateRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
