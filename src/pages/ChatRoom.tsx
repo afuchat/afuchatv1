@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
@@ -160,11 +160,13 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   const { chatId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const { preferences: chatPreferences, loading: prefsLoading } = useChatPreferences();
   const [messages, setMessages] = useState<Message[]>([]);
   const [redEnvelopes, setRedEnvelopes] = useState<RedEnvelope[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
   const [otherUser, setOtherUser] = useState<OtherUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -232,6 +234,24 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       scrollToBottom(false);
     }
   }, [loading]);
+
+  // Handle pre-filled message from navigation state (e.g., hiring)
+  useEffect(() => {
+    const state = location.state as { prefillMessage?: string } | null;
+    if (state?.prefillMessage) {
+      setNewMessage(state.prefillMessage);
+      // Clear the state to prevent re-filling on navigation
+      window.history.replaceState({}, document.title);
+      // Focus and auto-resize textarea
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.style.height = 'auto';
+          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+        }
+      }, 100);
+    }
+  }, [location.state]);
 
   // Load theme and wallpaper data
   useEffect(() => {
@@ -2132,14 +2152,30 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   )}
                   
                   {/* Message input */}
-                  <div className="flex-1 bg-muted/50 rounded-full flex items-center px-4">
-                    <Input
+                  <div className="flex-1 bg-muted/50 rounded-2xl flex items-end px-4 py-2 min-h-[44px]">
+                    <textarea
+                      ref={textareaRef}
                       value={newMessage}
-                      onChange={(e) => handleInputChange(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
+                      onChange={(e) => {
+                        handleInputChange(e.target.value);
+                        // Auto-resize textarea
+                        e.target.style.height = 'auto';
+                        e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSend();
+                          // Reset height after sending
+                          if (textareaRef.current) {
+                            textareaRef.current.style.height = 'auto';
+                          }
+                        }
+                      }}
                       placeholder={selectedFile ? 'Add a caption...' : 'Message'}
-                      className="flex-1 bg-transparent border-none h-10 text-[15px] placeholder:text-muted-foreground focus-visible:ring-0 px-0"
+                      className="flex-1 bg-transparent border-none text-[15px] placeholder:text-muted-foreground focus:outline-none focus:ring-0 resize-none min-h-[28px] max-h-[120px] py-1 leading-relaxed"
                       disabled={sending}
+                      rows={1}
                     />
                   </div>
                   

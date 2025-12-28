@@ -1195,19 +1195,12 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				return;
 			}
 
-			// Send the hiring message
-			const hiringMessage = `👋 Hi ${profile.display_name}! I saw you're available for hire and I'm interested in working with you. Let's discuss potential opportunities!`;
+			// Navigate with pre-filled hiring message
+			const hiringMessage = `Hi ${profile.display_name}! I saw you're available for hire and I'm interested in working with you. Let's discuss potential opportunities!`;
 			
-			await supabase
-				.from('messages')
-				.insert({
-					chat_id: chatId,
-					sender_id: user.id,
-					encrypted_content: hiringMessage
-				});
-
-			navigate(`/chat/${chatId}`);
-			toast.success('Hiring message sent!');
+			navigate(`/chat/${chatId}`, { 
+				state: { prefillMessage: hiringMessage } 
+			});
 		} catch (error) {
 			console.error('Error starting hire chat:', error);
 			toast.error(t('profile.failedToChat'));
