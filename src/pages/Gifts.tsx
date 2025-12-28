@@ -12,6 +12,7 @@ import { GiftDetailSheet } from '@/components/gifts/GiftDetailSheet';
 import { GiftPreviewModal } from '@/components/gifts/GiftPreviewModal';
 import { SelectRecipientDialog } from '@/components/gifts/SelectRecipientDialog';
 import { PageHeader } from '@/components/PageHeader';
+import { SEO } from '@/components/SEO';
 
 interface Gift {
   id: string;
@@ -166,6 +167,11 @@ const Gifts = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-4">
+      <SEO 
+        title="Gifts — AfuChat"
+        description="Send beautiful virtual gifts to your friends on AfuChat. Choose from a variety of gifts, including seasonal specials. Use your Nexa points to spread joy!"
+        image="https://afuchat.com/og/gifts.jpg"
+      />
       <PageHeader title="Gifts" subtitle="Send special gifts to friends" />
 
       <div className="max-w-6xl mx-auto p-3 sm:p-4">

@@ -11,6 +11,7 @@ import { Mail, MessageCircle, HelpCircle, Send, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { PageHeader } from '@/components/PageHeader';
+import { SEO } from '@/components/SEO';
 import {
   Accordion,
   AccordionContent,
@@ -234,6 +235,11 @@ const Support = () => {
 
       {/* Main Content */}
       <main className="container max-w-6xl mx-auto px-4 sm:px-6 py-8 pb-24">
+        <SEO 
+          title="Support Center — AfuChat"
+          description="Get help with AfuChat. Find answers to frequently asked questions, contact our support team, and learn how to use all features."
+          image="https://afuchat.com/og/support.jpg"
+        />
         <div className="text-center mb-12">
           <HelpCircle className="h-16 w-16 mx-auto mb-4 text-primary" />
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Support Center</h1>
