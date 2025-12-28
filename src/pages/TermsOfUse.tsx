@@ -216,10 +216,10 @@ const TermsOfUse = () => {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">Governing Law and Dispute Resolution</h2>
             <p className="text-foreground/90 leading-relaxed mb-4">
-              These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which AfuChat operates, without regard to its conflict of law provisions.
+              These Terms shall be governed by and construed in accordance with the laws of the Republic of Uganda, without regard to its conflict of law provisions.
             </p>
             <p className="text-foreground/90 leading-relaxed mb-4">
-              Any disputes arising out of or relating to these Terms or our services shall be resolved through binding arbitration in accordance with the rules of the relevant arbitration association, except that you may assert claims in small claims court if your claims qualify.
+              Any disputes arising out of or relating to these Terms or our services shall be resolved through the courts of Uganda, or through alternative dispute resolution mechanisms available under Ugandan law.
             </p>
           </section>
 
@@ -237,22 +237,16 @@ const TermsOfUse = () => {
             </p>
             <div className="space-y-3 mb-4">
               <a 
-                href="mailto:legal@afuchat.com" 
+                href="mailto:support@afuchat.com" 
                 className="flex items-center gap-2 text-primary hover:underline w-fit"
               >
-                <span>Email: legal@afuchat.com</span>
+                <span>Email: support@afuchat.com</span>
               </a>
               <button
                 onClick={() => navigate('/support')}
                 className="flex items-center gap-2 text-primary hover:underline w-fit cursor-pointer"
               >
-                <span>In-app Support System</span>
-              </button>
-              <button
-                onClick={() => navigate('/support')}
-                className="flex items-center gap-2 text-primary hover:underline w-fit cursor-pointer"
-              >
-                <span>AfuChat Support Page</span>
+                <span>In-app Support Center</span>
               </button>
             </div>
             <p className="text-foreground/90 leading-relaxed">
