@@ -99,21 +99,9 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Advertising and Third-Party Services</h2>
-            
-            <h3 className="text-xl font-semibold mb-3 mt-6">Advertising Partners</h3>
+            <h2 className="text-2xl font-semibold mb-4">Third-Party Services</h2>
             <p className="text-foreground/90 leading-relaxed mb-4">
-              As of Version 2.1.0, AfuChat uses advertising partners including Adsterra to display advertisements throughout our platform. Premium subscribers enjoy an ad-free experience. Advertising partners may use cookies and similar technologies to serve ads based on your interests and browsing activity. All advertisements are clearly labeled as "Sponsored" to ensure transparency.
-            </p>
-            
-            <h3 className="text-xl font-semibold mb-3 mt-6">Advertising Data Collection</h3>
-            <p className="text-foreground/90 leading-relaxed mb-4">
-              Google and other third-party advertising partners may collect information about your device, browser, and interactions with ads to provide relevant advertising. This may include your IP address, device identifiers, ad interaction data, and browsing patterns. You can manage your ad preferences through Google Ad Settings or opt out of personalized advertising.
-            </p>
-            
-            <h3 className="text-xl font-semibold mb-3 mt-6">Ad Relevance</h3>
-            <p className="text-foreground/90 leading-relaxed mb-4">
-              We may use your search queries, interests, and activity on AfuChat to display contextually relevant advertisements. This helps us provide free services while showing you ads that may be of interest to you. We do not share your personal messages or private content with advertisers.
+              AfuChat may integrate with third-party services to provide certain features. These integrations are designed to enhance your experience while respecting your privacy. We only share necessary information with third-party services and require them to protect your data appropriately.
             </p>
           </section>
 

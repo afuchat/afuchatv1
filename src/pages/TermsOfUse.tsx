@@ -43,14 +43,10 @@ const TermsOfUse = () => {
               <li>AI-powered features and chatbot</li>
               <li>Gamification elements and leaderboards</li>
               <li>Business and affiliate programs</li>
-              <li>Advertising services (clearly labeled, premium users are ad-free)</li>
               <li>Premium subscriptions with verified status</li>
               <li>Telegram Mini App and bot integration</li>
               <li>Offline-first PWA functionality</li>
             </ul>
-            <p className="text-foreground/90 leading-relaxed mb-4">
-              As of Version 2.1.0, AfuChat includes advertising services to support free users. Premium subscribers enjoy an ad-free experience. All ads are clearly labeled as "Sponsored" and comply with applicable advertising regulations.
-            </p>
             <p className="text-foreground/90 leading-relaxed mb-4">
               We reserve the right to modify, suspend, or discontinue any part of our services at any time without prior notice. We strive to provide reliable service but do not guarantee uninterrupted or error-free access.
             </p>
