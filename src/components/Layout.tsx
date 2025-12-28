@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { DesktopHybridLayout } from '@/components/DesktopHybridLayout';
+import { DesktopBlocker } from '@/components/DesktopBlocker';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
@@ -231,9 +231,9 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     };
   }, [lastScrollY, isMobile]);
 
-  // Use desktop hybrid layout for tablets and desktops (after all hooks)
+  // Block desktop users - mobile only app
   if (!isMobile) {
-    return <DesktopHybridLayout>{children}</DesktopHybridLayout>;
+    return <DesktopBlocker />;
   }
 
   const navItems = [
