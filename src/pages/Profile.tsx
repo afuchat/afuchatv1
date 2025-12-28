@@ -897,13 +897,39 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 		const recordProfileView = async () => {
 			if (!user || !profileId || user.id === profileId) return;
 			
-			// Record the view (upsert to update timestamp if already exists)
-			await supabase
+			// Check if already viewed in the last 24 hours
+			const twentyFourHoursAgo = new Date();
+			twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+			
+			const { data: existingView } = await supabase
 				.from('profile_views')
-				.upsert(
-					{ profile_id: profileId, viewer_id: user.id, viewed_at: new Date().toISOString() },
-					{ onConflict: 'profile_id,viewer_id' }
-				);
+				.select('id, viewed_at')
+				.eq('profile_id', profileId)
+				.eq('viewer_id', user.id)
+				.gte('viewed_at', twentyFourHoursAgo.toISOString())
+				.maybeSingle();
+			
+			// Only record if no view in the last 24 hours
+			if (!existingView) {
+				// Record the view
+				const { error } = await supabase
+					.from('profile_views')
+					.upsert(
+						{ profile_id: profileId, viewer_id: user.id, viewed_at: new Date().toISOString() },
+						{ onConflict: 'profile_id,viewer_id' }
+					);
+				
+				if (!error) {
+					// Send notification to profile owner
+					await supabase
+						.from('notifications')
+						.insert({
+							user_id: profileId,
+							actor_id: user.id,
+							type: 'profile_view' as any
+						});
+				}
+			}
 		};
 
 		const fetchProfileViewsCount = async () => {
@@ -923,6 +949,42 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 
 		recordProfileView();
 		fetchProfileViewsCount();
+	}, [user, profileId]);
+
+	// Real-time subscription for profile views on own profile
+	useEffect(() => {
+		if (!user || profileId !== user.id) return;
+
+		const channel = supabase
+			.channel('profile-views-realtime')
+			.on(
+				'postgres_changes',
+				{ 
+					event: 'INSERT', 
+					schema: 'public', 
+					table: 'profile_views',
+					filter: `profile_id=eq.${user.id}`
+				},
+				() => {
+					// Refresh count when new view arrives
+					const thirtyDaysAgo = new Date();
+					thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+					
+					supabase
+						.from('profile_views')
+						.select('id', { count: 'exact', head: true })
+						.eq('profile_id', user.id)
+						.gte('viewed_at', thirtyDaysAgo.toISOString())
+						.then(({ count }) => {
+							setProfileViewsCount(count || 0);
+						});
+				}
+			)
+			.subscribe();
+
+		return () => {
+			supabase.removeChannel(channel);
+		};
 	}, [user, profileId]);
 
 
