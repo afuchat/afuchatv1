@@ -217,16 +217,8 @@ const Support = () => {
       answer: "Two-factor authentication adds an extra layer of security to your account. Go to Settings > Security > Two-Factor Authentication and follow the setup instructions. You'll need an authenticator app (Google Authenticator, Authy, etc.) to scan the QR code."
     },
     {
-      question: "Why am I seeing ads on AfuChat?",
-      answer: "AfuChat includes advertising services to help support our free platform and continue providing quality features. All ads are clearly labeled as 'Sponsored' and comply with advertising regulations. Premium subscribers enjoy a completely ad-free experience."
-    },
-    {
-      question: "What's new in Version 2.1.0?",
-      answer: "Version 2.1.0 introduces premium ad-free experience, enhanced real-time feed updates with pull-to-refresh, improved offline-first PWA functionality, Telegram Mini App integration, and Lovable AI-powered features for premium users. We've also improved chat customization with AI-generated themes and wallpapers."
-    },
-    {
-      question: "How do I get an ad-free experience?",
-      answer: "Subscribe to AfuChat Premium to enjoy a completely ad-free experience. Premium also includes verification status, AI-powered features, custom chat themes, and more. Visit the Premium page to learn more and subscribe using your ACoin balance."
+      question: "What's new in Version 2.2.0?",
+      answer: "Version 2.2.0 includes enhanced real-time feed updates with pull-to-refresh, improved offline-first PWA functionality, Telegram Mini App integration, and AI-powered features for premium users. We've also improved chat customization with AI-generated themes and wallpapers."
     },
     {
       question: "How does Telegram integration work?",
