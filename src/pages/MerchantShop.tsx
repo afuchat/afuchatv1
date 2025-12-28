@@ -12,7 +12,7 @@ import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { PageSkeleton } from '@/components/skeletons';
 import { formatPriceForCountry } from '@/lib/currencyUtils';
-const shopshackLogo = '/shopshack-logo.png';
+// Shop branding now uses merchant data from database
 
 interface Product {
   id: string;
@@ -171,9 +171,9 @@ export default function MerchantShop() {
   const isUgandan = userCountry === 'Uganda';
   const showRestriction = userCountry && !isUgandan;
 
-  const handleContactShopShack = async () => {
+  const handleContactMerchant = async () => {
     if (!user || !merchant) {
-      toast.error('Please sign in to contact ShopShack');
+      toast.error('Please sign in to contact the shop');
       navigate('/auth/signin');
       return;
     }
@@ -223,13 +223,13 @@ export default function MerchantShop() {
       await supabase.from('messages').insert({
         chat_id: chatId,
         sender_id: user.id,
-        encrypted_content: `👋 **Support Request**\n\nHello ShopShack team,\n\nI'm reaching out regarding your service availability. I noticed that ShopShack is currently only available in Uganda, and I'm located in ${userCountry}.\n\nCould you please help me with:\n• Information about future expansion plans\n• Alternative options for my region\n• Any other assistance you can provide\n\nThank you!`
+        encrypted_content: `👋 **Support Request**\n\nHello ${merchant.name} team,\n\nI'm reaching out regarding your service availability. I noticed that ${merchant.name} is currently only available in Uganda, and I'm located in ${userCountry}.\n\nCould you please help me with:\n• Information about future expansion plans\n• Alternative options for my region\n• Any other assistance you can provide\n\nThank you!`
       });
 
       navigate(`/chat/${chatId}`);
     } catch (error) {
-      console.error('Error contacting ShopShack:', error);
-      toast.error('Failed to start chat with ShopShack');
+      console.error('Error contacting merchant:', error);
+      toast.error('Failed to start chat with merchant');
     } finally {
       setContactingSupport(false);
     }
@@ -255,8 +255,14 @@ export default function MerchantShop() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="flex items-center gap-2">
-                <img src={shopshackLogo} alt="ShopShack" className="h-8 w-8 rounded-full object-cover" />
-                <h1 className="font-semibold">ShopShack</h1>
+                {merchant?.logo_url ? (
+                  <img src={merchant.logo_url} alt={merchant?.name || 'Shop'} className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Store className="h-4 w-4 text-primary" />
+                  </div>
+                )}
+                <h1 className="font-semibold">{merchant?.name || 'Shop'}</h1>
               </div>
             </div>
           </div>
@@ -278,7 +284,7 @@ export default function MerchantShop() {
               <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold">Service Unavailable</h1>
                 <p className="text-muted-foreground">
-                  ShopShack is not available in your region
+                  {merchant?.name || 'This shop'} is not available in your region
                 </p>
               </div>
 
@@ -296,16 +302,16 @@ export default function MerchantShop() {
                   <div className="space-y-1">
                     <h3 className="font-medium text-foreground">Geographic Restrictions</h3>
                     <p>
-                      ShopShack has chosen to operate exclusively within <strong className="text-foreground">Uganda</strong> at this time. 
-                      This decision was made by ShopShack to ensure optimal service delivery, logistics support, and customer experience.
+                      {merchant?.name || 'This merchant'} has chosen to operate exclusively within <strong className="text-foreground">Uganda</strong> at this time. 
+                      This decision was made to ensure optimal service delivery, logistics support, and customer experience.
                     </p>
                   </div>
 
                   <div className="space-y-1">
-                    <h3 className="font-medium text-foreground">About ShopShack</h3>
+                    <h3 className="font-medium text-foreground">About This Shop</h3>
                     <p>
-                      ShopShack is an independent e-commerce platform operating on this marketplace. 
-                      All product listings, pricing, delivery, and customer service are managed directly by ShopShack.
+                      {merchant?.name || 'This merchant'} is an independent e-commerce platform operating on this marketplace. 
+                      All product listings, pricing, delivery, and customer service are managed directly by the merchant.
                     </p>
                   </div>
 
@@ -319,8 +325,8 @@ export default function MerchantShop() {
                   <div className="space-y-1">
                     <h3 className="font-medium text-foreground">Expansion Plans</h3>
                     <p>
-                      ShopShack may expand to additional regions in the future based on their business decisions. 
-                      For updates on service availability, please contact ShopShack directly.
+                      {merchant?.name || 'This merchant'} may expand to additional regions in the future based on their business decisions. 
+                      For updates on service availability, please contact them directly.
                     </p>
                   </div>
 
@@ -332,13 +338,13 @@ export default function MerchantShop() {
                 </div>
               </div>
 
-              {/* Contact ShopShack */}
+              {/* Contact Merchant */}
               <div className="bg-muted/30 rounded-lg p-4 text-center space-y-2">
-                <p className="text-sm text-muted-foreground">Have questions about ShopShack's service availability?</p>
+                <p className="text-sm text-muted-foreground">Have questions about service availability?</p>
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={handleContactShopShack}
+                  onClick={handleContactMerchant}
                   disabled={contactingSupport}
                   className="gap-2"
                 >
@@ -350,7 +356,7 @@ export default function MerchantShop() {
                   ) : (
                     <>
                       <MessageCircle className="h-4 w-4" />
-                      Chat with ShopShack
+                      Chat with {merchant?.name || 'Merchant'}
                     </>
                   )}
                 </Button>
@@ -395,7 +401,13 @@ export default function MerchantShop() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div className="flex items-center gap-2">
-                  <img src={shopshackLogo} alt={merchant.name} className="h-8 w-8 rounded-full object-cover" />
+                  {merchant.logo_url ? (
+                    <img src={merchant.logo_url} alt={merchant.name} className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Store className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
                   <div>
                     <h1 className="font-semibold">{merchant.name}</h1>
                     <p className="text-xs text-muted-foreground">{products.length} products</p>

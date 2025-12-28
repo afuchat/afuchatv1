@@ -260,8 +260,8 @@ const MiniPrograms = () => {
   // Built-in services - system apps
   const builtInServices: BuiltInApp[] = [
     { 
-      id: 'shopshack',
-      name: 'ShopShack',
+      id: 'shop',
+      name: 'Shop',
       description: 'Shop quality products',
       icon: ShoppingBag,
       logo: shopshackLogo,

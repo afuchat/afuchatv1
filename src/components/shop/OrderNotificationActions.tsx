@@ -22,7 +22,7 @@ interface OrderNotificationActionsProps {
   isAdmin?: boolean;
 }
 
-const SHOPSHACK_USER_ID = '629333cf-087e-4283-8a09-a44282dda98b';
+const SHOP_ADMIN_USER_ID = '629333cf-087e-4283-8a09-a44282dda98b';
 
 const getOrCreateSystemNotificationChat = async (userId: string): Promise<string | null> => {
   try {
@@ -38,7 +38,7 @@ const getOrCreateSystemNotificationChat = async (userId: string): Promise<string
     const { data: newChat, error } = await supabase
       .from('chats')
       .insert({
-        name: 'ShopShack Updates',
+        name: 'Shop Updates',
         is_system_notifications: true,
         is_group: false,
         created_by: userId
@@ -76,11 +76,11 @@ export function OrderNotificationActions({ orderContext, isAdmin }: OrderNotific
     
     setLoading('contact');
     try {
-      // Get merchant info for ShopShack
+      // Get merchant info
       const { data: merchant } = await supabase
         .from('merchants')
         .select('id')
-        .eq('user_id', SHOPSHACK_USER_ID)
+        .eq('user_id', SHOP_ADMIN_USER_ID)
         .single();
 
       if (!merchant) {
@@ -103,7 +103,7 @@ export function OrderNotificationActions({ orderContext, isAdmin }: OrderNotific
         const { data: newChat, error } = await supabase
           .from('chats')
           .insert({
-            created_by: SHOPSHACK_USER_ID,
+            created_by: SHOP_ADMIN_USER_ID,
             is_group: false
           })
           .select('id')
@@ -113,7 +113,7 @@ export function OrderNotificationActions({ orderContext, isAdmin }: OrderNotific
 
         // Add members
         await supabase.from('chat_members').insert([
-          { chat_id: newChat.id, user_id: SHOPSHACK_USER_ID },
+          { chat_id: newChat.id, user_id: SHOP_ADMIN_USER_ID },
           { chat_id: newChat.id, user_id: orderContext.customer_id }
         ]);
 
@@ -180,11 +180,11 @@ export function OrderNotificationActions({ orderContext, isAdmin }: OrderNotific
       const label = getStatusLabel(newStatus);
 
       // Send status update to merchant's system notification chat
-      const merchantChatId = await getOrCreateSystemNotificationChat(SHOPSHACK_USER_ID);
+      const merchantChatId = await getOrCreateSystemNotificationChat(SHOP_ADMIN_USER_ID);
       if (merchantChatId) {
         await supabase.from('messages').insert({
           chat_id: merchantChatId,
-          sender_id: SHOPSHACK_USER_ID,
+          sender_id: SHOP_ADMIN_USER_ID,
           encrypted_content: `${emoji} **Order Status Updated**\n\nOrder: ${orderContext.order_number}\nNew Status: ${label}\n\n[VIEW_ORDER:${orderContext.order_number}]`,
           order_context: {
             ...orderContext,

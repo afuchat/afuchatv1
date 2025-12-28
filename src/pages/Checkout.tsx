@@ -155,7 +155,7 @@ export default function Checkout() {
           })
           .eq('order_number', result.order_number);
 
-        // Send notification to ShopShack Updates system chat
+        // Send notification to Shop Updates system chat
         await sendSystemNotification(result.order_number, result.total_amount || subtotal);
 
         setOrderResult({ order_number: result.order_number, total: result.total_amount || subtotal });
@@ -189,7 +189,7 @@ export default function Checkout() {
       const { data: newChat, error } = await supabase
         .from('chats')
         .insert({
-          name: 'ShopShack Updates',
+          name: 'Shop Updates',
           is_system_notifications: true,
           is_group: false,
           created_by: userId

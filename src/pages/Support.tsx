@@ -247,7 +247,7 @@ const Support = () => {
             We're here to help you get the most out of AfuChat
           </p>
           <p className="text-muted-foreground text-sm">
-            Platform Version 2.1.0 | Last Updated: December 7, 2025
+            Platform Version 2.2.0 | Last Updated: December 28, 2025
           </p>
         </div>
 

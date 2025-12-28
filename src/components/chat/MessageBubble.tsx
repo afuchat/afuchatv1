@@ -234,8 +234,8 @@ export const MessageBubble = ({
   const hasAttachment = !!message.attachment_url;
   const hasOrderContext = !!message.order_context;
   
-  // Check if current user is ShopShack admin
-  const isShopShackAdmin = user?.id === '629333cf-087e-4283-8a09-a44282dda98b';
+  // Check if current user is shop admin
+  const isShopAdmin = user?.id === '629333cf-087e-4283-8a09-a44282dda98b';
 
   const formatAudioTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -526,7 +526,7 @@ export const MessageBubble = ({
             {hasOrderContext && message.order_context && (
               <OrderNotificationActions 
                 orderContext={message.order_context}
-                isAdmin={isShopShackAdmin}
+                isAdmin={isShopAdmin}
               />
             )}
             <span className="inline-flex items-center gap-0.5 ml-1.5 align-bottom float-right translate-y-0.5">
