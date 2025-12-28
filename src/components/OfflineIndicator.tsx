@@ -1,30 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { WifiOff, Wifi, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import usePWA from '@/hooks/usePWA';
 
 export const OfflineIndicator = () => {
   const { isOnline, swUpdateAvailable, updateServiceWorker, isStandalone } = usePWA();
-  const [showOfflineAlert, setShowOfflineAlert] = useState(!navigator.onLine);
+  const [showOfflineAlert, setShowOfflineAlert] = useState(false);
   const [showOnlineToast, setShowOnlineToast] = useState(false);
   const [showUpdateBanner, setShowUpdateBanner] = useState(false);
+  const wasOffline = useRef(false);
 
   useEffect(() => {
     if (!isOnline) {
+      wasOffline.current = true;
       setShowOfflineAlert(true);
       setShowOnlineToast(false);
       // Hide offline alert after 5 seconds
       const offlineTimer = setTimeout(() => setShowOfflineAlert(false), 5000);
       return () => clearTimeout(offlineTimer);
-    } else if (showOfflineAlert) {
-      // User just came back online
+    } else if (wasOffline.current) {
+      // User just came back online (was previously offline)
+      wasOffline.current = false;
       setShowOfflineAlert(false);
       setShowOnlineToast(true);
       // Hide online toast after 3 seconds
       const timer = setTimeout(() => setShowOnlineToast(false), 3000);
       return () => clearTimeout(timer);
     }
-  }, [isOnline, showOfflineAlert]);
+  }, [isOnline]);
 
   useEffect(() => {
     if (swUpdateAvailable) {
