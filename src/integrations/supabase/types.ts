@@ -4725,6 +4725,7 @@ export type Database = {
         | "new_reply"
         | "new_mention"
         | "gift"
+        | "profile_view"
       user_role_enum: "user" | "admin"
     }
     CompositeTypes: {
@@ -4861,6 +4862,7 @@ export const Constants = {
         "new_reply",
         "new_mention",
         "gift",
+        "profile_view",
       ],
       user_role_enum: ["user", "admin"],
     },
