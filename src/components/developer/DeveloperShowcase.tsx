@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ExternalLink, Github, Plus, Trash2, Eye, Star, Upload, X, ImageIcon } from 'lucide-react';
+import { ExternalLink, Github, Plus, Trash2, Eye, Star, X, ImageIcon, Share2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -65,13 +65,14 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
         return;
       }
       setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
+      // Create preview immediately
+      const objectUrl = URL.createObjectURL(file);
+      setImagePreview(objectUrl);
     }
   };
 
   const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImageFile(null);
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -85,7 +86,10 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
     
     const { error } = await supabase.storage
       .from('developer-showcase')
-      .upload(fileName, imageFile);
+      .upload(fileName, imageFile, {
+        cacheControl: '3600',
+        upsert: true
+      });
     
     if (error) throw error;
     
@@ -94,6 +98,29 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
       .getPublicUrl(fileName);
     
     return publicUrl;
+  };
+
+  const handleShare = async (item: ShowcaseItem) => {
+    const shareUrl = item.project_url || window.location.href;
+    const shareText = `Check out "${item.title}" - a project by a developer on AfuChat!`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: item.title,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          await navigator.clipboard.writeText(shareUrl);
+          toast.success('Link copied!');
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copied!');
+    }
   };
 
   const addProjectMutation = useMutation({
@@ -117,7 +144,7 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
       setIsAddDialogOpen(false);
       setNewProject({ title: '', description: '', project_url: '', github_url: '', technologies: '' });
       clearImage();
-      toast.success('Project added to showcase!');
+      toast.success('Project added!');
     },
     onError: () => toast.error('Failed to add project'),
     onSettled: () => setIsUploading(false)
@@ -149,7 +176,7 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
     return (
       <div className="mt-4 space-y-3">
         {[1, 2].map(i => (
-          <div key={i} className="h-24 bg-muted/50 rounded-xl animate-pulse" />
+          <div key={i} className="h-48 bg-muted/50 rounded-xl animate-pulse" />
         ))}
       </div>
     );
@@ -160,7 +187,7 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
   return (
     <div className="mt-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-foreground">Showcase</h3>
         {isOwnProfile && (
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -191,11 +218,11 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Project Image</label>
                   {imagePreview ? (
-                    <div className="relative w-full h-32 rounded-lg overflow-hidden bg-muted">
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
                       <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                       <button
                         onClick={clearImage}
-                        className="absolute top-2 right-2 p-1 rounded-full bg-background/80 hover:bg-background"
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-background"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -203,10 +230,11 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
                   ) : (
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                      className="w-full aspect-video border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
                     >
                       <ImageIcon className="h-8 w-8 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">Click to upload image</span>
+                      <span className="text-xs text-muted-foreground">Max 5MB</span>
                     </div>
                   )}
                   <input
@@ -219,7 +247,7 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
                 </div>
 
                 <Input
-                  placeholder="Live project URL"
+                  placeholder="Live project URL (external link)"
                   value={newProject.project_url}
                   onChange={e => setNewProject(p => ({ ...p, project_url: e.target.value }))}
                 />
@@ -238,7 +266,12 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
                   disabled={!newProject.title || addProjectMutation.isPending || isUploading}
                   className="w-full"
                 >
-                  {isUploading ? 'Uploading...' : addProjectMutation.isPending ? 'Adding...' : 'Add Project'}
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : addProjectMutation.isPending ? 'Adding...' : 'Add Project'}
                 </Button>
               </div>
             </DialogContent>
@@ -246,84 +279,91 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
         )}
       </div>
 
-      {/* Showcase Grid */}
+      {/* Showcase Grid - Wide Cards */}
       {hasItems ? (
-        <div className="grid gap-3">
+        <div className="space-y-4">
           {showcaseItems.map((item, index) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="group relative rounded-xl border border-border/50 bg-card/50 overflow-hidden hover:border-primary/30 transition-all duration-300"
+              className="group relative rounded-xl border border-border/50 bg-card overflow-hidden hover:border-primary/30 hover:shadow-lg transition-all duration-300"
             >
-              <div className="flex gap-3 p-3">
-                {/* Thumbnail */}
-                {item.image_url && (
-                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+              {/* Wide Image */}
+              {item.image_url && (
+                <div className="w-full aspect-video bg-muted">
+                  <img 
+                    src={item.image_url} 
+                    alt={item.title} 
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+              
+              {/* Content */}
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    {item.is_featured && <Star className="h-4 w-4 text-amber-400 fill-amber-400 shrink-0" />}
+                    <h4 className="font-semibold text-foreground truncate">{item.title}</h4>
+                  </div>
+                  <div className="flex items-center gap-1 text-muted-foreground shrink-0">
+                    <Eye className="h-3.5 w-3.5" />
+                    <span className="text-xs">{item.view_count}</span>
+                  </div>
+                </div>
+                
+                {item.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.description}</p>
+                )}
+                
+                {/* Technologies */}
+                {item.technologies && item.technologies.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {item.technologies.map(tech => (
+                      <span
+                        key={tech}
+                        className="px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full"
+                      >
+                        {tech}
+                      </span>
+                    ))}
                   </div>
                 )}
                 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      {item.is_featured && <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />}
-                      <h4 className="font-semibold text-sm text-foreground truncate">{item.title}</h4>
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Eye className="h-3 w-3" />
-                      <span className="text-[10px]">{item.view_count}</span>
-                    </div>
-                  </div>
-                  
-                  {item.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{item.description}</p>
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {item.project_url && (
+                    <a
+                      href={item.project_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      View Live
+                    </a>
                   )}
-                  
-                  {/* Technologies */}
-                  {item.technologies && item.technologies.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {item.technologies.slice(0, 3).map(tech => (
-                        <span
-                          key={tech}
-                          className="px-1.5 py-0.5 text-[10px] bg-primary/10 text-primary rounded-md"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                      {item.technologies.length > 3 && (
-                        <span className="text-[10px] text-muted-foreground">+{item.technologies.length - 3}</span>
-                      )}
-                    </div>
+                  {item.github_url && (
+                    <a
+                      href={item.github_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs bg-secondary text-secondary-foreground px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
+                    >
+                      <Github className="h-3.5 w-3.5" />
+                      GitHub
+                    </a>
                   )}
-                  
-                  {/* Links */}
-                  <div className="flex items-center gap-2 mt-2">
-                    {item.project_url && (
-                      <a
-                        href={item.project_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[10px] text-primary hover:underline"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Live
-                      </a>
-                    )}
-                    {item.github_url && (
-                      <a
-                        href={item.github_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
-                      >
-                        <Github className="h-3 w-3" />
-                        Code
-                      </a>
-                    )}
-                  </div>
+                  <button
+                    onClick={() => handleShare(item)}
+                    className="inline-flex items-center gap-1.5 text-xs bg-accent text-accent-foreground px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                    Share
+                  </button>
                 </div>
               </div>
 
@@ -331,20 +371,20 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
               {isOwnProfile && (
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-8 w-8 bg-background/80 backdrop-blur-sm"
                     onClick={() => toggleFeatureMutation.mutate({ projectId: item.id, isFeatured: item.is_featured })}
                   >
-                    <Star className={`h-3 w-3 ${item.is_featured ? 'text-amber-400 fill-amber-400' : ''}`} />
+                    <Star className={`h-4 w-4 ${item.is_featured ? 'text-amber-400 fill-amber-400' : ''}`} />
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="icon"
-                    className="h-6 w-6 text-destructive hover:text-destructive"
+                    className="h-8 w-8 bg-background/80 backdrop-blur-sm text-destructive hover:text-destructive"
                     onClick={() => deleteProjectMutation.mutate(item.id)}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               )}
@@ -352,7 +392,7 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
           ))}
         </div>
       ) : (
-        <div className="text-center py-6 text-muted-foreground text-sm">
+        <div className="text-center py-8 text-muted-foreground text-sm">
           {isOwnProfile ? 'Add your projects to showcase your work' : 'No projects yet'}
         </div>
       )}
