@@ -1744,7 +1744,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 					</div>
 				) : (
 				<Tabs defaultValue="posts" className="w-full">
-					<TabsList className={`grid ${isDeveloper ? (profile.is_business_mode && user?.id === profileId ? 'grid-cols-6' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-5' : 'grid-cols-4') : (profile.is_business_mode && user?.id === profileId ? 'grid-cols-5' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-4' : 'grid-cols-3')} w-full h-12 rounded-none bg-background`}>
+					<TabsList className={`grid ${isDeveloper ? (profile.is_business_mode && user?.id === profileId ? 'grid-cols-6' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-5' : 'grid-cols-4') : (profile.is_business_mode && user?.id === profileId ? 'grid-cols-5' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-4' : 'grid-cols-3')} w-full h-12 rounded-none bg-background sticky top-0 z-10`}>
 						<TabsTrigger value="posts" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground text-xs sm:text-sm">
 							{t('profile.posts')}
 						</TabsTrigger>
