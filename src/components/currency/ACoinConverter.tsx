@@ -14,12 +14,13 @@ interface ACoinConverterProps {
   onConversionSuccess?: () => void;
 }
 
+// Rate: 100 ACoin = 77 Stars (0.77 stars per ACoin)
 const ACOIN_PACKAGES = [
-  { acoin: 100, stars: 1, price: '$1.00' },
-  { acoin: 500, stars: 4, price: '$5.00' },
-  { acoin: 1000, stars: 8, price: '$10.00' },
-  { acoin: 5000, stars: 39, price: '$50.00' },
-  { acoin: 10000, stars: 77, price: '$100.00' },
+  { acoin: 50, stars: 39, price: '$0.50' },
+  { acoin: 100, stars: 77, price: '$1.00' },
+  { acoin: 250, stars: 193, price: '$2.50' },
+  { acoin: 500, stars: 385, price: '$5.00' },
+  { acoin: 1000, stars: 770, price: '$10.00' },
 ];
 
 export const ACoinConverter = ({ currentNexa, currentACoin, onConversionSuccess }: ACoinConverterProps) => {

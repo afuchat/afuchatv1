@@ -12,8 +12,8 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 // ACoin pricing: 1 ACoin = $0.01
 const ACOIN_PRICE_USD = 0.01;
-// Telegram Stars conversion: approximately $0.013 per star (varies by region)
-const STARS_TO_USD = 0.013;
+// Rate: 100 ACoin = 77 Stars (0.77 stars per ACoin)
+const STARS_PER_ACOIN = 0.77;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -37,10 +37,9 @@ serve(async (req) => {
         );
       }
 
-      // Calculate price in Telegram Stars
+      // Calculate stars: 100 ACoin = 77 Stars (0.77 per ACoin)
+      const starsAmount = Math.max(1, Math.ceil(acoinAmount * STARS_PER_ACOIN));
       const priceUSD = acoinAmount * ACOIN_PRICE_USD;
-      // Convert to stars (minimum 1 star)
-      const starsAmount = Math.max(1, Math.ceil(priceUSD / STARS_TO_USD));
 
       // Get user's telegram_id
       const { data: telegramUser } = await supabase
@@ -169,13 +168,13 @@ serve(async (req) => {
     }
 
     if (action === 'get-packages') {
-      // Return available ACoin packages
+      // Return available ACoin packages: min 50, rate 100 ACoin = 77 Stars
       const packages = [
-        { acoin: 100, stars: Math.ceil((100 * ACOIN_PRICE_USD) / STARS_TO_USD), priceUSD: (100 * ACOIN_PRICE_USD).toFixed(2) },
-        { acoin: 500, stars: Math.ceil((500 * ACOIN_PRICE_USD) / STARS_TO_USD), priceUSD: (500 * ACOIN_PRICE_USD).toFixed(2) },
-        { acoin: 1000, stars: Math.ceil((1000 * ACOIN_PRICE_USD) / STARS_TO_USD), priceUSD: (1000 * ACOIN_PRICE_USD).toFixed(2) },
-        { acoin: 5000, stars: Math.ceil((5000 * ACOIN_PRICE_USD) / STARS_TO_USD), priceUSD: (5000 * ACOIN_PRICE_USD).toFixed(2) },
-        { acoin: 10000, stars: Math.ceil((10000 * ACOIN_PRICE_USD) / STARS_TO_USD), priceUSD: (10000 * ACOIN_PRICE_USD).toFixed(2) },
+        { acoin: 50, stars: 39, priceUSD: '0.50' },
+        { acoin: 100, stars: 77, priceUSD: '1.00' },
+        { acoin: 250, stars: 193, priceUSD: '2.50' },
+        { acoin: 500, stars: 385, priceUSD: '5.00' },
+        { acoin: 1000, stars: 770, priceUSD: '10.00' },
       ];
 
       return new Response(
