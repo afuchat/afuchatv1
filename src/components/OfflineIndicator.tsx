@@ -13,6 +13,9 @@ export const OfflineIndicator = () => {
     if (!isOnline) {
       setShowOfflineAlert(true);
       setShowOnlineToast(false);
+      // Hide offline alert after 5 seconds
+      const offlineTimer = setTimeout(() => setShowOfflineAlert(false), 5000);
+      return () => clearTimeout(offlineTimer);
     } else if (showOfflineAlert) {
       // User just came back online
       setShowOfflineAlert(false);
