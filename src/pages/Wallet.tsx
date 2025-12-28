@@ -396,11 +396,11 @@ const Wallet = () => {
                   <Button 
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate('/premium')}
+                    onClick={() => window.open('https://t.me/afuchatbot?start=buy_acoin', '_blank')}
                     className="border-yellow-500/30 text-yellow-600 hover:bg-yellow-500/10 gap-1.5"
                   >
                     <Sparkles className="h-4 w-4" />
-                    Get More
+                    Buy ACoin
                   </Button>
                 </div>
               </CardContent>
