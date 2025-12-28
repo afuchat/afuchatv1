@@ -1263,7 +1263,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				description={isPrivateAccount ? 'This account is private. Follow to see their content.' : `View ${profile?.display_name}'s profile on AfuChat. ${profile?.bio ? profile.bio.substring(0, 150) : `Follow ${profile?.display_name} to see their posts, updates, and connect with them on the social platform.`} Join AfuChat to discover profiles, connect with people, and stay updated.`}
 				keywords={`${profile?.handle} profile, ${profile?.display_name}, user profile, social profile, follow ${profile?.handle}, ${profile?.display_name} posts, connect with ${profile?.display_name}, user page, profile page, social media profile`}
 			/>
-			<div ref={scrollContainerRef} onScroll={handleProfileScroll} className="flex-1 overflow-y-auto">
+			<div ref={scrollContainerRef} onScroll={handleProfileScroll} className="flex-1 overflow-y-auto lg:overflow-visible lg:h-auto">
 				<div className="relative h-36 bg-gray-300 dark:bg-gray-700 w-full">
 					{/* Show blurred/hidden banner for private accounts */}
 					{isPrivateAccount ? (
@@ -1744,7 +1744,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 					</div>
 				) : (
 				<Tabs defaultValue="posts" className="w-full">
-					<TabsList className={`grid ${isDeveloper ? (profile.is_business_mode && user?.id === profileId ? 'grid-cols-6' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-5' : 'grid-cols-4') : (profile.is_business_mode && user?.id === profileId ? 'grid-cols-5' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-4' : 'grid-cols-3')} w-full h-12 rounded-none bg-background sticky top-0 z-20`}>
+					<TabsList className={`grid ${isDeveloper ? (profile.is_business_mode && user?.id === profileId ? 'grid-cols-6' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-5' : 'grid-cols-4') : (profile.is_business_mode && user?.id === profileId ? 'grid-cols-5' : profile.is_business_mode || user?.id === profileId ? 'grid-cols-4' : 'grid-cols-3')} w-full h-12 rounded-none bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 sticky top-0 lg:top-16 z-20 border-b border-border`}>
 						<TabsTrigger value="posts" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground text-xs sm:text-sm">
 							{t('profile.posts')}
 						</TabsTrigger>
