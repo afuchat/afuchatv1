@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { SEO } from '@/components/SEO';
 
 const WhatsNew = () => {
   const navigate = useNavigate();
@@ -115,7 +116,12 @@ const WhatsNew = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader 
+      <SEO 
+        title="What's New — AfuChat v2.2.0"
+        description="Discover the latest features and improvements in AfuChat. Mobile-first experience, enhanced messaging, Creator Earnings, and more."
+        image="https://afuchat.com/og/whats-new.jpg"
+      />
+      <PageHeader
         title="What's New" 
         icon={<Sparkles className="h-5 w-5 text-primary" />}
       />

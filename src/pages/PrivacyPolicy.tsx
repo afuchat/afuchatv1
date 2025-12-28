@@ -1,12 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
+import { SEO } from '@/components/SEO';
 
 const PrivacyPolicy = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background select-none">
+      <SEO 
+        title="Privacy Policy — AfuChat"
+        description="Learn how AfuChat protects your privacy. We're committed to data security, transparency, and your rights under GDPR and other regulations."
+        image="https://afuchat.com/og/privacy.jpg"
+      />
       <PageHeader 
         title="Privacy Policy" 
         icon={<Shield className="h-5 w-5 text-primary" />}

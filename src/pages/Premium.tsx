@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { CancelSubscriptionDialog } from '@/components/premium/CancelSubscriptionDialog';
 import { PremiumContentSkeleton } from '@/components/skeletons';
+import { SEO } from '@/components/SEO';
 
 interface SubscriptionPlan {
   id: string;
@@ -329,7 +330,12 @@ export default function Premium() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <PageHeader 
+      <SEO 
+        title="Premium — AfuChat"
+        description="Upgrade to AfuChat Premium for verified status, AI-powered features, custom chat themes, and exclusive badges. Choose from Standard, Gold, or Platinum plans."
+        image="https://afuchat.com/og/premium.jpg"
+      />
+      <PageHeader
         title="Premium" 
         icon={<Crown className="h-5 w-5 text-primary" />}
       />
