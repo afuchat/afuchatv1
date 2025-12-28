@@ -196,9 +196,11 @@ function buildWalletMenu(profile: any) {
 <b>Login Streak:</b> ${profile?.login_streak || 0} days 🔥
 
 ━━━━━━━━━━━━━━━━━━━━
-<i>Earn Nexa by posting, engaging, and daily logins!</i>`;
+<i>Earn Nexa by posting, engaging, and daily logins!</i>
+<i>Buy ACoin via Telegram at $0.01 per ACoin!</i>`;
 
   const buttons = [
+    [{ text: '💳 Buy ACoin', callback_data: 'buy_acoin' }],
     [{ text: '💱 Convert Nexa → ACoin', callback_data: 'convert_nexa' }],
     [{ text: '📤 Send Nexa', callback_data: 'send_nexa' }, { text: '📤 Send ACoin', callback_data: 'send_acoin' }],
     [{ text: '📊 Transaction History', callback_data: 'tx_history' }],
@@ -1679,6 +1681,35 @@ AfuChat is a social platform where you can:
       break;
     }
     
+    case 'buy_acoin': {
+      if (!isLinked) return;
+      
+      // ACoin packages with pricing at $0.01 per ACoin
+      const packages = [
+        { acoin: 100, stars: 1, price: '$1.00' },
+        { acoin: 500, stars: 4, price: '$5.00' },
+        { acoin: 1000, stars: 8, price: '$10.00' },
+        { acoin: 5000, stars: 39, price: '$50.00' },
+        { acoin: 10000, stars: 77, price: '$100.00' },
+      ];
+      
+      let text = `💳 <b>Buy ACoin</b>
+
+💰 Current Balance: ${profile?.acoin?.toLocaleString() || 0} ACoin
+
+<b>Price:</b> 1 ACoin = $0.01
+
+Select a package to purchase:`;
+
+      const buttons = packages.map(pkg => ([
+        { text: `${pkg.acoin.toLocaleString()} ACoin - ⭐${pkg.stars} (${pkg.price})`, callback_data: `buy_acoin_${pkg.acoin}` }
+      ]));
+      buttons.push([{ text: '⬅️ Back to Wallet', callback_data: 'menu_wallet' }]);
+      
+      await editMessage(chatId, messageId, text, { inline_keyboard: buttons });
+      break;
+    }
+    
     case 'convert_nexa': {
       if (!isLinked) return;
       await supabase.from('telegram_users').update({ current_menu: 'awaiting_convert_amount' }).eq('telegram_id', telegramUser.id);
@@ -2111,6 +2142,52 @@ async function handleDynamicCallback(
     
     const menu = await buildAdminPostsMenu(0);
     await editMessage(chatId, messageId, '✅ Post deleted!\n\n' + menu.text, menu.reply_markup);
+    return;
+  }
+  
+  // ACoin purchase handling
+  if (data.startsWith('buy_acoin_')) {
+    if (!isLinked) return;
+    const acoinAmount = parseInt(data.replace('buy_acoin_', ''));
+    
+    // Calculate stars (approximately $0.013 per star)
+    const priceUSD = acoinAmount * 0.01;
+    const starsAmount = Math.max(1, Math.ceil(priceUSD / 0.013));
+    
+    // Create and send invoice using Telegram Payments API
+    const invoicePayload = {
+      chat_id: chatId,
+      title: `${acoinAmount.toLocaleString()} ACoin`,
+      description: `Purchase ${acoinAmount.toLocaleString()} ACoin for your AfuChat wallet`,
+      payload: JSON.stringify({ userId: tgUser.user_id, acoinAmount, type: 'acoin_purchase' }),
+      currency: 'XTR', // Telegram Stars
+      prices: [{ label: `${acoinAmount.toLocaleString()} ACoin`, amount: starsAmount }],
+    };
+
+    const invoiceResponse = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendInvoice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(invoicePayload),
+    });
+
+    const invoiceResult = await invoiceResponse.json();
+    console.log('Invoice creation result:', invoiceResult);
+
+    if (!invoiceResult.ok) {
+      console.error('Failed to create invoice:', invoiceResult);
+      await editMessage(chatId, messageId, `❌ Failed to create payment. Please try again later.`, {
+        inline_keyboard: [[{ text: '⬅️ Back to Wallet', callback_data: 'menu_wallet' }]]
+      });
+    } else {
+      await editMessage(chatId, messageId, `✅ Invoice sent! Please complete the payment in the invoice message above.
+
+📦 Package: ${acoinAmount.toLocaleString()} ACoin
+💰 Price: ⭐${starsAmount} (~$${priceUSD.toFixed(2)})
+
+<i>After successful payment, your ACoin will be credited automatically.</i>`, {
+        inline_keyboard: [[{ text: '💳 Buy More', callback_data: 'buy_acoin' }], [{ text: '💰 Wallet', callback_data: 'menu_wallet' }]]
+      });
+    }
     return;
   }
   
@@ -3239,6 +3316,98 @@ serve(async (req) => {
   try {
     const update = await req.json();
     console.log('Telegram update:', JSON.stringify(update));
+    
+    // Handle pre-checkout query (required for Telegram Payments)
+    if (update.pre_checkout_query) {
+      const preCheckoutQuery = update.pre_checkout_query;
+      console.log('Pre-checkout query:', preCheckoutQuery);
+      
+      // Answer the pre-checkout query (approve the payment)
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerPreCheckoutQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pre_checkout_query_id: preCheckoutQuery.id,
+          ok: true
+        }),
+      });
+      
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Handle successful payment
+    if (update.message?.successful_payment) {
+      const payment = update.message.successful_payment;
+      const telegramUser = update.message.from;
+      console.log('Successful payment:', payment);
+      
+      try {
+        const payload = JSON.parse(payment.invoice_payload);
+        
+        if (payload.type === 'acoin_purchase') {
+          const { userId, acoinAmount } = payload;
+          
+          // Check if payment already processed
+          const { data: existingTx } = await supabase
+            .from('acoin_transactions')
+            .select('id')
+            .eq('metadata->>telegram_charge_id', payment.telegram_payment_charge_id)
+            .maybeSingle();
+          
+          if (!existingTx) {
+            // Get user's current ACoin balance
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('acoin')
+              .eq('id', userId)
+              .single();
+            
+            if (profile) {
+              // Update user's ACoin balance
+              const newBalance = (profile.acoin || 0) + acoinAmount;
+              await supabase
+                .from('profiles')
+                .update({ acoin: newBalance })
+                .eq('id', userId);
+              
+              // Record the transaction
+              await supabase.from('acoin_transactions').insert({
+                user_id: userId,
+                amount: acoinAmount,
+                transaction_type: 'telegram_purchase',
+                metadata: {
+                  telegram_charge_id: payment.telegram_payment_charge_id,
+                  provider_charge_id: payment.provider_payment_charge_id,
+                  total_amount: payment.total_amount,
+                  currency: payment.currency
+                }
+              });
+              
+              console.log(`Successfully credited ${acoinAmount} ACoin to user ${userId}`);
+              
+              // Send confirmation message
+              await sendTelegramMessage(telegramUser.id, `🎉 <b>Payment Successful!</b>
+
+✅ ${acoinAmount.toLocaleString()} ACoin has been added to your wallet!
+
+💰 New Balance: ${newBalance.toLocaleString()} ACoin
+
+Thank you for your purchase!`, {
+                inline_keyboard: [[{ text: '💰 View Wallet', callback_data: 'menu_wallet' }]]
+              });
+            }
+          }
+        }
+      } catch (parseError) {
+        console.error('Failed to parse payment payload:', parseError);
+      }
+      
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
     if (update.callback_query) {
       await handleCallback(update.callback_query);
