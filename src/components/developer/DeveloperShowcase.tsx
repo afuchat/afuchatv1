@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ExternalLink, Github, Plus, Trash2, Eye, Star, X, ImageIcon, Share2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,15 +26,19 @@ interface ShowcaseItem {
 interface DeveloperShowcaseProps {
   userId: string;
   isOwnProfile: boolean;
+  userHandle?: string;
 }
 
-export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, isOwnProfile }) => {
+export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, isOwnProfile, userHandle }) => {
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const highlightedProjectId = searchParams.get('project');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const highlightedRef = useRef<HTMLDivElement>(null);
   const [newProject, setNewProject] = useState({
     title: '',
     description: '',
@@ -57,6 +62,15 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
     }
   });
 
+  // Scroll to highlighted project when loaded
+  useEffect(() => {
+    if (highlightedProjectId && highlightedRef.current && showcaseItems) {
+      setTimeout(() => {
+        highlightedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, [highlightedProjectId, showcaseItems]);
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -65,7 +79,6 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
         return;
       }
       setImageFile(file);
-      // Create preview immediately
       const objectUrl = URL.createObjectURL(file);
       setImagePreview(objectUrl);
     }
@@ -101,8 +114,10 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
   };
 
   const handleShare = async (item: ShowcaseItem) => {
-    const shareUrl = item.project_url || window.location.href;
-    const shareText = `Check out "${item.title}" - a project by a developer on AfuChat!`;
+    // Create unique profile link with project ID
+    const handle = userHandle || userId;
+    const shareUrl = `${window.location.origin}/${handle}?project=${item.id}`;
+    const shareText = `Check out "${item.title}" - a project showcase!`;
     
     if (navigator.share) {
       try {
@@ -176,7 +191,7 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
     return (
       <div className="mt-4 space-y-3">
         {[1, 2].map(i => (
-          <div key={i} className="h-48 bg-muted/50 rounded-xl animate-pulse" />
+          <div key={i} className="h-32 bg-muted/50 rounded-xl animate-pulse" />
         ))}
       </div>
     );
@@ -214,27 +229,26 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
                   rows={3}
                 />
                 
-                {/* Image Upload */}
+                {/* Image Upload - Smaller Preview */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Project Image</label>
                   {imagePreview ? (
-                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                    <div className="relative w-32 h-20 rounded-lg overflow-hidden bg-muted">
                       <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                       <button
                         onClick={clearImage}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-background"
+                        className="absolute top-1 right-1 p-1 rounded-full bg-background/80 hover:bg-background"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3 w-3" />
                       </button>
                     </div>
                   ) : (
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full aspect-video border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                      className="w-32 h-20 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
                     >
-                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">Click to upload image</span>
-                      <span className="text-xs text-muted-foreground">Max 5MB</span>
+                      <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Upload</span>
                     </div>
                   )}
                   <input
@@ -279,117 +293,130 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
         )}
       </div>
 
-      {/* Showcase Grid - Wide Cards */}
+      {/* Showcase Grid - Compact Cards */}
       {hasItems ? (
-        <div className="space-y-4">
-          {showcaseItems.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="group relative rounded-xl border border-border/50 bg-card overflow-hidden hover:border-primary/30 hover:shadow-lg transition-all duration-300"
-            >
-              {/* Wide Image */}
-              {item.image_url && (
-                <div className="w-full aspect-video bg-muted">
-                  <img 
-                    src={item.image_url} 
-                    alt={item.title} 
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              )}
-              
-              {/* Content */}
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    {item.is_featured && <Star className="h-4 w-4 text-amber-400 fill-amber-400 shrink-0" />}
-                    <h4 className="font-semibold text-foreground truncate">{item.title}</h4>
-                  </div>
-                  <div className="flex items-center gap-1 text-muted-foreground shrink-0">
-                    <Eye className="h-3.5 w-3.5" />
-                    <span className="text-xs">{item.view_count}</span>
-                  </div>
-                </div>
-                
-                {item.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.description}</p>
-                )}
-                
-                {/* Technologies */}
-                {item.technologies && item.technologies.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {item.technologies.map(tech => (
-                      <span
-                        key={tech}
-                        className="px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full"
+        <div className="space-y-3">
+          {showcaseItems.map((item, index) => {
+            const isHighlighted = item.id === highlightedProjectId;
+            return (
+              <motion.div
+                key={item.id}
+                ref={isHighlighted ? highlightedRef : undefined}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className={`group relative rounded-xl border bg-card overflow-hidden hover:shadow-lg transition-all duration-300 ${
+                  isHighlighted 
+                    ? 'border-primary ring-2 ring-primary/20' 
+                    : 'border-border/50 hover:border-primary/30'
+                }`}
+              >
+                <div className="flex gap-3 p-3">
+                  {/* Small Thumbnail */}
+                  {item.image_url && (
+                    <div className="w-20 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
+                      <img 
+                        src={item.image_url} 
+                        alt={item.title} 
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {item.is_featured && <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400 shrink-0" />}
+                        <h4 className="font-semibold text-sm text-foreground truncate">{item.title}</h4>
+                      </div>
+                      <div className="flex items-center gap-1 text-muted-foreground shrink-0">
+                        <Eye className="h-3 w-3" />
+                        <span className="text-xs">{item.view_count}</span>
+                      </div>
+                    </div>
+                    
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{item.description}</p>
+                    )}
+                    
+                    {/* Technologies */}
+                    {item.technologies && item.technologies.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {item.technologies.slice(0, 3).map(tech => (
+                          <span
+                            key={tech}
+                            className="px-1.5 py-0.5 text-[10px] bg-primary/10 text-primary rounded"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                        {item.technologies.length > 3 && (
+                          <span className="text-[10px] text-muted-foreground">+{item.technologies.length - 3}</span>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-1.5 mt-2">
+                      {item.project_url && (
+                        <a
+                          href={item.project_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] bg-primary text-primary-foreground px-2 py-1 rounded-full hover:opacity-90 transition-opacity"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Live
+                        </a>
+                      )}
+                      {item.github_url && (
+                        <a
+                          href={item.github_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] bg-secondary text-secondary-foreground px-2 py-1 rounded-full hover:opacity-90 transition-opacity"
+                        >
+                          <Github className="h-3 w-3" />
+                          Code
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleShare(item)}
+                        className="inline-flex items-center gap-1 text-[10px] bg-accent text-accent-foreground px-2 py-1 rounded-full hover:opacity-90 transition-opacity"
                       >
-                        {tech}
-                      </span>
-                    ))}
+                        <Share2 className="h-3 w-3" />
+                        Share
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Owner Actions */}
+                {isOwnProfile && (
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-6 w-6 bg-background/80 backdrop-blur-sm"
+                      onClick={() => toggleFeatureMutation.mutate({ projectId: item.id, isFeatured: item.is_featured })}
+                    >
+                      <Star className={`h-3 w-3 ${item.is_featured ? 'text-amber-400 fill-amber-400' : ''}`} />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-6 w-6 bg-background/80 backdrop-blur-sm text-destructive hover:text-destructive"
+                      onClick={() => deleteProjectMutation.mutate(item.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
                 )}
-                
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  {item.project_url && (
-                    <a
-                      href={item.project_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      View Live
-                    </a>
-                  )}
-                  {item.github_url && (
-                    <a
-                      href={item.github_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs bg-secondary text-secondary-foreground px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
-                    >
-                      <Github className="h-3.5 w-3.5" />
-                      GitHub
-                    </a>
-                  )}
-                  <button
-                    onClick={() => handleShare(item)}
-                    className="inline-flex items-center gap-1.5 text-xs bg-accent text-accent-foreground px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
-                  >
-                    <Share2 className="h-3.5 w-3.5" />
-                    Share
-                  </button>
-                </div>
-              </div>
-
-              {/* Owner Actions */}
-              {isOwnProfile && (
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="h-8 w-8 bg-background/80 backdrop-blur-sm"
-                    onClick={() => toggleFeatureMutation.mutate({ projectId: item.id, isFeatured: item.is_featured })}
-                  >
-                    <Star className={`h-4 w-4 ${item.is_featured ? 'text-amber-400 fill-amber-400' : ''}`} />
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="h-8 w-8 bg-background/80 backdrop-blur-sm text-destructive hover:text-destructive"
-                    onClick={() => deleteProjectMutation.mutate(item.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-8 text-muted-foreground text-sm">

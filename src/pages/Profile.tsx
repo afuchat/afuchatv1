@@ -1759,10 +1759,10 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						)}
 					</TabsContent>
 
-					{isDeveloper && (
+				{isDeveloper && (
 						<TabsContent value="showcase">
 							<div className="p-4">
-								<DeveloperShowcase userId={profileId!} isOwnProfile={user?.id === profileId} />
+								<DeveloperShowcase userId={profileId!} isOwnProfile={user?.id === profileId} userHandle={profile?.handle} />
 							</div>
 						</TabsContent>
 					)}
