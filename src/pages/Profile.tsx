@@ -1167,6 +1167,55 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 		}
 	};
 
+	const handleHireChat = async () => {
+		if (!user || !profileId || !profile) {
+			navigate('/auth');
+			return;
+		}
+
+		// Prevent duplicate clicks
+		if (isChatLoading) return;
+		setIsChatLoading(true);
+
+		try {
+			// Use RPC to get or create chat - prevents duplicates
+			const { data: chatId, error } = await supabase
+				.rpc('get_or_create_chat', {
+					other_user_id: profileId
+				});
+
+			if (error) {
+				console.error('Error starting chat:', error);
+				toast.error(t('profile.failedToChat'));
+				return;
+			}
+
+			if (!chatId) {
+				toast.error(t('profile.failedToChat'));
+				return;
+			}
+
+			// Send the hiring message
+			const hiringMessage = `👋 Hi ${profile.display_name}! I saw you're available for hire and I'm interested in working with you. Let's discuss potential opportunities!`;
+			
+			await supabase
+				.from('messages')
+				.insert({
+					chat_id: chatId,
+					sender_id: user.id,
+					encrypted_content: hiringMessage
+				});
+
+			navigate(`/chat/${chatId}`);
+			toast.success('Hiring message sent!');
+		} catch (error) {
+			console.error('Error starting hire chat:', error);
+			toast.error(t('profile.failedToChat'));
+		} finally {
+			setIsChatLoading(false);
+		}
+	};
+
 	const handleLogout = async () => {
 		try {
 			const { error } = await supabase.auth.signOut();
@@ -1629,7 +1678,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						availableForHire={profile.available_for_hire}
 						displayName={profile.display_name}
 						handle={profile.handle}
-						onContact={user && user.id !== profileId ? handleStartChat : undefined}
+						onContact={user && user.id !== profileId ? handleHireChat : undefined}
 					/>
 				)}
 
