@@ -199,22 +199,16 @@ const PrivacyPolicy = () => {
             </p>
             <div className="space-y-3 mb-4">
               <a 
-                href="mailto:privacy@afuchat.com" 
+                href="mailto:support@afuchat.com" 
                 className="flex items-center gap-2 text-primary hover:underline w-fit"
               >
-                <span>Email: privacy@afuchat.com</span>
+                <span>Email: support@afuchat.com</span>
               </a>
               <button
                 onClick={() => navigate('/support')}
                 className="flex items-center gap-2 text-primary hover:underline w-fit cursor-pointer"
               >
-                <span>In-app Support System</span>
-              </button>
-              <button
-                onClick={() => navigate('/support')}
-                className="flex items-center gap-2 text-primary hover:underline w-fit cursor-pointer"
-              >
-                <span>AfuChat Support Page</span>
+                <span>In-app Support Center</span>
               </button>
             </div>
             <p className="text-foreground/90 leading-relaxed">
