@@ -897,19 +897,19 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 		const recordProfileView = async () => {
 			if (!user || !profileId || user.id === profileId) return;
 			
-			// Check if already viewed in the last 24 hours
-			const twentyFourHoursAgo = new Date();
-			twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+			// Check if already viewed in the last 30 days (once per month per viewer)
+			const thirtyDaysAgo = new Date();
+			thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 			
 			const { data: existingView } = await supabase
 				.from('profile_views')
 				.select('id, viewed_at')
 				.eq('profile_id', profileId)
 				.eq('viewer_id', user.id)
-				.gte('viewed_at', twentyFourHoursAgo.toISOString())
+				.gte('viewed_at', thirtyDaysAgo.toISOString())
 				.maybeSingle();
 			
-			// Only record if no view in the last 24 hours
+			// Only record if no view in the last 30 days
 			if (!existingView) {
 				// Record the view
 				const { error } = await supabase
