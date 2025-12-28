@@ -362,7 +362,7 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
                     <div className="flex items-center gap-1.5 mt-2">
                       {item.project_url && (
                         <a
-                          href={item.project_url}
+                          href={item.project_url.startsWith('http') ? item.project_url : `https://${item.project_url}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-[10px] bg-primary text-primary-foreground px-2 py-1 rounded-full hover:opacity-90 transition-opacity"
@@ -373,7 +373,7 @@ export const DeveloperShowcase: React.FC<DeveloperShowcaseProps> = ({ userId, is
                       )}
                       {item.github_url && (
                         <a
-                          href={item.github_url}
+                          href={item.github_url.startsWith('http') ? item.github_url : `https://${item.github_url}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-[10px] bg-secondary text-secondary-foreground px-2 py-1 rounded-full hover:opacity-90 transition-opacity"
