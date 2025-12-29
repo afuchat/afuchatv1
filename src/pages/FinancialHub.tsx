@@ -11,12 +11,13 @@ import {
   ArrowLeft, Wallet, Send, Mail, TrendingUp, Gift, 
   ArrowUpRight, ArrowDownRight, Trophy, Heart, Sparkles, 
   Coins, Megaphone, Eye, EyeOff, ArrowRightLeft, Crown,
-  Shield, ChevronRight, Star, Zap, RefreshCw
+  Shield, ChevronRight, Star, Zap, RefreshCw, CreditCard
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ACoinConverter } from '@/components/currency/ACoinConverter';
+import { PesapalPaymentDialog } from '@/components/currency/PesapalPaymentDialog';
 import { GradeBadge, Grade } from '@/components/gamification/GradeBadge';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { cn } from '@/lib/utils';
@@ -65,6 +66,7 @@ const FinancialHub = () => {
   const [showConverter, setShowConverter] = useState(false);
   const [currentGrade, setCurrentGrade] = useState<Grade>('Newcomer');
   const [loginStreak, setLoginStreak] = useState(0);
+  const [showPesapalDialog, setShowPesapalDialog] = useState(false);
   
   const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
 
@@ -597,9 +599,9 @@ const FinancialHub = () => {
                     size="sm" 
                     variant="outline"
                     className="border-yellow-500/30 text-yellow-600 hover:bg-yellow-500/10"
-                    onClick={() => window.open('https://t.me/afuchatbot?start=buy_acoin', '_blank')}
+                    onClick={() => setShowPesapalDialog(true)}
                   >
-                    <Star className="h-4 w-4 mr-1" />
+                    <CreditCard className="h-4 w-4 mr-1" />
                     Buy ACoin
                   </Button>
                 </div>
@@ -878,6 +880,12 @@ const FinancialHub = () => {
           </div>
         </motion.div>
       </main>
+
+      <PesapalPaymentDialog
+        open={showPesapalDialog}
+        onOpenChange={setShowPesapalDialog}
+        onSuccess={() => fetchFinancialData()}
+      />
     </div>
   );
 };
