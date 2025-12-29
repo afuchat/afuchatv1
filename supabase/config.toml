@@ -53,3 +53,6 @@ verify_jwt = true
 
 [functions.telegram-acoin-payment]
 verify_jwt = true
+
+[functions.pesapal-payment]
+verify_jwt = false

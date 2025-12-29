@@ -31,6 +31,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ACoinConverter } from '@/components/currency/ACoinConverter';
+import { PesapalPaymentDialog } from '@/components/currency/PesapalPaymentDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
@@ -45,6 +46,7 @@ const Wallet = () => {
   const [showBalance, setShowBalance] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [showPesapalDialog, setShowPesapalDialog] = useState(false);
 
   const { data: profile, refetch: refetchProfile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -396,10 +398,10 @@ const Wallet = () => {
                   <Button 
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open('https://t.me/afuchatbot?start=buy_acoin', '_blank')}
+                    onClick={() => setShowPesapalDialog(true)}
                     className="border-yellow-500/30 text-yellow-600 hover:bg-yellow-500/10 gap-1.5"
                   >
-                    <Sparkles className="h-4 w-4" />
+                    <CreditCard className="h-4 w-4" />
                     Buy ACoin
                   </Button>
                 </div>
@@ -603,6 +605,16 @@ const Wallet = () => {
           </motion.div>
         </div>
       </main>
+
+      {/* PesaPal Payment Dialog */}
+      <PesapalPaymentDialog 
+        open={showPesapalDialog}
+        onOpenChange={setShowPesapalDialog}
+        onSuccess={() => {
+          refetchProfile();
+          refetchTransactions();
+        }}
+      />
     </div>
   );
 };
