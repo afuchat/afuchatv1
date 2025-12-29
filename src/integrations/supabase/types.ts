@@ -2536,6 +2536,69 @@ export type Database = {
           },
         ]
       }
+      pesapal_transactions: {
+        Row: {
+          acoin_amount: number
+          acoin_credited: boolean | null
+          amount: number
+          confirmation_code: string | null
+          created_at: string
+          currency: string
+          id: string
+          merchant_reference: string
+          payment_method: string | null
+          pesapal_tracking_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acoin_amount: number
+          acoin_credited?: boolean | null
+          amount: number
+          confirmation_code?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          merchant_reference: string
+          payment_method?: string | null
+          pesapal_tracking_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acoin_amount?: number
+          acoin_credited?: boolean | null
+          amount?: number
+          confirmation_code?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          merchant_reference?: string
+          payment_method?: string | null
+          pesapal_tracking_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pesapal_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pesapal_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pinned_gifts: {
         Row: {
           gift_id: string
