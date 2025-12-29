@@ -597,10 +597,10 @@ const FinancialHub = () => {
                     size="sm" 
                     variant="outline"
                     className="border-yellow-500/30 text-yellow-600 hover:bg-yellow-500/10"
-                    onClick={() => navigate('/premium')}
+                    onClick={() => window.open('https://t.me/afuchatbot?start=buy_acoin', '_blank')}
                   >
                     <Star className="h-4 w-4 mr-1" />
-                    Get More
+                    Buy ACoin
                   </Button>
                 </div>
               </div>
