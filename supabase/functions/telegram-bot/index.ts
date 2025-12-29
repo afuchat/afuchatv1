@@ -300,6 +300,20 @@ const translations: Record<Lang, Record<string, string>> = {
     subscriptions: 'Subscriptions',
     reports: 'Reports',
     broadcast: 'Broadcast Message',
+    telegramUsers: 'Telegram Bot Users',
+    telegramUsersDesc: 'Users who have started the bot',
+    totalBotUsers: 'Total Bot Users',
+    linkedUsers: 'Linked Users',
+    unlinkedUsers: 'Unlinked Users',
+    joinedOn: 'Joined',
+    linked: 'Linked',
+    notLinked: 'Not Linked',
+    selectAudience: 'Select Broadcast Audience',
+    allUsers: 'All Users',
+    linkedOnly: 'Linked Users Only',
+    byLanguage: 'By Language',
+    broadcastSent: 'Broadcast sent to {count} users',
+    selectLanguageForBroadcast: 'Select language to broadcast to',
     
     // Misc
     linkFirst: 'Please link your account first.',
@@ -1378,6 +1392,7 @@ function buildAdminMenu(lang: Lang = 'en') {
 
   const buttons = [
     [{ text: t('manageUsers', lang), callback_data: 'admin_users' }],
+    [{ text: t('telegramUsers', lang), callback_data: 'admin_telegram_users' }],
     [{ text: t('managePosts', lang), callback_data: 'admin_posts' }],
     [{ text: t('manageWallets', lang), callback_data: 'admin_wallets' }],
     [{ text: t('platformStats', lang), callback_data: 'admin_stats' }],
@@ -1386,6 +1401,87 @@ function buildAdminMenu(lang: Lang = 'en') {
     [{ text: t('reports', lang), callback_data: 'admin_reports' }],
     [{ text: t('broadcast', lang), callback_data: 'admin_broadcast' }],
     [{ text: t('mainMenu', lang), callback_data: 'main_menu' }],
+  ];
+
+  return { text, reply_markup: { inline_keyboard: buttons } };
+}
+
+async function buildAdminTelegramUsersMenu(page = 0, lang: Lang = 'en') {
+  const pageSize = 8;
+  const { data: tgUsers, count } = await supabase
+    .from('telegram_users')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(page * pageSize, (page + 1) * pageSize - 1);
+
+  const { count: linkedCount } = await supabase
+    .from('telegram_users')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_linked', true);
+
+  const totalPages = Math.ceil((count || 0) / pageSize);
+  
+  let text = `<b>${t('telegramUsers', lang)}</b>
+
+<b>${t('totalBotUsers', lang)}:</b> ${count || 0}
+<b>${t('linkedUsers', lang)}:</b> ${linkedCount || 0}
+<b>${t('unlinkedUsers', lang)}:</b> ${(count || 0) - (linkedCount || 0)}
+
+Page ${page + 1}/${totalPages || 1}
+${'─'.repeat(20)}
+`;
+
+  (tgUsers || []).forEach((u: any, i: number) => {
+    const name = u.telegram_first_name + (u.telegram_last_name ? ' ' + u.telegram_last_name : '');
+    const username = u.telegram_username ? `@${u.telegram_username}` : 'No username';
+    const status = u.is_linked ? '●' : '○';
+    const joinDate = new Date(u.created_at).toLocaleDateString();
+    const userLang = u.preferred_language?.toUpperCase() || 'EN';
+    
+    text += `\n${status} <b>${name}</b> [${userLang}]
+   ${username}
+   ${t('joinedOn', lang)}: ${joinDate}\n`;
+  });
+
+  const buttons: any[][] = [];
+  
+  // Navigation buttons
+  const navButtons = [];
+  if (page > 0) navButtons.push({ text: '◀ Prev', callback_data: `admin_tg_users_page_${page - 1}` });
+  if ((count || 0) > (page + 1) * pageSize) navButtons.push({ text: 'Next ▶', callback_data: `admin_tg_users_page_${page + 1}` });
+  if (navButtons.length > 0) buttons.push(navButtons);
+  
+  buttons.push([{ text: t('refresh', lang), callback_data: 'admin_telegram_users' }]);
+  buttons.push([{ text: t('back', lang), callback_data: 'admin_menu' }]);
+
+  return { text, reply_markup: { inline_keyboard: buttons } };
+}
+
+function buildBroadcastAudienceMenu(lang: Lang = 'en') {
+  const text = `<b>${t('broadcast', lang)}</b>
+
+${t('selectAudience', lang)}:`;
+
+  const buttons = [
+    [{ text: t('allUsers', lang), callback_data: 'broadcast_all' }],
+    [{ text: t('linkedOnly', lang), callback_data: 'broadcast_linked' }],
+    [{ text: t('byLanguage', lang), callback_data: 'broadcast_by_lang' }],
+    [{ text: t('back', lang), callback_data: 'admin_menu' }],
+  ];
+
+  return { text, reply_markup: { inline_keyboard: buttons } };
+}
+
+function buildBroadcastLanguageMenu(lang: Lang = 'en') {
+  const text = `<b>${t('broadcast', lang)}</b>
+
+${t('selectLanguageForBroadcast', lang)}:`;
+
+  const buttons = [
+    [{ text: 'English', callback_data: 'broadcast_lang_en' }, { text: 'Español', callback_data: 'broadcast_lang_es' }],
+    [{ text: 'Français', callback_data: 'broadcast_lang_fr' }, { text: 'العربية', callback_data: 'broadcast_lang_ar' }],
+    [{ text: 'Swahili', callback_data: 'broadcast_lang_sw' }],
+    [{ text: t('back', lang), callback_data: 'admin_broadcast' }],
   ];
 
   return { text, reply_markup: { inline_keyboard: buttons } };
@@ -2559,12 +2655,48 @@ Visit: afuchat.com`, {
       break;
     }
     
+    case 'admin_telegram_users': {
+      if (!isAdminUser) return;
+      const menu = await buildAdminTelegramUsersMenu(0, lang);
+      await editMessage(chatId, messageId, menu.text, menu.reply_markup);
+      break;
+    }
+    
     case 'admin_broadcast': {
       if (!isAdminUser) return;
-      await supabase.from('telegram_users').update({ current_menu: 'admin_awaiting_broadcast' }).eq('telegram_id', telegramUser.id);
-      await editMessage(chatId, messageId, `<b>${t('broadcast', lang)}</b>\n\nEnter the message to send to all users:`, {
-        inline_keyboard: [[{ text: t('cancel', lang), callback_data: 'admin_menu' }]]
+      const menu = buildBroadcastAudienceMenu(lang);
+      await editMessage(chatId, messageId, menu.text, menu.reply_markup);
+      break;
+    }
+    
+    case 'broadcast_all': {
+      if (!isAdminUser) return;
+      await supabase.from('telegram_users').update({ 
+        current_menu: 'admin_awaiting_broadcast', 
+        menu_data: { audience: 'all' } 
+      }).eq('telegram_id', telegramUser.id);
+      await editMessage(chatId, messageId, `<b>${t('broadcast', lang)}</b>\n\nEnter the message to broadcast to <b>all users</b>:`, {
+        inline_keyboard: [[{ text: t('cancel', lang), callback_data: 'admin_broadcast' }]]
       });
+      break;
+    }
+    
+    case 'broadcast_linked': {
+      if (!isAdminUser) return;
+      await supabase.from('telegram_users').update({ 
+        current_menu: 'admin_awaiting_broadcast', 
+        menu_data: { audience: 'linked' } 
+      }).eq('telegram_id', telegramUser.id);
+      await editMessage(chatId, messageId, `<b>${t('broadcast', lang)}</b>\n\nEnter the message to broadcast to <b>linked users only</b>:`, {
+        inline_keyboard: [[{ text: t('cancel', lang), callback_data: 'admin_broadcast' }]]
+      });
+      break;
+    }
+    
+    case 'broadcast_by_lang': {
+      if (!isAdminUser) return;
+      const menu = buildBroadcastLanguageMenu(lang);
+      await editMessage(chatId, messageId, menu.text, menu.reply_markup);
       break;
     }
     
@@ -2591,6 +2723,28 @@ async function handleDynamicCallback(
     const page = parseInt(data.replace('admin_users_page_', ''));
     const menu = await buildAdminUsersMenu(page, lang);
     await editMessage(chatId, messageId, menu.text, menu.reply_markup);
+    return;
+  }
+  
+  if (data.startsWith('admin_tg_users_page_')) {
+    if (!isAdminUser) return;
+    const page = parseInt(data.replace('admin_tg_users_page_', ''));
+    const menu = await buildAdminTelegramUsersMenu(page, lang);
+    await editMessage(chatId, messageId, menu.text, menu.reply_markup);
+    return;
+  }
+  
+  if (data.startsWith('broadcast_lang_')) {
+    if (!isAdminUser) return;
+    const targetLang = data.replace('broadcast_lang_', '');
+    await supabase.from('telegram_users').update({ 
+      current_menu: 'admin_awaiting_broadcast', 
+      menu_data: { audience: 'language', target_language: targetLang } 
+    }).eq('telegram_id', telegramUser.id);
+    const langNames: Record<string, string> = { en: 'English', es: 'Español', fr: 'Français', ar: 'العربية', sw: 'Swahili' };
+    await editMessage(chatId, messageId, `<b>${t('broadcast', lang)}</b>\n\nEnter the message to broadcast to <b>${langNames[targetLang] || targetLang} users</b>:`, {
+      inline_keyboard: [[{ text: t('cancel', lang), callback_data: 'broadcast_by_lang' }]]
+    });
     return;
   }
   
@@ -4164,6 +4318,8 @@ async function handleAdminGiveACoin(chatId: number, telegramUser: any, tgUser: a
 
 async function handleAdminBroadcast(chatId: number, telegramUser: any, tgUser: any, text: string, lang: Lang) {
   const message = text.trim();
+  const audience = tgUser.menu_data?.audience || 'all';
+  const targetLanguage = tgUser.menu_data?.target_language;
   
   if (message.length < 1) {
     await sendTelegramMessage(chatId, 'Message cannot be empty.', {
@@ -4172,29 +4328,98 @@ async function handleAdminBroadcast(chatId: number, telegramUser: any, tgUser: a
     return;
   }
   
-  const { data: telegramUsers } = await supabase
-    .from('telegram_users')
-    .select('telegram_id')
-    .eq('is_linked', true);
+  // Build query based on audience
+  let query = supabase.from('telegram_users').select('telegram_id, preferred_language');
+  
+  if (audience === 'linked') {
+    query = query.eq('is_linked', true);
+  } else if (audience === 'language' && targetLanguage) {
+    query = query.eq('preferred_language', targetLanguage);
+  }
+  // 'all' - no filter needed
+  
+  const { data: telegramUsers } = await query;
   
   const totalUsers = telegramUsers?.length || 0;
   let sentCount = 0;
   
   await sendTelegramMessage(chatId, `Broadcasting to ${totalUsers} users...`);
   
+  // Translation keys for broadcast header in each language
+  const broadcastHeaders: Record<string, string> = {
+    en: 'Announcement from AfuChat',
+    es: 'Anuncio de AfuChat',
+    fr: 'Annonce de AfuChat',
+    ar: 'إعلان من AfuChat',
+    sw: 'Tangazo kutoka AfuChat'
+  };
+  
   for (const user of (telegramUsers || [])) {
     try {
-      await sendTelegramMessage(user.telegram_id, `<b>Announcement from AfuChat</b>\n\n${message}`);
+      // Send message in user's preferred language
+      const userLang = user.preferred_language || 'en';
+      const header = broadcastHeaders[userLang] || broadcastHeaders.en;
+      await sendTelegramMessage(user.telegram_id, `<b>${header}</b>\n\n${message}`);
       sentCount++;
     } catch (error) {
       console.error('Broadcast error for user:', user.telegram_id, error);
     }
   }
   
-  await supabase.from('telegram_users').update({ current_menu: 'main' }).eq('telegram_id', telegramUser.id);
+  await supabase.from('telegram_users').update({ current_menu: 'main', menu_data: {} }).eq('telegram_id', telegramUser.id);
+  
+  const audienceLabel = audience === 'linked' ? 'linked users' : 
+                        audience === 'language' ? `${targetLanguage?.toUpperCase()} users` : 
+                        'all users';
   
   const menu = buildAdminMenu(lang);
-  await sendTelegramMessage(chatId, `${t('success', lang)}! Broadcast complete.\n\nSent to ${sentCount}/${totalUsers} users.\n\n` + menu.text, menu.reply_markup);
+  await sendTelegramMessage(chatId, `<b>${t('success', lang)}</b>
+
+Broadcast complete to <b>${audienceLabel}</b>.
+Sent: ${sentCount}/${totalUsers} users
+
+` + menu.text, menu.reply_markup);
+}
+
+// ============================================
+// PLATFORM NOTIFICATION FORWARDER
+// ============================================
+
+async function sendPlatformNotificationToTelegram(userId: string, notificationType: string, content: string) {
+  // Get the telegram user for this platform user
+  const { data: tgUser } = await supabase
+    .from('telegram_users')
+    .select('telegram_id, preferred_language, is_linked')
+    .eq('user_id', userId)
+    .eq('is_linked', true)
+    .single();
+  
+  if (!tgUser) return; // User not linked to Telegram
+  
+  const userLang = (tgUser.preferred_language as Lang) || 'en';
+  
+  // Notification type icons
+  const icons: Record<string, string> = {
+    new_follower: '👤',
+    new_reply: '💬',
+    new_like: '❤️',
+    gift: '🎁',
+    message: '✉️',
+    mention: '@',
+    system: '📢'
+  };
+  
+  const icon = icons[notificationType] || '🔔';
+  
+  try {
+    await sendTelegramMessage(tgUser.telegram_id, `${icon} <b>AfuChat</b>\n\n${content}`, {
+      inline_keyboard: [
+        [{ text: t('openWebApp', userLang), url: 'https://afuchat.com/notifications' }]
+      ]
+    });
+  } catch (error) {
+    console.error('Failed to send platform notification to Telegram:', error);
+  }
 }
 
 // ============================================
@@ -4207,7 +4432,41 @@ serve(async (req) => {
   }
 
   try {
-    const update = await req.json();
+    const body = await req.json();
+    
+    // Handle platform notification forwarding
+    if (body.type === 'platform_notification') {
+      const { user_id, notification_type, content, actor_name } = body;
+      
+      if (!user_id || !notification_type) {
+        return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // Build notification content based on type
+      let notificationContent = content;
+      if (!content && actor_name) {
+        const contentTemplates: Record<string, string> = {
+          new_follower: `${actor_name} started following you`,
+          new_reply: `${actor_name} replied to your post`,
+          new_like: `${actor_name} liked your post`,
+          gift: `${actor_name} sent you a gift`,
+          mention: `${actor_name} mentioned you`,
+        };
+        notificationContent = contentTemplates[notification_type] || `New notification from ${actor_name}`;
+      }
+      
+      await sendPlatformNotificationToTelegram(user_id, notification_type, notificationContent || 'You have a new notification');
+      
+      return new Response(JSON.stringify({ ok: true, message: 'Notification sent' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Standard Telegram webhook handling
+    const update = body;
     console.log('Telegram update:', JSON.stringify(update));
     
     // Handle pre-checkout query
