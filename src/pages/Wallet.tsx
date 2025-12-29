@@ -242,11 +242,15 @@ const Wallet = () => {
     const xp = profile?.xp || 0;
     const grades = [
       { name: 'Newcomer', min: 0, max: 1000 },
-      { name: 'Active', min: 1000, max: 5000 },
-      { name: 'Rising', min: 5000, max: 15000 },
-      { name: 'Influencer', min: 15000, max: 50000 },
-      { name: 'Star', min: 50000, max: 150000 },
-      { name: 'Legend', min: 150000, max: Infinity },
+      { name: 'Active Chatter', min: 1000, max: 5000 },
+      { name: 'Community Builder', min: 5000, max: 15000 },
+      { name: 'Rising Star', min: 15000, max: 50000 },
+      { name: 'Influencer', min: 50000, max: 150000 },
+      { name: 'Elite Creator', min: 150000, max: 500000 },
+      { name: 'Champion', min: 500000, max: 1500000 },
+      { name: 'Master', min: 1500000, max: 4000000 },
+      { name: 'Grandmaster', min: 4000000, max: 10000000 },
+      { name: 'Legend', min: 10000000, max: Infinity },
     ];
     
     const currentGrade = grades.find(g => xp >= g.min && xp < g.max) || grades[0];

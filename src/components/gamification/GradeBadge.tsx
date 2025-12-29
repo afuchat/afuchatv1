@@ -1,6 +1,16 @@
 import { motion } from 'framer-motion';
 
-export type Grade = 'Newcomer' | 'Active Chatter' | 'Community Builder' | 'Elite Creator' | 'Legend';
+export type Grade = 
+  | 'Newcomer' 
+  | 'Active Chatter' 
+  | 'Community Builder' 
+  | 'Rising Star'
+  | 'Influencer'
+  | 'Elite Creator' 
+  | 'Champion'
+  | 'Master'
+  | 'Grandmaster'
+  | 'Legend';
 
 interface GradeBadgeProps {
   grade: Grade;
@@ -13,7 +23,12 @@ const GRADE_CONFIG: Record<Grade, { color: string; symbol: string; glow: string 
   'Newcomer': { color: 'text-gray-500', symbol: '🟢', glow: 'shadow-gray-500/50' },
   'Active Chatter': { color: 'text-blue-500', symbol: '🔵', glow: 'shadow-blue-500/50' },
   'Community Builder': { color: 'text-purple-500', symbol: '🟣', glow: 'shadow-purple-500/50' },
+  'Rising Star': { color: 'text-cyan-500', symbol: '⭐', glow: 'shadow-cyan-500/50' },
+  'Influencer': { color: 'text-pink-500', symbol: '💫', glow: 'shadow-pink-500/50' },
   'Elite Creator': { color: 'text-yellow-500', symbol: '🟡', glow: 'shadow-yellow-500/50' },
+  'Champion': { color: 'text-orange-500', symbol: '🏆', glow: 'shadow-orange-500/50' },
+  'Master': { color: 'text-emerald-500', symbol: '💎', glow: 'shadow-emerald-500/50' },
+  'Grandmaster': { color: 'text-indigo-500', symbol: '👑', glow: 'shadow-indigo-500/50' },
   'Legend': { color: 'text-red-500', symbol: '🔴', glow: 'shadow-red-500/50' },
 };
 

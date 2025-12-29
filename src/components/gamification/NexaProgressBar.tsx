@@ -12,46 +12,86 @@ const GRADE_THRESHOLDS = [
   { 
     grade: 'Newcomer' as Grade, 
     min: 0, 
-    max: 500, 
+    max: 1000, 
     gradient: 'from-gray-400 via-gray-500 to-gray-600',
     glow: 'shadow-gray-500/20',
     shimmerSpeed: 2
   },
   { 
     grade: 'Active Chatter' as Grade, 
-    min: 500, 
-    max: 2000, 
+    min: 1000, 
+    max: 5000, 
     gradient: 'from-blue-400 via-blue-500 to-blue-600',
     glow: 'shadow-blue-500/30',
     shimmerSpeed: 1.8
   },
   { 
     grade: 'Community Builder' as Grade, 
-    min: 2000, 
-    max: 5000, 
+    min: 5000, 
+    max: 15000, 
     gradient: 'from-purple-400 via-purple-500 to-purple-600',
     glow: 'shadow-purple-500/40',
     shimmerSpeed: 1.5
   },
   { 
+    grade: 'Rising Star' as Grade, 
+    min: 15000, 
+    max: 50000, 
+    gradient: 'from-cyan-400 via-cyan-500 to-cyan-600',
+    glow: 'shadow-cyan-500/40',
+    shimmerSpeed: 1.4
+  },
+  { 
+    grade: 'Influencer' as Grade, 
+    min: 50000, 
+    max: 150000, 
+    gradient: 'from-pink-400 via-pink-500 to-pink-600',
+    glow: 'shadow-pink-500/45',
+    shimmerSpeed: 1.3
+  },
+  { 
     grade: 'Elite Creator' as Grade, 
-    min: 5000, 
-    max: 15000, 
+    min: 150000, 
+    max: 500000, 
     gradient: 'from-yellow-400 via-yellow-500 to-amber-500',
     glow: 'shadow-yellow-500/50',
     shimmerSpeed: 1.2
   },
   { 
+    grade: 'Champion' as Grade, 
+    min: 500000, 
+    max: 1500000, 
+    gradient: 'from-orange-400 via-orange-500 to-orange-600',
+    glow: 'shadow-orange-500/50',
+    shimmerSpeed: 1.1
+  },
+  { 
+    grade: 'Master' as Grade, 
+    min: 1500000, 
+    max: 4000000, 
+    gradient: 'from-emerald-400 via-emerald-500 to-emerald-600',
+    glow: 'shadow-emerald-500/55',
+    shimmerSpeed: 1.0
+  },
+  { 
+    grade: 'Grandmaster' as Grade, 
+    min: 4000000, 
+    max: 10000000, 
+    gradient: 'from-indigo-400 via-indigo-500 to-indigo-600',
+    glow: 'shadow-indigo-500/55',
+    shimmerSpeed: 0.9
+  },
+  { 
     grade: 'Legend' as Grade, 
-    min: 15000, 
+    min: 10000000, 
     max: Infinity, 
     gradient: 'from-red-500 via-orange-500 to-pink-500',
     glow: 'shadow-red-500/60',
-    shimmerSpeed: 1
+    shimmerSpeed: 0.8
   },
 ];
 
-const TOTAL_MAX_FOR_DISPLAY = 15000; // Max value for visual representation
+const TOTAL_MAX_FOR_DISPLAY = 10000000; // Max value for visual representation (10M)
 
 export const NexaProgressBar = ({ currentNexa, currentGrade, showDetails = true }: NexaProgressBarProps) => {
   const [progress, setProgress] = useState(0);
