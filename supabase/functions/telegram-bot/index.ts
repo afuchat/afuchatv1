@@ -655,13 +655,16 @@ function buildCreateAccountMenu() {
 
 Create a new AfuChat account directly from Telegram!
 
-Your Telegram info will be used:
-• Name: Will use your Telegram name
-• Username: Will try to use your Telegram username
-
 You'll need to provide:
-• Email address
-• Password`;
+• 📧 Email address
+• 🔐 Password
+• 👤 Username
+• 🎂 Date of birth
+• 🌍 Country
+• 🌐 Language
+• 📷 Profile picture (max 5MB)
+
+Your profile will be complete from the start!`;
 
   const buttons = [
     [{ text: '✅ Start Registration', callback_data: 'start_registration' }],
@@ -1634,10 +1637,27 @@ Or describe your issue and we'll help you!`, {
     }
     
     case 'start_registration': {
-      await supabase.from('telegram_users').update({ current_menu: 'awaiting_email' }).eq('telegram_id', telegramUser.id);
-      await editMessage(chatId, messageId, '📧 Please enter your email address:', {
+      await supabase.from('telegram_users').update({ current_menu: 'awaiting_email', menu_data: {} }).eq('telegram_id', telegramUser.id);
+      await editMessage(chatId, messageId, `📧 <b>Step 1/7: Email</b>
+
+Please enter your email address:`, {
         inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
       });
+      break;
+    }
+    
+    case 'reg_lang_en':
+    case 'reg_lang_es':
+    case 'reg_lang_fr':
+    case 'reg_lang_ar':
+    case 'reg_lang_sw': {
+      const lang = data.replace('reg_lang_', '');
+      await handleRegistrationLanguage(chatId, messageId, telegramUser, tgUser, lang);
+      break;
+    }
+    
+    case 'reg_skip_avatar': {
+      await completeRegistrationWithoutAvatar(chatId, messageId, telegramUser, tgUser);
       break;
     }
     
@@ -2376,9 +2396,15 @@ async function handleMessage(message: any) {
   if (photo && photo.length > 0) {
     const largestPhoto = photo[photo.length - 1];
     const fileId = largestPhoto.file_id;
+    const fileSize = largestPhoto.file_size;
     
     if (currentMenu === 'awaiting_avatar') {
       await handleAvatarUpload(chatId, telegramUser, tgUser, fileId);
+      return;
+    }
+    
+    if (currentMenu === 'awaiting_reg_avatar') {
+      await handleRegistrationAvatar(chatId, telegramUser, tgUser, fileId, fileSize);
       return;
     }
     
@@ -2465,6 +2491,23 @@ async function handleMessage(message: any) {
       await handleRegistrationEmail(chatId, telegramUser, tgUser, text);
       break;
       
+    case 'awaiting_reg_password':
+      await handleRegistrationPassword(chatId, telegramUser, tgUser, text);
+      break;
+      
+    case 'awaiting_reg_username':
+      await handleRegistrationUsername(chatId, telegramUser, tgUser, text);
+      break;
+      
+    case 'awaiting_reg_dob':
+      await handleRegistrationDob(chatId, telegramUser, tgUser, text);
+      break;
+      
+    case 'awaiting_reg_country':
+      await handleRegistrationCountry(chatId, telegramUser, tgUser, text);
+      break;
+      
+    // Legacy handler for old flow (kept for compatibility)
     case 'awaiting_password':
       await handleRegistrationPassword(chatId, telegramUser, tgUser, text);
       break;
@@ -3145,14 +3188,35 @@ async function handleRegistrationEmail(chatId: number, telegramUser: any, tgUser
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
   if (!emailRegex.test(email)) {
-    await sendTelegramMessage(chatId, '❌ Invalid email format:', {
+    await sendTelegramMessage(chatId, '❌ Invalid email format. Please enter a valid email:', {
       inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
     });
     return;
   }
   
-  await supabase.from('telegram_users').update({ current_menu: 'awaiting_password', menu_data: { email } }).eq('telegram_id', telegramUser.id);
-  await sendTelegramMessage(chatId, '🔐 Great! Now enter a password (min 6 characters):', {
+  // Check if email already exists
+  const { data: existingUser } = await supabase.auth.admin.listUsers();
+  const emailExists = existingUser?.users?.some(u => u.email?.toLowerCase() === email);
+  
+  if (emailExists) {
+    await sendTelegramMessage(chatId, '❌ This email is already registered. Please use a different email or link your existing account:', {
+      inline_keyboard: [
+        [{ text: '🔗 Link Existing Account', callback_data: 'link_account' }],
+        [{ text: '📧 Try Different Email', callback_data: 'start_registration' }],
+        [{ text: '⬅️ Cancel', callback_data: 'main_menu' }]
+      ]
+    });
+    return;
+  }
+  
+  await supabase.from('telegram_users').update({ 
+    current_menu: 'awaiting_reg_password', 
+    menu_data: { email } 
+  }).eq('telegram_id', telegramUser.id);
+  
+  await sendTelegramMessage(chatId, `📧 Email: <code>${email}</code>
+
+🔐 Now enter a password (min 6 characters):`, {
     inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
   });
 }
@@ -3161,15 +3225,231 @@ async function handleRegistrationPassword(chatId: number, telegramUser: any, tgU
   const password = text.trim();
   
   if (password.length < 6) {
-    await sendTelegramMessage(chatId, '❌ Password must be at least 6 characters:', {
+    await sendTelegramMessage(chatId, '❌ Password must be at least 6 characters. Please try again:', {
       inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
     });
     return;
   }
   
-  const email = tgUser.menu_data?.email;
+  const menuData = { ...tgUser.menu_data, password };
+  await supabase.from('telegram_users').update({ 
+    current_menu: 'awaiting_reg_username', 
+    menu_data: menuData 
+  }).eq('telegram_id', telegramUser.id);
+  
+  await sendTelegramMessage(chatId, `✅ Password set!
+
+👤 Choose a unique username (letters, numbers, underscores only, 3-20 characters):
+
+Example: @john_doe`, {
+    inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
+  });
+}
+
+async function handleRegistrationUsername(chatId: number, telegramUser: any, tgUser: any, text: string) {
+  const handle = text.trim().replace('@', '').toLowerCase();
+  const handleRegex = /^[a-z0-9_]{3,20}$/;
+  
+  if (!handleRegex.test(handle)) {
+    await sendTelegramMessage(chatId, '❌ Invalid username. Use only letters, numbers, underscores (3-20 characters):', {
+      inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
+    });
+    return;
+  }
+  
+  // Check if handle is taken
+  const { data: existingHandle } = await supabase.from('profiles').select('id').ilike('handle', handle).maybeSingle();
+  
+  if (existingHandle) {
+    await sendTelegramMessage(chatId, '❌ This username is already taken. Please choose a different one:', {
+      inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
+    });
+    return;
+  }
+  
+  const menuData = { ...tgUser.menu_data, handle };
+  await supabase.from('telegram_users').update({ 
+    current_menu: 'awaiting_reg_dob', 
+    menu_data: menuData 
+  }).eq('telegram_id', telegramUser.id);
+  
+  await sendTelegramMessage(chatId, `✅ Username: @${handle}
+
+🎂 Enter your date of birth (format: YYYY-MM-DD):
+
+Example: 1995-06-15
+
+<i>You must be at least 13 years old to register.</i>`, {
+    inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
+  });
+}
+
+async function handleRegistrationDob(chatId: number, telegramUser: any, tgUser: any, text: string) {
+  const dobString = text.trim();
+  const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
+  
+  if (!dobRegex.test(dobString)) {
+    await sendTelegramMessage(chatId, '❌ Invalid format. Use YYYY-MM-DD (e.g., 1995-06-15):', {
+      inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
+    });
+    return;
+  }
+  
+  const dob = new Date(dobString);
+  const today = new Date();
+  const age = Math.floor((today.getTime() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  
+  if (isNaN(dob.getTime()) || dob > today) {
+    await sendTelegramMessage(chatId, '❌ Invalid date. Please enter a valid date in the past:', {
+      inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
+    });
+    return;
+  }
+  
+  if (age < 13) {
+    await sendTelegramMessage(chatId, '❌ You must be at least 13 years old to register.', {
+      inline_keyboard: [[{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+    });
+    await supabase.from('telegram_users').update({ current_menu: 'main', menu_data: {} }).eq('telegram_id', telegramUser.id);
+    return;
+  }
+  
+  const menuData = { ...tgUser.menu_data, dob: dobString };
+  await supabase.from('telegram_users').update({ 
+    current_menu: 'awaiting_reg_country', 
+    menu_data: menuData 
+  }).eq('telegram_id', telegramUser.id);
+  
+  await sendTelegramMessage(chatId, `✅ Date of birth: ${dobString}
+
+🌍 Enter your country (e.g., United States, Uganda, Germany):`, {
+    inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
+  });
+}
+
+// Common countries list for validation
+const VALID_COUNTRIES = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
+  "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain",
+  "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan",
+  "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria",
+  "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde",
+  "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros",
+  "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark",
+  "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt",
+  "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Fiji",
+  "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece",
+  "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras",
+  "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
+  "Italy", "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya",
+  "Kiribati", "North Korea", "South Korea", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos",
+  "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania",
+  "Luxembourg", "Macedonia", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali",
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia",
+  "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
+  "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger",
+  "Nigeria", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama",
+  "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
+  "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia",
+  "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe",
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore",
+  "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan",
+  "Spain", "Sri Lanka", "Sudan", "Suriname", "Swaziland", "Sweden", "Switzerland",
+  "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tonga",
+  "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda",
+  "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay",
+  "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia",
+  "Zimbabwe"
+];
+
+async function handleRegistrationCountry(chatId: number, telegramUser: any, tgUser: any, text: string) {
+  const inputCountry = text.trim();
+  
+  // Find matching country (case-insensitive)
+  const matchedCountry = VALID_COUNTRIES.find(c => c.toLowerCase() === inputCountry.toLowerCase());
+  
+  if (!matchedCountry) {
+    // Try partial match
+    const partialMatch = VALID_COUNTRIES.find(c => c.toLowerCase().includes(inputCountry.toLowerCase()));
+    
+    if (partialMatch) {
+      await sendTelegramMessage(chatId, `Did you mean "${partialMatch}"? Please enter the exact country name:`, {
+        inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
+      });
+    } else {
+      await sendTelegramMessage(chatId, '❌ Country not found. Please enter a valid country name (e.g., United States, Uganda):', {
+        inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'main_menu' }]]
+      });
+    }
+    return;
+  }
+  
+  const menuData = { ...tgUser.menu_data, country: matchedCountry };
+  await supabase.from('telegram_users').update({ 
+    current_menu: 'awaiting_reg_language', 
+    menu_data: menuData 
+  }).eq('telegram_id', telegramUser.id);
+  
+  await sendTelegramMessage(chatId, `✅ Country: ${matchedCountry}
+
+🌐 Select your preferred language:`, {
+    inline_keyboard: [
+      [{ text: '🇬🇧 English', callback_data: 'reg_lang_en' }, { text: '🇪🇸 Español', callback_data: 'reg_lang_es' }],
+      [{ text: '🇫🇷 Français', callback_data: 'reg_lang_fr' }, { text: '🇸🇦 العربية', callback_data: 'reg_lang_ar' }],
+      [{ text: '🇰🇪 Swahili', callback_data: 'reg_lang_sw' }],
+      [{ text: '⬅️ Cancel', callback_data: 'main_menu' }]
+    ]
+  });
+}
+
+async function handleRegistrationLanguage(chatId: number, messageId: number, telegramUser: any, tgUser: any, lang: string) {
+  const langNames: Record<string, string> = {
+    'en': 'English',
+    'es': 'Español',
+    'fr': 'Français',
+    'ar': 'العربية',
+    'sw': 'Swahili'
+  };
+  
+  const menuData = { ...tgUser.menu_data, language: lang };
+  await supabase.from('telegram_users').update({ 
+    current_menu: 'awaiting_reg_avatar', 
+    menu_data: menuData 
+  }).eq('telegram_id', telegramUser.id);
+  
+  await editMessage(chatId, messageId, `✅ Language: ${langNames[lang] || lang}
+
+📷 <b>Final Step: Profile Picture</b>
+
+Send a photo to use as your profile picture.
+
+<i>Maximum size: 5MB. For best results, use a square image.</i>`, {
+    inline_keyboard: [
+      [{ text: '⏭️ Skip for now', callback_data: 'reg_skip_avatar' }],
+      [{ text: '⬅️ Cancel', callback_data: 'main_menu' }]
+    ]
+  });
+}
+
+async function handleRegistrationAvatar(chatId: number, telegramUser: any, tgUser: any, fileId: string, fileSize?: number) {
+  // Check file size (5MB = 5 * 1024 * 1024 = 5242880 bytes)
+  const MAX_SIZE = 5 * 1024 * 1024;
+  
+  if (fileSize && fileSize > MAX_SIZE) {
+    await sendTelegramMessage(chatId, '❌ Image too large! Maximum size is 5MB. Please send a smaller image:', {
+      inline_keyboard: [
+        [{ text: '⏭️ Skip for now', callback_data: 'reg_skip_avatar' }],
+        [{ text: '⬅️ Cancel', callback_data: 'main_menu' }]
+      ]
+    });
+    return;
+  }
+  
+  await sendTelegramMessage(chatId, '⏳ Creating your account...');
+  
+  // Now create the account with all collected data
+  const { email, password, handle, dob, country, language } = tgUser.menu_data;
   const displayName = telegramUser.first_name + (telegramUser.last_name ? ' ' + telegramUser.last_name : '');
-  const handle = telegramUser.username || `user_${telegramUser.id}`;
   
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
@@ -3186,17 +3466,116 @@ async function handleRegistrationPassword(chatId: number, telegramUser: any, tgU
     return;
   }
   
-  await supabase.from('telegram_users').update({ user_id: authData.user.id, is_linked: true, current_menu: 'main', menu_data: {} }).eq('telegram_id', telegramUser.id);
+  const userId = authData.user.id;
   
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single();
+  // Upload avatar
+  let avatarUrl = null;
+  try {
+    const fileInfo = await getFile(fileId);
+    if (fileInfo.ok && fileInfo.result.file_path) {
+      const fileData = await downloadFile(fileInfo.result.file_path);
+      const ext = fileInfo.result.file_path.split('.').pop() || 'jpg';
+      const filename = `${userId}/avatar.${ext}`;
+      
+      await supabase.storage.from('avatars').upload(filename, fileData, { 
+        contentType: `image/${ext}`,
+        upsert: true 
+      });
+      
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filename);
+      avatarUrl = publicUrl;
+    }
+  } catch (err) {
+    console.error('Failed to upload avatar:', err);
+  }
+  
+  // Update profile with all collected data
+  await supabase.from('profiles').update({
+    handle,
+    date_of_birth: dob,
+    country,
+    language,
+    ...(avatarUrl && { avatar_url: avatarUrl })
+  }).eq('id', userId);
+  
+  // Link telegram user
+  await supabase.from('telegram_users').update({ 
+    user_id: userId, 
+    is_linked: true, 
+    current_menu: 'main', 
+    menu_data: {} 
+  }).eq('telegram_id', telegramUser.id);
+  
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
   const menu = buildMainMenu(true, profile, false);
   
   await sendTelegramMessage(chatId, `🎉 <b>Account Created Successfully!</b>
 
 Welcome to AfuChat, ${displayName}!
 
-You can now log in at afuchat.com with:
-📧 ${email}
+✅ Email: ${email}
+✅ Username: @${handle}
+✅ Country: ${country}
+✅ Profile complete!
+
+You can now log in at afuchat.com with your email.
+
+` + menu.text, menu.reply_markup);
+}
+
+async function completeRegistrationWithoutAvatar(chatId: number, messageId: number, telegramUser: any, tgUser: any) {
+  await editMessage(chatId, messageId, '⏳ Creating your account...', { inline_keyboard: [] });
+  
+  const { email, password, handle, dob, country, language } = tgUser.menu_data;
+  const displayName = telegramUser.first_name + (telegramUser.last_name ? ' ' + telegramUser.last_name : '');
+  
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { display_name: displayName, handle }
+  });
+  
+  if (authError || !authData.user) {
+    await sendTelegramMessage(chatId, `❌ Registration failed: ${authError?.message || 'Unknown error'}`, {
+      inline_keyboard: [[{ text: '📝 Try Again', callback_data: 'create_account' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+    });
+    await supabase.from('telegram_users').update({ current_menu: 'main', menu_data: {} }).eq('telegram_id', telegramUser.id);
+    return;
+  }
+  
+  const userId = authData.user.id;
+  
+  // Update profile with all collected data
+  await supabase.from('profiles').update({
+    handle,
+    date_of_birth: dob,
+    country,
+    language
+  }).eq('id', userId);
+  
+  // Link telegram user
+  await supabase.from('telegram_users').update({ 
+    user_id: userId, 
+    is_linked: true, 
+    current_menu: 'main', 
+    menu_data: {} 
+  }).eq('telegram_id', telegramUser.id);
+  
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
+  const menu = buildMainMenu(true, profile, false);
+  
+  await sendTelegramMessage(chatId, `🎉 <b>Account Created Successfully!</b>
+
+Welcome to AfuChat, ${displayName}!
+
+✅ Email: ${email}
+✅ Username: @${handle}
+✅ Country: ${country}
+
+<i>You can add a profile picture later from your profile settings.</i>
+
+You can now log in at afuchat.com with your email.
 
 ` + menu.text, menu.reply_markup);
 }
