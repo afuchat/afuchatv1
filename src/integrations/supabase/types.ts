@@ -3619,6 +3619,7 @@ export type Database = {
           link_token: string | null
           link_token_expires_at: string | null
           menu_data: Json | null
+          preferred_language: string | null
           telegram_first_name: string | null
           telegram_id: number
           telegram_last_name: string | null
@@ -3634,6 +3635,7 @@ export type Database = {
           link_token?: string | null
           link_token_expires_at?: string | null
           menu_data?: Json | null
+          preferred_language?: string | null
           telegram_first_name?: string | null
           telegram_id: number
           telegram_last_name?: string | null
@@ -3649,6 +3651,7 @@ export type Database = {
           link_token?: string | null
           link_token_expires_at?: string | null
           menu_data?: Json | null
+          preferred_language?: string | null
           telegram_first_name?: string | null
           telegram_id?: number
           telegram_last_name?: string | null
