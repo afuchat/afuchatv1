@@ -63,7 +63,18 @@ export const UnclaimedRedEnvelopeBanner = () => {
   }, [envelopes, currentIndex]);
 
   const fetchUnclaimedEnvelopes = async () => {
+    if (!user?.id) return;
+    
     try {
+      // First, get envelopes the user has already claimed
+      const { data: claimedData } = await supabase
+        .from('red_envelope_claims')
+        .select('red_envelope_id')
+        .eq('claimer_id', user.id);
+      
+      const claimedEnvelopeIds = new Set((claimedData || []).map(c => c.red_envelope_id));
+
+      // Fetch available red envelopes
       const { data, error } = await supabase
         .from('red_envelopes')
         .select(`
@@ -78,14 +89,22 @@ export const UnclaimedRedEnvelopeBanner = () => {
             avatar_url
           )
         `)
+        .neq('sender_id', user.id) // Don't show user's own envelopes
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (error) return;
 
       if (data) {
-        const unclaimed = data.filter((e: any) => (e.claimed_count || 0) < e.recipient_count).slice(0, 5);
+        // Filter: not fully claimed AND not already claimed by this user
+        const unclaimed = data
+          .filter((e: any) => 
+            (e.claimed_count || 0) < e.recipient_count && 
+            !claimedEnvelopeIds.has(e.id)
+          )
+          .slice(0, 5);
+          
         setEnvelopes(unclaimed.map((e: any) => ({
           id: e.id,
           total_amount: e.total_amount,
