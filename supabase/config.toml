@@ -56,3 +56,6 @@ verify_jwt = true
 
 [functions.pesapal-payment]
 verify_jwt = false
+
+[functions.send-year-wrapped]
+verify_jwt = false
