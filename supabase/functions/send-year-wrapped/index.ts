@@ -273,7 +273,7 @@ function generateEmailHtml(stats: UserStats, year: number): string {
 
         <!-- CTA -->
         <div style="text-align: center; margin: 40px 0 20px 0;">
-          <a href="https://afuchat.app" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #000; text-decoration: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 16px;">
+          <a href="https://afuchat.com" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #000; text-decoration: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 16px;">
             Continue Your Journey →
           </a>
         </div>
@@ -373,7 +373,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       const html = generateEmailHtml(stats, year);
       const { error } = await resend.emails.send({
-        from: "AfuChat <wrapped@afuchat.app>",
+        from: "AfuChat <wrapped@afuchat.com>",
         to: [stats.email],
         subject: `🎉 Your AfuChat ${year} Year Wrapped is here!`,
         html,
@@ -412,7 +412,7 @@ const handler = async (req: Request): Promise<Response> => {
             stats.email = user.email; // Set email from auth
             const html = generateEmailHtml(stats, year);
             const { error } = await resend.emails.send({
-              from: "AfuChat <wrapped@afuchat.app>",
+              from: "AfuChat <wrapped@afuchat.com>",
               to: [user.email],
               subject: `🎉 Your AfuChat ${year} Year Wrapped is here!`,
               html,
