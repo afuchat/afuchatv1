@@ -31,22 +31,22 @@ interface UserStats {
 
 export const AdminYearWrappedPanel = () => {
   const [year, setYear] = useState(new Date().getFullYear().toString());
-  const [userId, setUserId] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sendingAll, setSendingAll] = useState(false);
   const [previewStats, setPreviewStats] = useState<UserStats | null>(null);
   const [lastResult, setLastResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
 
   const handlePreview = async () => {
-    if (!userId.trim()) {
-      toast.error('Please enter a user ID');
+    if (!email.trim()) {
+      toast.error('Please enter a user email');
       return;
     }
 
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-year-wrapped', {
-        body: { action: 'preview', userId: userId.trim(), year: parseInt(year) }
+        body: { action: 'preview', email: email.trim(), year: parseInt(year) }
       });
 
       if (error) throw error;
@@ -66,15 +66,15 @@ export const AdminYearWrappedPanel = () => {
   };
 
   const handleSendSingle = async () => {
-    if (!userId.trim()) {
-      toast.error('Please enter a user ID');
+    if (!email.trim()) {
+      toast.error('Please enter a user email');
       return;
     }
 
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-year-wrapped', {
-        body: { action: 'send_single', userId: userId.trim(), year: parseInt(year) }
+        body: { action: 'send_single', email: email.trim(), year: parseInt(year) }
       });
 
       if (error) throw error;
@@ -220,11 +220,12 @@ export const AdminYearWrappedPanel = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>User ID</Label>
+                <Label>User Email</Label>
                 <Input 
-                  placeholder="Enter user UUID..."
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
+                  type="email"
+                  placeholder="Enter user email..."
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
@@ -232,7 +233,7 @@ export const AdminYearWrappedPanel = () => {
                 <Button 
                   variant="outline" 
                   onClick={handlePreview} 
-                  disabled={loading || !userId.trim()}
+                  disabled={loading || !email.trim()}
                   className="gap-2"
                 >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
@@ -240,7 +241,7 @@ export const AdminYearWrappedPanel = () => {
                 </Button>
                 <Button 
                   onClick={handleSendSingle} 
-                  disabled={loading || !userId.trim()}
+                  disabled={loading || !email.trim()}
                   className="gap-2"
                 >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

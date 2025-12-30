@@ -36,11 +36,11 @@ async function getUserStats(supabase: any, userId: string, year: number): Promis
   // Get user profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, email, display_name, handle, xp, current_grade, created_at")
+    .select("id, display_name, handle, xp, current_grade, created_at")
     .eq("id", userId)
     .single();
 
-  if (!profile || !profile.email) return null;
+  if (!profile) return null;
 
   // Get posts count and top post
   const { data: posts } = await supabase
@@ -138,7 +138,7 @@ async function getUserStats(supabase: any, userId: string, year: number): Promis
 
   return {
     userId,
-    email: profile.email,
+    email: "", // Will be populated from auth.users
     displayName: profile.display_name || profile.handle || "AfuChat User",
     handle: profile.handle || "user",
     totalPosts,
@@ -304,23 +304,57 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { action, userId, year = new Date().getFullYear() } = await req.json();
+    const { action, userId, email, year = new Date().getFullYear() } = await req.json();
+
+    // Helper function to get user ID from email
+    async function getUserIdFromEmail(userEmail: string): Promise<{ id: string; email: string } | null> {
+      const { data, error } = await supabase.auth.admin.listUsers();
+      if (error) {
+        console.error("Error listing users:", error);
+        return null;
+      }
+      const user = data.users.find((u: any) => u.email?.toLowerCase() === userEmail.toLowerCase());
+      if (user && user.email) {
+        return { id: user.id, email: user.email };
+      }
+      return null;
+    }
 
     if (action === "send_single") {
-      // Send to a single user
-      if (!userId) {
+      // Send to a single user - accept email or userId
+      let targetUserId = userId;
+      let targetEmail = email;
+
+      if (email && !userId) {
+        const userInfo = await getUserIdFromEmail(email);
+        if (!userInfo) {
+          return new Response(
+            JSON.stringify({ error: "User not found with that email" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        targetUserId = userInfo.id;
+        targetEmail = userInfo.email;
+      }
+
+      if (!targetUserId) {
         return new Response(
-          JSON.stringify({ error: "userId is required" }),
+          JSON.stringify({ error: "email or userId is required" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const stats = await getUserStats(supabase, userId, year);
+      const stats = await getUserStats(supabase, targetUserId, year);
       if (!stats) {
         return new Response(
-          JSON.stringify({ error: "User not found or no email" }),
+          JSON.stringify({ error: "User not found or no stats available" }),
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      }
+
+      // Override email from auth if we have it
+      if (targetEmail) {
+        stats.email = targetEmail;
       }
 
       const html = generateEmailHtml(stats, year);
@@ -345,26 +379,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (action === "send_all") {
       // Send to all users with emails (batch processing)
-      const { data: users, error: usersError } = await supabase
-        .from("profiles")
-        .select("id, email")
-        .not("email", "is", null)
-        .limit(500); // Process in batches
+      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) throw authError;
 
-      if (usersError) throw usersError;
+      const usersWithEmails = authData.users.filter((u: any) => u.email);
 
       let sent = 0;
       let failed = 0;
       const errors: string[] = [];
 
-      for (const user of users || []) {
+      for (const user of usersWithEmails.slice(0, 500)) {
+        if (!user.email) continue;
+        
         try {
           const stats = await getUserStats(supabase, user.id, year);
           if (stats) {
+            stats.email = user.email; // Set email from auth
             const html = generateEmailHtml(stats, year);
             const { error } = await resend.emails.send({
               from: "AfuChat <wrapped@afuchat.app>",
-              to: [stats.email],
+              to: [user.email],
               subject: `🎉 Your AfuChat ${year} Year Wrapped is here!`,
               html,
             });
@@ -374,7 +409,7 @@ const handler = async (req: Request): Promise<Response> => {
               errors.push(`${user.email}: ${error.message}`);
             } else {
               sent++;
-              console.log(`Wrapped email sent to ${stats.email}`);
+              console.log(`Wrapped email sent to ${user.email}`);
             }
           }
           // Add delay to avoid rate limiting
@@ -390,7 +425,7 @@ const handler = async (req: Request): Promise<Response> => {
           success: true, 
           sent, 
           failed, 
-          total: users?.length || 0,
+          total: usersWithEmails.length,
           errors: errors.slice(0, 10) // Return first 10 errors
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -398,20 +433,40 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (action === "preview") {
-      // Preview stats for a user without sending
-      if (!userId) {
+      // Preview stats for a user without sending - accept email or userId
+      let targetUserId = userId;
+      let targetEmail = email;
+
+      if (email && !userId) {
+        const userInfo = await getUserIdFromEmail(email);
+        if (!userInfo) {
+          return new Response(
+            JSON.stringify({ error: "User not found with that email" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        targetUserId = userInfo.id;
+        targetEmail = userInfo.email;
+      }
+
+      if (!targetUserId) {
         return new Response(
-          JSON.stringify({ error: "userId is required" }),
+          JSON.stringify({ error: "email or userId is required" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const stats = await getUserStats(supabase, userId, year);
+      const stats = await getUserStats(supabase, targetUserId, year);
       if (!stats) {
         return new Response(
           JSON.stringify({ error: "User not found" }),
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      }
+
+      // Override email from auth if we have it
+      if (targetEmail) {
+        stats.email = targetEmail;
       }
 
       return new Response(
