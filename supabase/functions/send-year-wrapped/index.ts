@@ -308,15 +308,29 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Helper function to get user ID from email
     async function getUserIdFromEmail(userEmail: string): Promise<{ id: string; email: string } | null> {
-      const { data, error } = await supabase.auth.admin.listUsers();
-      if (error) {
-        console.error("Error listing users:", error);
-        return null;
+      const normalized = userEmail.trim().toLowerCase();
+      console.log("[send-year-wrapped] lookup email:", normalized);
+
+      // listUsers is paginated; scan pages until we find the email
+      const perPage = 200;
+      const maxPages = 50; // safety cap
+
+      for (let page = 1; page <= maxPages; page++) {
+        const { data, error } = await (supabase.auth.admin as any).listUsers({ page, perPage });
+
+        if (error) {
+          console.error("[send-year-wrapped] listUsers error:", error);
+          return null;
+        }
+
+        const users: any[] = data?.users ?? [];
+        const match = users.find((u) => (u.email ?? "").toLowerCase() === normalized);
+        if (match?.id && match?.email) return { id: match.id, email: match.email };
+
+        // If the page returned fewer than perPage, we're at the end.
+        if (users.length < perPage) break;
       }
-      const user = data.users.find((u: any) => u.email?.toLowerCase() === userEmail.toLowerCase());
-      if (user && user.email) {
-        return { id: user.id, email: user.email };
-      }
+
       return null;
     }
 
