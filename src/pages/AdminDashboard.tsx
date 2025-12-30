@@ -7,7 +7,7 @@ import { AdminDashboardSkeleton } from '@/components/skeletons';
 import { 
   Users, MessageSquare, Package, Activity, Shield, Gift, Coins, 
   TrendingUp, Globe, Briefcase, Wallet, AlertTriangle, Eye, 
-  Heart, UserPlus, FileText, Image, Gamepad2, RefreshCw, Store, Github
+  Heart, UserPlus, FileText, Image, Gamepad2, RefreshCw, Store, Github, Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,6 +24,7 @@ import { AdminGroupChannelVerification } from '@/components/admin/AdminGroupChan
 import { AdminMiniProgramsPanel } from '@/components/admin/AdminMiniProgramsPanel';
 import { PageHeader } from '@/components/PageHeader';
 import AdminDeveloperPanel from '@/components/admin/AdminDeveloperPanel';
+import AdminYearWrappedPanel from '@/components/admin/AdminYearWrappedPanel';
 
 interface DashboardStats {
   totalUsers: number;
@@ -722,6 +723,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="gifts" className="text-xs">Gifts</TabsTrigger>
             <TabsTrigger value="premium" className="text-xs">Premium</TabsTrigger>
             <TabsTrigger value="games" className="text-xs">Games</TabsTrigger>
+            <TabsTrigger value="year-wrapped" className="text-xs gap-1">
+              <Mail className="h-3 w-3" />
+              Year Wrapped
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics" className="mt-6">
@@ -1055,6 +1060,10 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="year-wrapped" className="mt-6">
+            <AdminYearWrappedPanel />
           </TabsContent>
         </Tabs>
       </div>
