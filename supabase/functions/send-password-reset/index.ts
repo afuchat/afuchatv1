@@ -30,7 +30,8 @@ function generatePasswordResetEmailHtml(displayName: string, resetLink: string):
           <tr>
             <td style="text-align: center; padding-bottom: 24px;">
               <a href="https://afuchat.com" style="text-decoration: none;">
-                <span style="font-size: 28px; font-weight: 700; color: #00C2CB; letter-spacing: -0.5px;">AfuChat</span>
+                <img src="https://afuchat.com/logo.jpg" alt="AfuChat" width="48" height="48" style="display: inline-block; border-radius: 12px; vertical-align: middle;" />
+                <span style="font-size: 28px; font-weight: 700; color: #00C2CB; letter-spacing: -0.5px; vertical-align: middle; margin-left: 12px;">AfuChat</span>
               </a>
             </td>
           </tr>
