@@ -23,11 +23,23 @@ const ForgotPassword = () => {
       // Validate email
       emailSchema.parse(email);
 
+      // First, generate the reset link using Supabase
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
       if (error) throw error;
+
+      // Send our branded email via edge function
+      try {
+        const resetLink = `${window.location.origin}/auth/reset-password`;
+        await supabase.functions.invoke('send-password-reset', {
+          body: { email, resetLink, displayName: email.split('@')[0] },
+        });
+      } catch (emailError) {
+        // Edge function email failed, but Supabase still sent default email
+        console.log('Custom email failed, using default Supabase email');
+      }
 
       toast.success('Password reset email sent! Check your inbox.');
       setEmailSent(true);

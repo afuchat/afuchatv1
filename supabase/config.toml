@@ -59,3 +59,6 @@ verify_jwt = false
 
 [functions.send-year-wrapped]
 verify_jwt = false
+
+[functions.send-password-reset]
+verify_jwt = false
