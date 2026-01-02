@@ -23,8 +23,7 @@ import {
   ChevronRight,
   Shield,
   Zap,
-  Star,
-  Trophy
+  Star
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,6 +37,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
+import { GradeBadge, type Grade } from '@/components/gamification/GradeBadge';
 
 const Wallet = () => {
   const navigate = useNavigate();
@@ -237,33 +237,33 @@ const Wallet = () => {
     { icon: Gift, label: 'Gifts', color: 'bg-pink-500', onClick: () => navigate('/gifts') },
   ];
 
-  // Calculate grade progress
+  // Calculate grade progress with updated thresholds
   const getGradeProgress = () => {
     const xp = profile?.xp || 0;
     const grades = [
       { name: 'Newcomer', min: 0, max: 1000 },
       { name: 'Active Chatter', min: 1000, max: 5000 },
-      { name: 'Community Builder', min: 5000, max: 15000 },
-      { name: 'Rising Star', min: 15000, max: 50000 },
-      { name: 'Influencer', min: 50000, max: 150000 },
-      { name: 'Elite Creator', min: 150000, max: 500000 },
-      { name: 'Champion', min: 500000, max: 1500000 },
-      { name: 'Master', min: 1500000, max: 4000000 },
-      { name: 'Grandmaster', min: 4000000, max: 10000000 },
+      { name: 'Community Builder', min: 5000, max: 20000 },
+      { name: 'Rising Star', min: 20000, max: 75000 },
+      { name: 'Influencer', min: 75000, max: 250000 },
+      { name: 'Elite Creator', min: 250000, max: 750000 },
+      { name: 'Champion', min: 750000, max: 2000000 },
+      { name: 'Master', min: 2000000, max: 5000000 },
+      { name: 'Grandmaster', min: 5000000, max: 10000000 },
       { name: 'Legend', min: 10000000, max: Infinity },
     ];
     
-    const currentGrade = grades.find(g => xp >= g.min && xp < g.max) || grades[0];
+    const currentGrade = grades.find(g => xp >= g.min && xp < g.max) || grades[grades.length - 1];
     const nextGrade = grades[grades.indexOf(currentGrade) + 1];
     
     if (!nextGrade) return { progress: 100, current: currentGrade.name, next: null, needed: 0 };
     
-    const progress = ((xp - currentGrade.min) / (currentGrade.max - currentGrade.min)) * 100;
+    const progress = ((xp - currentGrade.min) / (nextGrade.min - currentGrade.min)) * 100;
     return { 
       progress: Math.min(progress, 100), 
       current: currentGrade.name, 
       next: nextGrade.name,
-      needed: currentGrade.max - xp
+      needed: nextGrade.min - xp
     };
   };
 
@@ -423,13 +423,7 @@ const Wallet = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Trophy className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">{gradeInfo.current}</p>
-                      <p className="text-xs text-muted-foreground">Current Grade</p>
-                    </div>
+                    <GradeBadge grade={gradeInfo.current as Grade} size="md" showLabel />
                   </div>
                   {gradeInfo.next && (
                     <Badge variant="secondary" className="gap-1">
