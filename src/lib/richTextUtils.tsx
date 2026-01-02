@@ -11,10 +11,11 @@ import React from 'react';
 export const parseRichText = (text: string): React.ReactNode => {
   if (!text || typeof text !== 'string') return text;
 
+  // Twitter/X style formatting: **bold**, _italic_, ~~strikethrough~~, `code`
   const patterns = [
-    { regex: /\*([^*]+)\*/g, wrapper: (content: string, key: number) => <strong key={key} className="font-bold">{content}</strong> },
+    { regex: /\*\*([^*]+)\*\*/g, wrapper: (content: string, key: number) => <strong key={key} className="font-bold">{content}</strong> },
     { regex: /_([^_]+)_/g, wrapper: (content: string, key: number) => <em key={key} className="italic">{content}</em> },
-    { regex: /~([^~]+)~/g, wrapper: (content: string, key: number) => <span key={key} className="line-through">{content}</span> },
+    { regex: /~~([^~]+)~~/g, wrapper: (content: string, key: number) => <span key={key} className="line-through">{content}</span> },
     { regex: /`([^`]+)`/g, wrapper: (content: string, key: number) => <code key={key} className="px-1 py-0.5 bg-muted rounded text-sm font-mono">{content}</code> },
   ];
 
