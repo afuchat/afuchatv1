@@ -37,11 +37,34 @@ const SwipeableSheet = ({
   className,
   showCloseButton = false,
   disableSwipe = false,
-  snapPoints,
-  activeSnapPoint,
-  onSnapPointChange,
+  snapPoints: customSnapPoints,
+  activeSnapPoint: customActiveSnapPoint,
+  onSnapPointChange: customOnSnapPointChange,
 }: SwipeableSheetProps) => {
   const isHorizontal = side === 'left' || side === 'right';
+  const isBottom = side === 'bottom';
+  
+  // Use custom snap points or default to auto-expanding behavior for bottom sheets
+  const defaultSnapPoints = isBottom ? [0.5, 1] : undefined;
+  const snapPoints = customSnapPoints ?? defaultSnapPoints;
+  
+  const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(
+    customActiveSnapPoint ?? (snapPoints ? snapPoints[0] : null)
+  );
+
+  // Reset snap point when sheet opens
+  React.useEffect(() => {
+    if (open && snapPoints) {
+      setActiveSnapPoint(snapPoints[0]);
+    }
+  }, [open, snapPoints]);
+
+  const handleSnapPointChange = (snapPoint: number | string) => {
+    setActiveSnapPoint(snapPoint);
+    customOnSnapPointChange?.(snapPoint);
+  };
+
+  const isFullScreen = activeSnapPoint === 1;
 
   // Get direction based on side
   const getDirection = () => {
@@ -79,7 +102,8 @@ const SwipeableSheet = ({
       default:
         return cn(
           baseStyles,
-          'fixed inset-x-0 bottom-0 max-h-[85vh] rounded-t-3xl border-t border-border'
+          'fixed inset-x-0 bottom-0 h-full',
+          isFullScreen ? 'rounded-none' : 'rounded-t-3xl border-t border-border'
         );
     }
   };
@@ -92,14 +116,15 @@ const SwipeableSheet = ({
       dismissible={!disableSwipe}
       snapPoints={snapPoints}
       activeSnapPoint={activeSnapPoint}
-      setActiveSnapPoint={onSnapPointChange}
+      setActiveSnapPoint={handleSnapPointChange}
+      fadeFromIndex={snapPoints ? 0 : undefined}
     >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
         <Drawer.Content
           className={cn(
             getContentStyles(),
-            'z-50 shadow-2xl',
+            'z-50 shadow-2xl transition-[border-radius] duration-200',
             className
           )}
         >
