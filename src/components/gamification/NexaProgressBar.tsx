@@ -28,54 +28,54 @@ const GRADE_THRESHOLDS = [
   { 
     grade: 'Community Builder' as Grade, 
     min: 5000, 
-    max: 15000, 
+    max: 20000, 
     gradient: 'from-purple-400 via-purple-500 to-purple-600',
     glow: 'shadow-purple-500/40',
     shimmerSpeed: 1.5
   },
   { 
     grade: 'Rising Star' as Grade, 
-    min: 15000, 
-    max: 50000, 
+    min: 20000, 
+    max: 75000, 
     gradient: 'from-cyan-400 via-cyan-500 to-cyan-600',
     glow: 'shadow-cyan-500/40',
     shimmerSpeed: 1.4
   },
   { 
     grade: 'Influencer' as Grade, 
-    min: 50000, 
-    max: 150000, 
+    min: 75000, 
+    max: 250000, 
     gradient: 'from-pink-400 via-pink-500 to-pink-600',
     glow: 'shadow-pink-500/45',
     shimmerSpeed: 1.3
   },
   { 
     grade: 'Elite Creator' as Grade, 
-    min: 150000, 
-    max: 500000, 
+    min: 250000, 
+    max: 750000, 
     gradient: 'from-yellow-400 via-yellow-500 to-amber-500',
     glow: 'shadow-yellow-500/50',
     shimmerSpeed: 1.2
   },
   { 
     grade: 'Champion' as Grade, 
-    min: 500000, 
-    max: 1500000, 
+    min: 750000, 
+    max: 2000000, 
     gradient: 'from-orange-400 via-orange-500 to-orange-600',
     glow: 'shadow-orange-500/50',
     shimmerSpeed: 1.1
   },
   { 
     grade: 'Master' as Grade, 
-    min: 1500000, 
-    max: 4000000, 
+    min: 2000000, 
+    max: 5000000, 
     gradient: 'from-emerald-400 via-emerald-500 to-emerald-600',
     glow: 'shadow-emerald-500/55',
     shimmerSpeed: 1.0
   },
   { 
     grade: 'Grandmaster' as Grade, 
-    min: 4000000, 
+    min: 5000000, 
     max: 10000000, 
     gradient: 'from-indigo-400 via-indigo-500 to-indigo-600',
     glow: 'shadow-indigo-500/55',
