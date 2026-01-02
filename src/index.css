@@ -270,9 +270,9 @@
   
   html, body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 15px;
-    line-height: 1.5;
+    line-height: 1.3125;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -307,34 +307,39 @@
     position: absolute !important;
   }
 
-  /* X/Twitter Style Typography System */
+  /* X/Twitter Style Typography System - Exact Match */
   h1, h2, h3, h4, h5, h6 {
     @apply font-sans;
-    letter-spacing: -0.01em;
+    letter-spacing: normal;
   }
 
   h1 {
-    @apply text-[20px] font-bold leading-6;
+    @apply text-[23px] font-extrabold leading-7;
   }
 
   h2 {
-    @apply text-[17px] font-bold leading-5;
+    @apply text-[20px] font-extrabold leading-6;
   }
 
   h3 {
-    @apply text-[15px] font-bold leading-5;
+    @apply text-[17px] font-bold leading-[22px];
   }
 
   h4 {
-    @apply text-[15px] font-semibold leading-5;
+    @apply text-[15px] font-bold leading-5;
   }
 
   /* Body text - X style */
   p {
-    @apply text-[15px] font-normal leading-[22px];
+    @apply text-[15px] font-normal leading-5;
   }
 
-  /* Display name style - bold like X */
+  /* Profile display name - Large and bold like X profile page */
+  .profile-display-name {
+    @apply text-[20px] font-extrabold leading-6;
+  }
+
+  /* Display name in posts/feed - bold like X */
   .display-name {
     @apply text-[15px] font-bold leading-5;
   }
@@ -344,10 +349,15 @@
     @apply text-[15px] font-normal text-muted-foreground leading-5;
   }
 
-  /* Post content style - regular weight like X */
+  /* Post content style - X uses 17px for tweets */
   .post-content {
-    @apply text-[15px] font-normal leading-[22px];
+    @apply text-[17px] font-normal leading-[22px];
     word-wrap: break-word;
+  }
+
+  /* Bio/description text - slightly larger */
+  .bio-text {
+    @apply text-[15px] font-normal leading-5;
   }
 
   /* Small metadata/engagement text */
@@ -357,12 +367,21 @@
 
   /* Tab/Navigation text */
   .nav-text {
-    @apply text-[15px] font-semibold leading-5;
+    @apply text-[15px] font-bold leading-5;
   }
 
-  /* Button text */
+  /* Button text - X uses bold */
   .btn-text {
-    @apply text-[14px] font-bold leading-5;
+    @apply text-[15px] font-bold leading-5;
+  }
+
+  /* Stats text (Following, Followers count) */
+  .stats-text {
+    @apply text-[14px] font-normal leading-4;
+  }
+
+  .stats-number {
+    @apply text-[14px] font-bold leading-4;
   }
 
   /* Bold text utility for headers */
