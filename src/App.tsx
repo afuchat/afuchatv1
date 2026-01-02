@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect } from "react";
+import '@/types/telegram.d.ts';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { AccountModeProvider } from "./contexts/AccountModeContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
+import { TelegramProvider } from "./contexts/TelegramContext";
 import { SettingsSheet } from "./components/SettingsSheet";
 import { RequireCountry } from "./components/RequireCountry";
 import { RequireDateOfBirth } from "./components/RequireDateOfBirth";
@@ -270,8 +272,15 @@ const AppWithDesktopCheck = () => {
   const isLovablePreview =
     typeof window !== 'undefined' && /lovable(app|project)\.com$/i.test(window.location.hostname);
 
-  // Block desktop users (except Lovable preview)
-  if (!isMobile && !isLovablePreview) {
+  // Check if running in Telegram Mini App
+  const isTelegramMiniApp =
+    typeof window !== 'undefined' && 
+    window.Telegram && 
+    window.Telegram.WebApp && 
+    window.Telegram.WebApp.initData;
+
+  // Block desktop users (except Lovable preview and Telegram Mini App)
+  if (!isMobile && !isLovablePreview && !isTelegramMiniApp) {
     return <DesktopBlocker />;
   }
 
@@ -283,22 +292,24 @@ const App = () => (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <AuthProvider>
-            <AccountModeProvider>
-              <SettingsProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                    <AnimatePresence mode="wait">
-                      <AppWithDesktopCheck />
-                    </AnimatePresence>
-                    <SettingsSheet />
-                  </BrowserRouter>
-                </TooltipProvider>
-              </SettingsProvider>
-            </AccountModeProvider>
-          </AuthProvider>
+          <TelegramProvider>
+            <AuthProvider>
+              <AccountModeProvider>
+                <SettingsProvider>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Sonner />
+                    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                      <AnimatePresence mode="wait">
+                        <AppWithDesktopCheck />
+                      </AnimatePresence>
+                      <SettingsSheet />
+                    </BrowserRouter>
+                  </TooltipProvider>
+                </SettingsProvider>
+              </AccountModeProvider>
+            </AuthProvider>
+          </TelegramProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>

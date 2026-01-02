@@ -1,9 +1,17 @@
 import { Smartphone } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTelegramOptional } from '@/contexts/TelegramContext';
 
 export const DesktopBlocker = () => {
+  const telegram = useTelegramOptional();
+  
+  // Don't show blocker in Telegram Mini App
+  if (telegram?.isTelegram) {
+    return null;
+  }
+  
   return (
-    <div className="fixed inset-0 bg-background z-[9999] flex items-center justify-center p-6">
+    <div className="fixed inset-0 bg-background z-[9999] flex items-center justify-center p-6 desktop-blocker">
       <motion.div 
         className="text-center max-w-md"
         initial={{ opacity: 0, y: 20 }}

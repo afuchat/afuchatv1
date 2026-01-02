@@ -631,3 +631,92 @@ html.pwa-standalone [role="button"] {
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* ==========================================
+   Telegram Mini App Styles
+   ========================================== */
+
+/* Telegram CSS Variables */
+:root {
+  --tg-viewport-height: 100vh;
+  --tg-viewport-stable-height: 100vh;
+  --tg-bg-color: hsl(var(--background));
+  --tg-text-color: hsl(var(--foreground));
+  --tg-hint-color: hsl(var(--muted-foreground));
+  --tg-link-color: hsl(var(--primary));
+  --tg-button-color: hsl(var(--primary));
+  --tg-button-text-color: hsl(var(--primary-foreground));
+  --tg-secondary-bg-color: hsl(var(--secondary));
+}
+
+/* Telegram Mini App specific styles */
+html.telegram-mini-app {
+  /* Use Telegram viewport height for full-screen experience */
+  height: var(--tg-viewport-height, 100vh);
+  overflow: hidden;
+}
+
+html.telegram-mini-app body {
+  height: var(--tg-viewport-height, 100vh);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Disable desktop blocker in Telegram */
+html.telegram-mini-app .desktop-blocker {
+  display: none !important;
+}
+
+/* Telegram haptic feedback visual cue */
+html.telegram-mini-app button:active,
+html.telegram-mini-app [role="button"]:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Telegram safe areas */
+html.telegram-mini-app {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+
+/* Optimize scrolling for Telegram WebView */
+html.telegram-mini-app .scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Hide scrollbar in Telegram for cleaner look */
+html.telegram-mini-app ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Telegram platform-specific adjustments */
+html.telegram-mini-app[data-tg-platform="ios"] {
+  /* iOS-specific padding for notch */
+  padding-top: max(var(--sat), 0px);
+}
+
+html.telegram-mini-app[data-tg-platform="android"] {
+  /* Android-specific adjustments */
+  padding-bottom: var(--sab);
+}
+
+/* Touch optimization for Telegram */
+html.telegram-mini-app * {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent text selection in interactive elements */
+html.telegram-mini-app button,
+html.telegram-mini-app a,
+html.telegram-mini-app [role="button"],
+html.telegram-mini-app input[type="button"],
+html.telegram-mini-app input[type="submit"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
