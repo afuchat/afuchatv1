@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle,
-  SheetClose 
-} from '@/components/ui/sheet';
+import { SwipeableSheet, SwipeableSheetContent } from '@/components/ui/swipeable-sheet';
 import { UserX, Flag, Loader2, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -103,59 +97,54 @@ const UserActionsSheet = ({
 
   return (
     <>
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent 
-          side="bottom" 
-          className="h-auto max-h-[45vh] rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-border/50 p-6"
-        >
-          <SheetHeader className="text-left mb-6">
-            <SheetTitle className="text-xl font-bold">@{userHandle}</SheetTitle>
-          </SheetHeader>
-
-          <div className="space-y-2">
-            {isBlocked ? (
-              <Button
-                variant="outline"
-                className="w-full justify-start h-12 text-base rounded-xl font-medium gap-3"
-                onClick={() => setShowUnblockConfirm(true)}
-              >
-                <UserCheck className="h-5 w-5 text-muted-foreground" />
-                Unblock User
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full justify-start h-12 text-base rounded-xl font-medium gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => setShowBlockConfirm(true)}
-              >
-                <UserX className="h-5 w-5" />
-                Block User
-              </Button>
-            )}
-
+      <SwipeableSheet
+        open={isOpen}
+        onOpenChange={onClose}
+        title={`@${userHandle}`}
+        snapPoints={[0.35, 1]}
+      >
+        <SwipeableSheetContent className="space-y-2">
+          {isBlocked ? (
+            <Button
+              variant="outline"
+              className="w-full justify-start h-12 text-base rounded-xl font-medium gap-3"
+              onClick={() => setShowUnblockConfirm(true)}
+            >
+              <UserCheck className="h-5 w-5 text-muted-foreground" />
+              Unblock User
+            </Button>
+          ) : (
             <Button
               variant="outline"
               className="w-full justify-start h-12 text-base rounded-xl font-medium gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={() => {
-                onClose();
-                setShowReportSheet(true);
-              }}
+              onClick={() => setShowBlockConfirm(true)}
             >
-              <Flag className="h-5 w-5" />
-              Report Account
+              <UserX className="h-5 w-5" />
+              Block User
             </Button>
+          )}
 
-            <SheetClose asChild>
-              <Button
-                variant="ghost"
-                className="w-full h-12 rounded-xl font-medium mt-4"
-              >
-                Cancel
-              </Button>
-            </SheetClose>
-          </div>
-        </SheetContent>
-      </Sheet>
+          <Button
+            variant="outline"
+            className="w-full justify-start h-12 text-base rounded-xl font-medium gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => {
+              onClose();
+              setShowReportSheet(true);
+            }}
+          >
+            <Flag className="h-5 w-5" />
+            Report Account
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full h-12 rounded-xl font-medium mt-4"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+        </SwipeableSheetContent>
+      </SwipeableSheet>
 
       <ReportUserSheet
         isOpen={showReportSheet}
