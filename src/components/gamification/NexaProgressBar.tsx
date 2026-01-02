@@ -91,7 +91,7 @@ const GRADE_THRESHOLDS = [
   },
 ];
 
-const TOTAL_MAX_FOR_DISPLAY = 10000000; // Max value for visual representation (10M)
+
 
 export const NexaProgressBar = ({ currentNexa, currentGrade, showDetails = true }: NexaProgressBarProps) => {
   const [progress, setProgress] = useState(0);
@@ -100,22 +100,29 @@ export const NexaProgressBar = ({ currentNexa, currentGrade, showDetails = true 
   const nextThreshold = GRADE_THRESHOLDS[GRADE_THRESHOLDS.findIndex(t => t.grade === currentGrade) + 1];
 
   useEffect(() => {
-    // Calculate overall progress across all levels
-    const cappedNexa = Math.min(currentNexa, TOTAL_MAX_FOR_DISPLAY);
-    const overallProgress = (cappedNexa / TOTAL_MAX_FOR_DISPLAY) * 100;
-    setProgress(overallProgress);
-  }, [currentNexa]);
+    // Calculate progress within current level only
+    if (currentThreshold && nextThreshold) {
+      const levelMin = currentThreshold.min;
+      const levelMax = nextThreshold.min;
+      const levelProgress = ((currentNexa - levelMin) / (levelMax - levelMin)) * 100;
+      setProgress(Math.min(Math.max(levelProgress, 0), 100));
+    } else if (!nextThreshold) {
+      // Legend level - always full
+      setProgress(100);
+    }
+  }, [currentNexa, currentThreshold, nextThreshold]);
 
-  const nexaToNextGrade = nextThreshold ? nextThreshold.min - currentNexa : 0;
-
-  // Calculate milestone positions as percentages
-  const milestones = GRADE_THRESHOLDS.slice(1, -1).map(threshold => ({
-    position: (threshold.min / TOTAL_MAX_FOR_DISPLAY) * 100,
-    grade: threshold.grade,
-  }));
+  const nexaToNextGrade = nextThreshold ? Math.max(nextThreshold.min - currentNexa, 0) : 0;
 
   // Get current grade config for styling
   const gradeConfig = currentThreshold || GRADE_THRESHOLDS[0];
+
+  // Format large numbers
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
+    return num.toString();
+  };
 
   return (
     <div className="w-full space-y-2">
@@ -123,28 +130,17 @@ export const NexaProgressBar = ({ currentNexa, currentGrade, showDetails = true 
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
             <GradeBadge grade={currentGrade} size="sm" showLabel />
-            <span className="text-muted-foreground">{currentNexa} Nexa</span>
+            <span className="text-muted-foreground">{formatNumber(currentNexa)} Nexa</span>
           </div>
-          {nextThreshold && currentNexa < TOTAL_MAX_FOR_DISPLAY && (
+          {nextThreshold && (
             <span className="text-muted-foreground">
-              {nexaToNextGrade} to {nextThreshold.grade}
+              {formatNumber(nexaToNextGrade)} to {nextThreshold.grade}
             </span>
           )}
         </div>
       )}
       
-      <div className="relative h-3 bg-muted rounded-full overflow-visible">
-        {/* Milestone markers */}
-        {milestones.map((milestone, index) => (
-          <div
-            key={index}
-            className="absolute top-0 bottom-0 w-0.5 bg-background z-10"
-            style={{ left: `${milestone.position}%` }}
-          >
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-background border-2 border-muted-foreground/30" />
-          </div>
-        ))}
-        
+      <div className="relative h-3 bg-muted rounded-full overflow-hidden">
         {/* Progress fill with grade-specific gradient and glow */}
         <motion.div
           className={`absolute inset-y-0 left-0 rounded-full overflow-hidden ${gradeConfig.glow}`}
@@ -180,20 +176,10 @@ export const NexaProgressBar = ({ currentNexa, currentGrade, showDetails = true 
         </motion.div>
       </div>
       
-      {/* Level labels below the bar */}
-      <div className="relative w-full">
-        <div className="flex justify-between text-[10px] text-muted-foreground px-1">
-          {GRADE_THRESHOLDS.slice(0, -1).map((threshold, index) => (
-            <span key={index} className="text-center" style={{ 
-              position: index === 0 ? 'relative' : 'absolute',
-              left: index === 0 ? '0' : `${(threshold.min / TOTAL_MAX_FOR_DISPLAY) * 100}%`,
-              transform: index === 0 ? 'none' : 'translateX(-50%)'
-            }}>
-              {threshold.min}
-            </span>
-          ))}
-          <span className="text-right">{TOTAL_MAX_FOR_DISPLAY}+</span>
-        </div>
+      {/* Level labels - current level min and max only */}
+      <div className="flex justify-between text-[10px] text-muted-foreground">
+        <span>{formatNumber(currentThreshold?.min || 0)}</span>
+        <span>{nextThreshold ? formatNumber(nextThreshold.min) : 'MAX'}</span>
       </div>
     </div>
   );
