@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { GradeBadge, type Grade } from './GradeBadge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Check, ChevronRight } from 'lucide-react';
 
 interface NexaProgressBarProps {
@@ -136,8 +136,8 @@ export const NexaProgressBar = ({ currentNexa, currentGrade: providedGrade, show
   };
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
+    <Drawer>
+      <DrawerTrigger asChild>
         <div className="w-full space-y-2 cursor-pointer hover:opacity-90 transition-opacity">
           {showDetails && (
             <div className="flex items-center justify-between text-xs">
@@ -198,15 +198,15 @@ export const NexaProgressBar = ({ currentNexa, currentGrade: providedGrade, show
             <span>{nextThreshold ? formatNumber(nextThreshold.min) : 'MAX'}</span>
           </div>
         </div>
-      </SheetTrigger>
+      </DrawerTrigger>
       
-      <SheetContent side="bottom" className="max-h-[80vh]">
-        <SheetHeader className="pb-4">
-          <SheetTitle className="text-center">Nexa Levels</SheetTitle>
-        </SheetHeader>
+      <DrawerContent className="max-h-[85vh]">
+        <DrawerHeader className="pb-4">
+          <DrawerTitle className="text-center">Nexa Levels</DrawerTitle>
+        </DrawerHeader>
         
         {/* Current balance display */}
-        <div className="text-center mb-6 p-4 bg-muted/50 rounded-xl">
+        <div className="text-center mb-6 mx-4 p-4 bg-muted/50 rounded-xl">
           <p className="text-sm text-muted-foreground mb-1">Your Balance</p>
           <p className="text-2xl font-bold">{formatFullNumber(currentNexa)} Nexa</p>
           <div className="flex items-center justify-center gap-2 mt-2">
@@ -215,10 +215,9 @@ export const NexaProgressBar = ({ currentNexa, currentGrade: providedGrade, show
         </div>
         
         {/* All levels list */}
-        <div className="space-y-2 overflow-y-auto max-h-[45vh] pb-4">
+        <div className="space-y-2 overflow-y-auto max-h-[50vh] px-4 pb-8">
           {GRADE_THRESHOLDS.map((threshold, index) => {
             const isCurrentLevel = threshold.grade === currentGrade;
-            const isCompleted = currentNexa >= threshold.min && GRADE_THRESHOLDS[index + 1] && currentNexa >= GRADE_THRESHOLDS[index + 1].min;
             const isPastLevel = GRADE_THRESHOLDS.findIndex(t => t.grade === currentGrade) > index;
             
             return (
@@ -251,7 +250,7 @@ export const NexaProgressBar = ({ currentNexa, currentGrade: providedGrade, show
             );
           })}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 };

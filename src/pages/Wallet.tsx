@@ -36,8 +36,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Progress } from '@/components/ui/progress';
-import { GradeBadge, type Grade } from '@/components/gamification/GradeBadge';
+import { NexaProgressBar } from '@/components/gamification/NexaProgressBar';
+import { type Grade } from '@/components/gamification/GradeBadge';
 
 const Wallet = () => {
   const navigate = useNavigate();
@@ -421,18 +421,10 @@ const Wallet = () => {
           >
             <Card className="shadow-md border-border/50">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <GradeBadge grade={gradeInfo.current as Grade} size="md" showLabel />
-                  </div>
-                  {gradeInfo.next && (
-                    <Badge variant="secondary" className="gap-1">
-                      <Zap className="h-3 w-3" />
-                      {gradeInfo.needed.toLocaleString()} to {gradeInfo.next}
-                    </Badge>
-                  )}
-                </div>
-                <Progress value={gradeInfo.progress} className="h-2" />
+                <NexaProgressBar 
+                  currentNexa={profile?.xp || 0}
+                  showDetails={true}
+                />
               </CardContent>
             </Card>
           </motion.div>
