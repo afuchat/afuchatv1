@@ -29,9 +29,6 @@ export const BusinessBadge = ({ size = 'sm', className, showLabel = false }: Bus
     );
   }
 
-  return (
-    <div className="inline-flex ml-0.5 flex-shrink-0" title="Verified Business Account">
-      <Briefcase className={cn('text-blue-500', sizeClasses[size], className)} />
-    </div>
-  );
+  // Don't show the briefcase icon inline next to names
+  return null;
 };
