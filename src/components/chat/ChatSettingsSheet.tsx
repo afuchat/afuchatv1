@@ -5,15 +5,9 @@ import { toast } from 'sonner';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { PremiumThemeGenerator } from './PremiumThemeGenerator';
 import { Crown } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
+import { SwipeableSheet, SwipeableSheetContent } from '@/components/ui/swipeable-sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -159,17 +153,17 @@ export const ChatSettingsSheet = ({ isOpen, onClose, defaultTab = 'appearance' }
   }, [selectedTheme, selectedWallpaper, bubbleStyle, fontSize, sounds, autoDownload, mediaQuality, chatLock, readReceipts, loading]);
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:w-[540px] p-0">
-        <SheetHeader className="p-6 pb-4">
-          <SheetTitle className="text-2xl font-bold">Chat Customization</SheetTitle>
-          <SheetDescription>
-            Personalize your chat experience with themes, sounds, and privacy settings
-          </SheetDescription>
-        </SheetHeader>
-
+    <SwipeableSheet
+      open={isOpen}
+      onOpenChange={onClose}
+      title="Chat Customization"
+      description="Personalize your chat experience with themes, sounds, and privacy settings"
+      side="right"
+      showCloseButton
+    >
+      <SwipeableSheetContent>
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="w-full justify-start px-6 bg-transparent border-b rounded-none h-auto p-0">
+          <TabsList className="w-full justify-start bg-transparent border-b rounded-none h-auto p-0 mb-6">
             <TabsTrigger value="appearance" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
               Appearance
             </TabsTrigger>
@@ -181,8 +175,7 @@ export const ChatSettingsSheet = ({ isOpen, onClose, defaultTab = 'appearance' }
             </TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="h-[calc(100vh-180px)]">
-            <div className="px-6 py-6 space-y-6">
+          <div className="space-y-6">
               {/* Appearance Tab */}
               <TabsContent value="appearance" className="space-y-6 mt-0">
                 {/* Themes */}
@@ -523,9 +516,8 @@ export const ChatSettingsSheet = ({ isOpen, onClose, defaultTab = 'appearance' }
                 </div>
               </TabsContent>
             </div>
-          </ScrollArea>
         </Tabs>
-      </SheetContent>
-    </Sheet>
+      </SwipeableSheetContent>
+    </SwipeableSheet>
   );
 };

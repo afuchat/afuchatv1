@@ -3,9 +3,8 @@ import {
   Ellipsis, Trash2, Flag, Share, LogIn, EyeOff, UserPlus, UserMinus, List, VolumeX, Volume2, UserX, Pencil, Quote, Loader2, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
-  Sheet, SheetContent, SheetTrigger, SheetClose 
-} from '@/components/ui/sheet';
+import { Drawer } from 'vaul';
+import { cn } from '@/lib/utils';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -123,11 +122,8 @@ const PostActionsSheet: React.FC<PostActionsSheetProps> = ({
         }
     };
 
-    const renderDragHandle = () => (
-        <div className="flex justify-center py-3">
-            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
-        </div>
-    );
+    const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(0.5);
+    const isFullScreen = activeSnapPoint === 1;
 
     const handleShare = () => {
         const postUrl = `${window.location.origin}/post/${post.id}`;
@@ -284,16 +280,17 @@ const PostActionsSheet: React.FC<PostActionsSheetProps> = ({
                     <div className="text-center text-muted-foreground text-sm py-6">
                         Log in to interact with this post.
                     </div>
-                    <SheetClose asChild>
-                        <Button 
-                            variant="default"
-                            className="w-full justify-center py-4 h-auto bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-base rounded-2xl transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98]"
-                            onClick={() => navigate('/auth')}
-                        >
-                            <LogIn className="h-5 w-5 mr-3 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" />
-                            Log In to Engage
-                        </Button>
-                    </SheetClose>
+                    <Button 
+                        variant="default"
+                        className="w-full justify-center py-4 h-auto bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-base rounded-2xl transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98]"
+                        onClick={() => {
+                            setIsOpen(false);
+                            navigate('/auth');
+                        }}
+                    >
+                        <LogIn className="h-5 w-5 mr-3 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                        Log In to Engage
+                    </Button>
                 </div>
             );
         }
@@ -461,21 +458,37 @@ const PostActionsSheet: React.FC<PostActionsSheetProps> = ({
 
     return (
         <>
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                <SheetTrigger asChild>
+            <Drawer.Root
+                open={isOpen}
+                onOpenChange={setIsOpen}
+                snapPoints={[0.5, 1]}
+                activeSnapPoint={activeSnapPoint}
+                setActiveSnapPoint={setActiveSnapPoint}
+                fadeFromIndex={0}
+            >
+                <Drawer.Trigger asChild>
                     <button className="p-1 opacity-60 hover:opacity-100 transition-opacity">
                         <Ellipsis className="h-4 w-4 text-muted-foreground" />
                     </button>
-                </SheetTrigger>
+                </Drawer.Trigger>
                 
-                <SheetContent 
-                    side="bottom" 
-                    className="h-auto max-h-[70vh] rounded-t-xl p-0 overflow-y-auto bg-background"
-                >
-                    {renderDragHandle()}
-                    {renderActions()}
-                </SheetContent>
-            </Sheet>
+                <Drawer.Portal>
+                    <Drawer.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
+                    <Drawer.Content 
+                        className={cn(
+                            "fixed inset-x-0 bottom-0 z-50 h-full bg-background flex flex-col focus:outline-none shadow-2xl transition-[border-radius] duration-200",
+                            isFullScreen ? 'rounded-none' : 'rounded-t-3xl border-t border-border'
+                        )}
+                    >
+                        <div className="flex justify-center pt-4 pb-2 flex-shrink-0">
+                            <div className="w-10 h-1 rounded-full bg-muted-foreground/30 hover:bg-muted-foreground/50 transition-colors" />
+                        </div>
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+                            {renderActions()}
+                        </div>
+                    </Drawer.Content>
+                </Drawer.Portal>
+            </Drawer.Root>
 
             {/* Report Post Sheet */}
             <ReportPostSheet
