@@ -78,21 +78,32 @@
     
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6547165240467026" crossorigin="anonymous"></script>
+    
+    <!-- Telegram Mini App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
 
   <body>
     <!-- Inline script to prevent theme flash and handle PWA state -->
     <script>
       (function() {
-        // Theme handling
-        var theme = localStorage.getItem('afuchat-theme') || 'system';
-        var resolved;
-        if (theme === 'system') {
-          resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        } else if (theme === 'light' || theme === 'dark') {
-          resolved = theme;
+        // Detect Telegram Mini App first
+        var isTelegram = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
+        
+        // Theme handling - use Telegram theme if in Telegram
+        var theme, resolved;
+        if (isTelegram && window.Telegram.WebApp.colorScheme) {
+          resolved = window.Telegram.WebApp.colorScheme;
+          document.documentElement.classList.add('telegram-mini-app');
         } else {
-          resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          theme = localStorage.getItem('afuchat-theme') || 'system';
+          if (theme === 'system') {
+            resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          } else if (theme === 'light' || theme === 'dark') {
+            resolved = theme;
+          } else {
+            resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
         }
         document.documentElement.classList.add(resolved);
         
@@ -118,6 +129,12 @@
         // Handle Android
         if (/Android/.test(navigator.userAgent)) {
           document.documentElement.classList.add('android-device');
+        }
+        
+        // Set Telegram viewport height CSS variable early
+        if (isTelegram) {
+          document.documentElement.style.setProperty('--tg-viewport-height', window.Telegram.WebApp.viewportHeight + 'px');
+          document.documentElement.style.setProperty('--tg-viewport-stable-height', window.Telegram.WebApp.viewportStableHeight + 'px');
         }
       })();
     </script>
