@@ -18,6 +18,7 @@ import { useNexa } from '@/hooks/useNexa';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CircularImageCrop } from '@/components/profile/CircularImageCrop';
+import { SquareImageCrop } from '@/components/profile/SquareImageCrop';
 import { countries } from '@/lib/countries';
 import { getCountryFlag, getCountryCode, getPhonePlaceholder } from '@/lib/countryFlags';
 
@@ -397,13 +398,19 @@ const EditProfile: React.FC = () => {
           {/* Avatar Section */}
           <Card className="border border-border/50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold">Profile Picture</CardTitle>
+              <CardTitle className="text-lg font-semibold">
+                {isBusiness ? 'Business Logo' : 'Profile Picture'}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-2 border-border">
-                  <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
-                  <AvatarFallback className="bg-muted text-2xl">
+                <Avatar className={`h-20 w-20 sm:h-24 sm:w-24 border-2 border-border ${isBusiness ? 'rounded-lg' : ''}`}>
+                  <AvatarImage 
+                    src={profile.avatar_url || undefined} 
+                    alt={profile.display_name} 
+                    className={isBusiness ? 'rounded-lg' : ''}
+                  />
+                  <AvatarFallback className={`bg-muted text-2xl ${isBusiness ? 'rounded-lg' : ''}`}>
                     {profile.display_name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -428,7 +435,7 @@ const EditProfile: React.FC = () => {
                       >
                         <span className="cursor-pointer">
                           <Upload className="h-4 w-4 mr-2" />
-                          {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+                          {uploadingAvatar ? 'Uploading...' : isBusiness ? 'Upload Logo' : 'Upload Photo'}
                         </span>
                       </Button>
                     </Label>
@@ -814,13 +821,22 @@ const EditProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* Circular Image Crop Editor */}
-      <CircularImageCrop
-        imageFile={selectedImageFile}
-        open={showCropEditor}
-        onOpenChange={setShowCropEditor}
-        onSave={handleSaveAvatar}
-      />
+      {/* Image Crop Editor - Square for business, Circular for personal */}
+      {isBusiness ? (
+        <SquareImageCrop
+          imageFile={selectedImageFile}
+          open={showCropEditor}
+          onOpenChange={setShowCropEditor}
+          onSave={handleSaveAvatar}
+        />
+      ) : (
+        <CircularImageCrop
+          imageFile={selectedImageFile}
+          open={showCropEditor}
+          onOpenChange={setShowCropEditor}
+          onSave={handleSaveAvatar}
+        />
+      )}
     </div>
   );
 };
