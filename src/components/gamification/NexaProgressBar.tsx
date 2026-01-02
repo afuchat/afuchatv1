@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { GradeBadge, type Grade } from './GradeBadge';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Check, ChevronRight } from 'lucide-react';
 
 interface NexaProgressBarProps {
   currentNexa: number;
@@ -128,63 +130,128 @@ export const NexaProgressBar = ({ currentNexa, currentGrade: providedGrade, show
     return num.toString();
   };
 
+  // Format number with commas
+  const formatFullNumber = (num: number) => {
+    return num.toLocaleString();
+  };
+
   return (
-    <div className="w-full space-y-2">
-      {showDetails && (
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <GradeBadge grade={currentGrade} size="sm" showLabel />
-            <span className="text-muted-foreground">{formatNumber(currentNexa)} Nexa</span>
-          </div>
-          {nextThreshold && (
-            <span className="text-muted-foreground">
-              {formatNumber(nexaToNextGrade)} to {nextThreshold.grade}
-            </span>
+    <Sheet>
+      <SheetTrigger asChild>
+        <div className="w-full space-y-2 cursor-pointer hover:opacity-90 transition-opacity">
+          {showDetails && (
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <GradeBadge grade={currentGrade} size="sm" showLabel />
+                <span className="text-muted-foreground">{formatNumber(currentNexa)} Nexa</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {nextThreshold && (
+                  <span className="text-muted-foreground">
+                    {formatNumber(nexaToNextGrade)} to {nextThreshold.grade}
+                  </span>
+                )}
+                <ChevronRight className="h-3 w-3 text-muted-foreground" />
+              </div>
+            </div>
           )}
-        </div>
-      )}
-      
-      <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-        {/* Progress fill with grade-specific gradient and glow */}
-        <motion.div
-          className={`absolute inset-y-0 left-0 rounded-full overflow-hidden ${gradeConfig.glow}`}
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-        >
-          <div className={`h-full w-full bg-gradient-to-r ${gradeConfig.gradient} relative`}>
-            {/* Shimmer effect with grade-specific speed */}
+          
+          <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+            {/* Progress fill with grade-specific gradient and glow */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-              animate={{ x: ['-100%', '200%'] }}
-              transition={{ 
-                duration: gradeConfig.shimmerSpeed, 
-                repeat: Infinity, 
-                ease: 'linear' 
-              }}
-            />
-            
-            {/* Pulse effect for higher grades */}
-            {(currentGrade === 'Elite Creator' || currentGrade === 'Legend') && (
-              <motion.div
-                className="absolute inset-0 bg-white/10"
-                animate={{ opacity: [0.2, 0.4, 0.2] }}
-                transition={{ 
-                  duration: 2, 
-                  repeat: Infinity, 
-                  ease: 'easeInOut' 
-                }}
-              />
-            )}
+              className={`absolute inset-y-0 left-0 rounded-full overflow-hidden ${gradeConfig.glow}`}
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+            >
+              <div className={`h-full w-full bg-gradient-to-r ${gradeConfig.gradient} relative`}>
+                {/* Shimmer effect with grade-specific speed */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ 
+                    duration: gradeConfig.shimmerSpeed, 
+                    repeat: Infinity, 
+                    ease: 'linear' 
+                  }}
+                />
+                
+                {/* Pulse effect for higher grades */}
+                {(currentGrade === 'Elite Creator' || currentGrade === 'Legend') && (
+                  <motion.div
+                    className="absolute inset-0 bg-white/10"
+                    animate={{ opacity: [0.2, 0.4, 0.2] }}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity, 
+                      ease: 'easeInOut' 
+                    }}
+                  />
+                )}
+              </div>
+            </motion.div>
           </div>
-        </motion.div>
-      </div>
+          
+          {/* Level labels - current level min and max only */}
+          <div className="flex justify-between text-[10px] text-muted-foreground">
+            <span>{formatNumber(currentThreshold?.min || 0)}</span>
+            <span>{nextThreshold ? formatNumber(nextThreshold.min) : 'MAX'}</span>
+          </div>
+        </div>
+      </SheetTrigger>
       
-      {/* Level labels - current level min and max only */}
-      <div className="flex justify-between text-[10px] text-muted-foreground">
-        <span>{formatNumber(currentThreshold?.min || 0)}</span>
-        <span>{nextThreshold ? formatNumber(nextThreshold.min) : 'MAX'}</span>
-      </div>
-    </div>
+      <SheetContent side="bottom" className="max-h-[80vh]">
+        <SheetHeader className="pb-4">
+          <SheetTitle className="text-center">Nexa Levels</SheetTitle>
+        </SheetHeader>
+        
+        {/* Current balance display */}
+        <div className="text-center mb-6 p-4 bg-muted/50 rounded-xl">
+          <p className="text-sm text-muted-foreground mb-1">Your Balance</p>
+          <p className="text-2xl font-bold">{formatFullNumber(currentNexa)} Nexa</p>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <GradeBadge grade={currentGrade} size="sm" showLabel />
+          </div>
+        </div>
+        
+        {/* All levels list */}
+        <div className="space-y-2 overflow-y-auto max-h-[45vh] pb-4">
+          {GRADE_THRESHOLDS.map((threshold, index) => {
+            const isCurrentLevel = threshold.grade === currentGrade;
+            const isCompleted = currentNexa >= threshold.min && GRADE_THRESHOLDS[index + 1] && currentNexa >= GRADE_THRESHOLDS[index + 1].min;
+            const isPastLevel = GRADE_THRESHOLDS.findIndex(t => t.grade === currentGrade) > index;
+            
+            return (
+              <div 
+                key={threshold.grade}
+                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                  isCurrentLevel 
+                    ? 'bg-primary/10 border border-primary/30' 
+                    : isPastLevel
+                    ? 'bg-muted/30'
+                    : 'bg-muted/10'
+                }`}
+              >
+                <GradeBadge grade={threshold.grade} size="sm" />
+                <div className="flex-1">
+                  <p className={`font-medium text-sm ${isCurrentLevel ? 'text-primary' : ''}`}>
+                    {threshold.grade}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatFullNumber(threshold.min)} - {threshold.max === Infinity ? '∞' : formatFullNumber(threshold.max)} Nexa
+                  </p>
+                </div>
+                {isPastLevel && (
+                  <Check className="h-4 w-4 text-green-500" />
+                )}
+                {isCurrentLevel && (
+                  <div className="text-xs text-primary font-medium">Current</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
