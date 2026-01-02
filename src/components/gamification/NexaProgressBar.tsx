@@ -4,7 +4,7 @@ import { GradeBadge, type Grade } from './GradeBadge';
 
 interface NexaProgressBarProps {
   currentNexa: number;
-  currentGrade: Grade;
+  currentGrade?: Grade; // Optional - will be calculated from currentNexa if not provided
   showDetails?: boolean;
 }
 
@@ -93,8 +93,12 @@ const GRADE_THRESHOLDS = [
 
 
 
-export const NexaProgressBar = ({ currentNexa, currentGrade, showDetails = true }: NexaProgressBarProps) => {
+export const NexaProgressBar = ({ currentNexa, currentGrade: providedGrade, showDetails = true }: NexaProgressBarProps) => {
   const [progress, setProgress] = useState(0);
+  
+  // Calculate the actual grade from currentNexa
+  const calculatedGrade = GRADE_THRESHOLDS.find(t => currentNexa >= t.min && currentNexa < t.max)?.grade || 'Newcomer';
+  const currentGrade = calculatedGrade;
   
   const currentThreshold = GRADE_THRESHOLDS.find(t => t.grade === currentGrade);
   const nextThreshold = GRADE_THRESHOLDS[GRADE_THRESHOLDS.findIndex(t => t.grade === currentGrade) + 1];
