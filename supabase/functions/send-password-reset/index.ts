@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://rhnsjqqtdzlkvqazfcbg.supabase.co";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -154,7 +154,59 @@ serve(async (req) => {
   }
 
   try {
-    const { email, resetLink, displayName } = await req.json();
+    const payload = await req.json();
+    
+    console.log("Received payload:", JSON.stringify(payload, null, 2));
+
+    // Handle Supabase Auth Hook format (Send Email hook)
+    // Payload structure: { user: {...}, email_data: { token, token_hash, redirect_to, email_action_type } }
+    if (payload.user && payload.email_data) {
+      const { user, email_data } = payload;
+      const { token, token_hash, redirect_to, email_action_type } = email_data;
+      
+      // Only handle recovery (password reset) emails
+      if (email_action_type !== "recovery") {
+        console.log(`Skipping email type: ${email_action_type}`);
+        return new Response(
+          JSON.stringify({ success: true, message: `Skipped ${email_action_type} email` }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const email = user.email;
+      const displayName = user.user_metadata?.display_name || user.user_metadata?.full_name || email.split("@")[0];
+      
+      // Build the verification URL with token_hash (more secure than raw token)
+      const redirectTo = redirect_to || "https://afuchat.com/auth/reset-password";
+      const resetLink = `${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=recovery&redirect_to=${encodeURIComponent(redirectTo)}`;
+
+      console.log(`Sending password reset email to: ${email}`);
+      console.log(`Reset link: ${resetLink}`);
+
+      const html = generatePasswordResetEmailHtml(displayName, resetLink);
+
+      const { data, error } = await resend.emails.send({
+        from: "AfuChat <no-reply@afuchat.com>",
+        to: [email],
+        subject: "Reset Your AfuChat Password",
+        html,
+      });
+
+      if (error) {
+        console.error("Resend error:", error);
+        throw new Error(`Failed to send email: ${error.message}`);
+      }
+
+      console.log("Password reset email sent successfully:", data);
+
+      return new Response(
+        JSON.stringify({ success: true, message: "Password reset email sent" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle legacy/direct call format (fallback)
+    const { email, resetLink, displayName } = payload;
 
     if (!email || !resetLink) {
       throw new Error("Email and resetLink are required");
@@ -163,7 +215,7 @@ serve(async (req) => {
     const userName = displayName || email.split("@")[0];
     const html = generatePasswordResetEmailHtml(userName, resetLink);
 
-    console.log(`Sending password reset email to: ${email}`);
+    console.log(`Sending password reset email to: ${email} (legacy format)`);
 
     const { data, error } = await resend.emails.send({
       from: "AfuChat <no-reply@afuchat.com>",
@@ -181,19 +233,13 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, message: "Password reset email sent" }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
     console.error("Error in send-password-reset function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
