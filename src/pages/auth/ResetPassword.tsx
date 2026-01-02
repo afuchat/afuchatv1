@@ -17,19 +17,36 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [validSession, setValidSession] = useState(false);
+  const [validSession, setValidSession] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check if user has a valid reset session
+    // Listen for auth state changes - this catches the SIGNED_IN event from the reset link
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setValidSession(true);
+      } else if (event === 'SIGNED_OUT') {
+        setValidSession(false);
+      }
+    });
+
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setValidSession(true);
       } else {
-        toast.error('Invalid or expired reset link');
-        navigate('/auth/signin');
+        // Wait a moment for the hash fragment to be processed
+        setTimeout(() => {
+          supabase.auth.getSession().then(({ data: { session: retrySession } }) => {
+            if (!retrySession) {
+              setValidSession(false);
+            }
+          });
+        }, 1000);
       }
     });
-  }, [navigate]);
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -60,12 +77,29 @@ const ResetPassword = () => {
     }
   };
 
-  if (!validSession) {
+  if (validSession === null) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <div className="w-full max-w-sm space-y-3">
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-8 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (validSession === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background animate-fade-in">
+        <div className="w-full max-w-md text-center">
+          <Logo size="md" className="mb-6" />
+          <h1 className="text-2xl font-bold mb-2 text-destructive">Invalid or Expired Link</h1>
+          <p className="text-muted-foreground mb-6">
+            This password reset link is no longer valid. Please request a new one.
+          </p>
+          <Button onClick={() => navigate('/auth/forgot-password')} className="w-full h-12">
+            Request New Link
+          </Button>
         </div>
       </div>
     );
