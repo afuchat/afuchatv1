@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTelegramWebApp, type TelegramUser, type HapticFeedbackApi, type BackButtonApi, type MainButtonApi } from '@/hooks/useTelegramWebApp';
 import { useTheme } from './ThemeContext';
 
@@ -32,6 +33,8 @@ const TelegramContext = createContext<TelegramContextType | undefined>(undefined
 export function TelegramProvider({ children }: { children: ReactNode }) {
   const telegram = useTelegramWebApp();
   const { setTheme } = useTheme();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Sync Telegram theme with app theme
   useEffect(() => {
@@ -71,6 +74,39 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
       document.documentElement.style.setProperty('--tg-viewport-stable-height', `${telegram.viewportStableHeight}px`);
     }
   }, [telegram.isTelegram, telegram.viewportHeight, telegram.viewportStableHeight]);
+
+  // Manage Telegram Back Button based on route
+  useEffect(() => {
+    if (!telegram.isTelegram || !telegram.isReady) return;
+    
+    const isHomePage = location.pathname === '/' || location.pathname === '/home';
+    
+    const handleBackClick = () => {
+      // Provide haptic feedback
+      telegram.hapticFeedback.impactOccurred('light');
+      
+      // Navigate back
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate('/');
+      }
+    };
+    
+    if (isHomePage) {
+      // Hide back button on home page
+      telegram.backButton.hide();
+    } else {
+      // Show back button on all other pages
+      telegram.backButton.show();
+      telegram.backButton.onClick(handleBackClick);
+    }
+    
+    // Cleanup
+    return () => {
+      telegram.backButton.offClick(handleBackClick);
+    };
+  }, [telegram.isTelegram, telegram.isReady, location.pathname, navigate, telegram.backButton, telegram.hapticFeedback]);
 
   return (
     <TelegramContext.Provider value={telegram}>
