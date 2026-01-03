@@ -46,6 +46,9 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
       document.documentElement.classList.add('telegram-mini-app');
       document.documentElement.dataset.tgPlatform = telegram.platform;
       
+      // Disable overscroll/pull-to-refresh behavior in Telegram
+      document.body.style.overscrollBehavior = 'contain';
+      
       // Set CSS variables from Telegram theme
       const root = document.documentElement;
       const tp = telegram.themeParams;
@@ -64,6 +67,7 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
     return () => {
       document.documentElement.classList.remove('telegram-mini-app');
       delete document.documentElement.dataset.tgPlatform;
+      document.body.style.overscrollBehavior = '';
     };
   }, [telegram.isTelegram, telegram.isReady, telegram.colorScheme, telegram.themeParams, setTheme]);
 

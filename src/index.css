@@ -1,6 +1,16 @@
 /* X/Twitter system font stack */
 
 @tailwind base;
+
+/* Disable native pull-to-refresh in Telegram Mini App */
+html.telegram-mini-app {
+  overscroll-behavior-y: contain;
+}
+
+html.telegram-mini-app body {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
 @tailwind components;
 @tailwind utilities;
 
