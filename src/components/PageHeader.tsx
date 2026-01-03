@@ -1,8 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PageHeaderProps {
   title: string;
@@ -13,21 +10,6 @@ interface PageHeaderProps {
 
 export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderProps) => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<{ avatar_url: string | null; display_name: string } | null>(null);
-
-  useEffect(() => {
-    if (user) {
-      const fetchProfile = async () => {
-        const { data } = await supabase
-          .from('profiles')
-          .select('avatar_url, display_name')
-          .eq('id', user.id)
-          .single();
-        if (data) setProfile(data);
-      };
-      fetchProfile();
-    }
-  }, [user]);
 
   return (
     <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
