@@ -2373,12 +2373,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                 <ProfileDrawer
                   trigger={
                     <button className="flex-shrink-0">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={userProfile?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
+                      <span className="text-xl font-bold text-foreground">AfuChat</span>
                     </button>
                   }
                 />
