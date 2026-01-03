@@ -172,9 +172,9 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
             {sidebarCollapsed ? <Menu className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </Button>
 
-          {/* Logo */}
+          {/* Brand Name */}
           <Link to="/" className="flex items-center flex-shrink-0">
-            <Logo />
+            <span className="text-xl font-bold text-foreground">AfuChat</span>
           </Link>
 
           {/* Search Bar */}

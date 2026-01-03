@@ -206,12 +206,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                 onClick={() => setIsMenuOpen(true)}
                 className="flex-shrink-0"
               >
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src={currentUserProfile?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                    {currentUserProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                <span className="text-xl font-bold text-foreground">AfuChat</span>
               </button>
 
               {/* Collapsed stories preview - only show when NOT expanded and has stories */}
