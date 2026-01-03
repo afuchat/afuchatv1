@@ -7,6 +7,7 @@ interface SwipeConfig {
   onSwipeDown?: () => void;
   minSwipeDistance?: number;
   maxSwipeTime?: number;
+  disabled?: boolean;
 }
 
 interface TouchPoint {
@@ -26,21 +27,23 @@ export function useSwipeGestures(config: SwipeConfig) {
     onSwipeDown,
     minSwipeDistance = 50,
     maxSwipeTime = 500,
+    disabled = false,
   } = config;
 
   const touchStartRef = useRef<TouchPoint | null>(null);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (disabled) return;
     const touch = e.touches[0];
     touchStartRef.current = {
       x: touch.clientX,
       y: touch.clientY,
       time: Date.now(),
     };
-  }, []);
+  }, [disabled]);
 
   const handleTouchEnd = useCallback((e: TouchEvent) => {
-    if (!touchStartRef.current) return;
+    if (disabled || !touchStartRef.current) return;
 
     const touch = e.changedTouches[0];
     const deltaX = touch.clientX - touchStartRef.current.x;
@@ -74,7 +77,7 @@ export function useSwipeGestures(config: SwipeConfig) {
     }
 
     touchStartRef.current = null;
-  }, [onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown, minSwipeDistance, maxSwipeTime]);
+  }, [disabled, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown, minSwipeDistance, maxSwipeTime]);
 
   const handleTouchCancel = useCallback(() => {
     touchStartRef.current = null;
