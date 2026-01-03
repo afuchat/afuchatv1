@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { getCountryFlag } from '@/lib/countryFlags';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdminAnalyticsCharts } from '@/components/admin/AdminAnalyticsCharts';
+import { ActiveUsersAnalytics } from '@/components/admin/ActiveUsersAnalytics';
 import { AdminUserManagement } from '@/components/admin/AdminUserManagement';
 import { AdminWithdrawalsPanel } from '@/components/admin/AdminWithdrawalsPanel';
 import { AdminReportsPanel } from '@/components/admin/AdminReportsPanel';
@@ -729,7 +730,17 @@ const AdminDashboard = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="analytics" className="mt-6">
+          <TabsContent value="analytics" className="mt-6 space-y-8">
+            {/* Active Users Analytics - DAU, WAU, MAU, YAU */}
+            <ActiveUsersAnalytics 
+              users={users}
+              messages={messages}
+              posts={posts}
+              postViews={postViews}
+              likes={likes}
+            />
+            
+            {/* Other Analytics Charts */}
             <AdminAnalyticsCharts 
               data={{
                 users,
