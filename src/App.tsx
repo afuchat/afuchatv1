@@ -292,24 +292,24 @@ const App = () => (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <TelegramProvider>
-            <AuthProvider>
-              <AccountModeProvider>
-                <SettingsProvider>
-                  <TooltipProvider>
-                    <Toaster />
-                    <Sonner />
-                    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <AuthProvider>
+            <AccountModeProvider>
+              <SettingsProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    <TelegramProvider>
                       <AnimatePresence mode="wait">
                         <AppWithDesktopCheck />
                       </AnimatePresence>
                       <SettingsSheet />
-                    </BrowserRouter>
-                  </TooltipProvider>
-                </SettingsProvider>
-              </AccountModeProvider>
-            </AuthProvider>
-          </TelegramProvider>
+                    </TelegramProvider>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </SettingsProvider>
+            </AccountModeProvider>
+          </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
