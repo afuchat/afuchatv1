@@ -38,10 +38,7 @@ export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderPr
               <ProfileDrawer
                 trigger={
                   <button className="flex-shrink-0">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={profile?.avatar_url || ''} />
-                      <AvatarFallback>{profile?.display_name?.[0] || 'U'}</AvatarFallback>
-                    </Avatar>
+                    <span className="text-xl font-bold text-foreground">AfuChat</span>
                   </button>
                 }
               />
@@ -49,7 +46,7 @@ export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderPr
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 {icon}
               </div>
-            ) : null}
+            ) : <span className="text-xl font-bold text-foreground">AfuChat</span>}
             <div>
               <h1 className="text-xl font-bold">{title}</h1>
               {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
