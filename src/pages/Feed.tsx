@@ -2373,7 +2373,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                 <ProfileDrawer
                   trigger={
                     <button className="flex-shrink-0">
-                      <span className="text-xl font-bold text-foreground">AfuChat</span>
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={userProfile?.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
                     </button>
                   }
                 />
@@ -2382,14 +2387,10 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                   Sign In
                 </Link>
               )}
-              {/* Centered Logo - absolutely positioned */}
-              <img 
-                src={platformLogo} 
-                alt="AfuChat" 
-                className="h-8 w-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none" 
-                draggable={false}
-                onContextMenu={(e) => e.preventDefault()}
-              />
+              {/* Centered Brand Name */}
+              <span className="text-xl font-bold text-foreground absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
+                AfuChat
+              </span>
               <div className="flex items-center gap-2">
                 {user && premiumButton}
               </div>
