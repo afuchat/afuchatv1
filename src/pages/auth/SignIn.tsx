@@ -62,7 +62,9 @@ const SignIn = () => {
         }
       } else {
         toast.success('Signed in successfully!');
-        navigate('/onboarding');
+        // Set step to 1 (account type) - loadProfileData will determine correct step
+        localStorage.setItem('onboarding_step', '1');
+        navigate('/onboarding', { replace: true });
       }
     } catch (error: any) {
       toast.error(error.errors?.[0]?.message || error.message || 'An error occurred.');

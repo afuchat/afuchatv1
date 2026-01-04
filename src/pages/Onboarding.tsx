@@ -371,9 +371,6 @@ const Onboarding = () => {
   // Skip to correct step if already authenticated
   useEffect(() => {
     if (!authLoading && user) {
-      if (currentStep < 1) {
-        setCurrentStep(1); // Go to account type selection
-      }
       loadProfileData();
     }
   }, [user, authLoading]);
@@ -388,6 +385,7 @@ const Onboarding = () => {
       .maybeSingle();
     
     if (profile) {
+      // Load existing profile data into state
       if (profile.display_name) setDisplayName(profile.display_name);
       if (profile.handle) setHandle(profile.handle);
       if (profile.bio) setBio(profile.bio);
@@ -400,33 +398,69 @@ const Onboarding = () => {
       if (profile.date_of_birth) setDateOfBirth(profile.date_of_birth);
       if (profile.phone_number) setPhoneNumber(profile.phone_number);
       
-      // Check if profile is already complete
-      const isComplete = profile.display_name && profile.handle && profile.country && 
-                        profile.date_of_birth && profile.avatar_url;
-      
-      // Check if user has interests
+      // Check completion status for each step
+      const isProfileComplete = profile.display_name && profile.handle && profile.country && 
+                                profile.date_of_birth && profile.avatar_url;
       const hasInterests = profile.interests && (profile.interests as string[]).length > 0;
       
-      if (isComplete) {
-        // Also check if user has followed anyone before redirecting to home
-        const { data: follows } = await supabase
-          .from('follows')
-          .select('id')
-          .eq('follower_id', user.id)
-          .limit(1);
-        
-        if (follows && follows.length > 0) {
-          // User has completed onboarding and has follows - clear storage and go to home
-          localStorage.removeItem('onboarding_step');
-          navigate('/home', { replace: true });
-        } else if (!hasInterests) {
-          // Profile complete but no interests - go to interests step
-          setCurrentStep(3);
-        } else {
-          // Profile complete with interests but no follows - go to suggestions step
-          await loadSuggestedUsers();
-          setCurrentStep(4);
-        }
+      // Check if user has followed anyone
+      const { data: follows } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .limit(1);
+      
+      const hasFollows = follows && follows.length > 0;
+      
+      // Determine correct step based on saved localStorage step vs actual completion
+      const savedStep = parseInt(localStorage.getItem('onboarding_step') || '0', 10);
+      
+      // If user has completed everything - go to home
+      if (isProfileComplete && hasInterests && hasFollows) {
+        localStorage.removeItem('onboarding_step');
+        navigate('/home', { replace: true });
+        return;
+      }
+      
+      // Otherwise, determine the correct step the user should be on
+      // Step 0: Auth (skip if user exists)
+      // Step 1: Account Type
+      // Step 2: Profile
+      // Step 3: Interests
+      // Step 4: Suggestions
+      // Step 5: Tour
+      
+      let correctStep = savedStep;
+      
+      // If at auth step but user exists, move to account type
+      if (savedStep === 0) {
+        correctStep = 1;
+      }
+      
+      // Enforce sequential completion - can't skip ahead of required steps
+      // Profile must be complete before interests (step 3)
+      if (!isProfileComplete && correctStep >= 3) {
+        correctStep = 2;
+      }
+      // Interests must be complete before suggestions (step 4)
+      else if (isProfileComplete && !hasInterests && correctStep >= 4) {
+        correctStep = 3;
+      }
+      // Must follow at least one user before tour (step 5)
+      else if (isProfileComplete && hasInterests && !hasFollows && correctStep >= 5) {
+        correctStep = 4;
+      }
+      
+      // Load suggested users if we're at or going to step 4
+      if (correctStep === 4) {
+        await loadSuggestedUsers();
+      }
+      
+      setCurrentStep(correctStep);
+    } else {
+      // No profile data, ensure we're at step 1 (account type) if authenticated
+      if (currentStep === 0) {
+        setCurrentStep(1);
       }
     }
   };
@@ -743,16 +777,14 @@ const Onboarding = () => {
       
       if (shouldReward) {
         setShowRewardModal(true);
-        setTimeout(async () => {
+        setTimeout(() => {
           setShowRewardModal(false);
-          // Load suggested users and go to suggestions step (step 4)
-          await loadSuggestedUsers();
-          setCurrentStep(4);
+          // Profile done - go to interests step (step 3)
+          setCurrentStep(3);
         }, 2500);
       } else {
-        // Load suggested users and go to suggestions step (step 4)
-        await loadSuggestedUsers();
-        setCurrentStep(4);
+        // Profile done - go to interests step (step 3)
+        setCurrentStep(3);
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to save profile');
@@ -1505,8 +1537,13 @@ const Onboarding = () => {
       
       <Button 
         onClick={handleInterestsSubmit} 
-        disabled={loading}
-        className="w-full h-14 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/25"
+        disabled={loading || selectedInterests.length === 0}
+        className={cn(
+          "w-full h-14 text-base font-semibold rounded-xl transition-opacity shadow-lg",
+          selectedInterests.length > 0 
+            ? "bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-primary/25" 
+            : "bg-muted text-muted-foreground cursor-not-allowed"
+        )}
         size="lg"
       >
         {loading ? (
@@ -1516,7 +1553,7 @@ const Onboarding = () => {
           </div>
         ) : (
           <>
-            {selectedInterests.length > 0 ? `Continue with ${selectedInterests.length} interests` : 'Skip for now'}
+            {selectedInterests.length > 0 ? `Continue with ${selectedInterests.length} interests` : 'Select at least 1 interest'}
             <ArrowRight className="ml-2 h-5 w-5" />
           </>
         )}
