@@ -93,6 +93,7 @@ const AdminCreatorWithdrawals = lazy(() => import("./pages/AdminCreatorWithdrawa
 const AdManager = lazy(() => import("./pages/AdManager"));
 const AfuMail = lazy(() => import("./pages/AfuMail"));
 const WhatsNew = lazy(() => import("./pages/WhatsNew"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 
 const FoodDelivery = lazy(() => import("./pages/FoodDelivery"));
 const Bookings = lazy(() => import("./pages/Bookings"));
@@ -179,6 +180,7 @@ const AppRoutes = () => {
       <Route path="/admin" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/ai-chat" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AIChat /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/install" element={<Install />} />
+      <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/support" element={<Support />} />
       <Route path="/leaderboard" element={<Layout><UnifiedLeaderboard /></Layout>} />
       <Route path="/wallet" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><FinancialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
