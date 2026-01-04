@@ -17,6 +17,8 @@ import { DateOfBirthSelector } from '@/components/DateOfBirthSelector';
 import { clearProfileCache } from '@/hooks/useProfileCheck';
 import { ReferralWelcomeBanner } from '@/components/gamification/ReferralWelcomeBanner';
 import { validateUsernameFormat } from '@/lib/validation';
+import { CircularImageCrop } from '@/components/profile/CircularImageCrop';
+import { SquareImageCrop } from '@/components/profile/SquareImageCrop';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { 
   ArrowRight, 
@@ -69,7 +71,7 @@ const STEPS = [
 // Pinned recommended users
 const PINNED_USERNAMES = ['afuchat', 'amkaweesi'];
 
-// Account types
+// Account types - using only brand colors
 const ACCOUNT_TYPES = [
   { 
     id: 'personal', 
@@ -85,17 +87,18 @@ const ACCOUNT_TYPES = [
     description: 'Grow your brand, reach customers, and sell products',
     icon: Store,
     features: ['Business analytics', 'Promote products', 'Customer engagement'],
-    gradient: 'from-purple-500 to-pink-500'
+    gradient: 'from-primary/80 to-primary'
   },
 ];
 
+// Features using only brand colors (primary/accent variations)
 const FEATURES = [
   { 
     id: 'chat', 
     title: 'Chat & Connect', 
     description: 'Message friends with real-time chat, voice messages, and more',
     icon: MessageCircle,
-    gradient: 'from-blue-500 to-cyan-500',
+    gradient: 'from-primary to-accent',
     path: '/chats'
   },
   { 
@@ -103,7 +106,7 @@ const FEATURES = [
     title: 'Send Gifts', 
     description: 'Surprise friends with virtual gifts and show appreciation',
     icon: Gift,
-    gradient: 'from-pink-500 to-rose-500',
+    gradient: 'from-accent to-primary',
     path: '/gifts'
   },
   { 
@@ -111,7 +114,7 @@ const FEATURES = [
     title: 'Play Games', 
     description: 'Challenge friends to fun mini-games and earn rewards',
     icon: Gamepad2,
-    gradient: 'from-purple-500 to-indigo-500',
+    gradient: 'from-primary/90 to-primary',
     path: '/games'
   },
   { 
@@ -119,7 +122,7 @@ const FEATURES = [
     title: 'Climb Rankings', 
     description: 'Compete with others and rise to the top of leaderboards',
     icon: Trophy,
-    gradient: 'from-amber-500 to-orange-500',
+    gradient: 'from-warning to-warning/80',
     path: '/leaderboard'
   },
   { 
@@ -127,7 +130,7 @@ const FEATURES = [
     title: 'Mini Programs', 
     description: 'Explore a world of apps right inside AfuChat',
     icon: Zap,
-    gradient: 'from-emerald-500 to-teal-500',
+    gradient: 'from-success to-success/80',
     path: '/mini-programs'
   },
   { 
@@ -135,7 +138,7 @@ const FEATURES = [
     title: 'Shop & Earn', 
     description: 'Discover products and earn rewards on purchases',
     icon: Store,
-    gradient: 'from-violet-500 to-purple-500',
+    gradient: 'from-primary to-primary/80',
     path: '/shop'
   },
 ];
@@ -207,6 +210,10 @@ const Onboarding = () => {
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [showReferralWelcome, setShowReferralWelcome] = useState(false);
   const [referrerName, setReferrerName] = useState<string | undefined>();
+  
+  // Image crop modal state
+  const [showImageCrop, setShowImageCrop] = useState(false);
+  const [tempImageFile, setTempImageFile] = useState<File | null>(null);
 
   // Debounced username check
   useEffect(() => {
@@ -495,11 +502,19 @@ const Onboarding = () => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setAvatarPreview(reader.result as string);
-      reader.readAsDataURL(file);
+      setTempImageFile(file);
+      setShowImageCrop(true);
     }
+  };
+
+  const handleImageCropSave = (blob: Blob) => {
+    const file = new File([blob], 'avatar.png', { type: 'image/png' });
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setAvatarPreview(reader.result as string);
+    reader.readAsDataURL(file);
+    setShowImageCrop(false);
+    setTempImageFile(null);
   };
 
   const uploadAvatar = async (): Promise<string | null> => {
@@ -767,8 +782,25 @@ const Onboarding = () => {
     }
   };
 
-  const handleAccountTypeSelect = (type: 'personal' | 'business') => {
+  const handleAccountTypeSelect = async (type: 'personal' | 'business') => {
     setAccountType(type);
+    
+    // Save account type to database
+    if (user) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ is_business_mode: type === 'business' })
+          .eq('id', user.id);
+        
+        if (error) {
+          console.error('Error saving account type:', error);
+        }
+      } catch (error) {
+        console.error('Error saving account type:', error);
+      }
+    }
+    
     setCurrentStep(2); // Go to profile step
   };
 
@@ -962,9 +994,9 @@ const Onboarding = () => {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-          className="h-20 w-20 rounded-3xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/25"
+          className="h-20 w-20 rounded-3xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/25"
         >
-          <Store className="h-10 w-10 text-white" />
+          <Store className="h-10 w-10 text-primary-foreground" />
         </motion.div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Choose Your Path</h2>
         <p className="text-muted-foreground">How will you use AfuChat?</p>
@@ -1060,7 +1092,7 @@ const Onboarding = () => {
         <p className="text-muted-foreground">Let's make your account unique</p>
       </div>
       
-      {/* Avatar with premium styling */}
+      {/* Avatar with premium styling - different shape based on account type */}
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -1069,10 +1101,19 @@ const Onboarding = () => {
       >
         <label className="relative cursor-pointer group">
           <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary rounded-full opacity-75 blur-sm group-hover:opacity-100 transition-opacity" />
-            <Avatar className="relative h-28 w-28 ring-4 ring-background">
-              <AvatarImage src={avatarPreview} className="object-cover" />
-              <AvatarFallback className="bg-gradient-to-br from-muted to-muted/50 text-muted-foreground text-3xl font-bold">
+            <div className={cn(
+              "absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary opacity-75 blur-sm group-hover:opacity-100 transition-opacity",
+              accountType === 'business' ? 'rounded-2xl' : 'rounded-full'
+            )} />
+            <Avatar className={cn(
+              "relative h-28 w-28 ring-4 ring-background",
+              accountType === 'business' && 'rounded-2xl'
+            )}>
+              <AvatarImage src={avatarPreview} className={cn("object-cover", accountType === 'business' && 'rounded-2xl')} />
+              <AvatarFallback className={cn(
+                "bg-gradient-to-br from-muted to-muted/50 text-muted-foreground text-3xl font-bold",
+                accountType === 'business' && 'rounded-2xl'
+              )}>
                 {displayName?.[0]?.toUpperCase() || <Camera className="h-10 w-10" />}
               </AvatarFallback>
             </Avatar>
@@ -1092,7 +1133,9 @@ const Onboarding = () => {
           />
         </label>
       </motion.div>
-      <p className="text-center text-xs text-muted-foreground mb-6">Tap to add profile picture <span className="text-primary">*</span></p>
+      <p className="text-center text-xs text-muted-foreground mb-6">
+        Tap to add {accountType === 'business' ? 'business logo' : 'profile picture'} <span className="text-primary">*</span>
+      </p>
       
       <div className="space-y-5">
         <div className="space-y-2">
@@ -1305,9 +1348,9 @@ const Onboarding = () => {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-          className="h-20 w-20 rounded-3xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-pink-500/25"
+          className="h-20 w-20 rounded-3xl bg-gradient-to-br from-accent via-primary to-accent flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/25"
         >
-          <Heart className="h-10 w-10 text-white" />
+          <Heart className="h-10 w-10 text-primary-foreground" />
         </motion.div>
         <h2 className="text-2xl font-bold text-foreground mb-2">What interests you?</h2>
         <p className="text-muted-foreground">Select topics to personalize your feed</p>
@@ -1407,9 +1450,9 @@ const Onboarding = () => {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-          className="h-20 w-20 rounded-3xl bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/25"
+          className="h-20 w-20 rounded-3xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/25"
         >
-          <Users className="h-10 w-10 text-white" />
+          <Users className="h-10 w-10 text-primary-foreground" />
         </motion.div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Find Your People</h2>
         <p className="text-muted-foreground">Follow accounts you might like</p>
@@ -1522,8 +1565,8 @@ const Onboarding = () => {
           transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
           className="relative mx-auto mb-6"
         >
-          <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center mx-auto shadow-lg shadow-teal-500/25">
-            <Globe className="h-10 w-10 text-white" />
+          <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-success via-success/90 to-primary flex items-center justify-center mx-auto shadow-lg shadow-success/25">
+            <Globe className="h-10 w-10 text-success-foreground" />
           </div>
           <motion.div 
             animate={{ rotate: 360 }}
@@ -1553,7 +1596,7 @@ const Onboarding = () => {
                 "h-14 w-14 rounded-2xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 shadow-lg transition-transform group-hover:scale-110",
                 feature.gradient
               )}>
-                <Icon className="h-7 w-7 text-white" />
+                <Icon className="h-7 w-7 text-primary-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">
@@ -1670,8 +1713,8 @@ const Onboarding = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex justify-center mb-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center animate-scale-in">
-                <Trophy className="h-10 w-10 text-white" />
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-warning to-warning/80 flex items-center justify-center animate-scale-in">
+                <Trophy className="h-10 w-10 text-warning-foreground" />
               </div>
             </div>
             <DialogTitle className="text-2xl text-center">Congratulations! 🎉</DialogTitle>
@@ -1682,9 +1725,9 @@ const Onboarding = () => {
           <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-6 text-center space-y-2">
             <p className="text-sm text-muted-foreground">Profile Completion Reward</p>
             <div className="flex items-center justify-center gap-2">
-              <Sparkles className="h-6 w-6 text-yellow-500" />
+              <Sparkles className="h-6 w-6 text-warning" />
               <span className="text-4xl font-bold text-primary">+100</span>
-              <span className="text-2xl font-semibold">Nexa</span>
+              <span className="text-2xl font-semibold text-foreground">Nexa</span>
             </div>
             <p className="text-xs text-muted-foreground">Keep earning by staying active!</p>
           </div>
@@ -1699,6 +1742,23 @@ const Onboarding = () => {
             setShowReferralWelcome(false);
             window.location.href = '/home';
           }}
+        />
+      )}
+
+      {/* Image Crop Modals */}
+      {accountType === 'personal' ? (
+        <CircularImageCrop
+          imageFile={tempImageFile}
+          open={showImageCrop}
+          onOpenChange={setShowImageCrop}
+          onSave={handleImageCropSave}
+        />
+      ) : (
+        <SquareImageCrop
+          imageFile={tempImageFile}
+          open={showImageCrop}
+          onOpenChange={setShowImageCrop}
+          onSave={handleImageCropSave}
         />
       )}
     </>
