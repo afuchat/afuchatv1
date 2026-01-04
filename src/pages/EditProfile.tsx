@@ -19,8 +19,8 @@ import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CircularImageCrop } from '@/components/profile/CircularImageCrop';
 import { SquareImageCrop } from '@/components/profile/SquareImageCrop';
-import { countries } from '@/lib/countries';
-import { getCountryFlag, getCountryCode, getPhonePlaceholder } from '@/lib/countryFlags';
+import { countries, getCountryPhoneCode } from '@/lib/countries';
+import { getCountryFlag } from '@/lib/countryFlags';
 
 // Import Supabase types
 import type { Database } from '@/integrations/supabase/types';
@@ -501,27 +501,27 @@ const EditProfile: React.FC = () => {
               <div className="space-y-2">
                 <Label htmlFor="phone_number" className="text-sm font-medium">Phone Number</Label>
                 <div className="flex gap-2">
-                  <div className="min-w-24 h-11 flex items-center justify-center gap-1.5 bg-muted rounded-md px-3 text-sm font-medium border border-input">
+                  <div className="min-w-[100px] h-11 flex items-center justify-center gap-1.5 bg-muted rounded-md px-3 text-sm font-medium border border-input">
                     <span className="text-xl">{getCountryFlag(profile.country)}</span>
-                    <span>{getCountryCode(profile.country)}</span>
+                    <span>{getCountryPhoneCode(profile.country)}</span>
                   </div>
                   <Input
                     id="phone_number"
                     name="phone_number"
                     type="tel"
-                    value={profile.phone_number.replace(getCountryCode(profile.country), '')}
+                    value={profile.phone_number.replace(getCountryPhoneCode(profile.country), '')}
                     onChange={(e) => {
                       const cleaned = e.target.value.replace(/\D/g, '');
-                      const countryCode = getCountryCode(profile.country);
+                      const countryCode = getCountryPhoneCode(profile.country);
                       setProfile(prev => ({ ...prev, phone_number: countryCode + cleaned }));
                     }}
-                    placeholder={getPhonePlaceholder(profile.country)}
+                    placeholder="Phone number"
                     disabled={saving}
                     className="h-11 flex-1"
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Country code is set based on your profile country
+                  Country code is based on your profile country
                 </p>
               </div>
 
