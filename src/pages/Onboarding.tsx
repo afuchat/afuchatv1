@@ -59,6 +59,10 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/Logo';
 
+// Background images for each step
+import signupBg from '@/assets/auth/signup-bg.jpg';
+import signinBg from '@/assets/auth/signin-bg.jpg';
+
 const STEPS = [
   { id: 'auth', title: 'Account', icon: User },
   { id: 'accountType', title: 'Type', icon: Store },
@@ -1677,11 +1681,38 @@ const Onboarding = () => {
     );
   }
 
+  // Get background image based on current step
+  const getBackgroundImage = () => {
+    switch (currentStep) {
+      case 0: // Auth step
+        return authMode === 'signup' ? signupBg : signinBg;
+      case 1: // Account type
+      case 2: // Profile
+        return signupBg;
+      case 3: // Interests
+      case 4: // Suggestions
+      case 5: // Tour
+        return signinBg;
+      default:
+        return signupBg;
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col relative overflow-hidden">
+        {/* Background image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={getBackgroundImage()} 
+            alt="" 
+            className="w-full h-full object-cover opacity-10 transition-opacity duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+        </div>
+        
         {/* Decorative background elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
         </div>
