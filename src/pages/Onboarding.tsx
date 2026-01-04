@@ -58,10 +58,32 @@ import Logo from '@/components/Logo';
 const STEPS = [
   { id: 'welcome', title: 'Welcome', icon: Sparkles },
   { id: 'auth', title: 'Account', icon: User },
+  { id: 'accountType', title: 'Type', icon: Store },
   { id: 'profile', title: 'Profile', icon: Camera },
   { id: 'interests', title: 'Interests', icon: Heart },
   { id: 'suggestions', title: 'Connect', icon: Users },
   { id: 'tour', title: 'Explore', icon: Globe },
+];
+
+// Pinned recommended users
+const PINNED_USERNAMES = ['afuchat', 'amkaweesi'];
+
+// Account types
+const ACCOUNT_TYPES = [
+  { 
+    id: 'personal', 
+    title: 'Personal', 
+    description: 'Connect with friends and share your moments',
+    icon: User,
+    color: 'from-blue-500 to-cyan-500'
+  },
+  { 
+    id: 'business', 
+    title: 'Business', 
+    description: 'Promote your brand and reach customers',
+    icon: Store,
+    color: 'from-purple-500 to-pink-500'
+  },
 ];
 
 const FEATURES = [
@@ -133,6 +155,7 @@ interface SuggestedUser {
   handle: string;
   avatar_url: string | null;
   bio: string | null;
+  isPinned?: boolean;
 }
 
 const Onboarding = () => {
@@ -167,6 +190,9 @@ const Onboarding = () => {
   
   // Interests state
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  
+  // Account type state
+  const [accountType, setAccountType] = useState<'personal' | 'business'>('personal');
   
   // Suggested users state
   const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
@@ -323,7 +349,7 @@ const Onboarding = () => {
   useEffect(() => {
     if (!authLoading && user) {
       if (currentStep < 2) {
-        setCurrentStep(2);
+        setCurrentStep(2); // Go to account type selection
       }
       loadProfileData();
     }
@@ -365,14 +391,28 @@ const Onboarding = () => {
     setLoadingSuggestions(true);
     
     try {
-      const { data: users } = await supabase
+      // Fetch pinned users first
+      const { data: pinnedUsers } = await supabase
+        .from('profiles')
+        .select('id, display_name, handle, avatar_url, bio')
+        .in('handle', PINNED_USERNAMES)
+        .neq('id', user.id);
+      
+      // Fetch other random users
+      const { data: otherUsers } = await supabase
         .from('profiles')
         .select('id, display_name, handle, avatar_url, bio')
         .neq('id', user.id)
+        .not('handle', 'in', `(${PINNED_USERNAMES.join(',')})`)
         .not('avatar_url', 'is', null)
-        .limit(12);
+        .limit(10);
       
-      if (users) setSuggestedUsers(users);
+      // Mark pinned users and shuffle others
+      const pinned = (pinnedUsers || []).map(u => ({ ...u, isPinned: true }));
+      const others = (otherUsers || []).sort(() => Math.random() - 0.5);
+      
+      // Combine: pinned first, then random others
+      setSuggestedUsers([...pinned, ...others]);
     } catch (error) {
       console.error('Error loading suggestions:', error);
     } finally {
@@ -633,10 +673,10 @@ const Onboarding = () => {
         setShowRewardModal(true);
         setTimeout(() => {
           setShowRewardModal(false);
-          setCurrentStep(3);
+          setCurrentStep(4);
         }, 2500);
       } else {
-        setCurrentStep(3);
+        setCurrentStep(4);
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to save profile');
@@ -659,7 +699,7 @@ const Onboarding = () => {
       
       // Load suggested users and go to suggestions step
       await loadSuggestedUsers();
-      setCurrentStep(4);
+      setCurrentStep(5);
     } catch (error: any) {
       toast.error(error.message || 'Failed to save interests');
     } finally {
@@ -684,7 +724,7 @@ const Onboarding = () => {
   };
 
   const handleSuggestionsComplete = () => {
-    setCurrentStep(5);
+    setCurrentStep(6);
   };
 
   const handleTourComplete = async () => {
@@ -714,18 +754,23 @@ const Onboarding = () => {
   };
 
   const handleSkip = () => {
-    if (currentStep === 5) {
+    if (currentStep === 6) {
       handleTourComplete();
+    } else if (currentStep === 5) {
+      setCurrentStep(6);
     } else if (currentStep === 4) {
-      setCurrentStep(5);
-    } else if (currentStep === 3) {
       loadSuggestedUsers();
-      setCurrentStep(4);
+      setCurrentStep(5);
     }
   };
 
+  const handleAccountTypeSelect = (type: 'personal' | 'business') => {
+    setAccountType(type);
+    setCurrentStep(3); // Go to profile step
+  };
+
   const canGoBack = currentStep > 0 && !(currentStep === 2 && user);
-  const canSkip = currentStep >= 3;
+  const canSkip = currentStep >= 4;
 
   const renderStepIndicator = () => (
     <div className="w-full max-w-md mx-auto mb-6">
@@ -903,6 +948,67 @@ const Onboarding = () => {
           </button>
         </p>
       </div>
+    </motion.div>
+  );
+
+  const renderAccountTypeStep = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="w-full max-w-md mx-auto px-6"
+    >
+      <div className="text-center mb-8">
+        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <Store className="h-8 w-8 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold text-foreground">Choose Account Type</h2>
+        <p className="text-muted-foreground mt-1">Select how you want to use AfuChat</p>
+      </div>
+      
+      <div className="space-y-4 mb-8">
+        {ACCOUNT_TYPES.map((type) => {
+          const Icon = type.icon;
+          const isSelected = accountType === type.id;
+          
+          return (
+            <button
+              key={type.id}
+              onClick={() => handleAccountTypeSelect(type.id as 'personal' | 'business')}
+              className={cn(
+                "w-full flex items-center gap-4 p-5 rounded-2xl border-2 transition-all duration-200 text-left",
+                isSelected 
+                  ? "border-primary bg-primary/5 shadow-lg" 
+                  : "border-border bg-card hover:border-primary/50"
+              )}
+            >
+              <div className={cn(
+                "h-14 w-14 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 shadow-md",
+                type.color
+              )}>
+                <Icon className="h-7 w-7 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-lg text-foreground">
+                  {type.title}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {type.description}
+                </p>
+              </div>
+              {isSelected && (
+                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0">
+                  <Check className="h-4 w-4" />
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      
+      <p className="text-xs text-center text-muted-foreground">
+        You can change this later in settings
+      </p>
     </motion.div>
   );
 
@@ -1207,7 +1313,10 @@ const Onboarding = () => {
           {suggestedUsers.map((suggestedUser) => (
             <div 
               key={suggestedUser.id}
-              className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border"
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-xl bg-card border",
+                suggestedUser.isPinned ? "border-primary/50 bg-primary/5" : "border-border"
+              )}
             >
               <Avatar className="h-12 w-12">
                 <AvatarImage src={suggestedUser.avatar_url || undefined} />
@@ -1216,7 +1325,14 @@ const Onboarding = () => {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{suggestedUser.display_name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-sm truncate">{suggestedUser.display_name}</p>
+                  {suggestedUser.isPinned && (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
+                      Recommended
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground truncate">@{suggestedUser.handle}</p>
               </div>
               <Button
@@ -1374,10 +1490,11 @@ const Onboarding = () => {
           <AnimatePresence mode="wait">
             {currentStep === 0 && renderWelcomeStep()}
             {currentStep === 1 && renderAuthStep()}
-            {currentStep === 2 && renderProfileStep()}
-            {currentStep === 3 && renderInterestsStep()}
-            {currentStep === 4 && renderSuggestionsStep()}
-            {currentStep === 5 && renderTourStep()}
+            {currentStep === 2 && renderAccountTypeStep()}
+            {currentStep === 3 && renderProfileStep()}
+            {currentStep === 4 && renderInterestsStep()}
+            {currentStep === 5 && renderSuggestionsStep()}
+            {currentStep === 6 && renderTourStep()}
           </AnimatePresence>
         </main>
       </div>
