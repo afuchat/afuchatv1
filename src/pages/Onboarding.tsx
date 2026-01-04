@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { countries, detectUserCountry } from '@/lib/countries';
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -131,9 +133,22 @@ const Onboarding = () => {
   const [bio, setBio] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState('');
+  const [country, setCountry] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   
   // Interests state
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+
+  // Auto-detect country on mount
+  useEffect(() => {
+    const autoDetectCountry = async () => {
+      const detected = await detectUserCountry();
+      if (detected && countries.includes(detected)) {
+        setCountry(detected);
+      }
+    };
+    autoDetectCountry();
+  }, []);
 
   // Skip to correct step if already authenticated
   useEffect(() => {
@@ -152,7 +167,7 @@ const Onboarding = () => {
     
     const { data: profile } = await supabase
       .from('profiles')
-      .select('display_name, handle, bio, avatar_url, interests')
+      .select('display_name, handle, bio, avatar_url, interests, country, date_of_birth')
       .eq('id', user.id)
       .maybeSingle();
     
@@ -162,6 +177,8 @@ const Onboarding = () => {
       if (profile.bio) setBio(profile.bio);
       if (profile.avatar_url) setAvatarPreview(profile.avatar_url);
       if (profile.interests) setSelectedInterests(profile.interests as string[]);
+      if (profile.country) setCountry(profile.country);
+      if (profile.date_of_birth) setDateOfBirth(profile.date_of_birth);
     }
   };
 
@@ -236,6 +253,28 @@ const Onboarding = () => {
       toast.error('Display name is required');
       return;
     }
+
+    if (!country) {
+      toast.error('Please select your country');
+      return;
+    }
+
+    if (!dateOfBirth) {
+      toast.error('Please enter your date of birth');
+      return;
+    }
+
+    // Validate age (must be at least 13)
+    const dob = new Date(dateOfBirth);
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate()) ? age - 1 : age;
+    
+    if (actualAge < 13) {
+      toast.error('You must be at least 13 years old to use AfuChat');
+      return;
+    }
     
     if (normalizedHandle && normalizedHandle.length < 4) {
       toast.error('Username must be at least 4 characters');
@@ -279,6 +318,8 @@ const Onboarding = () => {
           handle: normalizedHandle || null,
           bio: bio.trim() || null,
           avatar_url: avatarUrl || null,
+          country: country,
+          date_of_birth: dateOfBirth,
         })
         .eq('id', user.id);
 
@@ -584,13 +625,40 @@ const Onboarding = () => {
         </div>
         
         <div className="space-y-2">
+          <Label htmlFor="country">Country *</Label>
+          <Select value={country} onValueChange={setCountry}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your country" />
+            </SelectTrigger>
+            <SelectContent className="max-h-60">
+              {countries.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="dob">Date of Birth *</Label>
+          <Input
+            id="dob"
+            type="date"
+            value={dateOfBirth}
+            onChange={(e) => setDateOfBirth(e.target.value)}
+            max={new Date().toISOString().split('T')[0]}
+          />
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="bio">Bio</Label>
           <Textarea
             id="bio"
             placeholder="Write a short bio about yourself..."
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            rows={3}
+            rows={2}
             className="resize-none"
           />
         </div>
