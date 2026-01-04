@@ -226,16 +226,43 @@ const EditProfile: React.FC = () => {
     return () => clearTimeout(timer);
   }, [profile.handle, user?.id, originalHandle]);
 
-  // Phone number validation effect
+  // Phone number validation effect (length + uniqueness)
   useEffect(() => {
     const localNumber = profile.phone_number.replace(getCountryPhoneCode(profile.country), '');
     if (!localNumber || !profile.country) {
       setPhoneError('');
       return;
     }
+    
+    // First validate length
     const result = validatePhoneLength(profile.country, localNumber);
-    setPhoneError(result.message);
-  }, [profile.phone_number, profile.country]);
+    if (result.message) {
+      setPhoneError(result.message);
+      return;
+    }
+    
+    // Then check uniqueness with debounce
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, phone_number')
+          .eq('phone_number', profile.phone_number)
+          .neq('id', user?.id || '')
+          .maybeSingle();
+        
+        if (data) {
+          setPhoneError('This phone number is already registered');
+        } else {
+          setPhoneError('');
+        }
+      } catch {
+        // Ignore errors silently
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [profile.phone_number, profile.country, user?.id]);
 
   // ... (Input handlers and Save handler remain as previously corrected)
 

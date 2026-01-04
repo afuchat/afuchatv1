@@ -220,15 +220,43 @@ const Onboarding = () => {
     return () => clearTimeout(timer);
   }, [handle, user?.id]);
 
-  // Phone number validation
+  // Phone number validation (length + uniqueness)
   useEffect(() => {
     if (!phoneNumber || !country) {
       setPhoneError('');
       return;
     }
+    
+    // First validate length
     const result = validatePhoneLength(country, phoneNumber);
-    setPhoneError(result.message);
-  }, [phoneNumber, country]);
+    if (result.message) {
+      setPhoneError(result.message);
+      return;
+    }
+    
+    // Then check uniqueness with debounce
+    const fullPhoneNumber = getCountryPhoneCode(country) + phoneNumber;
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('phone_number', fullPhoneNumber)
+          .neq('id', user?.id || '')
+          .maybeSingle();
+        
+        if (data) {
+          setPhoneError('This phone number is already registered');
+        } else {
+          setPhoneError('');
+        }
+      } catch {
+        // Ignore errors silently
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [phoneNumber, country, user?.id]);
 
   // Helper to get cookie value
   const getCookie = (name: string): string | null => {
