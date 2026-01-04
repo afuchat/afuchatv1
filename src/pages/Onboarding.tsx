@@ -8,8 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { countries, detectUserCountry } from '@/lib/countries';
+import { format } from 'date-fns';
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -36,7 +39,10 @@ import {
   Trophy,
   Zap,
   Store,
-  Globe
+  Globe,
+  CalendarIcon,
+  ChevronsUpDown,
+  MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -625,30 +631,82 @@ const Onboarding = () => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="country">Country *</Label>
-          <Select value={country} onValueChange={setCountry}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select your country" />
-            </SelectTrigger>
-            <SelectContent className="max-h-60">
-              {countries.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Country *</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                className={cn(
+                  "w-full justify-between font-normal",
+                  !country && "text-muted-foreground"
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  {country || "Select your country"}
+                </div>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0 bg-popover border shadow-lg z-50" align="start">
+              <Command className="bg-popover">
+                <CommandInput placeholder="Search country..." className="h-10" />
+                <CommandList className="max-h-60">
+                  <CommandEmpty>No country found.</CommandEmpty>
+                  <CommandGroup>
+                    {countries.map((c) => (
+                      <CommandItem
+                        key={c}
+                        value={c}
+                        onSelect={() => setCountry(c)}
+                        className="cursor-pointer"
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            country === c ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {c}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="dob">Date of Birth *</Label>
-          <Input
-            id="dob"
-            type="date"
-            value={dateOfBirth}
-            onChange={(e) => setDateOfBirth(e.target.value)}
-            max={new Date().toISOString().split('T')[0]}
-          />
+          <Label>Date of Birth *</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start font-normal",
+                  !dateOfBirth && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateOfBirth ? format(new Date(dateOfBirth), "PPP") : "Pick your date of birth"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-popover border shadow-lg z-50" align="start">
+              <Calendar
+                mode="single"
+                selected={dateOfBirth ? new Date(dateOfBirth) : undefined}
+                onSelect={(date) => setDateOfBirth(date ? format(date, 'yyyy-MM-dd') : '')}
+                disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                initialFocus
+                captionLayout="dropdown-buttons"
+                fromYear={1920}
+                toYear={new Date().getFullYear()}
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-2">
