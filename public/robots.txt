@@ -1,5 +1,6 @@
 # AfuChat Robots.txt
 # https://afuchat.com
+# Last updated: 2026-01-04
 
 User-agent: *
 Allow: /
@@ -13,6 +14,7 @@ Disallow: /settings
 Disallow: /checkout
 Disallow: /complete-profile
 Disallow: /change-password
+Disallow: /onboarding
 
 # Block query parameters that create duplicates
 Disallow: /*?*ref=
