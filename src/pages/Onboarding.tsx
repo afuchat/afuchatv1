@@ -185,8 +185,11 @@ const Onboarding = () => {
   }, [currentStep]);
   const [showPassword, setShowPassword] = useState(false);
   
-  // Auth state
-  const [authMode, setAuthMode] = useState<'signup' | 'login'>('signup');
+  // Auth state - check for signin query param
+  const [authMode, setAuthMode] = useState<'signup' | 'login'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('signin') === 'true' ? 'login' : 'signup';
+  });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
