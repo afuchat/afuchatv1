@@ -394,8 +394,23 @@ const Onboarding = () => {
       // Check if profile is already complete
       const isComplete = profile.display_name && profile.handle && profile.country && 
                         profile.date_of_birth && profile.avatar_url;
+      
       if (isComplete) {
-        navigate('/home', { replace: true });
+        // Also check if user has followed anyone before redirecting to home
+        const { data: follows } = await supabase
+          .from('follows')
+          .select('id')
+          .eq('follower_id', user.id)
+          .limit(1);
+        
+        if (follows && follows.length > 0) {
+          // User has completed onboarding and has follows - go to home
+          navigate('/home', { replace: true });
+        } else {
+          // Profile complete but no follows - go to suggestions step
+          await loadSuggestedUsers();
+          setCurrentStep(4);
+        }
       }
     }
   };
