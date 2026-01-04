@@ -13,14 +13,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator'; 
 import { User, Lock, Eye, MessageCircle, Upload, X, Building2, Github, Globe, Code2, Briefcase, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 import { handleSchema, displayNameSchema, bioSchema } from '@/lib/validation';
 import { useNexa } from '@/hooks/useNexa';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CircularImageCrop } from '@/components/profile/CircularImageCrop';
 import { SquareImageCrop } from '@/components/profile/SquareImageCrop';
-import { countries, getCountryPhoneCode } from '@/lib/countries';
+import { countries, getCountryPhoneCode, getPhoneLimits, validatePhoneLength } from '@/lib/countries';
 import { getCountryFlag } from '@/lib/countryFlags';
+import { validateUsernameFormat } from '@/lib/validation';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 // Import Supabase types
 import type { Database } from '@/integrations/supabase/types';
@@ -80,6 +83,12 @@ const EditProfile: React.FC = () => {
   const [isAffiliate, setIsAffiliate] = useState(false);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [showCropEditor, setShowCropEditor] = useState(false);
+  
+  // Validation states
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const [usernameMessage, setUsernameMessage] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [originalHandle, setOriginalHandle] = useState('');
 
   useEffect(() => {
     // Check the global Auth loading state first. Exit if still checking session.
@@ -131,6 +140,7 @@ const EditProfile: React.FC = () => {
             business_category: data.business_category || '',
             phone_number: data.phone_number || '',
           });
+          setOriginalHandle(data.handle);
           setIsBusiness(data.is_business_mode || false);
           setIsAffiliate(data.is_affiliate || false);
         } else {
@@ -166,6 +176,67 @@ const EditProfile: React.FC = () => {
   // 🚨 FIX 3: Add the global auth loading state to the dependency array
   }, [user, navigate, userId, isLoadingAuth]); 
 
+  // Username validation effect
+  useEffect(() => {
+    const handle = profile.handle;
+    
+    // Skip validation if handle hasn't changed from original
+    if (handle === originalHandle) {
+      setUsernameStatus('idle');
+      setUsernameMessage('');
+      return;
+    }
+    
+    if (!handle || handle.length < 4) {
+      setUsernameStatus('idle');
+      setUsernameMessage('');
+      return;
+    }
+
+    const formatCheck = validateUsernameFormat(handle);
+    if (!formatCheck.valid) {
+      setUsernameStatus('invalid');
+      setUsernameMessage(formatCheck.message);
+      return;
+    }
+
+    setUsernameStatus('checking');
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('handle', handle.toLowerCase())
+          .neq('id', user?.id || '')
+          .maybeSingle();
+        
+        if (data) {
+          setUsernameStatus('taken');
+          setUsernameMessage('Username taken');
+        } else {
+          setUsernameStatus('available');
+          setUsernameMessage('Available');
+        }
+      } catch {
+        setUsernameStatus('idle');
+        setUsernameMessage('');
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [profile.handle, user?.id, originalHandle]);
+
+  // Phone number validation effect
+  useEffect(() => {
+    const localNumber = profile.phone_number.replace(getCountryPhoneCode(profile.country), '');
+    if (!localNumber || !profile.country) {
+      setPhoneError('');
+      return;
+    }
+    const result = validatePhoneLength(profile.country, localNumber);
+    setPhoneError(result.message);
+  }, [profile.phone_number, profile.country]);
+
   // ... (Input handlers and Save handler remain as previously corrected)
 
   const handleInputChange = (
@@ -190,35 +261,47 @@ const EditProfile: React.FC = () => {
     // Normalize handle to lowercase
     const normalizedHandle = profile.handle.toLowerCase().trim();
 
+    // Silent validation - return early without toasts
     if (!profile.display_name.trim() || !normalizedHandle) {
-        toast.error("Display Name and Handle are required.");
-        return;
+      return;
     }
     
-    // Validate inputs
+    // Check username status
+    if (usernameStatus === 'taken' || usernameStatus === 'invalid') {
+      return;
+    }
+
+    // Check phone validation
+    if (phoneError) {
+      return;
+    }
+    
+    // Validate inputs silently
     try {
       handleSchema.parse(normalizedHandle);
       displayNameSchema.parse(profile.display_name);
       if (profile.bio) bioSchema.parse(profile.bio);
-    } catch (error: any) {
-      toast.error(error.errors?.[0]?.message || 'Validation failed');
+    } catch {
       return;
     }
     
     setSaving(true);
     try {
-      // Check username uniqueness (case-insensitive)
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('id')
-        .ilike('handle', normalizedHandle)
-        .neq('id', user.id)
-        .maybeSingle();
-      
-      if (existingUser) {
-        toast.error('Username is already taken (usernames are case-insensitive)');
-        setSaving(false);
-        return;
+      // Double-check username uniqueness if changed
+      if (normalizedHandle !== originalHandle) {
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('handle', normalizedHandle)
+          .neq('id', user.id)
+          .maybeSingle();
+        
+        if (existingUser) {
+          setUsernameStatus('taken');
+          setUsernameMessage('Username taken');
+          setSaving(false);
+          return;
+        }
       }
       
       const updateData: ProfileUpdate = {
@@ -490,12 +573,36 @@ const EditProfile: React.FC = () => {
                     onChange={handleInputChange}
                     placeholder="unique_handle"
                     disabled={saving}
-                    className="pl-7 h-11"
+                    className={cn(
+                      "pl-7 pr-10 h-11",
+                      usernameStatus === 'available' && "border-green-500 focus-visible:ring-green-500",
+                      (usernameStatus === 'taken' || usernameStatus === 'invalid') && "border-destructive focus-visible:ring-destructive"
+                    )}
                   />
+                  {usernameStatus === 'checking' && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                  {usernameStatus === 'available' && (
+                    <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                  )}
+                  {(usernameStatus === 'taken' || usernameStatus === 'invalid') && (
+                    <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Your unique identifier. Only lowercase letters, numbers, and underscores.
-                </p>
+                {usernameMessage ? (
+                  <p className={cn(
+                    "text-xs",
+                    usernameStatus === 'available' ? "text-green-600" : "text-destructive"
+                  )}>
+                    {usernameMessage}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Only lowercase letters, numbers, and underscores.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -509,20 +616,35 @@ const EditProfile: React.FC = () => {
                     id="phone_number"
                     name="phone_number"
                     type="tel"
+                    inputMode="numeric"
                     value={profile.phone_number.replace(getCountryPhoneCode(profile.country), '')}
                     onChange={(e) => {
                       const cleaned = e.target.value.replace(/\D/g, '');
                       const countryCode = getCountryPhoneCode(profile.country);
-                      setProfile(prev => ({ ...prev, phone_number: countryCode + cleaned }));
+                      const limits = getPhoneLimits(profile.country);
+                      // Limit input to max length
+                      if (cleaned.length <= limits.max) {
+                        setProfile(prev => ({ ...prev, phone_number: countryCode + cleaned }));
+                      }
                     }}
-                    placeholder="Phone number"
+                    placeholder={profile.country ? `${getPhoneLimits(profile.country).min} digits` : 'Phone number'}
                     disabled={saving}
-                    className="h-11 flex-1"
+                    className={cn(
+                      "h-11 flex-1",
+                      phoneError && "border-destructive focus-visible:ring-destructive"
+                    )}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Country code is based on your profile country
-                </p>
+                {phoneError ? (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {phoneError}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Country code is based on your profile country
+                  </p>
+                )}
               </div>
 
               {/* Country - Read-only after signup */}
