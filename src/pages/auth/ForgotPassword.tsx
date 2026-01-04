@@ -9,6 +9,8 @@ import { X, ArrowLeft } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { emailSchema } from '@/lib/validation';
 
+import passwordBg from '@/assets/auth/password-bg.jpg';
+
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -42,8 +44,18 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background animate-fade-in">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden animate-fade-in">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={passwordBg} 
+          alt="" 
+          className="w-full h-full object-cover opacity-15"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/90 to-background" />
+      </div>
+      
+      <div className="w-full max-w-md relative z-10">
         <div className="mb-8">
           <Button
             variant="ghost"

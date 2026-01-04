@@ -17,6 +17,8 @@ import { AfuMailTermsDialog } from '@/components/afumail/AfuMailTermsDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 
+import signupBg from '@/assets/auth/signup-bg.jpg';
+
 // AfuMail OAuth configuration
 const AFUMAIL_CLIENT_ID_PREVIEW = '404c5ec3776ecbb26809295a7eace970';
 const AFUMAIL_CLIENT_ID_PROD = '404c5ec3776ecbb26809295a7eace970';
@@ -281,7 +283,16 @@ const SignUpContent = () => {
   const progressWidth = `${(step / 4) * 100}%`;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={signupBg} 
+          alt="" 
+          className="w-full h-full object-cover opacity-15"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/95 to-background" />
+      </div>
       {/* Linking Account Banner */}
       {isLinkingAccount && linkToUserId && (
         <div className="bg-gradient-to-r from-blue-500/20 to-blue-400/10 border-b border-blue-500/20 p-4">
@@ -304,7 +315,7 @@ const SignUpContent = () => {
       {/* Referral Banner */}
       {referralCode && !isLinkingAccount && (
         <div className="bg-gradient-to-r from-primary/20 to-primary/10 border-b border-primary/20 p-4">
-          <div className="flex items-center gap-3">
+        <div className="relative z-10 flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
               <Gift className="h-5 w-5 text-primary" />
             </div>
