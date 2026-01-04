@@ -38,6 +38,7 @@ import UserNotFound from "./pages/UserNotFound";
 import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import Banned from "./pages/Banned";
+import Install from "./pages/Install";
 
 // Lazy load other pages
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
@@ -161,6 +162,7 @@ const AppRoutes = () => {
       <Route path="/welcome" element={<Welcome />} />
       <Route path="/banned" element={<Banned />} />
       <Route path="/complete-profile" element={<Onboarding />} />
+      <Route path="/feed" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Home /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/home" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Home /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/auth" element={<Welcome />} />
       <Route path="/auth/signin" element={<SignIn />} />
@@ -179,6 +181,7 @@ const AppRoutes = () => {
       <Route path="/ai-chat" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AIChat /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/install" element={<Install />} />
       <Route path="/support" element={<Support />} />
       <Route path="/leaderboard" element={<Layout><UnifiedLeaderboard /></Layout>} />
       <Route path="/wallet" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><FinancialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
