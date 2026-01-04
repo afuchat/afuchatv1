@@ -26,12 +26,12 @@ export const RequireDateOfBirth = ({ children }: RequireDateOfBirthProps) => {
     return <>{children}</>;
   }
 
-  // User is logged in but has no date of birth - redirect to complete profile
+  // User is logged in but has no date of birth - redirect to onboarding
   if (!hasDateOfBirth) {
-    if (location.pathname === '/complete-profile') {
+    if (location.pathname === '/onboarding' || location.pathname === '/complete-profile') {
       return <>{children}</>;
     }
-    return <Navigate to="/complete-profile" replace />;
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <>{children}</>;

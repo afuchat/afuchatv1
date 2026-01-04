@@ -179,8 +179,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             const currentPath = window.location.pathname;
             
-            // Skip profile check if already on complete-profile or suggested-users pages
-            if (currentPath === '/complete-profile' || currentPath === '/suggested-users') {
+            // Skip profile check if already on onboarding or suggested-users pages
+            if (currentPath === '/onboarding' || currentPath === '/complete-profile' || currentPath === '/suggested-users') {
               return;
             }
             
@@ -207,7 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 // If on landing/auth pages
                 if (currentPath === '/' || currentPath.startsWith('/auth')) {
-                  window.location.href = hasEssentialFields ? '/home' : '/complete-profile';
+                  window.location.href = hasEssentialFields ? '/home' : '/onboarding';
                 }
               });
           }

@@ -173,7 +173,7 @@ const AfuMailCallback = () => {
               country: signupData?.country,
               is_business_mode: signupData?.is_business_mode,
             },
-            emailRedirectTo: `${window.location.origin}/complete-profile`,
+            emailRedirectTo: `${window.location.origin}/onboarding`,
           },
         });
 
@@ -193,7 +193,7 @@ const AfuMailCallback = () => {
         sessionStorage.removeItem('afumail_processed_code');
 
         toast.success('Account created! Complete your profile.');
-        navigate('/complete-profile');
+        navigate('/onboarding');
       } catch (err: unknown) {
         console.error('AfuMail OAuth error:', err);
         const message = err instanceof Error ? err.message : 'Authentication failed';

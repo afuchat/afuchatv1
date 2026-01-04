@@ -11,8 +11,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { countries, detectUserCountry } from '@/lib/countries';
+import { getCountryFlag } from '@/lib/countryFlags';
 import { format } from 'date-fns';
+import { clearProfileCache } from '@/hooks/useProfileCheck';
+import { ReferralWelcomeBanner } from '@/components/gamification/ReferralWelcomeBanner';
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -42,7 +46,9 @@ import {
   Globe,
   CalendarIcon,
   ChevronsUpDown,
-  MapPin
+  MapPin,
+  Phone,
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -54,6 +60,7 @@ const STEPS = [
   { id: 'auth', title: 'Account', icon: User },
   { id: 'profile', title: 'Profile', icon: Camera },
   { id: 'interests', title: 'Interests', icon: Heart },
+  { id: 'suggestions', title: 'Connect', icon: Users },
   { id: 'tour', title: 'Explore', icon: Globe },
 ];
 
@@ -120,6 +127,14 @@ const INTERESTS = [
   { id: 'tech', label: 'Technology', icon: Code },
 ];
 
+interface SuggestedUser {
+  id: string;
+  display_name: string;
+  handle: string;
+  avatar_url: string | null;
+  bio: string | null;
+}
+
 const Onboarding = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -139,11 +154,75 @@ const Onboarding = () => {
   const [bio, setBio] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState('');
+  const [existingAvatarUrl, setExistingAvatarUrl] = useState('');
   const [country, setCountry] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [countryOpen, setCountryOpen] = useState(false);
   
   // Interests state
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  
+  // Suggested users state
+  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
+  const [followedUsers, setFollowedUsers] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  // Referral & reward state
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [showRewardModal, setShowRewardModal] = useState(false);
+  const [showReferralWelcome, setShowReferralWelcome] = useState(false);
+  const [referrerName, setReferrerName] = useState<string | undefined>();
+
+  // Helper to get cookie value
+  const getCookie = (name: string): string | null => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      return parts.pop()?.split(';').shift() || null;
+    }
+    return null;
+  };
+
+  // Check for referral code on mount
+  useEffect(() => {
+    const checkReferralCode = () => {
+      let foundCode: string | null = null;
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const refFromUrl = urlParams.get('ref');
+      if (refFromUrl) foundCode = refFromUrl;
+      
+      if (!foundCode) {
+        const cookieCode = getCookie('afuchat_referral');
+        if (cookieCode) foundCode = cookieCode;
+      }
+      
+      if (!foundCode) {
+        const pendingDataLocal = localStorage.getItem('pendingSignupData');
+        if (pendingDataLocal) {
+          try {
+            const parsed = JSON.parse(pendingDataLocal);
+            if (parsed.referral_code) foundCode = parsed.referral_code;
+          } catch (e) {}
+        }
+      }
+      
+      if (!foundCode) {
+        const pendingDataSession = sessionStorage.getItem('pendingSignupData');
+        if (pendingDataSession) {
+          try {
+            const parsed = JSON.parse(pendingDataSession);
+            if (parsed.referral_code) foundCode = parsed.referral_code;
+          } catch (e) {}
+        }
+      }
+      
+      if (foundCode) setReferralCode(foundCode);
+    };
+    
+    checkReferralCode();
+  }, []);
 
   // Auto-detect country on mount
   useEffect(() => {
@@ -159,11 +238,9 @@ const Onboarding = () => {
   // Skip to correct step if already authenticated
   useEffect(() => {
     if (!authLoading && user) {
-      // Skip to profile step if already logged in
       if (currentStep < 2) {
         setCurrentStep(2);
       }
-      // Load existing profile data
       loadProfileData();
     }
   }, [user, authLoading]);
@@ -173,7 +250,7 @@ const Onboarding = () => {
     
     const { data: profile } = await supabase
       .from('profiles')
-      .select('display_name, handle, bio, avatar_url, interests, country, date_of_birth')
+      .select('display_name, handle, bio, avatar_url, interests, country, date_of_birth, phone_number')
       .eq('id', user.id)
       .maybeSingle();
     
@@ -181,10 +258,79 @@ const Onboarding = () => {
       if (profile.display_name) setDisplayName(profile.display_name);
       if (profile.handle) setHandle(profile.handle);
       if (profile.bio) setBio(profile.bio);
-      if (profile.avatar_url) setAvatarPreview(profile.avatar_url);
+      if (profile.avatar_url) {
+        setAvatarPreview(profile.avatar_url);
+        setExistingAvatarUrl(profile.avatar_url);
+      }
       if (profile.interests) setSelectedInterests(profile.interests as string[]);
       if (profile.country) setCountry(profile.country);
       if (profile.date_of_birth) setDateOfBirth(profile.date_of_birth);
+      if (profile.phone_number) setPhoneNumber(profile.phone_number);
+      
+      // Check if profile is already complete
+      const isComplete = profile.display_name && profile.handle && profile.country && 
+                        profile.date_of_birth && profile.avatar_url;
+      if (isComplete) {
+        navigate('/home', { replace: true });
+      }
+    }
+  };
+
+  const loadSuggestedUsers = async () => {
+    if (!user) return;
+    setLoadingSuggestions(true);
+    
+    try {
+      const { data: users } = await supabase
+        .from('profiles')
+        .select('id, display_name, handle, avatar_url, bio')
+        .neq('id', user.id)
+        .not('avatar_url', 'is', null)
+        .limit(12);
+      
+      if (users) setSuggestedUsers(users);
+    } catch (error) {
+      console.error('Error loading suggestions:', error);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  // Process referral reward
+  const processReferral = async (): Promise<boolean> => {
+    let codeToUse = referralCode || getCookie('afuchat_referral');
+    
+    if (!codeToUse) {
+      const urlParams = new URLSearchParams(window.location.search);
+      codeToUse = urlParams.get('ref');
+    }
+    
+    if (!codeToUse || !user) return false;
+    
+    try {
+      const { data, error } = await supabase.rpc('process_referral_reward', {
+        referral_code_input: codeToUse,
+        new_user_id: user.id
+      });
+      
+      if (error) return false;
+      
+      const result = Array.isArray(data) ? data[0] : data;
+      
+      if (result?.success) {
+        if (result.referrer_name) setReferrerName(result.referrer_name);
+        
+        localStorage.removeItem('pendingSignupData');
+        sessionStorage.removeItem('pendingSignupData');
+        document.cookie = 'afuchat_referral=; path=/; max-age=0';
+        
+        toast.success('Welcome! You received 1 week free Premium!');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      return false;
     }
   };
 
@@ -212,7 +358,6 @@ const Onboarding = () => {
         if (error) throw error;
         toast.success('Welcome back!');
       }
-      // Auth state change will trigger step progression
     } catch (error: any) {
       toast.error(error.message || 'Authentication failed');
     } finally {
@@ -260,6 +405,16 @@ const Onboarding = () => {
       return;
     }
 
+    if (!normalizedHandle || normalizedHandle.length < 4) {
+      toast.error('Username must be at least 4 characters');
+      return;
+    }
+
+    if (!/^[a-z0-9_]+$/.test(normalizedHandle)) {
+      toast.error('Username can only contain letters, numbers, and underscores');
+      return;
+    }
+
     if (!country) {
       toast.error('Please select your country');
       return;
@@ -281,57 +436,86 @@ const Onboarding = () => {
       toast.error('You must be at least 13 years old to use AfuChat');
       return;
     }
-    
-    if (normalizedHandle && normalizedHandle.length < 4) {
-      toast.error('Username must be at least 4 characters');
-      return;
-    }
-    
-    if (normalizedHandle && !/^[a-z0-9_]+$/.test(normalizedHandle)) {
-      toast.error('Username can only contain letters, numbers, and underscores');
+
+    // Check avatar
+    const hasAvatar = avatarFile || existingAvatarUrl;
+    if (!hasAvatar) {
+      toast.error('Profile picture is required');
       return;
     }
 
     setLoading(true);
     try {
-      // Check username uniqueness if provided
-      if (normalizedHandle) {
-        const { data: existingUser } = await supabase
-          .from('profiles')
-          .select('id')
-          .ilike('handle', normalizedHandle)
-          .neq('id', user.id)
-          .maybeSingle();
-        
-        if (existingUser) {
-          toast.error('Username is already taken');
+      // Check username uniqueness
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('handle', normalizedHandle)
+        .neq('id', user.id)
+        .maybeSingle();
+      
+      if (existingUser) {
+        toast.error('Username is already taken');
+        setLoading(false);
+        return;
+      }
+
+      // Upload avatar if new file
+      let avatarUrl = existingAvatarUrl;
+      if (avatarFile) {
+        const uploadedUrl = await uploadAvatar();
+        if (uploadedUrl) avatarUrl = uploadedUrl;
+        else {
+          toast.error('Failed to upload profile picture');
           setLoading(false);
           return;
         }
       }
 
-      // Upload avatar if new file
-      let avatarUrl = avatarPreview;
-      if (avatarFile) {
-        const uploadedUrl = await uploadAvatar();
-        if (uploadedUrl) avatarUrl = uploadedUrl;
+      // Check if user should be rewarded
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('profile_completion_rewarded, xp')
+        .eq('id', user.id)
+        .single();
+
+      const isFullyCompleted = phoneNumber && country && dateOfBirth;
+      const shouldReward = isFullyCompleted && !profile?.profile_completion_rewarded;
+
+      const updateData: any = {
+        display_name: displayName.trim(),
+        handle: normalizedHandle,
+        bio: bio.trim() || null,
+        avatar_url: avatarUrl,
+        country: country,
+        date_of_birth: dateOfBirth,
+      };
+
+      if (phoneNumber) updateData.phone_number = phoneNumber;
+
+      if (shouldReward) {
+        updateData.xp = (profile?.xp || 0) + 100;
+        updateData.profile_completion_rewarded = true;
       }
 
       const { error } = await supabase
         .from('profiles')
-        .update({
-          display_name: displayName.trim(),
-          handle: normalizedHandle || null,
-          bio: bio.trim() || null,
-          avatar_url: avatarUrl || null,
-          country: country,
-          date_of_birth: dateOfBirth,
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) throw error;
       
-      setCurrentStep(3);
+      clearProfileCache(user.id);
+      
+      if (shouldReward) {
+        setShowRewardModal(true);
+        setTimeout(() => {
+          setShowRewardModal(false);
+          setCurrentStep(3);
+        }, 2500);
+      } else {
+        setCurrentStep(3);
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to save profile');
     } finally {
@@ -351,7 +535,8 @@ const Onboarding = () => {
 
       if (error) throw error;
       
-      // Go to tour step instead of navigating home
+      // Load suggested users and go to suggestions step
+      await loadSuggestedUsers();
       setCurrentStep(4);
     } catch (error: any) {
       toast.error(error.message || 'Failed to save interests');
@@ -360,9 +545,38 @@ const Onboarding = () => {
     }
   };
 
-  const handleTourComplete = () => {
-    toast.success('Welcome to AfuChat! 🎉');
-    navigate('/home');
+  const handleFollowUser = async (userId: string) => {
+    if (!user || followedUsers.includes(userId)) return;
+    
+    try {
+      const { error } = await supabase
+        .from('follows')
+        .insert({ follower_id: user.id, following_id: userId });
+      
+      if (!error) {
+        setFollowedUsers(prev => [...prev, userId]);
+      }
+    } catch (error) {
+      console.error('Error following user:', error);
+    }
+  };
+
+  const handleSuggestionsComplete = () => {
+    setCurrentStep(5);
+  };
+
+  const handleTourComplete = async () => {
+    const referralSuccess = await processReferral();
+    
+    if (referralSuccess) {
+      setShowReferralWelcome(true);
+      setTimeout(() => {
+        window.location.href = '/home';
+      }, 4000);
+    } else {
+      toast.success('Welcome to AfuChat! 🎉');
+      navigate('/home');
+    }
   };
 
   const handleFeatureClick = (path: string) => {
@@ -378,23 +592,21 @@ const Onboarding = () => {
   };
 
   const handleSkip = () => {
-    if (currentStep === 4) {
-      // Skip tour and go to home
+    if (currentStep === 5) {
       handleTourComplete();
+    } else if (currentStep === 4) {
+      setCurrentStep(5);
     } else if (currentStep === 3) {
-      // Skip interests and go to tour
+      loadSuggestedUsers();
       setCurrentStep(4);
-    } else if (currentStep === 2 && user) {
-      // Skip to interests
-      setCurrentStep(3);
     }
   };
 
   const canGoBack = currentStep > 0 && !(currentStep === 2 && user);
-  const canSkip = currentStep >= 2;
+  const canSkip = currentStep >= 3;
 
   const renderStepIndicator = () => (
-    <div className="w-full max-w-md mx-auto mb-8">
+    <div className="w-full max-w-md mx-auto mb-6">
       <div className="flex items-center justify-between mb-3">
         {STEPS.map((step, index) => {
           const Icon = step.icon;
@@ -404,19 +616,19 @@ const Onboarding = () => {
           return (
             <div key={step.id} className="flex flex-col items-center">
               <div className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
+                "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all duration-300",
                 isComplete && "bg-primary text-primary-foreground",
                 isActive && "bg-primary/20 text-primary ring-2 ring-primary",
                 !isComplete && !isActive && "bg-muted text-muted-foreground"
               )}>
                 {isComplete ? (
-                  <Check className="h-5 w-5" />
+                  <Check className="h-4 w-4" />
                 ) : (
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-4 w-4" />
                 )}
               </div>
               <span className={cn(
-                "text-xs mt-1.5 font-medium",
+                "text-[10px] md:text-xs mt-1 font-medium",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}>
                 {step.title}
@@ -577,7 +789,7 @@ const Onboarding = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="w-full max-w-sm mx-auto px-6"
+      className="w-full max-w-sm mx-auto px-6 overflow-y-auto max-h-[calc(100vh-200px)]"
     >
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-foreground">Set Up Your Profile</h2>
@@ -604,6 +816,7 @@ const Onboarding = () => {
           />
         </label>
       </div>
+      <p className="text-center text-xs text-muted-foreground mb-4">Tap to add profile picture *</p>
       
       <div className="space-y-4">
         <div className="space-y-2">
@@ -617,14 +830,14 @@ const Onboarding = () => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="handle">Username</Label>
+          <Label htmlFor="handle">Username *</Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
             <Input
               id="handle"
               placeholder="username"
               value={handle}
-              onChange={(e) => setHandle(e.target.value.toLowerCase())}
+              onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
               className="pl-8"
             />
           </div>
@@ -632,19 +845,28 @@ const Onboarding = () => {
         
         <div className="space-y-2">
           <Label>Country *</Label>
-          <Popover>
+          <Popover open={countryOpen} onOpenChange={setCountryOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
                 className={cn(
-                  "w-full justify-between font-normal",
+                  "w-full justify-between font-normal h-12",
                   !country && "text-muted-foreground"
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  {country || "Select your country"}
+                  {country ? (
+                    <>
+                      <span className="text-xl">{getCountryFlag(country)}</span>
+                      <span>{country}</span>
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>Select your country</span>
+                    </>
+                  )}
                 </div>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -659,7 +881,10 @@ const Onboarding = () => {
                       <CommandItem
                         key={c}
                         value={c}
-                        onSelect={() => setCountry(c)}
+                        onSelect={() => {
+                          setCountry(c);
+                          setCountryOpen(false);
+                        }}
                         className="cursor-pointer"
                       >
                         <Check
@@ -668,6 +893,7 @@ const Onboarding = () => {
                             country === c ? "opacity-100" : "opacity-0"
                           )}
                         />
+                        <span className="mr-2 text-lg">{getCountryFlag(c)}</span>
                         {c}
                       </CommandItem>
                     ))}
@@ -676,6 +902,7 @@ const Onboarding = () => {
               </Command>
             </PopoverContent>
           </Popover>
+          <p className="text-xs text-muted-foreground">⚠️ Country cannot be changed after signup</p>
         </div>
 
         <div className="space-y-2">
@@ -685,7 +912,7 @@ const Onboarding = () => {
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full justify-start font-normal",
+                  "w-full justify-start font-normal h-12",
                   !dateOfBirth && "text-muted-foreground"
                 )}
               >
@@ -710,7 +937,26 @@ const Onboarding = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="bio">Bio</Label>
+          <Label htmlFor="phone">Phone Number (Optional)</Label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="+1234567890"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-yellow-500" />
+            Add phone to earn 100 Nexa reward!
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="bio">Bio (Optional)</Label>
           <Textarea
             id="bio"
             placeholder="Write a short bio about yourself..."
@@ -759,7 +1005,7 @@ const Onboarding = () => {
               key={interest.id}
               onClick={() => toggleInterest(interest.id)}
               className={cn(
-                "flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200",
+                "flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 relative",
                 isSelected 
                   ? "border-primary bg-primary/10 text-primary" 
                   : "border-border bg-card hover:border-primary/50"
@@ -792,6 +1038,77 @@ const Onboarding = () => {
     </motion.div>
   );
 
+  const renderSuggestionsStep = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="w-full max-w-md mx-auto px-6"
+    >
+      <div className="text-center mb-6">
+        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <Users className="h-8 w-8 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold text-foreground">Find Friends</h2>
+        <p className="text-muted-foreground mt-1">Follow people you might know</p>
+      </div>
+      
+      {loadingSuggestions ? (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      ) : (
+        <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto">
+          {suggestedUsers.map((suggestedUser) => (
+            <div 
+              key={suggestedUser.id}
+              className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border"
+            >
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={suggestedUser.avatar_url || undefined} />
+                <AvatarFallback className="bg-muted">
+                  {suggestedUser.display_name?.[0]?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{suggestedUser.display_name}</p>
+                <p className="text-xs text-muted-foreground truncate">@{suggestedUser.handle}</p>
+              </div>
+              <Button
+                size="sm"
+                variant={followedUsers.includes(suggestedUser.id) ? "secondary" : "default"}
+                onClick={() => handleFollowUser(suggestedUser.id)}
+                disabled={followedUsers.includes(suggestedUser.id)}
+              >
+                {followedUsers.includes(suggestedUser.id) ? (
+                  <>
+                    <Check className="h-4 w-4 mr-1" />
+                    Following
+                  </>
+                ) : 'Follow'}
+              </Button>
+            </div>
+          ))}
+          
+          {suggestedUsers.length === 0 && (
+            <p className="text-center text-muted-foreground py-4">
+              No suggestions available right now
+            </p>
+          )}
+        </div>
+      )}
+      
+      <Button 
+        onClick={handleSuggestionsComplete}
+        className="w-full"
+        size="lg"
+      >
+        {followedUsers.length > 0 ? `Continue (${followedUsers.length} followed)` : 'Continue'}
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
+    </motion.div>
+  );
+
   const renderTourStep = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -807,8 +1124,7 @@ const Onboarding = () => {
         <p className="text-muted-foreground mt-1">Discover everything you can do</p>
       </div>
       
-      {/* Feature Tour Cards */}
-      <div className="space-y-3 mb-8">
+      <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto">
         {FEATURES.map((feature, index) => {
           const Icon = feature.icon;
           return (
@@ -840,7 +1156,6 @@ const Onboarding = () => {
         })}
       </div>
 
-      {/* Floating tooltip hint */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -851,7 +1166,6 @@ const Onboarding = () => {
           <Zap className="h-5 w-5 flex-shrink-0" />
           <p className="text-sm font-medium">Tap any feature to explore, or continue below!</p>
         </div>
-        {/* Tooltip arrow */}
         <div className="absolute -bottom-2 left-8 w-4 h-4 bg-primary rotate-45" />
       </motion.div>
       
@@ -875,51 +1189,91 @@ const Onboarding = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex flex-col">
-      {/* Header with progress */}
-      <header className="pt-6 pb-2 px-4">
-        <div className="flex items-center justify-between max-w-md mx-auto mb-4">
-          {canGoBack && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setCurrentStep(prev => prev - 1)}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
-          {!canGoBack && <div className="w-10" />}
+    <>
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex flex-col">
+        {/* Header with progress */}
+        <header className="pt-6 pb-2 px-4">
+          <div className="flex items-center justify-between max-w-md mx-auto mb-4">
+            {canGoBack && (
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setCurrentStep(prev => prev - 1)}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
+            {!canGoBack && <div className="w-10" />}
+            
+            <Logo className="h-8" />
+            
+            {canSkip ? (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleSkip}
+                className="text-muted-foreground"
+              >
+                Skip
+              </Button>
+            ) : (
+              <div className="w-10" />
+            )}
+          </div>
           
-          <Logo className="h-8" />
-          
-          {canSkip ? (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={handleSkip}
-              className="text-muted-foreground"
-            >
-              Skip
-            </Button>
-          ) : (
-            <div className="w-10" />
-          )}
-        </div>
+          {renderStepIndicator()}
+        </header>
         
-        {renderStepIndicator()}
-      </header>
-      
-      {/* Main content */}
-      <main className="flex-1 flex items-center justify-center pb-12">
-        <AnimatePresence mode="wait">
-          {currentStep === 0 && renderWelcomeStep()}
-          {currentStep === 1 && renderAuthStep()}
-          {currentStep === 2 && renderProfileStep()}
-          {currentStep === 3 && renderInterestsStep()}
-          {currentStep === 4 && renderTourStep()}
-        </AnimatePresence>
-      </main>
-    </div>
+        {/* Main content */}
+        <main className="flex-1 flex items-center justify-center pb-12">
+          <AnimatePresence mode="wait">
+            {currentStep === 0 && renderWelcomeStep()}
+            {currentStep === 1 && renderAuthStep()}
+            {currentStep === 2 && renderProfileStep()}
+            {currentStep === 3 && renderInterestsStep()}
+            {currentStep === 4 && renderSuggestionsStep()}
+            {currentStep === 5 && renderTourStep()}
+          </AnimatePresence>
+        </main>
+      </div>
+
+      {/* Reward Modal */}
+      <Dialog open={showRewardModal} onOpenChange={setShowRewardModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center animate-scale-in">
+                <Trophy className="h-10 w-10 text-white" />
+              </div>
+            </div>
+            <DialogTitle className="text-2xl text-center">Congratulations! 🎉</DialogTitle>
+            <DialogDescription className="text-center text-base">
+              You've completed your profile and earned your reward!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-6 text-center space-y-2">
+            <p className="text-sm text-muted-foreground">Profile Completion Reward</p>
+            <div className="flex items-center justify-center gap-2">
+              <Sparkles className="h-6 w-6 text-yellow-500" />
+              <span className="text-4xl font-bold text-primary">+100</span>
+              <span className="text-2xl font-semibold">Nexa</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Keep earning by staying active!</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Referral Welcome Banner */}
+      {showReferralWelcome && (
+        <ReferralWelcomeBanner 
+          referrerName={referrerName}
+          onClose={() => {
+            setShowReferralWelcome(false);
+            window.location.href = '/home';
+          }}
+        />
+      )}
+    </>
   );
 };
 

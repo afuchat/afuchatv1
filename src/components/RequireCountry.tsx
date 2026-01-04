@@ -26,12 +26,12 @@ export const RequireCountry = ({ children }: RequireCountryProps) => {
     return <>{children}</>;
   }
 
-  // User is logged in but has no country - redirect to complete profile
+  // User is logged in but has no country - redirect to onboarding
   if (!hasCountry) {
-    if (location.pathname === '/complete-profile') {
+    if (location.pathname === '/onboarding' || location.pathname === '/complete-profile') {
       return <>{children}</>;
     }
-    return <Navigate to="/complete-profile" replace />;
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <>{children}</>;

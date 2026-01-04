@@ -22,9 +22,9 @@ const Index = () => {
     return <Navigate to="/banned" replace />;
   }
 
-  // Users with incomplete profile go to complete profile
+  // Users with incomplete profile go to onboarding
   if (!hasCountry || !hasDateOfBirth) {
-    return <Navigate to="/complete-profile" replace />;
+    return <Navigate to="/onboarding" replace />;
   }
 
   // Fully authenticated and complete profile - go to home

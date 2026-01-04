@@ -89,7 +89,7 @@ const Welcome = () => {
         const hasEssentialFields = profile?.display_name && profile?.handle;
         
         if (!hasEssentialFields) {
-          setShouldRedirect('/complete-profile');
+          setShouldRedirect('/onboarding');
         } else {
           setShouldRedirect('/home');
         }
