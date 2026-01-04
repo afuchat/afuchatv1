@@ -261,28 +261,56 @@ const EditProfile: React.FC = () => {
     // Normalize handle to lowercase
     const normalizedHandle = profile.handle.toLowerCase().trim();
 
-    // Silent validation - return early without toasts
-    if (!profile.display_name.trim() || !normalizedHandle) {
+    // Validation with toast feedback
+    if (!profile.display_name.trim()) {
+      toast.error('Please enter your display name');
+      return;
+    }
+    
+    if (!normalizedHandle) {
+      toast.error('Please enter a username');
       return;
     }
     
     // Check username status
-    if (usernameStatus === 'taken' || usernameStatus === 'invalid') {
+    if (usernameStatus === 'taken') {
+      toast.error('This username is already taken');
+      return;
+    }
+    
+    if (usernameStatus === 'invalid') {
+      toast.error('Please enter a valid username');
       return;
     }
 
     // Check phone validation
     if (phoneError) {
+      toast.error(phoneError);
       return;
     }
     
-    // Validate inputs silently
+    // Validate inputs with detailed feedback
     try {
       handleSchema.parse(normalizedHandle);
-      displayNameSchema.parse(profile.display_name);
-      if (profile.bio) bioSchema.parse(profile.bio);
-    } catch {
+    } catch (e: any) {
+      toast.error(e?.errors?.[0]?.message || 'Invalid username format');
       return;
+    }
+    
+    try {
+      displayNameSchema.parse(profile.display_name);
+    } catch (e: any) {
+      toast.error(e?.errors?.[0]?.message || 'Invalid display name');
+      return;
+    }
+    
+    if (profile.bio) {
+      try {
+        bioSchema.parse(profile.bio);
+      } catch (e: any) {
+        toast.error(e?.errors?.[0]?.message || 'Bio is too long');
+        return;
+      }
     }
     
     setSaving(true);

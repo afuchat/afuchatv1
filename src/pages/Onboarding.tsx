@@ -456,19 +456,51 @@ const Onboarding = () => {
     
     const normalizedHandle = handle.toLowerCase().trim();
     
-    // Validation - return early without toasts, just don't proceed
-    if (!displayName.trim() || !normalizedHandle || normalizedHandle.length < 4 || 
-        !/^[a-z0-9_]+$/.test(normalizedHandle) || !country || !dateOfBirth) {
+    // Validation with toast feedback
+    if (!displayName.trim()) {
+      toast.error('Please enter your display name');
+      return;
+    }
+    
+    if (!normalizedHandle) {
+      toast.error('Please enter a username');
+      return;
+    }
+    
+    if (normalizedHandle.length < 4) {
+      toast.error('Username must be at least 4 characters');
+      return;
+    }
+    
+    if (!/^[a-z0-9_]+$/.test(normalizedHandle)) {
+      toast.error('Username can only contain letters, numbers, and underscores');
+      return;
+    }
+    
+    if (!country) {
+      toast.error('Please select your country');
+      return;
+    }
+    
+    if (!dateOfBirth) {
+      toast.error('Please enter your date of birth');
       return;
     }
 
     // Check username availability
-    if (usernameStatus === 'taken' || usernameStatus === 'invalid') {
+    if (usernameStatus === 'taken') {
+      toast.error('This username is already taken');
+      return;
+    }
+    
+    if (usernameStatus === 'invalid') {
+      toast.error('Please enter a valid username');
       return;
     }
 
     // Validate phone if provided
     if (phoneNumber && phoneError) {
+      toast.error(phoneError);
       return;
     }
 
@@ -480,12 +512,14 @@ const Onboarding = () => {
     const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate()) ? age - 1 : age;
     
     if (actualAge < 13) {
+      toast.error('You must be at least 13 years old to use AfuChat');
       return;
     }
 
     // Check avatar
     const hasAvatar = avatarFile || existingAvatarUrl;
     if (!hasAvatar) {
+      toast.error('Please add a profile picture');
       return;
     }
 
