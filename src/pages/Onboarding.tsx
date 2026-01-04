@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { countries, detectUserCountry } from '@/lib/countries';
+import { countries, detectUserCountry, getCountryPhoneCode } from '@/lib/countries';
 import { getCountryFlag } from '@/lib/countryFlags';
 import { DateOfBirthSelector } from '@/components/DateOfBirthSelector';
 import { clearProfileCache } from '@/hooks/useProfileCheck';
@@ -911,16 +911,22 @@ const Onboarding = () => {
 
         <div className="space-y-2">
           <Label htmlFor="phone">Phone Number (Optional)</Label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="+1234567890"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2">
+            <div className="flex items-center gap-1.5 px-3 h-12 rounded-md border border-input bg-muted/50 text-sm min-w-[80px] justify-center">
+              <span>{country ? getCountryFlag(country) : '🌍'}</span>
+              <span className="font-medium">{country ? getCountryPhoneCode(country) : '+--'}</span>
+            </div>
+            <div className="relative flex-1">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="Phone number"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="pl-10 h-12"
+              />
+            </div>
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <Sparkles className="h-3 w-3 text-yellow-500" />
