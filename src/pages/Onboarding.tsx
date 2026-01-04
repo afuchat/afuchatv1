@@ -11,11 +11,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { countries, detectUserCountry, getCountryPhoneCode } from '@/lib/countries';
+import { countries, detectUserCountry, getCountryPhoneCode, getPhoneLimits, validatePhoneLength } from '@/lib/countries';
 import { getCountryFlag } from '@/lib/countryFlags';
 import { DateOfBirthSelector } from '@/components/DateOfBirthSelector';
 import { clearProfileCache } from '@/hooks/useProfileCheck';
 import { ReferralWelcomeBanner } from '@/components/gamification/ReferralWelcomeBanner';
+import { validateUsernameFormat } from '@/lib/validation';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -158,6 +160,11 @@ const Onboarding = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [countryOpen, setCountryOpen] = useState(false);
   
+  // Validation states
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const [usernameMessage, setUsernameMessage] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  
   // Interests state
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   
@@ -171,6 +178,57 @@ const Onboarding = () => {
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [showReferralWelcome, setShowReferralWelcome] = useState(false);
   const [referrerName, setReferrerName] = useState<string | undefined>();
+
+  // Debounced username check
+  useEffect(() => {
+    if (!handle || handle.length < 4) {
+      setUsernameStatus('idle');
+      setUsernameMessage('');
+      return;
+    }
+
+    const formatCheck = validateUsernameFormat(handle);
+    if (!formatCheck.valid) {
+      setUsernameStatus('invalid');
+      setUsernameMessage(formatCheck.message);
+      return;
+    }
+
+    setUsernameStatus('checking');
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('handle', handle.toLowerCase())
+          .neq('id', user?.id || '')
+          .maybeSingle();
+        
+        if (data) {
+          setUsernameStatus('taken');
+          setUsernameMessage('Username taken');
+        } else {
+          setUsernameStatus('available');
+          setUsernameMessage('Available');
+        }
+      } catch {
+        setUsernameStatus('idle');
+        setUsernameMessage('');
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [handle, user?.id]);
+
+  // Phone number validation
+  useEffect(() => {
+    if (!phoneNumber || !country) {
+      setPhoneError('');
+      return;
+    }
+    const result = validatePhoneLength(country, phoneNumber);
+    setPhoneError(result.message);
+  }, [phoneNumber, country]);
 
   // Helper to get cookie value
   const getCookie = (name: string): string | null => {
@@ -398,28 +456,19 @@ const Onboarding = () => {
     
     const normalizedHandle = handle.toLowerCase().trim();
     
-    if (!displayName.trim()) {
-      toast.error('Display name is required');
+    // Validation - return early without toasts, just don't proceed
+    if (!displayName.trim() || !normalizedHandle || normalizedHandle.length < 4 || 
+        !/^[a-z0-9_]+$/.test(normalizedHandle) || !country || !dateOfBirth) {
       return;
     }
 
-    if (!normalizedHandle || normalizedHandle.length < 4) {
-      toast.error('Username must be at least 4 characters');
+    // Check username availability
+    if (usernameStatus === 'taken' || usernameStatus === 'invalid') {
       return;
     }
 
-    if (!/^[a-z0-9_]+$/.test(normalizedHandle)) {
-      toast.error('Username can only contain letters, numbers, and underscores');
-      return;
-    }
-
-    if (!country) {
-      toast.error('Please select your country');
-      return;
-    }
-
-    if (!dateOfBirth) {
-      toast.error('Please enter your date of birth');
+    // Validate phone if provided
+    if (phoneNumber && phoneError) {
       return;
     }
 
@@ -431,20 +480,18 @@ const Onboarding = () => {
     const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate()) ? age - 1 : age;
     
     if (actualAge < 13) {
-      toast.error('You must be at least 13 years old to use AfuChat');
       return;
     }
 
     // Check avatar
     const hasAvatar = avatarFile || existingAvatarUrl;
     if (!hasAvatar) {
-      toast.error('Profile picture is required');
       return;
     }
 
     setLoading(true);
     try {
-      // Check username uniqueness
+      // Double-check username uniqueness
       const { data: existingUser } = await supabase
         .from('profiles')
         .select('id')
@@ -453,7 +500,8 @@ const Onboarding = () => {
         .maybeSingle();
       
       if (existingUser) {
-        toast.error('Username is already taken');
+        setUsernameStatus('taken');
+        setUsernameMessage('Username taken');
         setLoading(false);
         return;
       }
@@ -836,9 +884,32 @@ const Onboarding = () => {
               placeholder="username"
               value={handle}
               onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-              className="pl-8"
+              className={cn(
+                "pl-8 pr-10",
+                usernameStatus === 'available' && "border-green-500 focus-visible:ring-green-500",
+                (usernameStatus === 'taken' || usernameStatus === 'invalid') && "border-destructive focus-visible:ring-destructive"
+              )}
             />
+            {usernameStatus === 'checking' && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {usernameStatus === 'available' && (
+              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+            )}
+            {(usernameStatus === 'taken' || usernameStatus === 'invalid') && (
+              <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
+            )}
           </div>
+          {usernameMessage && (
+            <p className={cn(
+              "text-xs flex items-center gap-1",
+              usernameStatus === 'available' ? "text-green-600" : "text-destructive"
+            )}>
+              {usernameMessage}
+            </p>
+          )}
         </div>
         
         <div className="space-y-2">
@@ -921,17 +992,36 @@ const Onboarding = () => {
               <Input
                 id="phone"
                 type="tel"
-                placeholder="Phone number"
+                inputMode="numeric"
+                placeholder={country ? `${getPhoneLimits(country).min} digits` : 'Phone number'}
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="pl-10 h-12"
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '');
+                  const limits = getPhoneLimits(country);
+                  // Limit input to max length
+                  if (digits.length <= limits.max) {
+                    setPhoneNumber(digits);
+                  }
+                }}
+                maxLength={getPhoneLimits(country).max}
+                className={cn(
+                  "pl-10 h-12",
+                  phoneError && "border-destructive focus-visible:ring-destructive"
+                )}
               />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Sparkles className="h-3 w-3 text-yellow-500" />
-            Add phone to earn 100 Nexa reward!
-          </p>
+          {phoneError ? (
+            <p className="text-xs text-destructive flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {phoneError}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Sparkles className="h-3 w-3 text-yellow-500" />
+              Add phone to earn 100 Nexa reward!
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">

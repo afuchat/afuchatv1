@@ -26,7 +26,7 @@ export const handleSchema = z.string()
   .trim()
   .min(4, 'Username must be at least 4 characters')
   .max(20, 'Username must be less than 20 characters')
-  .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores')
+  .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, and underscores')
   .transform(val => val.toLowerCase());
 
 // Raw handle validation without transformation (for display purposes)
@@ -34,11 +34,26 @@ export const handleSchemaRaw = z.string()
   .trim()
   .min(4, 'Username must be at least 4 characters')
   .max(20, 'Username must be less than 20 characters')
-  .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores');
+  .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, and underscores');
 
 // Helper to normalize username for lookups
 export const normalizeUsername = (username: string): string => {
   return username.trim().toLowerCase();
+};
+
+// Validate username format only (not availability)
+export const validateUsernameFormat = (username: string): { valid: boolean; message: string } => {
+  const trimmed = username.trim();
+  if (trimmed.length < 4) {
+    return { valid: false, message: 'At least 4 characters' };
+  }
+  if (trimmed.length > 20) {
+    return { valid: false, message: 'Max 20 characters' };
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+    return { valid: false, message: 'Only letters, numbers, underscores' };
+  }
+  return { valid: true, message: '' };
 };
 
 // Display name validation
