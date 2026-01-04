@@ -599,7 +599,10 @@ const Onboarding = () => {
         date_of_birth: dateOfBirth,
       };
 
-      if (phoneNumber) updateData.phone_number = phoneNumber;
+      if (phoneNumber) {
+        const fullPhoneNumber = getCountryPhoneCode(country) + phoneNumber;
+        updateData.phone_number = fullPhoneNumber;
+      }
 
       if (shouldReward) {
         updateData.xp = (profile?.xp || 0) + 100;
