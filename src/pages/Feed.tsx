@@ -2289,6 +2289,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     await fetchPosts(0, true);
   }, [fetchPosts, learnUserInterests]);
 
+  // Container ref for scoped pull-to-refresh (prevents full page refresh)
+  const feedContainerRef = useRef<HTMLDivElement>(null);
+
   const { 
     isRefreshing, 
     pullDistance, 
@@ -2297,6 +2300,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     refresh: manualRefresh 
   } = usePullToRefresh({
     onRefresh: handlePullRefresh,
+    containerRef: feedContainerRef,
     threshold: 100,
     maxPull: 160,
     minPullToActivate: 25,
@@ -2354,7 +2358,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   const currentPosts = activeTab === 'foryou' ? posts : followingPosts;
 
   return (
-    <div className="max-w-4xl mx-auto pb-20">
+    <div ref={feedContainerRef} className="max-w-4xl mx-auto pb-20">
       {/* Pull to refresh indicator */}
       <PullToRefreshIndicator 
         pullDistance={pullDistance} 
