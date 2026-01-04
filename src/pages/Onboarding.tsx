@@ -172,8 +172,17 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   
-  const [currentStep, setCurrentStep] = useState(0);
+  // Persist step in localStorage to survive page refresh
+  const [currentStep, setCurrentStep] = useState(() => {
+    const saved = localStorage.getItem('onboarding_step');
+    return saved ? parseInt(saved, 10) : 0;
+  });
   const [loading, setLoading] = useState(false);
+
+  // Save step to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('onboarding_step', currentStep.toString());
+  }, [currentStep]);
   const [showPassword, setShowPassword] = useState(false);
   
   // Auth state
@@ -395,6 +404,9 @@ const Onboarding = () => {
       const isComplete = profile.display_name && profile.handle && profile.country && 
                         profile.date_of_birth && profile.avatar_url;
       
+      // Check if user has interests
+      const hasInterests = profile.interests && (profile.interests as string[]).length > 0;
+      
       if (isComplete) {
         // Also check if user has followed anyone before redirecting to home
         const { data: follows } = await supabase
@@ -404,10 +416,14 @@ const Onboarding = () => {
           .limit(1);
         
         if (follows && follows.length > 0) {
-          // User has completed onboarding and has follows - go to home
+          // User has completed onboarding and has follows - clear storage and go to home
+          localStorage.removeItem('onboarding_step');
           navigate('/home', { replace: true });
+        } else if (!hasInterests) {
+          // Profile complete but no interests - go to interests step
+          setCurrentStep(3);
         } else {
-          // Profile complete but no follows - go to suggestions step
+          // Profile complete with interests but no follows - go to suggestions step
           await loadSuggestedUsers();
           setCurrentStep(4);
         }
@@ -747,6 +763,12 @@ const Onboarding = () => {
 
   const handleInterestsSubmit = async () => {
     if (!user) return;
+    
+    // Require at least 1 interest
+    if (selectedInterests.length === 0) {
+      toast.error('Please select at least one interest to continue');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -794,6 +816,9 @@ const Onboarding = () => {
   };
 
   const handleTourComplete = async () => {
+    // Clear onboarding step from localStorage - onboarding is complete
+    localStorage.removeItem('onboarding_step');
+    
     // Final step - process referral and go to home
     const referralSuccess = await processReferral();
     
@@ -832,7 +857,11 @@ const Onboarding = () => {
       }
       setCurrentStep(5);
     } else if (currentStep === 3) {
-      // Interests step - can skip
+      // Interests step - require at least 1 interest
+      if (selectedInterests.length === 0) {
+        toast.error('Please select at least one interest to continue');
+        return;
+      }
       await loadSuggestedUsers();
       setCurrentStep(4);
     }
@@ -861,8 +890,8 @@ const Onboarding = () => {
   };
 
   const canGoBack = currentStep > 0 && !(currentStep === 1 && user);
-  // Can skip interests (3) and tour (5), can skip suggestions (4) only if followed at least one
-  const canSkip = currentStep === 3 || currentStep === 5 || (currentStep === 4 && followedUsers.length > 0);
+  // Can skip tour (5) only, interests (3) requires selection, suggestions (4) requires follow
+  const canSkip = currentStep === 5 || (currentStep === 3 && selectedInterests.length > 0) || (currentStep === 4 && followedUsers.length > 0);
 
   const renderStepIndicator = () => (
     <div className="w-full max-w-lg mx-auto mb-8">
