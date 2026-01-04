@@ -2284,8 +2284,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     learnUserInterests();
     setCurrentPage(0);
     setHasMore(true);
-    setPosts([]);
-    setFollowingPosts([]);
+    // Don't clear posts - keep content visible during refresh for smooth UX
     await fetchPosts(0, true);
   }, [fetchPosts, learnUserInterests]);
 
