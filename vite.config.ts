@@ -17,13 +17,13 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'logo.jpg', 'afuchat-logo.png'],
       manifest: {
-        name: 'AfuChat — Post. Chat. Shop. AI. All in One.',
+        name: 'AfuChat',
         short_name: 'AfuChat',
         description: 'The all-in-one social app where you can post like X, chat like Telegram, shop, and use built-in AI.',
         theme_color: '#00C2CB',
         background_color: '#0F1114',
         display: 'standalone',
-        display_override: ['standalone', 'fullscreen', 'minimal-ui'],
+        display_override: ['standalone', 'fullscreen'],
         orientation: 'portrait',
         scope: '/',
         start_url: '/?source=pwa',
@@ -32,81 +32,22 @@ export default defineConfig(({ mode }) => ({
         prefer_related_applications: false,
         icons: [
           {
-            src: '/favicon.png',
-            sizes: '48x48',
-            type: 'image/png'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '72x72',
-            type: 'image/png'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '96x96',
-            type: 'image/png'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '128x128',
-            type: 'image/png'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '144x144',
-            type: 'image/png'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '152x152',
-            type: 'image/png'
-          },
-          {
-            src: '/favicon.png',
+            src: '/logo.jpg',
             sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '256x256',
-            type: 'image/png'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '384x384',
-            type: 'image/png'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '512x512',
-            type: 'image/png',
+            type: 'image/jpeg',
             purpose: 'any'
           },
           {
-            src: '/favicon.png',
+            src: '/logo.jpg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/jpeg',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.jpg',
+            sizes: '512x512',
+            type: 'image/jpeg',
             purpose: 'maskable'
-          }
-        ],
-        shortcuts: [
-          {
-            name: 'Feed',
-            short_name: 'Feed',
-            url: '/feed',
-            icons: [{ src: '/favicon.png', sizes: '96x96' }]
-          },
-          {
-            name: 'Chats',
-            short_name: 'Chats',
-            url: '/chats',
-            icons: [{ src: '/favicon.png', sizes: '96x96' }]
-          },
-          {
-            name: 'Shop',
-            short_name: 'Shop',
-            url: '/shop',
-            icons: [{ src: '/favicon.png', sizes: '96x96' }]
           }
         ]
       },
