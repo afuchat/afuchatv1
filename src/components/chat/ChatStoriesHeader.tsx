@@ -206,7 +206,12 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                 onClick={() => setIsMenuOpen(true)}
                 className="flex-shrink-0"
               >
-                <span className="text-xl font-bold text-foreground">AfuChat</span>
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={currentUserProfile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {currentUserProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
               </button>
 
               {/* Collapsed stories preview - only show when NOT expanded and has stories */}
@@ -270,11 +275,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                   
                   <ChevronDown className="h-5 w-5 text-muted-foreground" />
                 </div>
-              ) : !isExpanded ? (
-                <h1 className="text-xl font-bold text-foreground">AfuChat</h1>
-              ) : (
-                <h1 className="text-xl font-bold text-foreground">AfuChat</h1>
-              )}
+              ) : null}
 
               <button 
                 onClick={handleSearchToggle}
