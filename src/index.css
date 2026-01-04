@@ -606,41 +606,6 @@ html.telegram-mini-app body {
   }
 }
 
-/* PWA Standalone Mode Styles */
-html.pwa-standalone {
-  /* Safe area insets for notched devices */
-  --sat: env(safe-area-inset-top, 0px);
-  --sab: env(safe-area-inset-bottom, 0px);
-  --sal: env(safe-area-inset-left, 0px);
-  --sar: env(safe-area-inset-right, 0px);
-}
-
-html.pwa-standalone body {
-  padding-top: var(--sat);
-  padding-bottom: var(--sab);
-  padding-left: var(--sal);
-  padding-right: var(--sar);
-}
-
-/* iOS specific standalone adjustments */
-html.ios-device.pwa-standalone {
-  /* Prevent rubber banding */
-  overscroll-behavior: none;
-}
-
-/* Touch action optimization for PWA */
-html.pwa-standalone * {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-}
-
-/* Prevent text selection in app-like areas */
-html.pwa-standalone button,
-html.pwa-standalone a,
-html.pwa-standalone [role="button"] {
-  -webkit-user-select: none;
-  user-select: none;
-}
 
 /* ==========================================
    Telegram Mini App Styles

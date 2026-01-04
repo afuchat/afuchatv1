@@ -60,8 +60,8 @@ const WhatsNew = () => {
     },
     {
       icon: Smartphone,
-      title: "PWA Support",
-      description: "Install AfuChat on your phone for a native app-like experience with offline support.",
+      title: "Mobile Optimized",
+      description: "AfuChat is fully optimized for mobile browsers with a native app-like experience.",
       badge: "New"
     },
     {
