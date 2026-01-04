@@ -753,6 +753,10 @@ const Onboarding = () => {
   };
 
   const handleSuggestionsComplete = () => {
+    if (followedUsers.length === 0) {
+      toast.error('Please follow at least one user to continue');
+      return;
+    }
     setCurrentStep(5);
   };
 
@@ -786,6 +790,11 @@ const Onboarding = () => {
     if (currentStep === 5) {
       handleTourComplete();
     } else if (currentStep === 4) {
+      // Cannot skip suggestions - must follow at least one user
+      if (followedUsers.length === 0) {
+        toast.error('Please follow at least one user to continue');
+        return;
+      }
       setCurrentStep(5);
     } else if (currentStep === 3) {
       loadSuggestedUsers();
@@ -816,7 +825,7 @@ const Onboarding = () => {
   };
 
   const canGoBack = currentStep > 0 && !(currentStep === 1 && user);
-  const canSkip = currentStep >= 3;
+  const canSkip = currentStep === 3 || currentStep === 5 || (currentStep === 4 && followedUsers.length > 0);
 
   const renderStepIndicator = () => (
     <div className="w-full max-w-lg mx-auto mb-8">
@@ -1553,10 +1562,16 @@ const Onboarding = () => {
       
       <Button 
         onClick={handleSuggestionsComplete}
-        className="w-full h-14 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/25"
+        disabled={followedUsers.length === 0}
+        className={cn(
+          "w-full h-14 text-base font-semibold rounded-xl transition-opacity shadow-lg",
+          followedUsers.length > 0 
+            ? "bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-primary/25" 
+            : "bg-muted text-muted-foreground cursor-not-allowed"
+        )}
         size="lg"
       >
-        {followedUsers.length > 0 ? `Continue (${followedUsers.length} followed)` : 'Skip for now'}
+        {followedUsers.length > 0 ? `Continue (${followedUsers.length} followed)` : 'Follow at least 1 user to continue'}
         <ArrowRight className="ml-2 h-5 w-5" />
       </Button>
     </motion.div>
