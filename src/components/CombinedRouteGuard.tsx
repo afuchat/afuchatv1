@@ -9,7 +9,7 @@ interface CombinedRouteGuardProps {
 
 export const CombinedRouteGuard = ({ children }: CombinedRouteGuardProps) => {
   const location = useLocation();
-  const { loading, isBanned, hasCountry, hasDateOfBirth } = useProfileCheck();
+  const { loading, isBanned, hasCountry, hasDateOfBirth, profileComplete } = useProfileCheck();
 
   // Show skeleton while checking
   if (loading) {
@@ -22,6 +22,11 @@ export const CombinedRouteGuard = ({ children }: CombinedRouteGuardProps) => {
       return <>{children}</>;
     }
     return <Navigate to="/banned" replace />;
+  }
+
+  // Users with complete profiles should never be redirected to onboarding
+  if (profileComplete) {
+    return <>{children}</>;
   }
 
   // Missing country or DOB - redirect to onboarding
