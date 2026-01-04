@@ -462,21 +462,32 @@ const Onboarding = () => {
   const uploadAvatar = async (): Promise<string | null> => {
     if (!avatarFile || !user) return null;
     
-    const fileExt = avatarFile.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `${user.id}/${fileName}`;
+    try {
+      // Determine file extension and content type
+      const fileExt = avatarFile.name?.split('.').pop()?.toLowerCase() || 'jpg';
+      const contentType = avatarFile.type || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
-    const { error } = await supabase.storage
-      .from('avatars')
-      .upload(filePath, avatarFile, { upsert: true });
+      const { error } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, avatarFile, { 
+          upsert: true,
+          contentType,
+          cacheControl: '3600'
+        });
 
-    if (error) {
-      console.error('Avatar upload error:', error);
+      if (error) {
+        console.error('Avatar upload error:', error);
+        return null;
+      }
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      return data.publicUrl;
+    } catch (err) {
+      console.error('Avatar upload exception:', err);
       return null;
     }
-
-    const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-    return data.publicUrl;
   };
 
   const handleProfileSubmit = async () => {
