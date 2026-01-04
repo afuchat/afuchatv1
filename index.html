@@ -18,7 +18,7 @@
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow" />
 
-    <!-- PWA Essential Meta Tags -->
+    <!-- Mobile app meta tags -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -31,8 +31,6 @@
     <meta name="theme-color" content="#0F1114" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F6F6F6" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1114" />
-
-    <!-- PWA manifest is injected automatically by vite-plugin-pwa -->
 
     <!-- Favicon / Apple Touch Icons -->
     <link rel="icon" type="image/png" href="/favicon.png">
@@ -49,9 +47,6 @@
     
     <!-- Microsoft Tile -->
     <meta name="msapplication-TileImage" content="/favicon.png" />
-
-    <!-- Splash screens for iOS -->
-    <link rel="apple-touch-startup-image" href="/favicon.png" />
 
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website" />
@@ -84,7 +79,7 @@
   </head>
 
   <body>
-    <!-- Inline script to prevent theme flash and handle PWA state -->
+    <!-- Inline script to prevent theme flash -->
     <script>
       (function() {
         // Detect Telegram Mini App first
@@ -111,15 +106,6 @@
         var themeColor = resolved === 'dark' ? '#0F1114' : '#F6F6F6';
         var meta = document.querySelector('meta[name="theme-color"]:not([media])');
         if (meta) meta.setAttribute('content', themeColor);
-
-        // Detect PWA standalone mode
-        var isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                          window.navigator.standalone === true ||
-                          document.referrer.includes('android-app://');
-        
-        if (isStandalone) {
-          document.documentElement.classList.add('pwa-standalone');
-        }
 
         // Handle iOS safe areas
         if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {

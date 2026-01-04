@@ -8,8 +8,6 @@ import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
 import NotificationIcon from '@/components/nav/NotificationIcon';
-import InstallPromptBanner from '@/components/InstallPromptBanner';
-import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -287,8 +285,6 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background select-none overflow-y-auto">
-      {!shouldHideUI && <InstallPromptBanner />}
-      {!shouldHideUI && <OfflineIndicator />}
 
       {/* Main Content */}
       <main className={shouldHideUI ? "min-h-screen" : "pb-20 min-h-screen"}>
