@@ -167,7 +167,8 @@ const SignUpContent = () => {
         }
       } else {
         toast.success('Account created! Check your email for verification.');
-        navigate('/auth/signin');
+        // Navigate to onboarding after email verification
+        navigate('/onboarding');
       }
     } catch (error: any) {
       toast.error(error.message || 'An error occurred.');
