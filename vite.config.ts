@@ -23,29 +23,57 @@ export default defineConfig(({ mode }) => ({
         theme_color: '#00C2CB',
         background_color: '#0F1114',
         display: 'standalone',
-        display_override: ['standalone', 'fullscreen'],
+        display_override: ['standalone', 'fullscreen', 'minimal-ui'],
         orientation: 'portrait',
         scope: '/',
-        start_url: '/',
+        start_url: '/?source=pwa',
         id: 'afuchat-pwa',
         categories: ['social', 'communication', 'entertainment', 'shopping'],
-        screenshots: [
-          {
-            src: '/favicon.png',
-            sizes: '512x512',
-            type: 'image/png',
-            form_factor: 'narrow'
-          }
-        ],
+        prefer_related_applications: false,
         icons: [
           {
             src: '/favicon.png',
-            sizes: '64x64',
+            sizes: '48x48',
+            type: 'image/png'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '72x72',
+            type: 'image/png'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '96x96',
+            type: 'image/png'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '128x128',
+            type: 'image/png'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '144x144',
+            type: 'image/png'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '152x152',
             type: 'image/png'
           },
           {
             src: '/favicon.png',
             sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '256x256',
+            type: 'image/png'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '384x384',
             type: 'image/png'
           },
           {
@@ -84,6 +112,11 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff,woff2}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/supabase/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -92,7 +125,7 @@ export default defineConfig(({ mode }) => ({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -106,7 +139,7 @@ export default defineConfig(({ mode }) => ({
               cacheName: 'gstatic-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -120,17 +153,33 @@ export default defineConfig(({ mode }) => ({
               cacheName: 'supabase-storage-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                maxAgeSeconds: 60 * 60 * 24 * 30
               },
               cacheableResponse: {
                 statuses: [0, 200]
               }
             }
+          },
+          {
+            urlPattern: /^https:\/\/rhnsjqqtdzlkvqazfcbg\.supabase\.co\/rest\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 5
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              },
+              networkTimeoutSeconds: 10
+            }
           }
         ]
       },
       devOptions: {
-        enabled: true
+        enabled: true,
+        type: 'module'
       }
     })
   ].filter(Boolean),

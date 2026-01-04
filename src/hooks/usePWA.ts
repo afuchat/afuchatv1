@@ -41,9 +41,11 @@ export const usePWA = (): PWAState => {
       const standalone = window.matchMedia('(display-mode: standalone)').matches;
       // @ts-ignore - iOS specific
       const iosStandalone = window.navigator.standalone === true;
-      // Check if launched from home screen via URL
       const isMinimalUI = window.matchMedia('(display-mode: minimal-ui)').matches;
-      const installed = standalone || iosStandalone || isMinimalUI;
+      const isFullscreen = window.matchMedia('(display-mode: fullscreen)').matches;
+      // Check URL param that indicates PWA launch
+      const isPWALaunch = window.location.search.includes('source=pwa');
+      const installed = standalone || iosStandalone || isMinimalUI || isFullscreen || isPWALaunch;
       setIsStandalone(installed);
       setIsInstalled(installed);
     };
@@ -60,29 +62,26 @@ export const usePWA = (): PWAState => {
     // If we have a stored prompt, use it
     if (globalDeferredPrompt && !deferredPrompt) {
       setDeferredPrompt(globalDeferredPrompt);
+      console.log('Using stored install prompt');
     }
 
-    // Listen for install prompt - only capture once
+    // Listen for install prompt
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      
-      // Store it globally and in state
       globalDeferredPrompt = e;
       setDeferredPrompt(e);
       promptCaptured.current = true;
-      
-      console.log('PWA install prompt captured and ready');
+      console.log('PWA install prompt captured');
     };
 
-    // Only add listener if we haven't captured a prompt yet
+    // Add listener if we haven't captured a prompt yet
     if (!promptCaptured.current && !globalDeferredPrompt) {
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     }
 
     // Listen for successful installation
     const handleAppInstalled = () => {
-      console.log('PWA was installed');
+      console.log('PWA installed successfully');
       setIsInstalled(true);
       setDeferredPrompt(null);
       globalDeferredPrompt = null;
