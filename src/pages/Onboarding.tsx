@@ -401,25 +401,36 @@ const Onboarding = () => {
     setLoadingSuggestions(true);
     
     try {
-      // Fetch pinned users first
-      const { data: pinnedUsers } = await supabase
+      // Fetch pinned users first (lowercase comparison for handles)
+      const { data: pinnedUsers, error: pinnedError } = await supabase
         .from('profiles')
         .select('id, display_name, handle, avatar_url, bio')
-        .in('handle', PINNED_USERNAMES)
+        .or(PINNED_USERNAMES.map(h => `handle.ilike.${h}`).join(','))
         .neq('id', user.id);
       
-      // Fetch other random users
-      const { data: otherUsers } = await supabase
+      if (pinnedError) {
+        console.error('Error fetching pinned users:', pinnedError);
+      }
+      
+      // Fetch other random users (excluding pinned ones)
+      const { data: otherUsers, error: othersError } = await supabase
         .from('profiles')
         .select('id, display_name, handle, avatar_url, bio')
         .neq('id', user.id)
-        .not('handle', 'in', `(${PINNED_USERNAMES.join(',')})`)
         .not('avatar_url', 'is', null)
-        .limit(10);
+        .limit(15);
       
-      // Mark pinned users and shuffle others
+      if (othersError) {
+        console.error('Error fetching other users:', othersError);
+      }
+      
+      // Mark pinned users and filter them from others
+      const pinnedHandlesLower = PINNED_USERNAMES.map(h => h.toLowerCase());
       const pinned = (pinnedUsers || []).map(u => ({ ...u, isPinned: true }));
-      const others = (otherUsers || []).sort(() => Math.random() - 0.5);
+      const others = (otherUsers || [])
+        .filter(u => !pinnedHandlesLower.includes(u.handle?.toLowerCase() || ''))
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 10);
       
       // Combine: pinned first, then random others
       setSuggestedUsers([...pinned, ...others]);
