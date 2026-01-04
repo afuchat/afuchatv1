@@ -56,7 +56,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/Logo';
 
 const STEPS = [
-  { id: 'welcome', title: 'Welcome', icon: Sparkles },
   { id: 'auth', title: 'Account', icon: User },
   { id: 'accountType', title: 'Type', icon: Store },
   { id: 'profile', title: 'Profile', icon: Camera },
@@ -348,8 +347,8 @@ const Onboarding = () => {
   // Skip to correct step if already authenticated
   useEffect(() => {
     if (!authLoading && user) {
-      if (currentStep < 2) {
-        setCurrentStep(2); // Go to account type selection
+      if (currentStep < 1) {
+        setCurrentStep(1); // Go to account type selection
       }
       loadProfileData();
     }
@@ -699,7 +698,7 @@ const Onboarding = () => {
       
       // Load suggested users and go to suggestions step
       await loadSuggestedUsers();
-      setCurrentStep(5);
+      setCurrentStep(4);
     } catch (error: any) {
       toast.error(error.message || 'Failed to save interests');
     } finally {
@@ -724,7 +723,7 @@ const Onboarding = () => {
   };
 
   const handleSuggestionsComplete = () => {
-    setCurrentStep(6);
+    setCurrentStep(5);
   };
 
   const handleTourComplete = async () => {
@@ -754,23 +753,23 @@ const Onboarding = () => {
   };
 
   const handleSkip = () => {
-    if (currentStep === 6) {
+    if (currentStep === 5) {
       handleTourComplete();
-    } else if (currentStep === 5) {
-      setCurrentStep(6);
     } else if (currentStep === 4) {
-      loadSuggestedUsers();
       setCurrentStep(5);
+    } else if (currentStep === 3) {
+      loadSuggestedUsers();
+      setCurrentStep(4);
     }
   };
 
   const handleAccountTypeSelect = (type: 'personal' | 'business') => {
     setAccountType(type);
-    setCurrentStep(3); // Go to profile step
+    setCurrentStep(2); // Go to profile step
   };
 
-  const canGoBack = currentStep > 0 && !(currentStep === 2 && user);
-  const canSkip = currentStep >= 4;
+  const canGoBack = currentStep > 0 && !(currentStep === 1 && user);
+  const canSkip = currentStep >= 3;
 
   const renderStepIndicator = () => (
     <div className="w-full max-w-md mx-auto mb-6">
@@ -808,66 +807,6 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderWelcomeStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="flex flex-col items-center text-center px-6"
-    >
-      <div className="mb-8">
-        <Logo className="h-20 w-20 mx-auto" />
-      </div>
-      
-      <h1 className="text-3xl font-bold text-foreground mb-3">
-        Welcome to AfuChat
-      </h1>
-      <p className="text-muted-foreground text-lg mb-8 max-w-sm">
-        Connect with friends, share moments, and discover amazing content.
-      </p>
-      
-      <div className="space-y-4 w-full max-w-xs">
-        <div className="flex items-center gap-3 text-left p-3 rounded-xl bg-muted/50">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="font-medium text-sm">Personalized Experience</p>
-            <p className="text-xs text-muted-foreground">Content tailored for you</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3 text-left p-3 rounded-xl bg-muted/50">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="font-medium text-sm">Build Your Profile</p>
-            <p className="text-xs text-muted-foreground">Express yourself authentically</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3 text-left p-3 rounded-xl bg-muted/50">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Heart className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="font-medium text-sm">Find Your Community</p>
-            <p className="text-xs text-muted-foreground">Connect with like-minded people</p>
-          </div>
-        </div>
-      </div>
-      
-      <Button 
-        onClick={() => setCurrentStep(1)} 
-        className="mt-10 w-full max-w-xs"
-        size="lg"
-      >
-        Get Started
-        <ArrowRight className="ml-2 h-4 w-4" />
-      </Button>
-    </motion.div>
-  );
 
   const renderAuthStep = () => (
     <motion.div
@@ -1488,13 +1427,12 @@ const Onboarding = () => {
         {/* Main content */}
         <main className="flex-1 flex items-center justify-center pb-12">
           <AnimatePresence mode="wait">
-            {currentStep === 0 && renderWelcomeStep()}
-            {currentStep === 1 && renderAuthStep()}
-            {currentStep === 2 && renderAccountTypeStep()}
-            {currentStep === 3 && renderProfileStep()}
-            {currentStep === 4 && renderInterestsStep()}
-            {currentStep === 5 && renderSuggestionsStep()}
-            {currentStep === 6 && renderTourStep()}
+            {currentStep === 0 && renderAuthStep()}
+            {currentStep === 1 && renderAccountTypeStep()}
+            {currentStep === 2 && renderProfileStep()}
+            {currentStep === 3 && renderInterestsStep()}
+            {currentStep === 4 && renderSuggestionsStep()}
+            {currentStep === 5 && renderTourStep()}
           </AnimatePresence>
         </main>
       </div>
