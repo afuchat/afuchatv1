@@ -1,21 +1,21 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, RefObject } from 'react';
 import { toast } from 'sonner';
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
+  containerRef?: RefObject<HTMLElement>;
   threshold?: number;
   maxPull?: number;
   disabled?: boolean;
-  successMessage?: string;
   minPullToActivate?: number;
 }
 
 export const usePullToRefresh = ({
   onRefresh,
+  containerRef,
   threshold = 100,
   maxPull = 160,
   disabled = false,
-  successMessage = 'Refreshed!',
   minPullToActivate = 20,
 }: UsePullToRefreshOptions) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -65,9 +65,16 @@ export const usePullToRefresh = ({
   useEffect(() => {
     if (disabled) return;
 
+    const getScrollTop = () => {
+      if (containerRef?.current) {
+        return containerRef.current.scrollTop;
+      }
+      return window.scrollY;
+    };
+
     const handleTouchStart = (e: TouchEvent) => {
-      // Only trigger if at very top of page and not refreshing
-      if (window.scrollY <= 2 && !isRefreshingRef.current) {
+      // Only trigger if at very top and not refreshing
+      if (getScrollTop() <= 2 && !isRefreshingRef.current) {
         startY.current = e.touches[0].pageY;
         startX.current = e.touches[0].pageX;
         isPullingRef.current = true;
@@ -104,7 +111,7 @@ export const usePullToRefresh = ({
       if (isHorizontalScrollRef.current) return;
       
       // Only proceed if pulling down and at top
-      if (deltaY <= minPullToActivate || window.scrollY > 2) {
+      if (deltaY <= minPullToActivate || getScrollTop() > 2) {
         return;
       }
       
@@ -175,23 +182,25 @@ export const usePullToRefresh = ({
       startX.current = 0;
     };
 
+    // Use container element if provided, otherwise use document
+    const target = containerRef?.current || document;
     const options: AddEventListenerOptions = { passive: false };
     
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchmove', handleTouchMove, options);
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
-    document.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+    target.addEventListener('touchstart', handleTouchStart as EventListener, { passive: true });
+    target.addEventListener('touchmove', handleTouchMove as EventListener, options);
+    target.addEventListener('touchend', handleTouchEnd as EventListener, { passive: true });
+    target.addEventListener('touchcancel', handleTouchEnd as EventListener, { passive: true });
 
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-      document.removeEventListener('touchcancel', handleTouchEnd);
+      target.removeEventListener('touchstart', handleTouchStart as EventListener);
+      target.removeEventListener('touchmove', handleTouchMove as EventListener);
+      target.removeEventListener('touchend', handleTouchEnd as EventListener);
+      target.removeEventListener('touchcancel', handleTouchEnd as EventListener);
       if (rafId.current) {
         cancelAnimationFrame(rafId.current);
       }
     };
-  }, [disabled, maxPull, threshold, minPullToActivate, animatePullBack]);
+  }, [disabled, maxPull, threshold, minPullToActivate, animatePullBack, containerRef]);
 
   const progress = Math.min(pullDistance / threshold, 1);
 
