@@ -16,19 +16,6 @@ export const usePushNotifications = () => {
       const currentPermission = Notification.permission;
       setPermission(currentPermission);
     }
-
-    // Listen for notification click messages from service worker
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'NOTIFICATION_CLICK' && event.data?.url) {
-        window.location.href = event.data.url;
-      }
-    };
-    
-    navigator.serviceWorker?.addEventListener('message', handleMessage);
-    
-    return () => {
-      navigator.serviceWorker?.removeEventListener('message', handleMessage);
-    };
   }, []);
 
   const requestPermission = useCallback(async () => {
@@ -60,21 +47,7 @@ export const usePushNotifications = () => {
     try {
       console.log('Showing notification:', title, options?.body);
       
-      // Try to use service worker for better PWA support
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification(title, {
-          icon: '/favicon.png',
-          badge: '/favicon.png',
-          tag: options?.tag || 'afuchat-notification',
-          body: options?.body,
-          data: options?.data,
-          requireInteraction: false,
-        });
-        return null;
-      }
-      
-      // Fallback to regular Notification API
+      // Use regular Notification API
       const notification = new Notification(title, {
         icon: '/favicon.png',
         badge: '/favicon.png',
@@ -149,7 +122,7 @@ export const usePushNotifications = () => {
           let body = '';
           let url = '/notifications';
 
-          // Match notification types with rich content (types from DB: new_like, new_follower, new_reply, gift, etc.)
+          // Match notification types with rich content
           if (notificationType === 'new_like' || notificationType === 'like') {
             title = '❤️ New Like';
             body = `${actorName} liked your post`;

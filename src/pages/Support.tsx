@@ -169,7 +169,7 @@ const Support = () => {
     },
     {
       question: "Can I use AfuChat on mobile?",
-      answer: "Yes! AfuChat is fully responsive and works great on mobile browsers (iOS Safari, Chrome, etc.). You can also install it as a Progressive Web App (PWA) for a native app-like experience with offline support. Visit the Install page or use your browser's 'Add to Home Screen' option."
+      answer: "Yes! AfuChat is fully responsive and works great on mobile browsers (iOS Safari, Chrome, etc.). The app is optimized for touch interactions and provides a native app-like experience."
     },
     {
       question: "How do I enable push notifications?",
@@ -221,7 +221,7 @@ const Support = () => {
     },
     {
       question: "What's new in Version 2.2.0?",
-      answer: "Version 2.2.0 includes enhanced real-time feed updates with pull-to-refresh, improved offline-first PWA functionality, Telegram Mini App integration, and AI-powered features for premium users. We've also improved chat customization with AI-generated themes and wallpapers."
+      answer: "Version 2.2.0 includes enhanced real-time feed updates with pull-to-refresh, Telegram Mini App integration, and AI-powered features for premium users. We've also improved chat customization with AI-generated themes and wallpapers."
     },
     {
       question: "How does Telegram integration work?",

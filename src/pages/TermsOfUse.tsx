@@ -51,7 +51,7 @@ const TermsOfUse = () => {
               <li>Business and affiliate programs</li>
               <li>Premium subscriptions with verified status</li>
               <li>Telegram Mini App and bot integration</li>
-              <li>Offline-first PWA functionality</li>
+              <li>Mobile-optimized web experience</li>
             </ul>
             <p className="text-foreground/90 leading-relaxed mb-4">
               We reserve the right to modify, suspend, or discontinue any part of our services at any time without prior notice. We strive to provide reliable service but do not guarantee uninterrupted or error-free access.
