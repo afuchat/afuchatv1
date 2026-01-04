@@ -150,7 +150,7 @@ const SignUpContent = () => {
         signupData.referral_code = referralCode;
       }
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -166,9 +166,12 @@ const SignUpContent = () => {
           throw error;
         }
       } else {
-        toast.success('Account created! Check your email for verification.');
-        // Navigate to onboarding after email verification
-        navigate('/onboarding');
+        toast.success('Account created!');
+
+        // If email confirmations are enabled, session can be null until the user verifies.
+        // We still route to onboarding, but start at the correct step based on session.
+        localStorage.setItem('onboarding_step', data.session ? '1' : '0');
+        navigate('/onboarding', { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message || 'An error occurred.');
