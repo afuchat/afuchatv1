@@ -38,7 +38,7 @@ const SignUp = () => {
   }
 
   if (user) {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <SignUpContent />;
