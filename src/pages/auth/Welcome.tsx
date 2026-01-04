@@ -254,7 +254,7 @@ const Welcome = () => {
         {isLastSlide ? (
           <div className="space-y-3">
             <Button
-              onClick={() => navigate('/auth/signup')}
+              onClick={() => navigate('/onboarding')}
               className="w-full h-12 text-base font-semibold rounded-xl"
               size="lg"
             >
