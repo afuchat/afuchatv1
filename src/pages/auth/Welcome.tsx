@@ -261,7 +261,7 @@ const Welcome = () => {
               Get Started
             </Button>
             <Button
-              onClick={() => navigate('/auth/signin')}
+              onClick={() => navigate('/onboarding?signin=true')}
               variant="outline"
               className="w-full h-12 text-base font-semibold rounded-xl"
               size="lg"
