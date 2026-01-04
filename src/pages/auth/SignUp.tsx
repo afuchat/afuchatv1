@@ -153,7 +153,7 @@ const SignUpContent = () => {
         password,
         options: {
           data: signupData,
-          emailRedirectTo: `${window.location.origin}/complete-profile`,
+          emailRedirectTo: `${window.location.origin}/onboarding`,
         },
       });
 
@@ -199,8 +199,8 @@ const SignUpContent = () => {
     try {
       // Include referral code in redirect URL as backup
       const redirectUrl = referralCode 
-        ? `${window.location.origin}/complete-profile?ref=${referralCode}`
-        : `${window.location.origin}/complete-profile`;
+        ? `${window.location.origin}/onboarding?ref=${referralCode}`
+        : `${window.location.origin}/onboarding`;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -221,8 +221,8 @@ const SignUpContent = () => {
     try {
       // Include referral code in redirect URL as backup
       const redirectUrl = referralCode 
-        ? `${window.location.origin}/complete-profile?ref=${referralCode}`
-        : `${window.location.origin}/complete-profile`;
+        ? `${window.location.origin}/onboarding?ref=${referralCode}`
+        : `${window.location.origin}/onboarding`;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',

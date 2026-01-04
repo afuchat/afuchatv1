@@ -24,12 +24,12 @@ export const CombinedRouteGuard = ({ children }: CombinedRouteGuardProps) => {
     return <Navigate to="/banned" replace />;
   }
 
-  // Missing country or DOB - redirect to complete profile
+  // Missing country or DOB - redirect to onboarding
   if (!hasCountry || !hasDateOfBirth) {
-    if (location.pathname === '/complete-profile') {
+    if (location.pathname === '/onboarding' || location.pathname === '/complete-profile') {
       return <>{children}</>;
     }
-    return <Navigate to="/complete-profile" replace />;
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <>{children}</>;

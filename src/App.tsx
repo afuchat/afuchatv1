@@ -36,7 +36,7 @@ import SignUp from "./pages/auth/SignUp";
 import AfuMailCallback from "./pages/auth/AfuMailCallback";
 import UserNotFound from "./pages/UserNotFound";
 import NotFound from "./pages/NotFound";
-import CompleteProfile from "./pages/CompleteProfile";
+import Onboarding from "./pages/Onboarding";
 import Banned from "./pages/Banned";
 
 // Lazy load other pages
@@ -93,7 +93,6 @@ const AdminCreatorWithdrawals = lazy(() => import("./pages/AdminCreatorWithdrawa
 const AdManager = lazy(() => import("./pages/AdManager"));
 const AfuMail = lazy(() => import("./pages/AfuMail"));
 const WhatsNew = lazy(() => import("./pages/WhatsNew"));
-const Onboarding = lazy(() => import("./pages/Onboarding"));
 
 const FoodDelivery = lazy(() => import("./pages/FoodDelivery"));
 const Bookings = lazy(() => import("./pages/Bookings"));
@@ -162,7 +161,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/welcome" element={<Welcome />} />
       <Route path="/banned" element={<Banned />} />
-      <Route path="/complete-profile" element={<CompleteProfile />} />
+      <Route path="/complete-profile" element={<Onboarding />} />
       <Route path="/home" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Home /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/auth" element={<Welcome />} />
       <Route path="/auth/signin" element={<SignIn />} />
