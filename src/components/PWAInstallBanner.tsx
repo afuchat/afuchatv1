@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { X, Download, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/hooks/usePWA';
@@ -72,25 +71,15 @@ export const PWAInstallBanner = () => {
             </div>
             
             <div className="flex items-center gap-2 flex-shrink-0">
-              {isInstallable ? (
-                <Button
-                  onClick={handleInstall}
-                  size="sm"
-                  className="bg-white text-primary hover:bg-white/90 h-8 px-3"
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Install
-                </Button>
-              ) : (
-                <Link to="/install">
-                  <Button
-                    size="sm"
-                    className="bg-white text-primary hover:bg-white/90 h-8 px-3"
-                  >
-                    {isIOS ? 'How to' : 'Install'}
-                  </Button>
-                </Link>
-              )}
+              <Button
+                onClick={handleInstall}
+                size="sm"
+                className="bg-white text-primary hover:bg-white/90 h-8 px-3"
+                disabled={!isInstallable}
+              >
+                <Download className="h-4 w-4 mr-1" />
+                {isIOS ? 'How to' : 'Install'}
+              </Button>
               
               <Button
                 onClick={handleDismiss}
