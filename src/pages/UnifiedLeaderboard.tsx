@@ -83,6 +83,51 @@ const UnifiedLeaderboard = () => {
     return `${index + 1}th`;
   };
 
+  const PodiumUser = ({ 
+    user, 
+    rank, 
+    isGift,
+    size = 'normal'
+  }: { 
+    user: any; 
+    rank: 1 | 2 | 3; 
+    isGift: boolean;
+    size?: 'large' | 'normal';
+  }) => {
+    const getValue = (user: any) => isGift ? user.total_xp : user.xp;
+    const avatarSize = size === 'large' ? 'h-24 w-24' : 'h-20 w-20';
+    const ringStyle = rank === 1 
+      ? 'ring-4 ring-white shadow-lg shadow-white/20' 
+      : 'ring-[3px] ring-white/80';
+    
+    return (
+      <div className="flex flex-col items-center">
+        <Avatar className={cn(avatarSize, ringStyle, "shadow-xl")}>
+          <AvatarImage src={user?.avatar_url} className="object-cover" />
+          <AvatarFallback className="bg-gradient-to-br from-gray-200 to-gray-300 text-gray-600 text-lg font-semibold">
+            {user?.display_name?.[0]?.toUpperCase() || 'U'}
+          </AvatarFallback>
+        </Avatar>
+        <p className="text-white text-sm font-semibold mt-3 truncate max-w-[100px] text-center drop-shadow-md">
+          {user?.display_name || 'User'}
+        </p>
+        <div className={cn(
+          "rounded-xl px-5 py-2.5 mt-2 min-w-[110px] text-center backdrop-blur-sm",
+          rank === 1 
+            ? "bg-gradient-to-b from-emerald-600/90 to-emerald-700/90 shadow-lg" 
+            : "bg-gradient-to-b from-emerald-700/80 to-emerald-800/80"
+        )}>
+          <p className="text-white/90 text-xs font-medium">
+            {rank === 1 ? '1st' : rank === 2 ? '2nd' : '3rd'}
+          </p>
+          <p className="text-white font-bold text-sm mt-0.5">
+            {formatValue(getValue(user))} Nexa
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   const PodiumSection = ({ users, isGift = false }: { users: any[]; isGift?: boolean }) => {
     if (!users || users.length < 3) return null;
 
@@ -90,66 +135,33 @@ const UnifiedLeaderboard = () => {
     const second = users[1];
     const third = users[2];
 
-    const getValue = (user: any) => isGift ? user.total_xp : user.xp;
-
     return (
-      <div className="relative bg-gradient-to-b from-emerald-900/90 to-emerald-950/95 rounded-t-3xl pt-8 pb-6 px-4 mb-4">
-        {/* Podium positions */}
-        <div className="flex items-end justify-center gap-3">
-          {/* 2nd Place - Left */}
-          <div className="flex flex-col items-center">
-            <Avatar className="h-16 w-16 ring-2 ring-white/30 mb-2">
-              <AvatarImage src={second?.avatar_url} />
-              <AvatarFallback className="bg-muted text-muted-foreground">
-                {second?.display_name?.[0] || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <p className="text-white text-sm font-medium truncate max-w-[100px] text-center">
-              {second?.display_name || 'User'}
-            </p>
-            <div className="bg-emerald-800/80 rounded-lg px-4 py-2 mt-2 min-w-[100px] text-center">
-              <p className="text-white/80 text-xs">2nd</p>
-              <p className="text-white font-bold text-sm">
-                {isGift ? '' : ''}{formatValue(getValue(second))} {isGift ? 'Nexa' : 'Nexa'}
-              </p>
-            </div>
-          </div>
+      <div className="relative overflow-hidden">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-800 via-emerald-900 to-emerald-950" />
+        
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+          backgroundSize: '32px 32px'
+        }} />
 
-          {/* 1st Place - Center (Elevated) */}
-          <div className="flex flex-col items-center -mt-6">
-            <Avatar className="h-20 w-20 ring-4 ring-yellow-400/50 mb-2">
-              <AvatarImage src={first?.avatar_url} />
-              <AvatarFallback className="bg-muted text-muted-foreground">
-                {first?.display_name?.[0] || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <p className="text-white text-sm font-medium truncate max-w-[100px] text-center">
-              {first?.display_name || 'User'}
-            </p>
-            <div className="bg-emerald-700/90 rounded-lg px-4 py-2 mt-2 min-w-[100px] text-center">
-              <p className="text-white/80 text-xs">1st</p>
-              <p className="text-white font-bold text-sm">
-                {formatValue(getValue(first))} Nexa
-              </p>
+        <div className="relative pt-6 pb-10 px-4">
+          {/* Podium positions - 1st elevated in center */}
+          <div className="flex items-end justify-center gap-2 sm:gap-4">
+            {/* 2nd Place - Left, lower */}
+            <div className="flex flex-col items-center pb-0">
+              <PodiumUser user={second} rank={2} isGift={isGift} />
             </div>
-          </div>
 
-          {/* 3rd Place - Right */}
-          <div className="flex flex-col items-center">
-            <Avatar className="h-16 w-16 ring-2 ring-white/30 mb-2">
-              <AvatarImage src={third?.avatar_url} />
-              <AvatarFallback className="bg-muted text-muted-foreground">
-                {third?.display_name?.[0] || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <p className="text-white text-sm font-medium truncate max-w-[100px] text-center">
-              {third?.display_name || 'User'}
-            </p>
-            <div className="bg-emerald-800/80 rounded-lg px-4 py-2 mt-2 min-w-[100px] text-center">
-              <p className="text-white/80 text-xs">3rd</p>
-              <p className="text-white font-bold text-sm">
-                {formatValue(getValue(third))} Nexa
-              </p>
+            {/* 1st Place - Center, highest */}
+            <div className="flex flex-col items-center -mt-8">
+              <PodiumUser user={first} rank={1} isGift={isGift} size="large" />
+            </div>
+
+            {/* 3rd Place - Right, lower */}
+            <div className="flex flex-col items-center pb-0">
+              <PodiumUser user={third} rank={3} isGift={isGift} />
             </div>
           </div>
         </div>
@@ -164,30 +176,30 @@ const UnifiedLeaderboard = () => {
     const getSubtitle = (user: any) => isGift ? `${user.gift_count} gifts received` : (user.current_grade || 'Rookie');
 
     return (
-      <div className="bg-card rounded-2xl shadow-lg mx-2 -mt-2 relative z-10">
-        <div className="divide-y divide-border">
+      <div className="bg-card rounded-t-3xl shadow-2xl -mt-4 relative z-10 border-t border-border/50">
+        <div className="divide-y divide-border/50">
           {users.map((user, index) => (
             <div
               key={user.id}
-              className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+              className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-muted/30 transition-colors"
               onClick={() => navigate(`/${user.handle}`)}
             >
               {/* Rank */}
-              <span className="text-muted-foreground font-medium w-8 text-sm">
+              <span className="text-muted-foreground font-semibold w-10 text-sm">
                 {getRankLabel(index)}
               </span>
 
-              {/* Avatar */}
-              <Avatar className="h-12 w-12 ring-2 ring-border">
-                <AvatarImage src={user.avatar_url} />
-                <AvatarFallback className="bg-muted text-muted-foreground">
-                  {user.display_name?.[0] || 'U'}
+              {/* Avatar with subtle ring */}
+              <Avatar className="h-14 w-14 ring-2 ring-border/60 shadow-md">
+                <AvatarImage src={user.avatar_url} className="object-cover" />
+                <AvatarFallback className="bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 font-semibold">
+                  {user.display_name?.[0]?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
 
               {/* Name & Subtitle */}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground truncate">
+                <p className="font-semibold text-foreground truncate text-base">
                   {user.display_name}
                 </p>
                 <p className="text-sm text-muted-foreground truncate">
@@ -199,7 +211,7 @@ const UnifiedLeaderboard = () => {
               <div className="text-right">
                 <p className={cn(
                   "font-bold text-base",
-                  isGift ? "text-pink-500" : "text-primary"
+                  isGift ? "text-pink-500" : "text-emerald-600 dark:text-emerald-400"
                 )}>
                   {formatValue(getValue(user))} Nexa
                 </p>
@@ -213,15 +225,16 @@ const UnifiedLeaderboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full bg-transparent">
-        <div className="container max-w-4xl mx-auto px-4 sm:px-6">
+      {/* Header - overlays the gradient */}
+      <header className="sticky top-0 z-50 w-full">
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-800 to-transparent h-20 pointer-events-none" />
+        <div className="container max-w-4xl mx-auto px-4 sm:px-6 relative">
           <div className="flex h-14 sm:h-16 items-center justify-between">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate(-1)}
-              className="shrink-0 text-foreground"
+              className="shrink-0 text-white hover:bg-white/10"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -231,22 +244,31 @@ const UnifiedLeaderboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container max-w-4xl mx-auto pb-24">
+      <main className="container max-w-4xl mx-auto pb-24 -mt-14">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mx-4 mb-4" style={{ width: 'calc(100% - 32px)' }}>
-            <TabsTrigger value="xp" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Nexa Leaders
-            </TabsTrigger>
-            <TabsTrigger value="gifts" className="flex items-center gap-2">
-              <Gift className="h-4 w-4" />
-              Gift Leaders
-            </TabsTrigger>
-          </TabsList>
+          {/* Tabs positioned over the gradient */}
+          <div className="relative z-20 px-4 pb-4">
+            <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm border border-white/20">
+              <TabsTrigger 
+                value="xp" 
+                className="flex items-center gap-2 text-white data-[state=active]:bg-white data-[state=active]:text-emerald-800"
+              >
+                <TrendingUp className="h-4 w-4" />
+                Nexa Leaders
+              </TabsTrigger>
+              <TabsTrigger 
+                value="gifts" 
+                className="flex items-center gap-2 text-white data-[state=active]:bg-white data-[state=active]:text-emerald-800"
+              >
+                <Gift className="h-4 w-4" />
+                Gift Leaders
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="xp" className="mt-0">
             {xpLoading ? (
-              <div className="text-center py-8">Loading...</div>
+              <div className="text-center py-8 text-white">Loading...</div>
             ) : (
               <>
                 <PodiumSection users={xpLeaderboard || []} isGift={false} />
@@ -257,7 +279,7 @@ const UnifiedLeaderboard = () => {
 
           <TabsContent value="gifts" className="mt-0">
             {giftLoading ? (
-              <div className="text-center py-8">Loading...</div>
+              <div className="text-center py-8 text-white">Loading...</div>
             ) : (
               <>
                 <PodiumSection users={giftLeaderboard as any[] || []} isGift={true} />
