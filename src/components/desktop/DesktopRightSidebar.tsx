@@ -298,7 +298,7 @@ export const DesktopRightSidebar = ({ className }: DesktopRightSidebarProps) => 
                 variant="ghost"
                 size="sm"
                 className="w-full text-primary hover:text-primary/80 mt-2"
-                onClick={() => navigate('/suggested-users')}
+                onClick={() => navigate('/search')}
               >
                 Show more
               </Button>

@@ -68,8 +68,8 @@ const STEPS = [
   { id: 'accountType', title: 'Type', icon: Store },
   { id: 'profile', title: 'Profile', icon: Camera },
   { id: 'interests', title: 'Interests', icon: Heart },
-  { id: 'suggestions', title: 'Connect', icon: Users },
   { id: 'tour', title: 'Explore', icon: Globe },
+  { id: 'suggestions', title: 'Connect', icon: Users },
 ];
 
 // Pinned recommended users
@@ -714,10 +714,10 @@ const Onboarding = () => {
         setShowRewardModal(true);
         setTimeout(() => {
           setShowRewardModal(false);
-          setCurrentStep(4);
+          setCurrentStep(4); // Go to tour step
         }, 2500);
       } else {
-        setCurrentStep(4);
+        setCurrentStep(4); // Go to tour step
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to save profile');
@@ -738,8 +738,7 @@ const Onboarding = () => {
 
       if (error) throw error;
       
-      // Load suggested users and go to suggestions step
-      await loadSuggestedUsers();
+      // Go to tour step (step 4)
       setCurrentStep(4);
     } catch (error: any) {
       toast.error(error.message || 'Failed to save interests');
@@ -764,15 +763,19 @@ const Onboarding = () => {
     }
   };
 
-  const handleSuggestionsComplete = () => {
+  const handleTourComplete = async () => {
+    // Load suggested users and go to suggestions step (final step)
+    await loadSuggestedUsers();
+    setCurrentStep(5);
+  };
+
+  const handleSuggestionsComplete = async () => {
     if (followedUsers.length === 0) {
       toast.error('Please follow at least one user to continue');
       return;
     }
-    setCurrentStep(5);
-  };
-
-  const handleTourComplete = async () => {
+    
+    // Final step - process referral and go to home
     const referralSuccess = await processReferral();
     
     if (referralSuccess) {
@@ -1698,8 +1701,8 @@ const Onboarding = () => {
       case 2: // Profile
         return signupBg;
       case 3: // Interests
-      case 4: // Suggestions
-      case 5: // Tour
+      case 4: // Tour
+      case 5: // Suggestions
         return signinBg;
       default:
         return signupBg;
@@ -1767,8 +1770,8 @@ const Onboarding = () => {
             {currentStep === 1 && renderAccountTypeStep()}
             {currentStep === 2 && renderProfileStep()}
             {currentStep === 3 && renderInterestsStep()}
-            {currentStep === 4 && renderSuggestionsStep()}
-            {currentStep === 5 && renderTourStep()}
+            {currentStep === 4 && renderTourStep()}
+            {currentStep === 5 && renderSuggestionsStep()}
           </AnimatePresence>
         </main>
       </div>

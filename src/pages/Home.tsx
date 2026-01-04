@@ -59,7 +59,8 @@ const Home = () => {
       if (error) throw error;
 
       if (!data || data.length === 0) {
-        navigate('/suggested-users');
+        // Redirect to onboarding for completion
+        navigate('/onboarding');
         return;
       }
     } catch (error) {
