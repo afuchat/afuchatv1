@@ -75,7 +75,6 @@ const DeveloperSDK = lazy(() => import("./pages/DeveloperSDK"));
 const VerificationRequest = lazy(() => import("./pages/VerificationRequest"));
 const Followers = lazy(() => import("./pages/Followers"));
 const Following = lazy(() => import("./pages/Following"));
-const SuggestedUsers = lazy(() => import("./pages/SuggestedUsers"));
 const SimpleGame = lazy(() => import("./pages/SimpleGame"));
 const MemoryGame = lazy(() => import("./pages/MemoryGame"));
 const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
@@ -198,7 +197,6 @@ const AppRoutes = () => {
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/whats-new" element={<WhatsNew />} />
-      <Route path="/suggested-users" element={<SuggestedUsers />} />
       <Route path="/trending" element={<Layout><TrendingHashtags /></Layout>} />
       <Route path="/admin/affiliate-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminAffiliateRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/admin/creator-withdrawals" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminCreatorWithdrawals /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />

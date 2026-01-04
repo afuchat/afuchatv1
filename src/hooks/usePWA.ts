@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -7,6 +7,12 @@ interface BeforeInstallPromptEvent extends Event {
     platform: string;
   }>;
   prompt(): Promise<void>;
+}
+
+declare global {
+  interface WindowEventMap {
+    beforeinstallprompt: BeforeInstallPromptEvent;
+  }
 }
 
 interface PWAState {
@@ -18,12 +24,16 @@ interface PWAState {
   install: () => Promise<boolean>;
 }
 
+// Store the prompt globally to persist across component remounts
+let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
+
 export const usePWA = (): PWAState => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(globalDeferredPrompt);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const promptCaptured = useRef(false);
 
   useEffect(() => {
     // Check if already installed
@@ -31,7 +41,9 @@ export const usePWA = (): PWAState => {
       const standalone = window.matchMedia('(display-mode: standalone)').matches;
       // @ts-ignore - iOS specific
       const iosStandalone = window.navigator.standalone === true;
-      const installed = standalone || iosStandalone;
+      // Check if launched from home screen via URL
+      const isMinimalUI = window.matchMedia('(display-mode: minimal-ui)').matches;
+      const installed = standalone || iosStandalone || isMinimalUI;
       setIsStandalone(installed);
       setIsInstalled(installed);
     };
@@ -40,21 +52,40 @@ export const usePWA = (): PWAState => {
 
     // Detect platform
     const userAgent = navigator.userAgent.toLowerCase();
-    setIsIOS(/iphone|ipad|ipod/.test(userAgent));
-    setIsAndroid(/android/.test(userAgent));
+    const iOS = /iphone|ipad|ipod/.test(userAgent) && !(window as any).MSStream;
+    const android = /android/.test(userAgent);
+    setIsIOS(iOS);
+    setIsAndroid(android);
 
-    // Listen for install prompt
-    const handleBeforeInstallPrompt = (e: Event) => {
+    // If we have a stored prompt, use it
+    if (globalDeferredPrompt && !deferredPrompt) {
+      setDeferredPrompt(globalDeferredPrompt);
+    }
+
+    // Listen for install prompt - only capture once
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
+      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      
+      // Store it globally and in state
+      globalDeferredPrompt = e;
+      setDeferredPrompt(e);
+      promptCaptured.current = true;
+      
+      console.log('PWA install prompt captured and ready');
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    // Only add listener if we haven't captured a prompt yet
+    if (!promptCaptured.current && !globalDeferredPrompt) {
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    }
 
     // Listen for successful installation
     const handleAppInstalled = () => {
+      console.log('PWA was installed');
       setIsInstalled(true);
       setDeferredPrompt(null);
+      globalDeferredPrompt = null;
     };
     
     window.addEventListener('appinstalled', handleAppInstalled);
@@ -73,29 +104,40 @@ export const usePWA = (): PWAState => {
       window.removeEventListener('appinstalled', handleAppInstalled);
       displayModeQuery.removeEventListener('change', handleDisplayModeChange);
     };
-  }, []);
+  }, [deferredPrompt]);
 
   const install = useCallback(async (): Promise<boolean> => {
-    if (!deferredPrompt) return false;
+    const promptToUse = deferredPrompt || globalDeferredPrompt;
+    
+    if (!promptToUse) {
+      console.log('No install prompt available');
+      return false;
+    }
 
     try {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
+      // Show the install prompt
+      await promptToUse.prompt();
+      
+      // Wait for user choice
+      const { outcome } = await promptToUse.userChoice;
+      
+      console.log('PWA install outcome:', outcome);
       
       if (outcome === 'accepted') {
         setIsInstalled(true);
         setDeferredPrompt(null);
+        globalDeferredPrompt = null;
         return true;
       }
     } catch (error) {
-      console.error('Install error:', error);
+      console.error('PWA install error:', error);
     }
     
     return false;
   }, [deferredPrompt]);
 
   return {
-    isInstallable: !!deferredPrompt,
+    isInstallable: !!(deferredPrompt || globalDeferredPrompt) && !isInstalled,
     isInstalled,
     isIOS,
     isAndroid,
