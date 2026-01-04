@@ -48,7 +48,9 @@ import {
   ChevronsUpDown,
   MapPin,
   Phone,
-  Users
+  Users,
+  Shield,
+  Star
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -72,16 +74,18 @@ const ACCOUNT_TYPES = [
   { 
     id: 'personal', 
     title: 'Personal', 
-    description: 'Connect with friends and share your moments',
+    description: 'Connect with friends, share moments, and join communities',
     icon: User,
-    color: 'from-blue-500 to-cyan-500'
+    features: ['Connect with friends', 'Share posts & stories', 'Send & receive gifts'],
+    gradient: 'from-primary to-accent'
   },
   { 
     id: 'business', 
     title: 'Business', 
-    description: 'Promote your brand and reach customers',
+    description: 'Grow your brand, reach customers, and sell products',
     icon: Store,
-    color: 'from-purple-500 to-pink-500'
+    features: ['Business analytics', 'Promote products', 'Customer engagement'],
+    gradient: 'from-purple-500 to-pink-500'
   },
 ];
 
@@ -91,7 +95,7 @@ const FEATURES = [
     title: 'Chat & Connect', 
     description: 'Message friends with real-time chat, voice messages, and more',
     icon: MessageCircle,
-    color: 'from-blue-500 to-cyan-500',
+    gradient: 'from-blue-500 to-cyan-500',
     path: '/chats'
   },
   { 
@@ -99,7 +103,7 @@ const FEATURES = [
     title: 'Send Gifts', 
     description: 'Surprise friends with virtual gifts and show appreciation',
     icon: Gift,
-    color: 'from-pink-500 to-rose-500',
+    gradient: 'from-pink-500 to-rose-500',
     path: '/gifts'
   },
   { 
@@ -107,7 +111,7 @@ const FEATURES = [
     title: 'Play Games', 
     description: 'Challenge friends to fun mini-games and earn rewards',
     icon: Gamepad2,
-    color: 'from-purple-500 to-indigo-500',
+    gradient: 'from-purple-500 to-indigo-500',
     path: '/games'
   },
   { 
@@ -115,7 +119,7 @@ const FEATURES = [
     title: 'Climb Rankings', 
     description: 'Compete with others and rise to the top of leaderboards',
     icon: Trophy,
-    color: 'from-amber-500 to-orange-500',
+    gradient: 'from-amber-500 to-orange-500',
     path: '/leaderboard'
   },
   { 
@@ -123,7 +127,7 @@ const FEATURES = [
     title: 'Mini Programs', 
     description: 'Explore a world of apps right inside AfuChat',
     icon: Zap,
-    color: 'from-emerald-500 to-teal-500',
+    gradient: 'from-emerald-500 to-teal-500',
     path: '/mini-programs'
   },
   { 
@@ -131,21 +135,21 @@ const FEATURES = [
     title: 'Shop & Earn', 
     description: 'Discover products and earn rewards on purchases',
     icon: Store,
-    color: 'from-violet-500 to-purple-500',
+    gradient: 'from-violet-500 to-purple-500',
     path: '/shop'
   },
 ];
 
 const INTERESTS = [
-  { id: 'art', label: 'Art & Design', icon: Palette },
-  { id: 'music', label: 'Music', icon: Music },
-  { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
-  { id: 'reading', label: 'Reading', icon: BookOpen },
-  { id: 'movies', label: 'Movies & TV', icon: Film },
-  { id: 'food', label: 'Food & Cooking', icon: Utensils },
-  { id: 'travel', label: 'Travel', icon: Plane },
-  { id: 'fitness', label: 'Fitness', icon: Dumbbell },
-  { id: 'tech', label: 'Technology', icon: Code },
+  { id: 'art', label: 'Art & Design', icon: Palette, emoji: '🎨' },
+  { id: 'music', label: 'Music', icon: Music, emoji: '🎵' },
+  { id: 'gaming', label: 'Gaming', icon: Gamepad2, emoji: '🎮' },
+  { id: 'reading', label: 'Reading', icon: BookOpen, emoji: '📚' },
+  { id: 'movies', label: 'Movies & TV', icon: Film, emoji: '🎬' },
+  { id: 'food', label: 'Food & Cooking', icon: Utensils, emoji: '🍳' },
+  { id: 'travel', label: 'Travel', icon: Plane, emoji: '✈️' },
+  { id: 'fitness', label: 'Fitness', icon: Dumbbell, emoji: '💪' },
+  { id: 'tech', label: 'Technology', icon: Code, emoji: '💻' },
 ];
 
 interface SuggestedUser {
@@ -772,38 +776,37 @@ const Onboarding = () => {
   const canSkip = currentStep >= 3;
 
   const renderStepIndicator = () => (
-    <div className="w-full max-w-md mx-auto mb-6">
-      <div className="flex items-center justify-between mb-3">
+    <div className="w-full max-w-lg mx-auto mb-8">
+      {/* Modern step dots */}
+      <div className="flex items-center justify-center gap-2 mb-4">
         {STEPS.map((step, index) => {
-          const Icon = step.icon;
           const isActive = index === currentStep;
           const isComplete = index < currentStep;
           
           return (
-            <div key={step.id} className="flex flex-col items-center">
-              <div className={cn(
-                "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all duration-300",
-                isComplete && "bg-primary text-primary-foreground",
-                isActive && "bg-primary/20 text-primary ring-2 ring-primary",
-                !isComplete && !isActive && "bg-muted text-muted-foreground"
-              )}>
-                {isComplete ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Icon className="h-4 w-4" />
+            <div key={step.id} className="flex items-center">
+              <motion.div
+                initial={false}
+                animate={{
+                  scale: isActive ? 1.2 : 1,
+                  backgroundColor: isComplete || isActive ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                }}
+                className={cn(
+                  "h-2.5 rounded-full transition-all duration-300",
+                  isActive ? "w-8" : "w-2.5"
                 )}
-              </div>
-              <span className={cn(
-                "text-[10px] md:text-xs mt-1 font-medium",
-                isActive ? "text-primary" : "text-muted-foreground"
-              )}>
-                {step.title}
-              </span>
+              />
             </div>
           );
         })}
       </div>
-      <Progress value={progress} className="h-1.5" />
+      
+      {/* Step title */}
+      <div className="text-center">
+        <p className="text-sm font-medium text-muted-foreground">
+          Step {currentStep + 1} of {STEPS.length}
+        </p>
+      </div>
     </div>
   );
 
@@ -815,54 +818,86 @@ const Onboarding = () => {
       exit={{ opacity: 0, y: -20 }}
       className="w-full max-w-sm mx-auto px-6"
     >
-      <div className="text-center mb-8">
-        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <User className="h-8 w-8 text-primary" />
-        </div>
-        <h2 className="text-2xl font-bold text-foreground">
-          {authMode === 'signup' ? 'Create Account' : 'Welcome Back'}
-        </h2>
-        <p className="text-muted-foreground mt-1">
+      {/* Premium header with gradient accent */}
+      <div className="text-center mb-10">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+          className="relative mx-auto mb-6"
+        >
+          <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center mx-auto shadow-lg shadow-primary/25">
+            <User className="h-10 w-10 text-primary-foreground" />
+          </div>
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-card border-2 border-background flex items-center justify-center shadow-md"
+          >
+            <Sparkles className="h-4 w-4 text-primary" />
+          </motion.div>
+        </motion.div>
+        
+        <motion.h2 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-2xl font-bold text-foreground mb-2"
+        >
+          {authMode === 'signup' ? 'Join AfuChat' : 'Welcome Back'}
+        </motion.h2>
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-muted-foreground"
+        >
           {authMode === 'signup' 
-            ? 'Join our community today' 
-            : 'Sign in to continue'}
-        </p>
+            ? 'Create your account to get started' 
+            : 'Sign in to continue your journey'}
+        </motion.p>
       </div>
       
-      <div className="space-y-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="space-y-5"
+      >
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+          <div className="relative group">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
               id="email"
               type="email"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10"
+              className="pl-12 h-14 text-base rounded-xl border-2 border-border focus:border-primary bg-card/50"
             />
           </div>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+          <div className="relative group">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10"
+              className="pl-12 pr-12 h-14 text-base rounded-xl border-2 border-border focus:border-primary bg-card/50"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
         </div>
@@ -870,23 +905,48 @@ const Onboarding = () => {
         <Button 
           onClick={handleAuth} 
           disabled={loading}
-          className="w-full"
+          className="w-full h-14 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/25"
           size="lg"
         >
-          {loading ? 'Please wait...' : authMode === 'signup' ? 'Create Account' : 'Sign In'}
+          {loading ? (
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              Please wait...
+            </div>
+          ) : (
+            <>
+              {authMode === 'signup' ? 'Create Account' : 'Sign In'}
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </>
+          )}
         </Button>
+        
+        {/* Security badge */}
+        <div className="flex items-center justify-center gap-2 text-muted-foreground">
+          <Shield className="h-4 w-4" />
+          <span className="text-xs">Secure & encrypted</span>
+        </div>
+        
+        <div className="relative py-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-background px-4 text-sm text-muted-foreground">or</span>
+          </div>
+        </div>
         
         <p className="text-center text-sm text-muted-foreground">
           {authMode === 'signup' ? 'Already have an account?' : "Don't have an account?"}{' '}
           <button
             type="button"
             onClick={() => setAuthMode(authMode === 'signup' ? 'login' : 'signup')}
-            className="text-primary font-medium hover:underline"
+            className="text-primary font-semibold hover:underline"
           >
             {authMode === 'signup' ? 'Sign in' : 'Sign up'}
           </button>
         </p>
-      </div>
+      </motion.div>
     </motion.div>
   );
 
@@ -897,55 +957,92 @@ const Onboarding = () => {
       exit={{ opacity: 0, y: -20 }}
       className="w-full max-w-md mx-auto px-6"
     >
-      <div className="text-center mb-8">
-        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <Store className="h-8 w-8 text-primary" />
-        </div>
-        <h2 className="text-2xl font-bold text-foreground">Choose Account Type</h2>
-        <p className="text-muted-foreground mt-1">Select how you want to use AfuChat</p>
+      <div className="text-center mb-10">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+          className="h-20 w-20 rounded-3xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/25"
+        >
+          <Store className="h-10 w-10 text-white" />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Choose Your Path</h2>
+        <p className="text-muted-foreground">How will you use AfuChat?</p>
       </div>
       
       <div className="space-y-4 mb-8">
-        {ACCOUNT_TYPES.map((type) => {
+        {ACCOUNT_TYPES.map((type, index) => {
           const Icon = type.icon;
           const isSelected = accountType === type.id;
           
           return (
-            <button
+            <motion.button
               key={type.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 + index * 0.1 }}
               onClick={() => handleAccountTypeSelect(type.id as 'personal' | 'business')}
               className={cn(
-                "w-full flex items-center gap-4 p-5 rounded-2xl border-2 transition-all duration-200 text-left",
+                "w-full p-5 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden group",
                 isSelected 
-                  ? "border-primary bg-primary/5 shadow-lg" 
-                  : "border-border bg-card hover:border-primary/50"
+                  ? "border-primary bg-card shadow-xl shadow-primary/10" 
+                  : "border-border bg-card/50 hover:border-primary/50 hover:bg-card"
               )}
             >
-              <div className={cn(
-                "h-14 w-14 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 shadow-md",
-                type.color
-              )}>
-                <Icon className="h-7 w-7 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-lg text-foreground">
-                  {type.title}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {type.description}
-                </p>
-              </div>
+              {/* Gradient background on select */}
               {isSelected && (
-                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0">
-                  <Check className="h-4 w-4" />
-                </div>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className={cn("absolute inset-0 bg-gradient-to-r opacity-5", type.gradient)}
+                />
               )}
-            </button>
+              
+              <div className="relative flex items-start gap-4">
+                <div className={cn(
+                  "h-14 w-14 rounded-2xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 shadow-lg transition-transform group-hover:scale-105",
+                  type.gradient
+                )}>
+                  <Icon className="h-7 w-7 text-white" />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold text-lg text-foreground">
+                      {type.title}
+                    </h3>
+                    {isSelected && (
+                      <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
+                      >
+                        <Check className="h-3 w-3" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {type.description}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {type.features.map((feature, i) => (
+                      <span 
+                        key={i}
+                        className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.button>
           );
         })}
       </div>
       
-      <p className="text-xs text-center text-muted-foreground">
+      <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+        <Sparkles className="h-3 w-3" />
         You can change this later in settings
       </p>
     </motion.div>
@@ -956,25 +1053,37 @@ const Onboarding = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="w-full max-w-sm mx-auto px-6 overflow-y-auto max-h-[calc(100vh-200px)]"
+      className="w-full max-w-sm mx-auto px-6 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-hide"
     >
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-foreground">Set Up Your Profile</h2>
-        <p className="text-muted-foreground mt-1">Tell us a bit about yourself</p>
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-foreground mb-2">Create Your Profile</h2>
+        <p className="text-muted-foreground">Let's make your account unique</p>
       </div>
       
-      {/* Avatar */}
-      <div className="flex justify-center mb-6">
+      {/* Avatar with premium styling */}
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="flex justify-center mb-8"
+      >
         <label className="relative cursor-pointer group">
-          <Avatar className="h-24 w-24 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all">
-            <AvatarImage src={avatarPreview} />
-            <AvatarFallback className="bg-muted text-muted-foreground text-2xl">
-              {displayName?.[0]?.toUpperCase() || <Camera className="h-8 w-8" />}
-            </AvatarFallback>
-          </Avatar>
-          <div className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
-            <Camera className="h-4 w-4" />
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary rounded-full opacity-75 blur-sm group-hover:opacity-100 transition-opacity" />
+            <Avatar className="relative h-28 w-28 ring-4 ring-background">
+              <AvatarImage src={avatarPreview} className="object-cover" />
+              <AvatarFallback className="bg-gradient-to-br from-muted to-muted/50 text-muted-foreground text-3xl font-bold">
+                {displayName?.[0]?.toUpperCase() || <Camera className="h-10 w-10" />}
+              </AvatarFallback>
+            </Avatar>
           </div>
+          <motion.div 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="absolute -bottom-1 -right-1 h-10 w-10 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/25"
+          >
+            <Camera className="h-5 w-5" />
+          </motion.div>
           <input
             type="file"
             accept="image/*"
@@ -982,88 +1091,91 @@ const Onboarding = () => {
             className="hidden"
           />
         </label>
-      </div>
-      <p className="text-center text-xs text-muted-foreground mb-4">Tap to add profile picture *</p>
+      </motion.div>
+      <p className="text-center text-xs text-muted-foreground mb-6">Tap to add profile picture <span className="text-primary">*</span></p>
       
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="displayName">Display Name *</Label>
+          <Label htmlFor="displayName" className="text-sm font-medium">Display Name <span className="text-primary">*</span></Label>
           <Input
             id="displayName"
             placeholder="Your name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
+            className="h-12 rounded-xl border-2 border-border focus:border-primary bg-card/50"
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="handle">Username *</Label>
+          <Label htmlFor="handle" className="text-sm font-medium">Username <span className="text-primary">*</span></Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">@</span>
             <Input
               id="handle"
               placeholder="username"
               value={handle}
               onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
               className={cn(
-                "pl-8 pr-10",
-                usernameStatus === 'available' && "border-green-500 focus-visible:ring-green-500",
-                (usernameStatus === 'taken' || usernameStatus === 'invalid') && "border-destructive focus-visible:ring-destructive"
+                "pl-10 pr-12 h-12 rounded-xl border-2 bg-card/50",
+                usernameStatus === 'available' && "border-success focus:border-success",
+                (usernameStatus === 'taken' || usernameStatus === 'invalid') && "border-destructive focus:border-destructive",
+                usernameStatus === 'idle' && "border-border focus:border-primary"
               )}
             />
-            {usernameStatus === 'checking' && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-            {usernameStatus === 'available' && (
-              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
-            )}
-            {(usernameStatus === 'taken' || usernameStatus === 'invalid') && (
-              <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
-            )}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              {usernameStatus === 'checking' && (
+                <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              )}
+              {usernameStatus === 'available' && (
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              )}
+              {(usernameStatus === 'taken' || usernameStatus === 'invalid') && (
+                <AlertCircle className="h-5 w-5 text-destructive" />
+              )}
+            </div>
           </div>
           {usernameMessage && (
             <p className={cn(
-              "text-xs flex items-center gap-1",
-              usernameStatus === 'available' ? "text-green-600" : "text-destructive"
+              "text-xs flex items-center gap-1 font-medium",
+              usernameStatus === 'available' ? "text-success" : "text-destructive"
             )}>
+              {usernameStatus === 'available' && <CheckCircle2 className="h-3 w-3" />}
               {usernameMessage}
             </p>
           )}
         </div>
         
         <div className="space-y-2">
-          <Label>Country *</Label>
+          <Label className="text-sm font-medium">Country <span className="text-primary">*</span></Label>
           <Popover open={countryOpen} onOpenChange={setCountryOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
                 className={cn(
-                  "w-full justify-between font-normal h-12",
+                  "w-full justify-between font-normal h-12 rounded-xl border-2 border-border hover:border-primary bg-card/50",
                   !country && "text-muted-foreground"
                 )}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   {country ? (
                     <>
-                      <span className="text-xl">{getCountryFlag(country)}</span>
-                      <span>{country}</span>
+                      <span className="text-2xl">{getCountryFlag(country)}</span>
+                      <span className="font-medium">{country}</span>
                     </>
                   ) : (
                     <>
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <MapPin className="h-5 w-5 text-muted-foreground" />
                       <span>Select your country</span>
                     </>
                   )}
                 </div>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <ChevronsUpDown className="ml-2 h-5 w-5 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0 bg-popover border shadow-lg z-50" align="start">
+            <PopoverContent className="w-full p-0 bg-popover border-2 shadow-xl z-50" align="start">
               <Command className="bg-popover">
-                <CommandInput placeholder="Search country..." className="h-10" />
+                <CommandInput placeholder="Search country..." className="h-12" />
                 <CommandList className="max-h-60">
                   <CommandEmpty>No country found.</CommandEmpty>
                   <CommandGroup>
@@ -1075,15 +1187,15 @@ const Onboarding = () => {
                           setCountry(c);
                           setCountryOpen(false);
                         }}
-                        className="cursor-pointer"
+                        className="cursor-pointer py-3"
                       >
                         <Check
                           className={cn(
-                            "mr-2 h-4 w-4",
+                            "mr-2 h-4 w-4 text-primary",
                             country === c ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        <span className="mr-2 text-lg">{getCountryFlag(c)}</span>
+                        <span className="mr-3 text-xl">{getCountryFlag(c)}</span>
                         {c}
                       </CommandItem>
                     ))}
@@ -1092,7 +1204,10 @@ const Onboarding = () => {
               </Command>
             </PopoverContent>
           </Popover>
-          <p className="text-xs text-muted-foreground">⚠️ Country cannot be changed after signup</p>
+          <p className="text-xs text-warning flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" />
+            Country cannot be changed after signup
+          </p>
         </div>
 
         <DateOfBirthSelector 
@@ -1102,14 +1217,14 @@ const Onboarding = () => {
         />
 
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number (Optional)</Label>
+          <Label htmlFor="phone" className="text-sm font-medium">Phone Number <span className="text-muted-foreground font-normal">(Optional)</span></Label>
           <div className="flex gap-2">
-            <div className="flex items-center gap-1.5 px-3 h-12 rounded-md border border-input bg-muted/50 text-sm min-w-[80px] justify-center">
-              <span>{country ? getCountryFlag(country) : '🌍'}</span>
-              <span className="font-medium">{country ? getCountryPhoneCode(country) : '+--'}</span>
+            <div className="flex items-center gap-2 px-4 h-12 rounded-xl border-2 border-border bg-muted/50 text-sm min-w-[90px] justify-center">
+              <span className="text-xl">{country ? getCountryFlag(country) : '🌍'}</span>
+              <span className="font-semibold">{country ? getCountryPhoneCode(country) : '+--'}</span>
             </div>
             <div className="relative flex-1">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 id="phone"
                 type="tel"
@@ -1119,52 +1234,60 @@ const Onboarding = () => {
                 onChange={(e) => {
                   const digits = e.target.value.replace(/\D/g, '');
                   const limits = getPhoneLimits(country);
-                  // Limit input to max length
                   if (digits.length <= limits.max) {
                     setPhoneNumber(digits);
                   }
                 }}
                 maxLength={getPhoneLimits(country).max}
                 className={cn(
-                  "pl-10 h-12",
-                  phoneError && "border-destructive focus-visible:ring-destructive"
+                  "pl-12 h-12 rounded-xl border-2 bg-card/50",
+                  phoneError ? "border-destructive focus:border-destructive" : "border-border focus:border-primary"
                 )}
               />
             </div>
           </div>
           {phoneError ? (
-            <p className="text-xs text-destructive flex items-center gap-1">
+            <p className="text-xs text-destructive flex items-center gap-1 font-medium">
               <AlertCircle className="h-3 w-3" />
               {phoneError}
             </p>
           ) : (
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-yellow-500" />
-              Add phone to earn 100 Nexa reward!
+              <Star className="h-3 w-3 text-warning" />
+              Add phone to earn <span className="font-semibold text-primary">100 Nexa</span> reward!
             </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="bio">Bio (Optional)</Label>
+          <Label htmlFor="bio" className="text-sm font-medium">Bio <span className="text-muted-foreground font-normal">(Optional)</span></Label>
           <Textarea
             id="bio"
             placeholder="Write a short bio about yourself..."
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={2}
-            className="resize-none"
+            className="resize-none rounded-xl border-2 border-border focus:border-primary bg-card/50"
           />
         </div>
         
         <Button 
           onClick={handleProfileSubmit} 
           disabled={loading}
-          className="w-full"
+          className="w-full h-14 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/25"
           size="lg"
         >
-          {loading ? 'Saving...' : 'Continue'}
-          <ArrowRight className="ml-2 h-4 w-4" />
+          {loading ? (
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              Saving...
+            </div>
+          ) : (
+            <>
+              Continue
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </>
+          )}
         </Button>
       </div>
     </motion.div>
@@ -1177,41 +1300,76 @@ const Onboarding = () => {
       exit={{ opacity: 0, y: -20 }}
       className="w-full max-w-md mx-auto px-6"
     >
-      <div className="text-center mb-6">
-        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <Heart className="h-8 w-8 text-primary" />
-        </div>
-        <h2 className="text-2xl font-bold text-foreground">What do you love?</h2>
-        <p className="text-muted-foreground mt-1">Select your interests to personalize your feed</p>
+      <div className="text-center mb-8">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+          className="h-20 w-20 rounded-3xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-pink-500/25"
+        >
+          <Heart className="h-10 w-10 text-white" />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-foreground mb-2">What interests you?</h2>
+        <p className="text-muted-foreground">Select topics to personalize your feed</p>
+        {selectedInterests.length > 0 && (
+          <p className="text-sm text-primary font-medium mt-2">
+            {selectedInterests.length} selected
+          </p>
+        )}
       </div>
       
       <div className="grid grid-cols-3 gap-3 mb-8">
-        {INTERESTS.map((interest) => {
+        {INTERESTS.map((interest, index) => {
           const Icon = interest.icon;
           const isSelected = selectedInterests.includes(interest.id);
           
           return (
-            <button
+            <motion.button
               key={interest.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 + index * 0.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => toggleInterest(interest.id)}
               className={cn(
-                "flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 relative",
+                "flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-200 relative overflow-hidden group",
                 isSelected 
-                  ? "border-primary bg-primary/10 text-primary" 
-                  : "border-border bg-card hover:border-primary/50"
+                  ? "border-primary bg-primary/10 shadow-lg shadow-primary/10" 
+                  : "border-border bg-card hover:border-primary/50 hover:bg-card/80"
               )}
             >
-              <Icon className={cn(
-                "h-6 w-6 mb-2",
-                isSelected ? "text-primary" : "text-muted-foreground"
-              )} />
-              <span className="text-xs font-medium text-center">{interest.label}</span>
+              {/* Animated background */}
               {isSelected && (
-                <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                  <Check className="h-3 w-3" />
-                </div>
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10"
+                />
               )}
-            </button>
+              
+              <motion.span 
+                animate={{ scale: isSelected ? 1.2 : 1 }}
+                className="text-2xl mb-2 relative z-10"
+              >
+                {interest.emoji}
+              </motion.span>
+              <span className={cn(
+                "text-xs font-medium text-center relative z-10",
+                isSelected ? "text-primary" : "text-foreground"
+              )}>
+                {interest.label}
+              </span>
+              
+              {isSelected && (
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md"
+                >
+                  <Check className="h-3 w-3" />
+                </motion.div>
+              )}
+            </motion.button>
           );
         })}
       </div>
@@ -1219,11 +1377,20 @@ const Onboarding = () => {
       <Button 
         onClick={handleInterestsSubmit} 
         disabled={loading}
-        className="w-full"
+        className="w-full h-14 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/25"
         size="lg"
       >
-        {loading ? 'Saving...' : 'Continue'}
-        <ArrowRight className="ml-2 h-4 w-4" />
+        {loading ? (
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+            Saving...
+          </div>
+        ) : (
+          <>
+            {selectedInterests.length > 0 ? `Continue with ${selectedInterests.length} interests` : 'Skip for now'}
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </>
+        )}
       </Button>
     </motion.div>
   );
@@ -1235,50 +1402,81 @@ const Onboarding = () => {
       exit={{ opacity: 0, y: -20 }}
       className="w-full max-w-md mx-auto px-6"
     >
-      <div className="text-center mb-6">
-        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <Users className="h-8 w-8 text-primary" />
-        </div>
-        <h2 className="text-2xl font-bold text-foreground">Find Friends</h2>
-        <p className="text-muted-foreground mt-1">Follow people you might know</p>
+      <div className="text-center mb-8">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+          className="h-20 w-20 rounded-3xl bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/25"
+        >
+          <Users className="h-10 w-10 text-white" />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Find Your People</h2>
+        <p className="text-muted-foreground">Follow accounts you might like</p>
+        {followedUsers.length > 0 && (
+          <p className="text-sm text-primary font-medium mt-2">
+            {followedUsers.length} following
+          </p>
+        )}
       </div>
       
       {loadingSuggestions ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        <div className="flex flex-col items-center justify-center py-12 gap-3">
+          <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Finding people for you...</p>
         </div>
       ) : (
-        <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto">
-          {suggestedUsers.map((suggestedUser) => (
-            <div 
+        <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto scrollbar-hide">
+          {suggestedUsers.map((suggestedUser, index) => (
+            <motion.div 
               key={suggestedUser.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
               className={cn(
-                "flex items-center gap-3 p-3 rounded-xl bg-card border",
-                suggestedUser.isPinned ? "border-primary/50 bg-primary/5" : "border-border"
+                "flex items-center gap-4 p-4 rounded-2xl bg-card border-2 transition-all duration-200",
+                suggestedUser.isPinned 
+                  ? "border-primary/50 bg-gradient-to-r from-primary/5 to-accent/5 shadow-lg shadow-primary/5" 
+                  : "border-border hover:border-primary/30"
               )}
             >
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={suggestedUser.avatar_url || undefined} />
-                <AvatarFallback className="bg-muted">
-                  {suggestedUser.display_name?.[0]?.toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="h-14 w-14 ring-2 ring-background">
+                  <AvatarImage src={suggestedUser.avatar_url || undefined} className="object-cover" />
+                  <AvatarFallback className="bg-gradient-to-br from-muted to-muted/50 font-bold">
+                    {suggestedUser.display_name?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                {suggestedUser.isPinned && (
+                  <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md">
+                    <Star className="h-3 w-3" />
+                  </div>
+                )}
+              </div>
+              
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-sm truncate">{suggestedUser.display_name}</p>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="font-bold text-sm truncate">{suggestedUser.display_name}</p>
                   {suggestedUser.isPinned && (
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
                       Recommended
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">@{suggestedUser.handle}</p>
+                <p className="text-sm text-muted-foreground truncate">@{suggestedUser.handle}</p>
               </div>
+              
               <Button
                 size="sm"
                 variant={followedUsers.includes(suggestedUser.id) ? "secondary" : "default"}
                 onClick={() => handleFollowUser(suggestedUser.id)}
                 disabled={followedUsers.includes(suggestedUser.id)}
+                className={cn(
+                  "rounded-xl font-semibold transition-all",
+                  followedUsers.includes(suggestedUser.id) 
+                    ? "bg-muted" 
+                    : "bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-md shadow-primary/20"
+                )}
               >
                 {followedUsers.includes(suggestedUser.id) ? (
                   <>
@@ -1287,24 +1485,25 @@ const Onboarding = () => {
                   </>
                 ) : 'Follow'}
               </Button>
-            </div>
+            </motion.div>
           ))}
           
           {suggestedUsers.length === 0 && (
-            <p className="text-center text-muted-foreground py-4">
-              No suggestions available right now
-            </p>
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground">No suggestions available right now</p>
+            </div>
           )}
         </div>
       )}
       
       <Button 
         onClick={handleSuggestionsComplete}
-        className="w-full"
+        className="w-full h-14 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/25"
         size="lg"
       >
-        {followedUsers.length > 0 ? `Continue (${followedUsers.length} followed)` : 'Continue'}
-        <ArrowRight className="ml-2 h-4 w-4" />
+        {followedUsers.length > 0 ? `Continue (${followedUsers.length} followed)` : 'Skip for now'}
+        <ArrowRight className="ml-2 h-5 w-5" />
       </Button>
     </motion.div>
   );
@@ -1316,15 +1515,27 @@ const Onboarding = () => {
       exit={{ opacity: 0, y: -20 }}
       className="w-full max-w-md mx-auto px-6"
     >
-      <div className="text-center mb-6">
-        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4 ring-2 ring-primary/20">
-          <Globe className="h-8 w-8 text-primary" />
-        </div>
-        <h2 className="text-2xl font-bold text-foreground">Explore AfuChat</h2>
-        <p className="text-muted-foreground mt-1">Discover everything you can do</p>
+      <div className="text-center mb-8">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+          className="relative mx-auto mb-6"
+        >
+          <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center mx-auto shadow-lg shadow-teal-500/25">
+            <Globe className="h-10 w-10 text-white" />
+          </div>
+          <motion.div 
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute -inset-2 rounded-full border-2 border-dashed border-primary/20"
+          />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-foreground mb-2">You're All Set!</h2>
+        <p className="text-muted-foreground">Explore everything AfuChat has to offer</p>
       </div>
       
-      <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto">
+      <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto scrollbar-hide">
         {FEATURES.map((feature, index) => {
           const Icon = feature.icon;
           return (
@@ -1332,18 +1543,20 @@ const Onboarding = () => {
               key={feature.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.08 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => handleFeatureClick(feature.path)}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 hover:shadow-lg transition-all duration-200 group text-left"
+              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border-2 border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300 group text-left"
             >
               <div className={cn(
-                "h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 shadow-md",
-                feature.color
+                "h-14 w-14 rounded-2xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 shadow-lg transition-transform group-hover:scale-110",
+                feature.gradient
               )}>
-                <Icon className="h-6 w-6 text-white" />
+                <Icon className="h-7 w-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">
                   {feature.title}
                 </h3>
                 <p className="text-sm text-muted-foreground line-clamp-1">
@@ -1360,50 +1573,65 @@ const Onboarding = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="relative mb-6"
+        className="mb-6"
       >
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-primary text-primary-foreground shadow-lg">
-          <Zap className="h-5 w-5 flex-shrink-0" />
-          <p className="text-sm font-medium">Tap any feature to explore, or continue below!</p>
+        <div className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25">
+          <Sparkles className="h-6 w-6 flex-shrink-0 animate-pulse" />
+          <p className="text-sm font-medium">Tap any feature to explore, or get started below!</p>
         </div>
-        <div className="absolute -bottom-2 left-8 w-4 h-4 bg-primary rotate-45" />
       </motion.div>
       
       <Button 
         onClick={handleTourComplete}
-        className="w-full"
+        className="w-full h-14 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/25"
         size="lg"
       >
-        Start Exploring
-        <Sparkles className="ml-2 h-4 w-4" />
+        Start Using AfuChat
+        <Sparkles className="ml-2 h-5 w-5" />
       </Button>
     </motion.div>
   );
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <Logo className="h-12 mb-2" />
+          <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+        </div>
+        
         {/* Header with progress */}
-        <header className="pt-6 pb-2 px-4">
-          <div className="flex items-center justify-between max-w-md mx-auto mb-4">
-            {canGoBack && (
+        <header className="relative pt-6 pb-2 px-4 z-10">
+          <div className="flex items-center justify-between max-w-lg mx-auto mb-4">
+            {canGoBack ? (
               <Button 
                 variant="ghost" 
                 size="icon"
                 onClick={() => setCurrentStep(prev => prev - 1)}
+                className="rounded-xl hover:bg-muted"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
+            ) : (
+              <div className="w-10" />
             )}
-            {!canGoBack && <div className="w-10" />}
             
             <Logo className="h-8" />
             
@@ -1412,7 +1640,7 @@ const Onboarding = () => {
                 variant="ghost" 
                 size="sm"
                 onClick={handleSkip}
-                className="text-muted-foreground"
+                className="text-muted-foreground hover:text-foreground font-medium"
               >
                 Skip
               </Button>
@@ -1425,7 +1653,7 @@ const Onboarding = () => {
         </header>
         
         {/* Main content */}
-        <main className="flex-1 flex items-center justify-center pb-12">
+        <main className="relative flex-1 flex items-center justify-center pb-12 z-10">
           <AnimatePresence mode="wait">
             {currentStep === 0 && renderAuthStep()}
             {currentStep === 1 && renderAccountTypeStep()}
