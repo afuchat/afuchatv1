@@ -179,8 +179,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             const currentPath = window.location.pathname;
             
-            // Skip profile check if already on onboarding or suggested-users pages
-            if (currentPath === '/onboarding' || currentPath === '/complete-profile' || currentPath === '/suggested-users') {
+            // Skip profile check if already on onboarding page
+            if (currentPath === '/onboarding' || currentPath === '/complete-profile') {
               return;
             }
             
