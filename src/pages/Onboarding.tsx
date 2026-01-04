@@ -405,22 +405,23 @@ const Onboarding = () => {
     setLoadingSuggestions(true);
     
     try {
-      // Fetch pinned users first (lowercase comparison for handles)
+      // Fetch pinned users first using .in() for exact matching
       const { data: pinnedUsers, error: pinnedError } = await supabase
         .from('profiles')
         .select('id, display_name, handle, avatar_url, bio')
-        .or(PINNED_USERNAMES.map(h => `handle.ilike.${h}`).join(','))
+        .in('handle', PINNED_USERNAMES)
         .neq('id', user.id);
       
       if (pinnedError) {
         console.error('Error fetching pinned users:', pinnedError);
       }
       
-      // Fetch other random users (excluding pinned ones)
+      // Fetch other random users (excluding pinned ones and current user)
       const { data: otherUsers, error: othersError } = await supabase
         .from('profiles')
         .select('id, display_name, handle, avatar_url, bio')
         .neq('id', user.id)
+        .not('handle', 'in', `(${PINNED_USERNAMES.join(',')})`)
         .not('avatar_url', 'is', null)
         .limit(15);
       
@@ -428,16 +429,22 @@ const Onboarding = () => {
         console.error('Error fetching other users:', othersError);
       }
       
-      // Mark pinned users and filter them from others
-      const pinnedHandlesLower = PINNED_USERNAMES.map(h => h.toLowerCase());
-      const pinned = (pinnedUsers || []).map(u => ({ ...u, isPinned: true }));
-      const others = (otherUsers || [])
-        .filter(u => !pinnedHandlesLower.includes(u.handle?.toLowerCase() || ''))
+      // Sort pinned users to ensure correct order (afuchat first)
+      const sortedPinned = (pinnedUsers || []).sort((a, b) => {
+        if (a.handle === 'afuchat') return -1;
+        if (b.handle === 'afuchat') return 1;
+        if (a.handle === 'amkaweesi') return -1;
+        if (b.handle === 'amkaweesi') return 1;
+        return 0;
+      }).map(u => ({ ...u, isPinned: true }));
+      
+      // Shuffle other users
+      const shuffledOthers = (otherUsers || [])
         .sort(() => Math.random() - 0.5)
         .slice(0, 10);
       
       // Combine: pinned first, then random others
-      setSuggestedUsers([...pinned, ...others]);
+      setSuggestedUsers([...sortedPinned, ...shuffledOthers]);
     } catch (error) {
       console.error('Error loading suggestions:', error);
     } finally {
