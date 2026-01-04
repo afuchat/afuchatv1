@@ -2,13 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Trophy, TrendingUp, Gift, Crown } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Gift } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import Logo from '@/components/Logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const UnifiedLeaderboard = () => {
@@ -68,47 +65,175 @@ const UnifiedLeaderboard = () => {
     }
   });
 
-  const getRankIcon = (index: number) => {
-    if (index === 0) return <Crown className="h-5 w-5 text-yellow-500" />;
-    if (index === 1) return <Trophy className="h-5 w-5 text-gray-400" />;
-    if (index === 2) return <Trophy className="h-5 w-5 text-amber-600" />;
-    return <span className="text-sm font-semibold text-muted-foreground">#{index + 1}</span>;
+  const formatValue = (value: number) => {
+    if (value >= 1000000000) {
+      return `${(value / 1000000000).toFixed(1)} B`;
+    } else if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)} M`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)} K`;
+    }
+    return value.toLocaleString();
+  };
+
+  const getRankLabel = (index: number) => {
+    if (index === 0) return '1st';
+    if (index === 1) return '2nd';
+    if (index === 2) return '3rd';
+    return `${index + 1}th`;
+  };
+
+  const PodiumSection = ({ users, isGift = false }: { users: any[]; isGift?: boolean }) => {
+    if (!users || users.length < 3) return null;
+
+    const first = users[0];
+    const second = users[1];
+    const third = users[2];
+
+    const getValue = (user: any) => isGift ? user.total_xp : user.xp;
+
+    return (
+      <div className="relative bg-gradient-to-b from-emerald-900/90 to-emerald-950/95 rounded-t-3xl pt-8 pb-6 px-4 mb-4">
+        {/* Podium positions */}
+        <div className="flex items-end justify-center gap-3">
+          {/* 2nd Place - Left */}
+          <div className="flex flex-col items-center">
+            <Avatar className="h-16 w-16 ring-2 ring-white/30 mb-2">
+              <AvatarImage src={second?.avatar_url} />
+              <AvatarFallback className="bg-muted text-muted-foreground">
+                {second?.display_name?.[0] || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <p className="text-white text-sm font-medium truncate max-w-[100px] text-center">
+              {second?.display_name || 'User'}
+            </p>
+            <div className="bg-emerald-800/80 rounded-lg px-4 py-2 mt-2 min-w-[100px] text-center">
+              <p className="text-white/80 text-xs">2nd</p>
+              <p className="text-white font-bold text-sm">
+                {isGift ? '' : ''}{formatValue(getValue(second))} {isGift ? 'Nexa' : 'Nexa'}
+              </p>
+            </div>
+          </div>
+
+          {/* 1st Place - Center (Elevated) */}
+          <div className="flex flex-col items-center -mt-6">
+            <Avatar className="h-20 w-20 ring-4 ring-yellow-400/50 mb-2">
+              <AvatarImage src={first?.avatar_url} />
+              <AvatarFallback className="bg-muted text-muted-foreground">
+                {first?.display_name?.[0] || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <p className="text-white text-sm font-medium truncate max-w-[100px] text-center">
+              {first?.display_name || 'User'}
+            </p>
+            <div className="bg-emerald-700/90 rounded-lg px-4 py-2 mt-2 min-w-[100px] text-center">
+              <p className="text-white/80 text-xs">1st</p>
+              <p className="text-white font-bold text-sm">
+                {formatValue(getValue(first))} Nexa
+              </p>
+            </div>
+          </div>
+
+          {/* 3rd Place - Right */}
+          <div className="flex flex-col items-center">
+            <Avatar className="h-16 w-16 ring-2 ring-white/30 mb-2">
+              <AvatarImage src={third?.avatar_url} />
+              <AvatarFallback className="bg-muted text-muted-foreground">
+                {third?.display_name?.[0] || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <p className="text-white text-sm font-medium truncate max-w-[100px] text-center">
+              {third?.display_name || 'User'}
+            </p>
+            <div className="bg-emerald-800/80 rounded-lg px-4 py-2 mt-2 min-w-[100px] text-center">
+              <p className="text-white/80 text-xs">3rd</p>
+              <p className="text-white font-bold text-sm">
+                {formatValue(getValue(third))} Nexa
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const LeaderboardList = ({ users, isGift = false }: { users: any[]; isGift?: boolean }) => {
+    if (!users) return null;
+
+    const getValue = (user: any) => isGift ? user.total_xp : user.xp;
+    const getSubtitle = (user: any) => isGift ? `${user.gift_count} gifts received` : (user.current_grade || 'Rookie');
+
+    return (
+      <div className="bg-card rounded-2xl shadow-lg mx-2 -mt-2 relative z-10">
+        <div className="divide-y divide-border">
+          {users.map((user, index) => (
+            <div
+              key={user.id}
+              className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+              onClick={() => navigate(`/${user.handle}`)}
+            >
+              {/* Rank */}
+              <span className="text-muted-foreground font-medium w-8 text-sm">
+                {getRankLabel(index)}
+              </span>
+
+              {/* Avatar */}
+              <Avatar className="h-12 w-12 ring-2 ring-border">
+                <AvatarImage src={user.avatar_url} />
+                <AvatarFallback className="bg-muted text-muted-foreground">
+                  {user.display_name?.[0] || 'U'}
+                </AvatarFallback>
+              </Avatar>
+
+              {/* Name & Subtitle */}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground truncate">
+                  {user.display_name}
+                </p>
+                <p className="text-sm text-muted-foreground truncate">
+                  {getSubtitle(user)}
+                </p>
+              </div>
+
+              {/* Value */}
+              <div className="text-right">
+                <p className={cn(
+                  "font-bold text-base",
+                  isGift ? "text-pink-500" : "text-primary"
+                )}>
+                  {formatValue(getValue(user))} Nexa
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full bg-transparent">
         <div className="container max-w-4xl mx-auto px-4 sm:px-6">
           <div className="flex h-14 sm:h-16 items-center justify-between">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate(-1)}
-              className="shrink-0"
+              className="shrink-0 text-foreground"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="absolute left-1/2 -translate-x-1/2">
-              <Logo size="sm" />
-            </div>
             <div className="w-10" />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 pb-24">
-        <div className="flex items-center gap-3 mb-8">
-          <Trophy className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Leaderboard</h1>
-            <p className="text-muted-foreground">Top contributors and receivers</p>
-          </div>
-        </div>
-
+      <main className="container max-w-4xl mx-auto pb-24">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-2 mx-4 mb-4" style={{ width: 'calc(100% - 32px)' }}>
             <TabsTrigger value="xp" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               Nexa Leaders
@@ -119,92 +244,25 @@ const UnifiedLeaderboard = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="xp" className="space-y-3">
+          <TabsContent value="xp" className="mt-0">
             {xpLoading ? (
               <div className="text-center py-8">Loading...</div>
             ) : (
-              xpLeaderboard?.map((user, index) => (
-                <Card 
-                  key={user.id}
-                  className={cn(
-                    "p-4 cursor-pointer hover:shadow-md transition-all",
-                    index < 3 && "border-2",
-                    index === 0 && "border-yellow-500/50 bg-yellow-500/5",
-                    index === 1 && "border-gray-400/50 bg-gray-400/5",
-                    index === 2 && "border-amber-600/50 bg-amber-600/5"
-                  )}
-                  onClick={() => navigate(`/${user.handle}`)}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 flex flex-col items-center">
-                      {getRankIcon(index)}
-                      <span className="text-xs text-muted-foreground mt-1">
-                        Rank {index + 1}
-                      </span>
-                    </div>
-                    <Avatar className="h-14 w-14 ring-2 ring-primary/20">
-                      <AvatarImage src={user.avatar_url} />
-                      <AvatarFallback>{user.display_name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-semibold text-base">{user.display_name}</p>
-                      <p className="text-sm text-muted-foreground">@{user.handle}</p>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="secondary" className="mb-2">
-                        {user.current_grade || 'Rookie'}
-                      </Badge>
-                      <p className="text-lg font-bold text-primary">{user.xp.toLocaleString()} Nexa</p>
-                    </div>
-                  </div>
-                </Card>
-              ))
+              <>
+                <PodiumSection users={xpLeaderboard || []} isGift={false} />
+                <LeaderboardList users={xpLeaderboard || []} isGift={false} />
+              </>
             )}
           </TabsContent>
 
-          <TabsContent value="gifts" className="space-y-3">
+          <TabsContent value="gifts" className="mt-0">
             {giftLoading ? (
               <div className="text-center py-8">Loading...</div>
             ) : (
-              giftLeaderboard?.map((user: any, index) => (
-                <Card 
-                  key={user.id}
-                  className={cn(
-                    "p-4 cursor-pointer hover:shadow-md transition-all",
-                    index < 3 && "border-2",
-                    index === 0 && "border-yellow-500/50 bg-yellow-500/5",
-                    index === 1 && "border-gray-400/50 bg-gray-400/5",
-                    index === 2 && "border-amber-600/50 bg-amber-600/5"
-                  )}
-                  onClick={() => navigate(`/${user.handle}`)}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 flex flex-col items-center">
-                      {getRankIcon(index)}
-                      <span className="text-xs text-muted-foreground mt-1">
-                        Rank {index + 1}
-                      </span>
-                    </div>
-                    <Avatar className="h-14 w-14 ring-2 ring-primary/20">
-                      <AvatarImage src={user.avatar_url} />
-                      <AvatarFallback>{user.display_name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-semibold text-base">{user.display_name}</p>
-                      <p className="text-sm text-muted-foreground">@{user.handle}</p>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="outline" className="mb-2 gap-1">
-                        <Gift className="h-3 w-3" />
-                        {user.gift_count} {user.gift_count === 1 ? 'gift' : 'gifts'}
-                      </Badge>
-                      <p className="text-lg font-bold text-pink-500">
-                        {user.total_xp.toLocaleString()} Nexa
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              ))
+              <>
+                <PodiumSection users={giftLeaderboard as any[] || []} isGift={true} />
+                <LeaderboardList users={giftLeaderboard as any[] || []} isGift={true} />
+              </>
             )}
           </TabsContent>
         </Tabs>
