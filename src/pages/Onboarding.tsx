@@ -8,13 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { countries, detectUserCountry } from '@/lib/countries';
 import { getCountryFlag } from '@/lib/countryFlags';
-import { format } from 'date-fns';
+import { DateOfBirthSelector } from '@/components/DateOfBirthSelector';
 import { clearProfileCache } from '@/hooks/useProfileCheck';
 import { ReferralWelcomeBanner } from '@/components/gamification/ReferralWelcomeBanner';
 import { 
@@ -44,7 +43,6 @@ import {
   Zap,
   Store,
   Globe,
-  CalendarIcon,
   ChevronsUpDown,
   MapPin,
   Phone,
@@ -905,36 +903,11 @@ const Onboarding = () => {
           <p className="text-xs text-muted-foreground">⚠️ Country cannot be changed after signup</p>
         </div>
 
-        <div className="space-y-2">
-          <Label>Date of Birth *</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start font-normal h-12",
-                  !dateOfBirth && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateOfBirth ? format(new Date(dateOfBirth), "PPP") : "Pick your date of birth"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-popover border shadow-lg z-50" align="start">
-              <Calendar
-                mode="single"
-                selected={dateOfBirth ? new Date(dateOfBirth) : undefined}
-                onSelect={(date) => setDateOfBirth(date ? format(date, 'yyyy-MM-dd') : '')}
-                disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                initialFocus
-                captionLayout="dropdown-buttons"
-                fromYear={1920}
-                toYear={new Date().getFullYear()}
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        <DateOfBirthSelector 
+          value={dateOfBirth} 
+          onChange={setDateOfBirth}
+          minAge={13}
+        />
 
         <div className="space-y-2">
           <Label htmlFor="phone">Phone Number (Optional)</Label>
