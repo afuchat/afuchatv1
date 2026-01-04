@@ -56,11 +56,15 @@ const Home = () => {
         .eq('follower_id', user.id)
         .limit(1);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking follows:', error);
+        setCheckingFollows(false);
+        return;
+      }
 
       if (!data || data.length === 0) {
-        // Redirect to onboarding for completion
-        navigate('/onboarding');
+        // Redirect to onboarding for completion - user hasn't followed anyone
+        navigate('/onboarding', { replace: true });
         return;
       }
     } catch (error) {

@@ -68,8 +68,8 @@ const STEPS = [
   { id: 'accountType', title: 'Type', icon: Store },
   { id: 'profile', title: 'Profile', icon: Camera },
   { id: 'interests', title: 'Interests', icon: Heart },
-  { id: 'tour', title: 'Explore', icon: Globe },
   { id: 'suggestions', title: 'Connect', icon: Users },
+  { id: 'tour', title: 'Explore', icon: Globe },
 ];
 
 // Pinned recommended users
@@ -712,12 +712,16 @@ const Onboarding = () => {
       
       if (shouldReward) {
         setShowRewardModal(true);
-        setTimeout(() => {
+        setTimeout(async () => {
           setShowRewardModal(false);
-          setCurrentStep(4); // Go to tour step
+          // Load suggested users and go to suggestions step (step 4)
+          await loadSuggestedUsers();
+          setCurrentStep(4);
         }, 2500);
       } else {
-        setCurrentStep(4); // Go to tour step
+        // Load suggested users and go to suggestions step (step 4)
+        await loadSuggestedUsers();
+        setCurrentStep(4);
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to save profile');
@@ -738,7 +742,8 @@ const Onboarding = () => {
 
       if (error) throw error;
       
-      // Go to tour step (step 4)
+      // Load suggested users and go to suggestions step (step 4)
+      await loadSuggestedUsers();
       setCurrentStep(4);
     } catch (error: any) {
       toast.error(error.message || 'Failed to save interests');
@@ -763,18 +768,17 @@ const Onboarding = () => {
     }
   };
 
-  const handleTourComplete = async () => {
-    // Load suggested users and go to suggestions step (final step)
-    await loadSuggestedUsers();
-    setCurrentStep(5);
-  };
-
   const handleSuggestionsComplete = async () => {
     if (followedUsers.length === 0) {
       toast.error('Please follow at least one user to continue');
       return;
     }
     
+    // Go to tour/explore step (final step 5)
+    setCurrentStep(5);
+  };
+
+  const handleTourComplete = async () => {
     // Final step - process referral and go to home
     const referralSuccess = await processReferral();
     
@@ -801,18 +805,20 @@ const Onboarding = () => {
     );
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     if (currentStep === 5) {
+      // Tour/Explore step - complete onboarding
       handleTourComplete();
     } else if (currentStep === 4) {
-      // Cannot skip suggestions - must follow at least one user
+      // Suggestions step - cannot skip, must follow at least one user
       if (followedUsers.length === 0) {
         toast.error('Please follow at least one user to continue');
         return;
       }
       setCurrentStep(5);
     } else if (currentStep === 3) {
-      loadSuggestedUsers();
+      // Interests step - can skip
+      await loadSuggestedUsers();
       setCurrentStep(4);
     }
   };
@@ -840,6 +846,7 @@ const Onboarding = () => {
   };
 
   const canGoBack = currentStep > 0 && !(currentStep === 1 && user);
+  // Can skip interests (3) and tour (5), can skip suggestions (4) only if followed at least one
   const canSkip = currentStep === 3 || currentStep === 5 || (currentStep === 4 && followedUsers.length > 0);
 
   const renderStepIndicator = () => (
@@ -1701,8 +1708,8 @@ const Onboarding = () => {
       case 2: // Profile
         return signupBg;
       case 3: // Interests
-      case 4: // Tour
-      case 5: // Suggestions
+      case 4: // Suggestions
+      case 5: // Tour/Explore
         return signinBg;
       default:
         return signupBg;
@@ -1770,8 +1777,8 @@ const Onboarding = () => {
             {currentStep === 1 && renderAccountTypeStep()}
             {currentStep === 2 && renderProfileStep()}
             {currentStep === 3 && renderInterestsStep()}
-            {currentStep === 4 && renderTourStep()}
-            {currentStep === 5 && renderSuggestionsStep()}
+            {currentStep === 4 && renderSuggestionsStep()}
+            {currentStep === 5 && renderTourStep()}
           </AnimatePresence>
         </main>
       </div>
