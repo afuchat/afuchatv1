@@ -1878,8 +1878,16 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       const mappedPosts = postData.map(mapPost);
       const mappedFollowingPosts = followingPostData.map(mapPost);
       
-      // Sort posts with personalization when logged in
-      const finalPosts = user ? sortPosts(mappedPosts) : mappedPosts;
+      // Sort posts with personalization when logged in, random shuffle for guests
+      const shuffleArray = <T,>(array: T[]): T[] => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      };
+      const finalPosts = user ? sortPosts(mappedPosts) : shuffleArray(mappedPosts);
       
       // Following posts stay chronological (already sorted by created_at desc)
       const finalFollowingPosts = mappedFollowingPosts;
