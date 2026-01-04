@@ -405,7 +405,7 @@ const Onboarding = () => {
     setLoadingSuggestions(true);
     
     try {
-      // Fetch pinned users first using .in() for exact matching
+      // Fetch pinned users first
       const { data: pinnedUsers, error: pinnedError } = await supabase
         .from('profiles')
         .select('id, display_name, handle, avatar_url, bio')
@@ -421,7 +421,7 @@ const Onboarding = () => {
         .from('profiles')
         .select('id, display_name, handle, avatar_url, bio')
         .neq('id', user.id)
-        .not('handle', 'in', `(${PINNED_USERNAMES.join(',')})`)
+        .not('handle', 'in', `("${PINNED_USERNAMES.join('","')}")`)
         .not('avatar_url', 'is', null)
         .limit(15);
       
@@ -429,24 +429,25 @@ const Onboarding = () => {
         console.error('Error fetching other users:', othersError);
       }
       
-      // Sort pinned users to ensure correct order (afuchat first)
+      // Sort pinned users: afuchat first, then amkaweesi
       const sortedPinned = (pinnedUsers || []).sort((a, b) => {
-        if (a.handle === 'afuchat') return -1;
-        if (b.handle === 'afuchat') return 1;
-        if (a.handle === 'amkaweesi') return -1;
-        if (b.handle === 'amkaweesi') return 1;
-        return 0;
+        const order = ['afuchat', 'amkaweesi'];
+        return order.indexOf(a.handle || '') - order.indexOf(b.handle || '');
       }).map(u => ({ ...u, isPinned: true }));
       
-      // Shuffle other users
+      // Shuffle and limit other users
       const shuffledOthers = (otherUsers || [])
         .sort(() => Math.random() - 0.5)
         .slice(0, 10);
       
       // Combine: pinned first, then random others
-      setSuggestedUsers([...sortedPinned, ...shuffledOthers]);
+      const allUsers = [...sortedPinned, ...shuffledOthers];
+      setSuggestedUsers(allUsers);
+      
+      console.log('Loaded suggestions:', allUsers.length, 'users');
     } catch (error) {
       console.error('Error loading suggestions:', error);
+      toast.error('Failed to load suggestions');
     } finally {
       setLoadingSuggestions(false);
     }
