@@ -15,10 +15,25 @@ const INTERACTION_WEIGHTS = {
 // Decay factor for time-based relevance (posts older than this lose relevance)
 const TIME_DECAY_HOURS = 72;
 
+// Map onboarding interests to content categories
+// This ensures posts matching user's selected interests get priority
+const INTEREST_TO_CATEGORY_MAP: Record<string, ContentCategory[]> = {
+  art: ['lifestyle', 'entertainment'],
+  music: ['entertainment'],
+  gaming: ['technology', 'entertainment'],
+  reading: ['lifestyle', 'news'],
+  movies: ['entertainment'],
+  food: ['lifestyle'],
+  travel: ['lifestyle'],
+  fitness: ['sports', 'lifestyle'],
+  tech: ['technology', 'business'],
+};
+
 interface UserInterests {
   categories: Record<ContentCategory, number>;
   authors: Record<string, number>;
   hashtags: Record<string, number>;
+  profileInterests: string[]; // User's selected interests from onboarding
   lastUpdated: number;
 }
 
@@ -33,6 +48,7 @@ interface PostScore {
     verifiedBoost: number;
     diversityPenalty: number;
     randomFactor: number;
+    profileInterestBoost: number;
   };
 }
 
@@ -49,6 +65,7 @@ const DEFAULT_INTERESTS: UserInterests = {
   },
   authors: {},
   hashtags: {},
+  profileInterests: [],
   lastUpdated: Date.now(),
 };
 
@@ -91,14 +108,14 @@ export function useFeedAlgorithm() {
     setInterests({ ...DEFAULT_INTERESTS, lastUpdated: 0 });
   }, [user]);
 
-  // Learn from user's past interactions
+  // Learn from user's past interactions and profile interests
   const learnUserInterests = useCallback(async () => {
     if (!user) return;
     
     setIsLoading(true);
     try {
-      // Fetch user's recent interactions in parallel
-      const [likesData, repliesData, viewsData, followsData] = await Promise.all([
+      // Fetch user's recent interactions and profile in parallel
+      const [likesData, repliesData, viewsData, followsData, profileData] = await Promise.all([
         // Likes from last 30 days
         supabase
           .from('post_acknowledgments')
@@ -144,14 +161,38 @@ export function useFeedAlgorithm() {
           .select('following_id')
           .eq('follower_id', user.id)
           .limit(200),
+        
+        // User's profile interests from onboarding
+        supabase
+          .from('profiles')
+          .select('interests')
+          .eq('id', user.id)
+          .single(),
       ]);
+
+      // Get user's profile interests
+      const profileInterests: string[] = (profileData.data?.interests as string[]) || [];
 
       const newInterests: UserInterests = {
         categories: { ...DEFAULT_INTERESTS.categories },
         authors: {},
         hashtags: {},
+        profileInterests,
         lastUpdated: Date.now(),
       };
+
+      // PRIORITY: Apply strong boost for user's selected interests from onboarding
+      // This ensures posts matching their interests always appear first
+      const PROFILE_INTEREST_BOOST = 15; // Strong boost for profile interests
+      profileInterests.forEach((interest) => {
+        const mappedCategories = INTEREST_TO_CATEGORY_MAP[interest];
+        if (mappedCategories) {
+          mappedCategories.forEach((category) => {
+            newInterests.categories[category] = 
+              (newInterests.categories[category] || 0) + PROFILE_INTEREST_BOOST;
+          });
+        }
+      });
 
       // Process likes
       (likesData.data || []).forEach((like: any) => {
@@ -252,7 +293,8 @@ export function useFeedAlgorithm() {
       verifiedBoost: 0,
       diversityPenalty: 0,
       randomFactor: 0,
-      unlikedBoost: 0, // NEW: Boost for posts user hasn't liked
+      unlikedBoost: 0,
+      profileInterestBoost: 0, // NEW: Boost for posts matching user's onboarding interests
     };
 
     // NEW: Strong boost for posts user hasn't liked yet (0-30 points)
@@ -261,13 +303,28 @@ export function useFeedAlgorithm() {
       factors.unlikedBoost = 30;
     }
 
-    // 1. Category match score (0-20 points) - reduced to make room for unliked boost
+    // 1. Category match score (0-20 points) - includes learned behavior
     const categories = categorizeContent(post.content);
     categories.forEach(cat => {
       const userInterest = interests.categories[cat.category] || 1;
       factors.categoryMatch += (cat.confidence / 100) * userInterest * 2;
     });
     factors.categoryMatch = Math.min(factors.categoryMatch, 20);
+
+    // 2. Profile interest boost (0-25 points) - prioritize posts matching onboarding interests
+    // This ensures the user's selected interests are always reflected in their feed
+    if (interests.profileInterests.length > 0) {
+      categories.forEach(cat => {
+        // Check if this category maps to any of user's selected interests
+        for (const [interest, mappedCategories] of Object.entries(INTEREST_TO_CATEGORY_MAP)) {
+          if (interests.profileInterests.includes(interest) && mappedCategories.includes(cat.category)) {
+            factors.profileInterestBoost += (cat.confidence / 100) * 25;
+            break;
+          }
+        }
+      });
+      factors.profileInterestBoost = Math.min(factors.profileInterestBoost, 25);
+    }
 
     // 2. Author affinity (0-15 points) - reduced
     const authorScore = interests.authors[post.author_id] || 0;
