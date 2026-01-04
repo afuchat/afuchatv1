@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { X, Download, Smartphone } from 'lucide-react';
+import { X, Download, Smartphone, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/hooks/usePWA';
-import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 export const PWAInstallBanner = () => {
   const { isInstallable, isInstalled, isStandalone, install, isIOS } = usePWA();
@@ -11,14 +11,12 @@ export const PWAInstallBanner = () => {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
-    // Check if user has dismissed the banner before
     const dismissed = sessionStorage.getItem('pwa-banner-dismissed');
     if (dismissed) {
       setIsDismissed(true);
       return;
     }
 
-    // Show banner after a short delay if not installed
     const timer = setTimeout(() => {
       if (!isInstalled && !isStandalone) {
         setShowBanner(true);
@@ -35,13 +33,25 @@ export const PWAInstallBanner = () => {
   };
 
   const handleInstall = async () => {
-    const success = await install();
-    if (success) {
-      setShowBanner(false);
+    if (isInstallable) {
+      const success = await install();
+      if (success) {
+        setShowBanner(false);
+        toast.success('AfuChat installed successfully!');
+      }
+    } else if (isIOS) {
+      toast.info(
+        <div className="flex flex-col gap-1">
+          <span className="font-semibold">Install AfuChat on iOS</span>
+          <span className="text-sm">Tap <Share className="inline h-4 w-4" /> then "Add to Home Screen"</span>
+        </div>,
+        { duration: 5000 }
+      );
+    } else {
+      toast.info('Use your browser menu to install AfuChat');
     }
   };
 
-  // Don't show if installed, in standalone mode, or dismissed
   if (isInstalled || isStandalone || isDismissed || !showBanner) {
     return null;
   }
@@ -75,10 +85,9 @@ export const PWAInstallBanner = () => {
                 onClick={handleInstall}
                 size="sm"
                 className="bg-white text-primary hover:bg-white/90 h-8 px-3"
-                disabled={!isInstallable}
               >
                 <Download className="h-4 w-4 mr-1" />
-                {isIOS ? 'How to' : 'Install'}
+                Install
               </Button>
               
               <Button
