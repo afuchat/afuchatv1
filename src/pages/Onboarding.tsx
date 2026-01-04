@@ -28,7 +28,13 @@ import {
   Plane,
   Dumbbell,
   Code,
-  Heart
+  Heart,
+  MessageCircle,
+  Gift,
+  Trophy,
+  Zap,
+  Store,
+  Globe
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -40,6 +46,58 @@ const STEPS = [
   { id: 'auth', title: 'Account', icon: User },
   { id: 'profile', title: 'Profile', icon: Camera },
   { id: 'interests', title: 'Interests', icon: Heart },
+  { id: 'tour', title: 'Explore', icon: Globe },
+];
+
+const FEATURES = [
+  { 
+    id: 'chat', 
+    title: 'Chat & Connect', 
+    description: 'Message friends with real-time chat, voice messages, and more',
+    icon: MessageCircle,
+    color: 'from-blue-500 to-cyan-500',
+    path: '/chats'
+  },
+  { 
+    id: 'gifts', 
+    title: 'Send Gifts', 
+    description: 'Surprise friends with virtual gifts and show appreciation',
+    icon: Gift,
+    color: 'from-pink-500 to-rose-500',
+    path: '/gifts'
+  },
+  { 
+    id: 'games', 
+    title: 'Play Games', 
+    description: 'Challenge friends to fun mini-games and earn rewards',
+    icon: Gamepad2,
+    color: 'from-purple-500 to-indigo-500',
+    path: '/games'
+  },
+  { 
+    id: 'leaderboard', 
+    title: 'Climb Rankings', 
+    description: 'Compete with others and rise to the top of leaderboards',
+    icon: Trophy,
+    color: 'from-amber-500 to-orange-500',
+    path: '/leaderboard'
+  },
+  { 
+    id: 'miniapps', 
+    title: 'Mini Programs', 
+    description: 'Explore a world of apps right inside AfuChat',
+    icon: Zap,
+    color: 'from-emerald-500 to-teal-500',
+    path: '/mini-programs'
+  },
+  { 
+    id: 'shop', 
+    title: 'Shop & Earn', 
+    description: 'Discover products and earn rewards on purchases',
+    icon: Store,
+    color: 'from-violet-500 to-purple-500',
+    path: '/shop'
+  },
 ];
 
 const INTERESTS = [
@@ -246,13 +304,22 @@ const Onboarding = () => {
 
       if (error) throw error;
       
-      toast.success('Welcome to AfuChat! 🎉');
-      navigate('/home');
+      // Go to tour step instead of navigating home
+      setCurrentStep(4);
     } catch (error: any) {
       toast.error(error.message || 'Failed to save interests');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTourComplete = () => {
+    toast.success('Welcome to AfuChat! 🎉');
+    navigate('/home');
+  };
+
+  const handleFeatureClick = (path: string) => {
+    navigate(path);
   };
 
   const toggleInterest = (id: string) => {
@@ -264,9 +331,12 @@ const Onboarding = () => {
   };
 
   const handleSkip = () => {
-    if (currentStep === 3) {
-      // Skip interests and go to home
-      navigate('/home');
+    if (currentStep === 4) {
+      // Skip tour and go to home
+      handleTourComplete();
+    } else if (currentStep === 3) {
+      // Skip interests and go to tour
+      setCurrentStep(4);
     } else if (currentStep === 2 && user) {
       // Skip to interests
       setCurrentStep(3);
@@ -590,7 +660,81 @@ const Onboarding = () => {
         className="w-full"
         size="lg"
       >
-        {loading ? 'Finishing...' : 'Complete Setup'}
+        {loading ? 'Saving...' : 'Continue'}
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
+    </motion.div>
+  );
+
+  const renderTourStep = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="w-full max-w-md mx-auto px-6"
+    >
+      <div className="text-center mb-6">
+        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4 ring-2 ring-primary/20">
+          <Globe className="h-8 w-8 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold text-foreground">Explore AfuChat</h2>
+        <p className="text-muted-foreground mt-1">Discover everything you can do</p>
+      </div>
+      
+      {/* Feature Tour Cards */}
+      <div className="space-y-3 mb-8">
+        {FEATURES.map((feature, index) => {
+          const Icon = feature.icon;
+          return (
+            <motion.button
+              key={feature.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              onClick={() => handleFeatureClick(feature.path)}
+              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 hover:shadow-lg transition-all duration-200 group text-left"
+            >
+              <div className={cn(
+                "h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 shadow-md",
+                feature.color
+              )}>
+                <Icon className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-muted-foreground line-clamp-1">
+                  {feature.description}
+                </p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Floating tooltip hint */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="relative mb-6"
+      >
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-primary text-primary-foreground shadow-lg">
+          <Zap className="h-5 w-5 flex-shrink-0" />
+          <p className="text-sm font-medium">Tap any feature to explore, or continue below!</p>
+        </div>
+        {/* Tooltip arrow */}
+        <div className="absolute -bottom-2 left-8 w-4 h-4 bg-primary rotate-45" />
+      </motion.div>
+      
+      <Button 
+        onClick={handleTourComplete}
+        className="w-full"
+        size="lg"
+      >
+        Start Exploring
         <Sparkles className="ml-2 h-4 w-4" />
       </Button>
     </motion.div>
@@ -646,6 +790,7 @@ const Onboarding = () => {
           {currentStep === 1 && renderAuthStep()}
           {currentStep === 2 && renderProfileStep()}
           {currentStep === 3 && renderInterestsStep()}
+          {currentStep === 4 && renderTourStep()}
         </AnimatePresence>
       </main>
     </div>
