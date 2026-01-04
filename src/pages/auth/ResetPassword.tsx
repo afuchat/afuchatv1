@@ -10,6 +10,8 @@ import { Eye, EyeOff } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { passwordSchema } from '@/lib/validation';
 
+import passwordBg from '@/assets/auth/password-bg.jpg';
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -79,8 +81,18 @@ const ResetPassword = () => {
 
   if (validSession === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-        <div className="w-full max-w-sm space-y-3">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={passwordBg} 
+            alt="" 
+            className="w-full h-full object-cover opacity-15"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/90 to-background" />
+        </div>
+        
+        <div className="w-full max-w-sm space-y-3 relative z-10">
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-8 w-full" />
         </div>
@@ -90,8 +102,18 @@ const ResetPassword = () => {
 
   if (validSession === false) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background animate-fade-in">
-        <div className="w-full max-w-md text-center">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden animate-fade-in">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={passwordBg} 
+            alt="" 
+            className="w-full h-full object-cover opacity-15"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/90 to-background" />
+        </div>
+        
+        <div className="w-full max-w-md text-center relative z-10">
           <Logo size="md" className="mb-6" />
           <h1 className="text-2xl font-bold mb-2 text-destructive">Invalid or Expired Link</h1>
           <p className="text-muted-foreground mb-6">
@@ -106,8 +128,18 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background animate-fade-in">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden animate-fade-in">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={passwordBg} 
+          alt="" 
+          className="w-full h-full object-cover opacity-15"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/90 to-background" />
+      </div>
+      
+      <div className="w-full max-w-md relative z-10">
         <div className="mb-8">
           <Logo size="md" className="mb-6" />
           <h1 className="text-3xl font-bold mb-2">Set new password</h1>
