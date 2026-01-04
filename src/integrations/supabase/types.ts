@@ -3046,6 +3046,7 @@ export type Database = {
           hide_following_list: boolean | null
           hide_on_leaderboard: boolean | null
           id: string
+          interests: string[] | null
           is_admin: boolean | null
           is_affiliate: boolean | null
           is_banned: boolean | null
@@ -3101,6 +3102,7 @@ export type Database = {
           hide_following_list?: boolean | null
           hide_on_leaderboard?: boolean | null
           id: string
+          interests?: string[] | null
           is_admin?: boolean | null
           is_affiliate?: boolean | null
           is_banned?: boolean | null
@@ -3156,6 +3158,7 @@ export type Database = {
           hide_following_list?: boolean | null
           hide_on_leaderboard?: boolean | null
           id?: string
+          interests?: string[] | null
           is_admin?: boolean | null
           is_affiliate?: boolean | null
           is_banned?: boolean | null
