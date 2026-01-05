@@ -8,7 +8,6 @@ import FloatingActionButton from '@/components/ui/FloatingActionButton';
 import { HomeContentSkeleton } from '@/components/skeletons';
 import { ProfileCompletionBanner } from '@/components/ProfileCompletionBanner';
 import { GuestAuthBanner } from '@/components/GuestAuthBanner';
-import { PWAInstallBanner } from '@/components/PWAInstallBanner';
 
 const Home = () => {
   const { user, loading } = useAuth();
@@ -81,7 +80,6 @@ const Home = () => {
   // No Layout wrapper here - Layout is applied at router level in App.tsx
   return (
     <>
-      <PWAInstallBanner />
       {user ? <ProfileCompletionBanner /> : <GuestAuthBanner />}
       <Feed />
       {user && <FloatingActionButton />}
