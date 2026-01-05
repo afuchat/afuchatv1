@@ -71,11 +71,16 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
     };
   }, [telegram.isTelegram, telegram.isReady, telegram.colorScheme, telegram.themeParams, setTheme]);
 
-  // Update viewport height CSS variable for proper sizing
+  // Update viewport height and safe area CSS variables for proper sizing
   useEffect(() => {
     if (telegram.isTelegram) {
       document.documentElement.style.setProperty('--tg-viewport-height', `${telegram.viewportHeight}px`);
       document.documentElement.style.setProperty('--tg-viewport-stable-height', `${telegram.viewportStableHeight}px`);
+      
+      // Get safe area from Telegram WebApp if available
+      const webApp = (window as any).Telegram?.WebApp;
+      const safeAreaTop = webApp?.safeAreaInset?.top || webApp?.headerColor ? 0 : 56;
+      document.documentElement.style.setProperty('--tg-safe-area-top', `${safeAreaTop}px`);
     }
   }, [telegram.isTelegram, telegram.viewportHeight, telegram.viewportStableHeight]);
 

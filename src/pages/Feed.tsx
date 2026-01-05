@@ -47,8 +47,8 @@ import { AIPostSummary } from '@/components/feed/AIPostSummary';
 
 import { FeedSkeleton } from '@/components/feed/FeedSkeleton';
 import { SubscriptionExpiryBanner } from '@/components/SubscriptionExpiryBanner';
-import { ChristmasGiftsBanner } from '@/components/home/ChristmasGiftsBanner';
 import { UnclaimedRedEnvelopeBanner } from '@/components/home/UnclaimedRedEnvelopeBanner';
+import { useTelegramOptional } from '@/contexts/TelegramContext';
 // --- INTERFACES ---
 
 // NEW: Define AuthUser interface for type safety (must match the one in PostActionsSheet.tsx)
@@ -1173,6 +1173,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const feedRef = useRef<HTMLDivElement>(null);
+  const telegram = useTelegramOptional();
   
   // Premium status - must be at top level with other hooks
   const { isPremium, loading: premiumLoading, expiresAt } = usePremiumStatus();
@@ -2375,7 +2376,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'foryou' | 'following')} className="w-full">
         {/* Fixed Header with Tabs - works like bottom navigation */}
         <div className={cn(
-          "fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/30 transition-transform duration-300",
+          "fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/30 transition-transform duration-300",
+          telegram?.isTelegram ? "top-[var(--tg-safe-area-top,0px)]" : "top-0",
           isScrollingDown ? "-translate-y-full" : "translate-y-0"
         )}>
           <div className="max-w-4xl mx-auto">
@@ -2426,10 +2428,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         </div>
 
         {/* Spacer for fixed header */}
-        <div className="h-[108px]" />
+        <div className={cn("h-[108px]", telegram?.isTelegram && "h-[calc(108px+var(--tg-safe-area-top,0px))]")} />
 
         {/* Promotional Banners */}
-        <ChristmasGiftsBanner />
         <UnclaimedRedEnvelopeBanner />
 
         {/* Subscription Expiry Reminder Banner */}
