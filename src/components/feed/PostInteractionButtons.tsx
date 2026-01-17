@@ -147,14 +147,14 @@ export const PostInteractionButtons = ({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className={cn("flex items-center text-muted-foreground", compact ? "gap-3" : "gap-4")}>
+      <div className={cn("flex items-center text-muted-foreground", compact ? "gap-4" : "gap-5")}>
         {/* Comment Button */}
         <button 
           className="flex items-center gap-1.5 group hover:text-primary transition-colors"
           onClick={handleCommentClick}
         >
-          <MessageSquare className={cn("group-hover:text-primary", compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
-          <span className={cn(compact ? "text-xs" : "text-sm")}>{replyCount}</span>
+          <MessageSquare className={cn("group-hover:text-primary", compact ? "h-4 w-4" : "h-5 w-5")} strokeWidth={2} />
+          <span className={cn("font-medium", compact ? "text-xs" : "text-sm")}>{replyCount}</span>
         </button>
 
         {/* Like Button */}
@@ -169,17 +169,18 @@ export const PostInteractionButtons = ({
           <Heart 
             className={cn(
               "transition-all",
-              compact ? "h-3.5 w-3.5" : "h-4 w-4",
+              compact ? "h-4 w-4" : "h-5 w-5",
               isLiked ? "fill-red-500 text-red-500" : "group-hover:text-red-500"
             )} 
+            strokeWidth={2}
           />
-          <span className={cn(compact ? "text-xs" : "text-sm")}>{likeCount}</span>
+          <span className={cn("font-medium", compact ? "text-xs" : "text-sm")}>{likeCount}</span>
         </button>
 
         {/* Views */}
         <div className="flex items-center gap-1.5 text-muted-foreground">
-          <TrendingUp className={cn(compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
-          <span className={cn(compact ? "text-xs" : "text-sm")}>{initialViewCount}</span>
+          <TrendingUp className={cn(compact ? "h-4 w-4" : "h-5 w-5")} strokeWidth={2} />
+          <span className={cn("font-medium", compact ? "text-xs" : "text-sm")}>{initialViewCount}</span>
         </div>
 
         {/* Share Button */}
@@ -187,7 +188,7 @@ export const PostInteractionButtons = ({
           className="flex items-center gap-1.5 group hover:text-primary transition-colors"
           onClick={handleShare}
         >
-          <Send className={cn("group-hover:text-primary", compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
+          <Send className={cn("group-hover:text-primary", compact ? "h-4 w-4" : "h-5 w-5")} strokeWidth={2} />
         </button>
       </div>
 
