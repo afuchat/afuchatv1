@@ -58,17 +58,17 @@ const FloatingActionButton = () => {
 
   const actions: FabAction[] = [
     {
-      icon: <Feather className="h-5 w-5" />,
+      icon: <Feather className="h-6 w-6" strokeWidth={2.5} />,
       label: 'Post',
       onClick: () => handleActionClick(handleNewPost),
     },
     {
-      icon: <Send className="h-5 w-5" />,
+      icon: <Send className="h-6 w-6" strokeWidth={2.5} />,
       label: 'Transfer',
       onClick: () => handleActionClick(() => navigate('/transfer')),
     },
     {
-      icon: <Gamepad2 className="h-5 w-5" />,
+      icon: <Gamepad2 className="h-6 w-6" strokeWidth={2.5} />,
       label: 'Games',
       onClick: () => handleActionClick(() => navigate('/games')),
     }
@@ -103,10 +103,10 @@ const FloatingActionButton = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               whileTap={{ scale: 0.95 }}
-              className="h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 flex items-center justify-center"
+              className="h-16 w-16 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 flex items-center justify-center"
               onClick={() => setIsOpen(true)}
             >
-              <Feather className="h-6 w-6" />
+              <Feather className="h-7 w-7" strokeWidth={2.5} />
             </motion.button>
           ) : (
             /* Action Menu */
@@ -132,10 +132,10 @@ const FloatingActionButton = () => {
                   onClick={action.onClick}
                   className="flex items-center gap-3"
                 >
-                  <span className="text-sm font-medium text-foreground bg-card px-3 py-1.5 rounded-full shadow-md border border-border/50">
+                  <span className="text-sm font-semibold text-foreground bg-card px-4 py-2 rounded-full shadow-lg border border-border/40">
                     {action.label}
                   </span>
-                  <div className="h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
+                  <div className="h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/25 flex items-center justify-center">
                     {action.icon}
                   </div>
                 </motion.button>
@@ -147,10 +147,10 @@ const FloatingActionButton = () => {
                 animate={{ opacity: 1, rotate: 0 }}
                 exit={{ opacity: 0, rotate: 90 }}
                 whileTap={{ scale: 0.95 }}
-                className="h-14 w-14 rounded-full bg-muted text-muted-foreground shadow-lg flex items-center justify-center mt-2"
+                className="h-16 w-16 rounded-full bg-muted text-muted-foreground shadow-xl flex items-center justify-center mt-2"
                 onClick={() => setIsOpen(false)}
               >
-                <X className="h-6 w-6" />
+                <X className="h-7 w-7" strokeWidth={2.5} />
               </motion.button>
             </motion.div>
           )}
