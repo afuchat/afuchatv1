@@ -1185,18 +1185,26 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     setActiveTab(defaultTab);
   }, [defaultTab]);
 
-  // Scroll hide effect for header
+  // Optimized scroll hide effect with throttling
   useEffect(() => {
+    let ticking = false;
+    let lastKnownScrollY = 0;
+    
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      lastKnownScrollY = window.scrollY;
       
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsScrollingDown(true);
-      } else {
-        setIsScrollingDown(false);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          if (lastKnownScrollY > lastScrollY && lastKnownScrollY > 100) {
+            setIsScrollingDown(true);
+          } else {
+            setIsScrollingDown(false);
+          }
+          setLastScrollY(lastKnownScrollY);
+          ticking = false;
+        });
+        ticking = true;
       }
-      
-      setLastScrollY(currentScrollY);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -2312,7 +2320,14 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   const currentPosts = activeTab === 'foryou' ? posts : followingPosts;
 
   return (
-    <div ref={feedContainerRef} className="max-w-4xl mx-auto pb-20">
+    <div 
+      ref={feedContainerRef} 
+      className="max-w-4xl mx-auto pb-20 scroll-smooth"
+      style={{
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+      }}
+    >
       {/* Pull to refresh indicator */}
       <PullToRefreshIndicator 
         pullDistance={pullDistance} 
@@ -2418,41 +2433,44 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                 </div>
               ) : (
                 <>
-                  <AnimatePresence mode="popLayout">
-                    {currentPosts.filter(post => post.profiles).map((post, index) => (
-                      <motion.div 
-                        key={post.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ 
-                          duration: 0.3, 
-                          delay: index < 10 ? index * 0.05 : 0,
-                          ease: [0.4, 0, 0.2, 1]
-                        }}
-                        layout
-                      >
-                        <PostCard
-                          post={post}
-                          addReply={addReply}
-                          user={user as AuthUser | null}
-                          navigate={navigate}
-                          onAcknowledge={handleAcknowledge}
-                          onDeletePost={handleDeletePost}
-                          onReportPost={handleReportPost}
-                          onEditPost={handleEditPost}
-                          onQuotePost={handleQuotePost}
-                          onHidePost={handleHidePost}
-                          userProfile={userProfile}
-                          expandedPosts={expandedPosts}
-                          setExpandedPosts={setExpandedPosts}
-                          guestMode={guestMode}
-                        />
-                        
-                        {/* Ads removed - coming soon */}
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
+                    <AnimatePresence mode="popLayout">
+                      {currentPosts.filter(post => post.profiles).map((post, index) => (
+                        <motion.div 
+                          key={post.id}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.98 }}
+                          transition={{ 
+                            duration: 0.25, 
+                            delay: index < 5 ? index * 0.03 : 0,
+                            ease: [0.25, 0.1, 0.25, 1]
+                          }}
+                          layout="position"
+                          layoutId={post.id}
+                          style={{ 
+                            willChange: 'transform, opacity',
+                            contain: 'layout style paint',
+                          }}
+                        >
+                          <PostCard
+                            post={post}
+                            addReply={addReply}
+                            user={user as AuthUser | null}
+                            navigate={navigate}
+                            onAcknowledge={handleAcknowledge}
+                            onDeletePost={handleDeletePost}
+                            onReportPost={handleReportPost}
+                            onEditPost={handleEditPost}
+                            onQuotePost={handleQuotePost}
+                            onHidePost={handleHidePost}
+                            userProfile={userProfile}
+                            expandedPosts={expandedPosts}
+                            setExpandedPosts={setExpandedPosts}
+                            guestMode={guestMode}
+                          />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   
                   {/* Loading more indicator */}
                   {loadingMore && (

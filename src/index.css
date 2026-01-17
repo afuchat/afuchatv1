@@ -84,15 +84,38 @@ html.telegram-mini-app .sticky.top-0 {
     animation: spin 3s linear infinite;
   }
   
-  /* Smooth scrolling */
+  /* Professional smooth scrolling */
   .smooth-scroll {
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Optimized scroll container */
+  .scroll-optimized {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    will-change: scroll-position;
   }
   
   /* Hardware acceleration */
   .gpu-accelerated {
     transform: translateZ(0);
     will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+  
+  /* Content containment for performance */
+  .contain-layout {
+    contain: layout style;
+  }
+  
+  .contain-paint {
+    contain: paint;
+  }
+  
+  .contain-strict {
+    contain: strict;
   }
 
   /* Safe area padding for mobile keyboards */
