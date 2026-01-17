@@ -2,10 +2,29 @@ import { useState, useRef, useEffect, useCallback, RefObject } from 'react';
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
+  /** Optional: pass the actual scroll container element (recommended). */
   containerRef?: RefObject<HTMLElement>;
   threshold?: number;
   disabled?: boolean;
 }
+
+const isScrollableY = (el: HTMLElement) => {
+  const style = window.getComputedStyle(el);
+  const overflowY = style.overflowY;
+  return (
+    (overflowY === 'auto' || overflowY === 'scroll') &&
+    el.scrollHeight > el.clientHeight
+  );
+};
+
+const findScrollableParent = (start: HTMLElement | null): HTMLElement | null => {
+  let el: HTMLElement | null = start;
+  while (el) {
+    if (isScrollableY(el)) return el;
+    el = el.parentElement;
+  }
+  return null;
+};
 
 export const usePullToRefresh = ({
   onRefresh,
@@ -16,26 +35,36 @@ export const usePullToRefresh = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
-  
-  const startY = useRef(0);
-  const isPulling = useRef(false);
-  const isAtTop = useRef(false);
+
   const onRefreshRef = useRef(onRefresh);
+  const startY = useRef(0);
+  const pullingRef = useRef(false);
+  const activeScrollElRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     onRefreshRef.current = onRefresh;
   }, [onRefresh]);
 
-  const getScrollTop = useCallback(() => {
-    if (containerRef?.current) {
-      return containerRef.current.scrollTop;
-    }
-    return window.scrollY || document.documentElement.scrollTop;
+  const getDocScrollEl = () =>
+    (document.scrollingElement as HTMLElement | null) || document.documentElement;
+
+  const getActiveScrollEl = useCallback((touchTarget: EventTarget | null) => {
+    // 1) If user provided a containerRef and it's actually scrollable, use it.
+    const provided = containerRef?.current;
+    if (provided && isScrollableY(provided)) return provided;
+
+    // 2) Otherwise, infer from touch target.
+    const targetEl = (touchTarget as HTMLElement | null) ?? null;
+    const inferred = findScrollableParent(targetEl);
+    if (inferred) return inferred;
+
+    // 3) Fallback to document scroll.
+    return getDocScrollEl();
   }, [containerRef]);
 
-  const resetPull = useCallback(() => {
-    isPulling.current = false;
-    isAtTop.current = false;
+  const reset = useCallback(() => {
+    pullingRef.current = false;
+    activeScrollElRef.current = null;
     startY.current = 0;
     setPullDistance(0);
   }, []);
@@ -44,112 +73,114 @@ export const usePullToRefresh = ({
     if (disabled) return;
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Only start if at top of scroll
-      const scrollTop = getScrollTop();
-      if (scrollTop <= 0 && !isRefreshing) {
+      if (isRefreshing) return;
+
+      const scrollEl = getActiveScrollEl(e.target);
+      activeScrollElRef.current = scrollEl;
+
+      // Only start when user is truly at the top of the active scroll container.
+      if (scrollEl.scrollTop <= 0) {
         startY.current = e.touches[0].clientY;
-        isAtTop.current = true;
-        isPulling.current = true;
+        pullingRef.current = true;
+      } else {
+        reset();
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isPulling.current || !isAtTop.current || isRefreshing) return;
-      
-      // Check if still at top
-      const scrollTop = getScrollTop();
-      if (scrollTop > 0) {
-        resetPull();
+      if (!pullingRef.current || isRefreshing) return;
+
+      const scrollEl = activeScrollElRef.current ?? getActiveScrollEl(e.target);
+      activeScrollElRef.current = scrollEl;
+
+      // If user is no longer at top, abort immediately.
+      if (scrollEl.scrollTop > 0) {
+        reset();
         return;
       }
 
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - startY.current;
 
-      // Only pull down, not up
+      // Do not interfere with normal scrolling (swipe up).
       if (deltaY <= 0) {
         setPullDistance(0);
         return;
       }
 
-      // Apply resistance for natural feel
+      // Resistance for a professional feel.
       const resistance = 0.4;
       const distance = Math.min(deltaY * resistance, 120);
-      
-      if (distance > 10) {
-        e.preventDefault();
-      }
-      
+
+      // Only prevent default when we are actually pulling down meaningfully.
+      if (distance > 10) e.preventDefault();
+
       setPullDistance(distance);
     };
 
     const handleTouchEnd = async () => {
-      if (!isPulling.current || isRefreshing) {
-        resetPull();
+      if (!pullingRef.current || isRefreshing) {
+        reset();
         return;
       }
 
       const distance = pullDistance;
-      
+
       if (distance >= threshold) {
-        // Trigger refresh
         setIsRefreshing(true);
-        setPullDistance(50); // Keep indicator visible
-        
+        setPullDistance(50); // keep indicator visible
+
         try {
           await onRefreshRef.current();
           setShowSuccess(true);
           setTimeout(() => setShowSuccess(false), 800);
-        } catch (error) {
-          console.error('Refresh failed:', error);
+        } catch (err) {
+          console.error('Pull-to-refresh failed:', err);
         } finally {
           setIsRefreshing(false);
           setPullDistance(0);
+          reset();
         }
       } else {
-        // Animate back to 0
         setPullDistance(0);
+        reset();
       }
-      
-      isPulling.current = false;
-      isAtTop.current = false;
-      startY.current = 0;
     };
 
-    const target = containerRef?.current || document;
-    
-    target.addEventListener('touchstart', handleTouchStart as EventListener, { passive: true });
-    target.addEventListener('touchmove', handleTouchMove as EventListener, { passive: false });
-    target.addEventListener('touchend', handleTouchEnd as EventListener, { passive: true });
-    target.addEventListener('touchcancel', handleTouchEnd as EventListener, { passive: true });
+    // Attach to document so we still capture events even if the inferred container changes.
+    document.addEventListener('touchstart', handleTouchStart as EventListener, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove as EventListener, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd as EventListener, { passive: true });
+    document.addEventListener('touchcancel', handleTouchEnd as EventListener, { passive: true });
 
     return () => {
-      target.removeEventListener('touchstart', handleTouchStart as EventListener);
-      target.removeEventListener('touchmove', handleTouchMove as EventListener);
-      target.removeEventListener('touchend', handleTouchEnd as EventListener);
-      target.removeEventListener('touchcancel', handleTouchEnd as EventListener);
+      document.removeEventListener('touchstart', handleTouchStart as EventListener);
+      document.removeEventListener('touchmove', handleTouchMove as EventListener);
+      document.removeEventListener('touchend', handleTouchEnd as EventListener);
+      document.removeEventListener('touchcancel', handleTouchEnd as EventListener);
     };
-  }, [disabled, threshold, isRefreshing, pullDistance, getScrollTop, resetPull, containerRef]);
+  }, [disabled, getActiveScrollEl, isRefreshing, pullDistance, reset, threshold]);
 
   const progress = Math.min(pullDistance / threshold, 1);
 
   const refresh = useCallback(async () => {
     if (isRefreshing) return;
-    
+
     setIsRefreshing(true);
     setPullDistance(50);
-    
+
     try {
       await onRefreshRef.current();
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 800);
-    } catch (error) {
-      console.error('Manual refresh failed:', error);
+    } catch (err) {
+      console.error('Manual refresh failed:', err);
     } finally {
       setIsRefreshing(false);
       setPullDistance(0);
+      reset();
     }
-  }, [isRefreshing]);
+  }, [isRefreshing, reset]);
 
   return {
     isRefreshing,
