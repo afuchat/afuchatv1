@@ -19,6 +19,7 @@ import { CommentInput } from '@/components/feed/CommentInput';
 import { WarningBadge } from '@/components/WarningBadge';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { EditPostModal } from '@/components/EditPostModal';
+import FloatingActionButton from '@/components/ui/FloatingActionButton';
 
 
 // --- Utility to render text with clickable mentions, hashtags, and links ---
@@ -888,6 +889,7 @@ const PostDetail = () => {
           }}
         />
       )}
+      {user && <FloatingActionButton />}
     </div>
   );
 };

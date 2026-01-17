@@ -47,6 +47,7 @@ import { EditPostModal } from '@/components/EditPostModal';
 import { DeveloperProfileSection } from '@/components/developer/DeveloperProfileSection';
 import { DeveloperShowcase } from '@/components/developer/DeveloperShowcase';
 import { Ellipsis, Pencil } from 'lucide-react';
+import FloatingActionButton from '@/components/ui/FloatingActionButton';
 
 interface Profile {
 	id: string;
@@ -2026,10 +2027,11 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						setEditingPost(null);
 						if (profileId) fetchUserPosts(profileId);
 					}}
-				/>
-			)}
-		</div>
-	);
+			/>
+		)}
+		{user && <FloatingActionButton />}
+	</div>
+);
 };
 
 export default Profile;
