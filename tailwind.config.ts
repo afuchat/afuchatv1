@@ -14,24 +14,26 @@ export default {
     },
     extend: {
       fontSize: {
-        // Professional, rich typography scale
-        '2xs': ['12px', { lineHeight: '16px', letterSpacing: '0.01em' }],
-        'xs': ['13px', { lineHeight: '18px', letterSpacing: '0.01em' }],
-        'sm': ['14px', { lineHeight: '20px', letterSpacing: '0.01em' }],
-        'base': ['15px', { lineHeight: '22px', letterSpacing: '0.01em' }],
-        'lg': ['17px', { lineHeight: '24px', letterSpacing: '0' }],
-        'xl': ['20px', { lineHeight: '28px', letterSpacing: '-0.01em' }],
-        '2xl': ['24px', { lineHeight: '32px', letterSpacing: '-0.02em' }],
-        '3xl': ['30px', { lineHeight: '36px', letterSpacing: '-0.02em' }],
-        '4xl': ['36px', { lineHeight: '44px', letterSpacing: '-0.02em' }],
-        '5xl': ['48px', { lineHeight: '52px', letterSpacing: '-0.03em' }],
+        // Bold, professional typography - all sizes increased
+        '2xs': ['13px', { lineHeight: '18px', letterSpacing: '0.01em', fontWeight: '500' }],
+        'xs': ['14px', { lineHeight: '20px', letterSpacing: '0.01em', fontWeight: '500' }],
+        'sm': ['15px', { lineHeight: '22px', letterSpacing: '0.01em', fontWeight: '500' }],
+        'base': ['16px', { lineHeight: '24px', letterSpacing: '0.01em', fontWeight: '500' }],
+        'lg': ['18px', { lineHeight: '26px', letterSpacing: '0', fontWeight: '500' }],
+        'xl': ['22px', { lineHeight: '30px', letterSpacing: '-0.01em', fontWeight: '600' }],
+        '2xl': ['26px', { lineHeight: '34px', letterSpacing: '-0.02em', fontWeight: '600' }],
+        '3xl': ['32px', { lineHeight: '40px', letterSpacing: '-0.02em', fontWeight: '700' }],
+        '4xl': ['40px', { lineHeight: '48px', letterSpacing: '-0.02em', fontWeight: '700' }],
+        '5xl': ['52px', { lineHeight: '58px', letterSpacing: '-0.03em', fontWeight: '800' }],
       },
       fontWeight: {
+        thin: '300',
         normal: '400',
         medium: '500',
         semibold: '600',
         bold: '700',
         extrabold: '800',
+        black: '900',
       },
       fontFamily: {
         'sans': ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
