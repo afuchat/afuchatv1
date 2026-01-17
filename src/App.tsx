@@ -56,7 +56,6 @@ const AIChat = lazy(() => import("./pages/AIChat"));
 const Support = lazy(() => import("./pages/Support"));
 
 const UnifiedLeaderboard = lazy(() => import("./pages/UnifiedLeaderboard"));
-const Wallet = lazy(() => import("./pages/Wallet"));
 const QRCode = lazy(() => import("./pages/QRCode"));
 const Settings = lazy(() => import("./pages/Settings"));
 const TermsOfUse = lazy(() => import("./pages/TermsOfUse"));
