@@ -305,7 +305,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
           (isScrollingDown || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
         )}>
           <nav className="bg-background border-t border-border">
-            <div className="flex justify-between items-center h-14 px-6 max-w-lg mx-auto">
+            <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
               <Link
                 to="/home"
                 onClick={(e) => {
@@ -319,10 +319,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
               >
                 <Home 
                   className={cn(
-                    "h-6 w-6",
+                    "h-7 w-7",
                     (isActive('/') || isActive('/home')) ? "text-primary fill-primary" : "text-foreground"
                   )} 
-                  strokeWidth={(isActive('/') || isActive('/home')) ? 2.5 : 1.5} 
+                  strokeWidth={(isActive('/') || isActive('/home')) ? 2.5 : 2} 
                 />
               </Link>
               
@@ -332,10 +332,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
               >
                 <Search 
                   className={cn(
-                    "h-6 w-6",
+                    "h-7 w-7",
                     isActive('/search') ? "text-primary" : "text-foreground"
                   )} 
-                  strokeWidth={isActive('/search') ? 2.5 : 1.5} 
+                  strokeWidth={isActive('/search') ? 2.5 : 2} 
                 />
               </Link>
               
@@ -349,7 +349,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                     src={aiChatIcon} 
                     alt="AI Chat" 
                     className={cn(
-                      "h-7 w-7 object-contain select-none",
+                      "h-8 w-8 object-contain select-none",
                       isActive('/ai-chat') ? "opacity-100" : "opacity-70"
                     )}
                     draggable={false}
@@ -361,7 +361,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                   to="/auth/signin"
                   className="flex items-center justify-center w-12 h-12 transition-colors"
                 >
-                  <img src={aiChatIcon} alt="AI Chat" className="h-7 w-7 object-contain opacity-50 select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
+                  <img src={aiChatIcon} alt="AI Chat" className="h-8 w-8 object-contain opacity-50 select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
                 </Link>
               )}
               
@@ -374,10 +374,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                   <div className="relative">
                     <Bell 
                       className={cn(
-                        "h-6 w-6",
+                        "h-7 w-7",
                         isActive('/notifications') ? "text-primary fill-primary" : "text-foreground"
                       )} 
-                      strokeWidth={isActive('/notifications') ? 2.5 : 1.5} 
+                      strokeWidth={isActive('/notifications') ? 2.5 : 2} 
                     />
                     {unreadNotifications > 0 && (
                       <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full">
@@ -391,7 +391,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                   to="/auth/signin"
                   className="flex items-center justify-center w-12 h-12 transition-colors"
                 >
-                  <Bell className="h-6 w-6 text-muted-foreground" strokeWidth={1.5} />
+                  <Bell className="h-7 w-7 text-muted-foreground" strokeWidth={2} />
                 </Link>
               )}
               
@@ -404,10 +404,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                   <div className="relative">
                     <MessageCircle 
                       className={cn(
-                        "h-6 w-6",
+                        "h-7 w-7",
                         isActive('/chats') ? "text-primary fill-primary" : "text-foreground"
                       )} 
-                      strokeWidth={isActive('/chats') ? 2.5 : 1.5} 
+                      strokeWidth={isActive('/chats') ? 2.5 : 2} 
                     />
                     {unreadChats > 0 && (
                       <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full">
@@ -421,7 +421,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                   to="/auth/signin"
                   className="flex items-center justify-center w-12 h-12 transition-colors"
                 >
-                  <MessageCircle className="h-6 w-6 text-muted-foreground" strokeWidth={1.5} />
+                  <MessageCircle className="h-7 w-7 text-muted-foreground" strokeWidth={2} />
                 </Link>
               )}
             </div>
