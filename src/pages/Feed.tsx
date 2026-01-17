@@ -998,34 +998,34 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
 
         <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-1.5 sm:-ml-2 max-w-full sm:max-w-[450px]">
-          <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3" onClick={() => {
+          <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3" onClick={() => {
             if (!showComments && post.profiles.handle) {
               setReplyText(`@${post.profiles.handle} `);
             }
             setShowComments(!showComments);
           }}>
-            <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-primary transition-colors" />
-            <span className="group-hover:text-primary transition-colors text-[10px] sm:text-xs">{post.reply_count > 0 ? post.reply_count : ''}</span>
+            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-primary transition-colors" strokeWidth={2} />
+            <span className="group-hover:text-primary transition-colors text-xs sm:text-sm font-medium">{post.reply_count > 0 ? post.reply_count : ''}</span>
           </Button>
-          <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3" onClick={() => onAcknowledge(post.id, post.has_liked)}>
-            <Heart className={`h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-red-500 transition-colors ${post.has_liked ? 'text-red-500 fill-red-500' : ''}`} />
-            <span className={`group-hover:text-red-500 transition-colors text-[10px] sm:text-xs ${post.has_liked ? 'text-red-500' : ''}`}>{post.like_count > 0 ? post.like_count : ''}</span>
+          <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3" onClick={() => onAcknowledge(post.id, post.has_liked)}>
+            <Heart className={`h-4 w-4 sm:h-5 sm:w-5 group-hover:text-red-500 transition-colors ${post.has_liked ? 'text-red-500 fill-red-500' : ''}`} strokeWidth={2} />
+            <span className={`group-hover:text-red-500 transition-colors text-xs sm:text-sm font-medium ${post.has_liked ? 'text-red-500' : ''}`}>{post.like_count > 0 ? post.like_count : ''}</span>
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3"
+            className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               setShowViewsSheet(true);
             }}
           >
-            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            <span className="text-[10px] sm:text-xs group-hover:text-primary transition-colors">{post.view_count > 0 ? post.view_count : ''}</span>
+            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-primary transition-colors" strokeWidth={2} />
+            <span className="text-xs sm:text-sm font-medium group-hover:text-primary transition-colors">{post.view_count > 0 ? post.view_count : ''}</span>
           </Button>
-          <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3" onClick={handleShare}>
-            <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-primary transition-colors" />
+          <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3" onClick={handleShare}>
+            <Send className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-primary transition-colors" strokeWidth={2} />
           </Button>
           {user && user.id !== post.author_id && (
             <>
@@ -1033,15 +1033,15 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 receiverId={post.author_id}
                 receiverName={post.profiles.display_name}
                 trigger={
-                  <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3">
-                    <Gift className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-pink-500 transition-colors" />
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3">
+                    <Gift className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-pink-500 transition-colors" strokeWidth={2} />
                   </Button>
                 }
               />
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3"
+                className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3"
                 onClick={async () => {
                   // Create or find existing chat with post author
                   const { data: existingChat } = await supabase
@@ -1080,7 +1080,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                   }
                 }}
               >
-                <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-primary transition-colors" />
+                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-primary transition-colors" strokeWidth={2} />
               </Button>
             </>
           )}
