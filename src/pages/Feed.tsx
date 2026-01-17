@@ -866,9 +866,9 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-x-1 min-w-0">
+          <div className="flex items-center gap-x-1.5 min-w-0">
             <span
-              className="font-bold text-foreground text-sm sm:text-base cursor-pointer hover:underline truncate max-w-[100px] sm:max-w-[140px]"
+              className="font-bold text-foreground text-base sm:text-lg cursor-pointer hover:underline truncate max-w-[120px] sm:max-w-[160px]"
               onClick={() => handleViewProfile(post.author_id)}
               title={post.profiles.display_name}
             >
@@ -899,13 +899,13 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             )}
 
             <span
-              className="text-muted-foreground text-[10px] sm:text-xs hover:underline cursor-pointer truncate flex-shrink min-w-0"
+              className="text-muted-foreground text-xs sm:text-sm hover:underline cursor-pointer truncate flex-shrink min-w-0"
               onClick={() => handleViewProfile(post.author_id)}
             >
               @{post.profiles.handle}
             </span>
 
-            <span className="text-muted-foreground text-[10px] sm:text-xs flex-shrink-0">·</span>
+            <span className="text-muted-foreground text-xs sm:text-sm flex-shrink-0">·</span>
             <span className="text-muted-foreground text-[10px] sm:text-xs whitespace-nowrap flex-shrink-0">
               {formatTime(post.created_at)}
             </span>
