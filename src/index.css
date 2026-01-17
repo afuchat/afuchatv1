@@ -1,6 +1,14 @@
-/* X/Twitter system font stack */
+/* Professional Typography & System Optimizations */
 
 @tailwind base;
+
+/* Enhanced Text Rendering */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
 
 /* PWA Fullscreen Display Optimizations */
 html, body {

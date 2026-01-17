@@ -14,16 +14,24 @@ export default {
     },
     extend: {
       fontSize: {
-        // X/Twitter style font sizes
-        '2xs': ['11px', { lineHeight: '16px' }],
-        'xs': ['13px', { lineHeight: '16px' }],
-        'sm': ['14px', { lineHeight: '18px' }],
-        'base': ['15px', { lineHeight: '20px' }],
-        'lg': ['17px', { lineHeight: '22px' }],
-        'xl': ['20px', { lineHeight: '24px' }],
-        '2xl': ['23px', { lineHeight: '28px' }],
-        '3xl': ['28px', { lineHeight: '32px' }],
-        '4xl': ['34px', { lineHeight: '40px' }],
+        // Professional, rich typography scale
+        '2xs': ['12px', { lineHeight: '16px', letterSpacing: '0.01em' }],
+        'xs': ['13px', { lineHeight: '18px', letterSpacing: '0.01em' }],
+        'sm': ['14px', { lineHeight: '20px', letterSpacing: '0.01em' }],
+        'base': ['15px', { lineHeight: '22px', letterSpacing: '0.01em' }],
+        'lg': ['17px', { lineHeight: '24px', letterSpacing: '0' }],
+        'xl': ['20px', { lineHeight: '28px', letterSpacing: '-0.01em' }],
+        '2xl': ['24px', { lineHeight: '32px', letterSpacing: '-0.02em' }],
+        '3xl': ['30px', { lineHeight: '36px', letterSpacing: '-0.02em' }],
+        '4xl': ['36px', { lineHeight: '44px', letterSpacing: '-0.02em' }],
+        '5xl': ['48px', { lineHeight: '52px', letterSpacing: '-0.03em' }],
+      },
+      fontWeight: {
+        normal: '400',
+        medium: '500',
+        semibold: '600',
+        bold: '700',
+        extrabold: '800',
       },
       fontFamily: {
         'sans': ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
