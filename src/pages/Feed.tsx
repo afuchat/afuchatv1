@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { MessageCircle, Heart, Send, Ellipsis, Gift, Eye, TrendingUp, Crown, Users } from 'lucide-react';
+import { MessageCircle, Heart, Send, Ellipsis, Gift, Eye, BarChart2, Crown, Users } from 'lucide-react';
 import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import platformLogo from '@/assets/ai-chat-icon.ico';
@@ -1021,68 +1021,22 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               setShowViewsSheet(true);
             }}
           >
-            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-primary transition-colors" strokeWidth={2} />
+            <BarChart2 className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-primary transition-colors" strokeWidth={2} />
             <span className="text-xs sm:text-sm font-medium group-hover:text-primary transition-colors">{post.view_count > 0 ? post.view_count : ''}</span>
           </Button>
           <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3" onClick={handleShare}>
             <Send className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-primary transition-colors" strokeWidth={2} />
           </Button>
           {user && user.id !== post.author_id && (
-            <>
-              <SendGiftDialog
-                receiverId={post.author_id}
-                receiverName={post.profiles.display_name}
-                trigger={
-                  <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3">
-                    <Gift className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-pink-500 transition-colors" strokeWidth={2} />
-                  </Button>
-                }
-              />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3"
-                onClick={async () => {
-                  // Create or find existing chat with post author
-                  const { data: existingChat } = await supabase
-                    .from('chats')
-                    .select('id')
-                    .or(`and(user_id.eq.${user.id},created_by.eq.${post.author_id}),and(user_id.eq.${post.author_id},created_by.eq.${user.id})`)
-                    .eq('is_group', false)
-                    .maybeSingle();
-                  
-                  if (existingChat) {
-                    navigate(`/chat/${existingChat.id}`);
-                  } else {
-                    // Create new chat
-                    const { data: newChat, error } = await supabase
-                      .from('chats')
-                      .insert({
-                        user_id: post.author_id,
-                        created_by: user.id,
-                        is_group: false
-                      })
-                      .select('id')
-                      .single();
-                    
-                    if (error) {
-                      toast.error('Failed to start chat');
-                      return;
-                    }
-                    
-                    // Add both users as members
-                    await supabase.from('chat_members').insert([
-                      { chat_id: newChat.id, user_id: user.id },
-                      { chat_id: newChat.id, user_id: post.author_id }
-                    ]);
-                    
-                    navigate(`/chat/${newChat.id}`);
-                  }
-                }}
-              >
-                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-primary transition-colors" strokeWidth={2} />
-              </Button>
-            </>
+            <SendGiftDialog
+              receiverId={post.author_id}
+              receiverName={post.profiles.display_name}
+              trigger={
+                <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3">
+                  <Gift className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-pink-500 transition-colors" strokeWidth={2} />
+                </Button>
+              }
+            />
           )}
         </div>
 

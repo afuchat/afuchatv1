@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Heart, MessageSquare, Send, TrendingUp, Repeat2 } from 'lucide-react';
+import { Heart, MessageSquare, Send, BarChart2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -179,7 +179,7 @@ export const PostInteractionButtons = ({
 
         {/* Views */}
         <div className="flex items-center gap-1.5 text-muted-foreground">
-          <TrendingUp className={cn(compact ? "h-4 w-4" : "h-5 w-5")} strokeWidth={2} />
+          <BarChart2 className={cn(compact ? "h-4 w-4" : "h-5 w-5")} strokeWidth={2} />
           <span className={cn("font-medium", compact ? "text-xs" : "text-sm")}>{initialViewCount}</span>
         </div>
 
