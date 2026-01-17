@@ -8,15 +8,17 @@ interface UsePullToRefreshOptions {
   maxPull?: number;
   disabled?: boolean;
   minPullToActivate?: number;
+  scrollThreshold?: number; // How close to top before pull activates
 }
 
 export const usePullToRefresh = ({
   onRefresh,
   containerRef,
-  threshold = 100,
+  threshold = 120, // Increased threshold for more deliberate pull
   maxPull = 160,
   disabled = false,
-  minPullToActivate = 20,
+  minPullToActivate = 40, // Increased minimum pull distance
+  scrollThreshold = 0, // Must be exactly at top
 }: UsePullToRefreshOptions) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -31,6 +33,8 @@ export const usePullToRefresh = ({
   const rafId = useRef<number>();
   const isHorizontalScrollRef = useRef(false);
   const hasDecidedDirectionRef = useRef(false);
+  const touchStartScrollTop = useRef(0); // Track scroll position at touch start
+  const isValidPullRef = useRef(false); // Track if this is a valid pull gesture
 
   // Keep ref updated
   useEffect(() => {
@@ -73,52 +77,82 @@ export const usePullToRefresh = ({
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Only trigger if at very top and not refreshing
-      if (getScrollTop() <= 2 && !isRefreshingRef.current) {
+      const scrollTop = getScrollTop();
+      touchStartScrollTop.current = scrollTop;
+      
+      // Only allow pull if exactly at top (within scrollThreshold) and not refreshing
+      if (scrollTop <= scrollThreshold && !isRefreshingRef.current) {
         startY.current = e.touches[0].pageY;
         startX.current = e.touches[0].pageX;
         isPullingRef.current = true;
         isHorizontalScrollRef.current = false;
         hasDecidedDirectionRef.current = false;
+        isValidPullRef.current = false; // Reset valid pull flag
         
         // Cancel any existing animation
         if (rafId.current) {
           cancelAnimationFrame(rafId.current);
         }
+      } else {
+        // Not at top, don't allow pull
+        isPullingRef.current = false;
+        isValidPullRef.current = false;
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isPullingRef.current || isRefreshingRef.current) return;
 
+      const currentScrollTop = getScrollTop();
       const currentY = e.touches[0].pageY;
       const currentX = e.touches[0].pageX;
       const deltaY = currentY - startY.current;
       const deltaX = currentX - startX.current;
       
-      // Determine scroll direction on first significant movement
-      if (!hasDecidedDirectionRef.current && (Math.abs(deltaY) > 10 || Math.abs(deltaX) > 10)) {
-        hasDecidedDirectionRef.current = true;
-        // If horizontal movement is greater, it's a horizontal scroll (e.g., product carousel)
-        if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
-          isHorizontalScrollRef.current = true;
-          isPullingRef.current = false;
-          return;
+      // If user scrolled down since touch start, cancel pull
+      if (currentScrollTop > scrollThreshold) {
+        isPullingRef.current = false;
+        isValidPullRef.current = false;
+        if (currentPullDistance.current > 0) {
+          animatePullBack();
         }
-      }
-      
-      // Skip if determined to be horizontal scroll
-      if (isHorizontalScrollRef.current) return;
-      
-      // Only proceed if pulling down and at top
-      if (deltaY <= minPullToActivate || getScrollTop() > 2) {
         return;
       }
       
-      // Apply strong resistance curve for deliberate pull feel
+      // Determine scroll direction on first significant movement (increased threshold)
+      if (!hasDecidedDirectionRef.current && (Math.abs(deltaY) > 15 || Math.abs(deltaX) > 15)) {
+        hasDecidedDirectionRef.current = true;
+        
+        // Stricter horizontal detection - any horizontal bias cancels pull
+        if (Math.abs(deltaX) > Math.abs(deltaY) * 0.8) {
+          isHorizontalScrollRef.current = true;
+          isPullingRef.current = false;
+          isValidPullRef.current = false;
+          return;
+        }
+        
+        // Must be clearly pulling down to be valid
+        if (deltaY < minPullToActivate * 0.5) {
+          isPullingRef.current = false;
+          isValidPullRef.current = false;
+          return;
+        }
+        
+        isValidPullRef.current = true;
+      }
+      
+      // Skip if determined to be horizontal scroll or not valid
+      if (isHorizontalScrollRef.current || !isValidPullRef.current) return;
+      
+      // Only proceed if pulling down significantly and still at top
+      if (deltaY <= minPullToActivate) {
+        return;
+      }
+      
+      // Apply stronger resistance curve for very deliberate pull feel
       const rawDistance = deltaY - minPullToActivate;
-      const resistance = 0.6; // Higher resistance = harder to pull
-      const resistedDistance = Math.pow(Math.max(0, rawDistance), 1 - resistance * 0.4) * 1.5;
+      const resistance = 0.7; // Higher resistance = much harder to pull
+      const resistedDistance = Math.pow(Math.max(0, rawDistance), 1 - resistance * 0.5) * 1.2;
       
       const distance = Math.min(Math.max(0, resistedDistance), maxPull);
 
@@ -137,14 +171,17 @@ export const usePullToRefresh = ({
     };
 
     const handleTouchEnd = async () => {
-      if (!isPullingRef.current && !currentPullDistance.current) return;
-
+      const wasValidPull = isValidPullRef.current;
       const distance = currentPullDistance.current;
+      
+      // Reset all flags
       isPullingRef.current = false;
       isHorizontalScrollRef.current = false;
       hasDecidedDirectionRef.current = false;
+      isValidPullRef.current = false;
 
-      if (distance >= threshold && !isRefreshingRef.current) {
+      // Only trigger refresh if it was a valid pull gesture
+      if (wasValidPull && distance >= threshold && !isRefreshingRef.current) {
         // Trigger refresh
         setIsRefreshing(true);
         isRefreshingRef.current = true;
@@ -173,8 +210,8 @@ export const usePullToRefresh = ({
           currentPullDistance.current = 50;
           animatePullBack();
         }
-      } else {
-        // Didn't reach threshold, spring back
+      } else if (distance > 0) {
+        // Didn't reach threshold or wasn't valid, spring back
         animatePullBack();
       }
       
@@ -200,7 +237,7 @@ export const usePullToRefresh = ({
         cancelAnimationFrame(rafId.current);
       }
     };
-  }, [disabled, maxPull, threshold, minPullToActivate, animatePullBack, containerRef]);
+  }, [disabled, maxPull, threshold, minPullToActivate, scrollThreshold, animatePullBack, containerRef]);
 
   const progress = Math.min(pullDistance / threshold, 1);
 
