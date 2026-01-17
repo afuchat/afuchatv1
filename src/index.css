@@ -2,12 +2,19 @@
 
 @tailwind base;
 
-/* Enhanced Text Rendering */
+/* Enhanced Text Rendering - Bolder & Larger */
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: "kern" 1, "liga" 1;
+  font-size: 16px; /* Base font size */
+}
+
+/* Global text enhancement - all text is bolder */
+body {
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 /* PWA Fullscreen Display Optimizations */
@@ -15,6 +22,27 @@ html, body {
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+}
+
+/* Enhanced typography for all text elements */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+p, span, div, label, a {
+  font-weight: 500;
+}
+
+/* Timestamps and meta text - bolder */
+time, .timestamp, [class*="text-muted"] {
+  font-weight: 500;
+  font-size: 0.875rem; /* 14px */
+}
+
+/* Small text sizes boosted */
+small, .text-xs, .text-sm {
+  font-weight: 500;
 }
 
 /* Standalone/PWA mode optimizations */
