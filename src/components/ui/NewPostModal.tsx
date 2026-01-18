@@ -40,13 +40,21 @@ interface QuotedPost {
     };
 }
 
+interface WallTarget {
+    id: string;
+    display_name: string;
+    handle: string;
+    avatar_url?: string | null;
+}
+
 interface NewPostModalProps {
     isOpen: boolean;
     onClose: () => void;
     quotedPost?: QuotedPost | null;
+    wallTarget?: WallTarget | null;
 }
 
-const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost }) => {
+const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost, wallTarget }) => {
     const { user } = useAuth();
     const { awardNexa } = useNexa();
     const { isPremium } = usePremiumStatus();
@@ -178,6 +186,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
                     author_id: user?.id,
                     image_url: imageUrls.length > 0 ? imageUrls[0] : null,
                     quoted_post_id: quotedPost?.id || null,
+                    wall_user_id: wallTarget?.id || null,
                 })
                 .select()
                 .single();
@@ -399,6 +408,19 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
 
                     {/* Content */}
                     <div className="p-4 pb-safe">
+                        {/* Wall Post Target Banner */}
+                        {wallTarget && (
+                            <div className="mb-3 p-3 bg-muted/50 rounded-lg border border-border/50 flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">Posting on</span>
+                                <Avatar className="h-6 w-6">
+                                    <AvatarImage src={wallTarget.avatar_url || undefined} alt={wallTarget.display_name} />
+                                    <AvatarFallback>{wallTarget.display_name.charAt(0).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <span className="font-semibold text-sm">{wallTarget.display_name}</span>
+                                <span className="text-muted-foreground text-sm">@{wallTarget.handle}'s wall</span>
+                            </div>
+                        )}
+                        
                         <div className="flex gap-3">
                             {/* Avatar */}
                             <Avatar className="h-10 w-10 flex-shrink-0">
@@ -411,7 +433,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
                                 <PostAutocomplete
                                     value={newPost}
                                     onChange={handleTextChange}
-                                    placeholder="What's happening?"
+                                    placeholder={wallTarget ? `Write something on ${wallTarget.display_name}'s wall...` : "What's happening?"}
                                     textareaRef={textareaRef}
                                 />
 

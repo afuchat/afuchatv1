@@ -46,8 +46,9 @@ import { ProfileViewsSheet } from '@/components/ProfileViewsSheet';
 import { EditPostModal } from '@/components/EditPostModal';
 import { DeveloperProfileSection } from '@/components/developer/DeveloperProfileSection';
 import { DeveloperShowcase } from '@/components/developer/DeveloperShowcase';
-import { Ellipsis, Pencil } from 'lucide-react';
+import { Ellipsis, Pencil, FileEdit } from 'lucide-react';
 import FloatingActionButton from '@/components/ui/FloatingActionButton';
+import NewPostModal from '@/components/ui/NewPostModal';
 
 interface Profile {
 	id: string;
@@ -337,6 +338,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	const [isProfileViewsOpen, setIsProfileViewsOpen] = useState(false);
 	const [profileViewsCount, setProfileViewsCount] = useState(0);
 	const [editingPost, setEditingPost] = useState<Post | null>(null);
+	const [isWallPostModalOpen, setIsWallPostModalOpen] = useState(false);
 
 	// Check if the profile user is a developer
 	const { isDeveloper } = useDeveloperStatus(profileId || undefined);
@@ -703,7 +705,8 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 		// For others, only show non-blocked posts
 		const isOwnProfile = user?.id === id;
 		
-		let query = supabase
+		// Fetch posts: author's own posts + posts on their wall from others
+		const { data: authorPosts, error: authorError } = await supabase
 			.from('posts')
 			.select(`
 				id, 
@@ -712,6 +715,8 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				quoted_post_id,
 				is_blocked,
 				blocked_reason,
+				author_id,
+				wall_user_id,
 				post_images (
 					image_url,
 					alt_text,
@@ -725,16 +730,16 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 					site_name
 				)
 			`)
-			.eq('author_id', id)
+			.or(`author_id.eq.${id},wall_user_id.eq.${id}`)
 			.order('created_at', { ascending: false })
-			.limit(20);
+			.limit(30);
 		
-		// Only filter out blocked posts for other users' profiles
-		if (!isOwnProfile) {
-			query = query.eq('is_blocked', false);
+		// Filter out blocked posts for other users' profiles
+		let data = authorPosts;
+		if (!isOwnProfile && data) {
+			data = data.filter(p => !p.is_blocked);
 		}
-		
-		const { data, error } = await query;
+		const error = authorError;
 
 		if (!error && data) {
 			// Fetch quoted posts if any
@@ -1398,6 +1403,12 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							</div>
 						) : (
 							<div className="flex gap-2 flex-1 justify-end">
+								{/* Post on Wall button */}
+								{isFollowing && (
+									<Button onClick={() => setIsWallPostModalOpen(true)} variant="outline" size="icon" className="rounded-full bg-card border-border" title="Post on wall">
+										<FileEdit className="h-5 w-5" />
+									</Button>
+								)}
 								{isFollowing && (
 									<Button onClick={handleStartChat} variant="outline" size="icon" className="rounded-full bg-card border-border" disabled={isChatLoading}>
 										<MessageSquare className="h-5 w-5" />
@@ -2027,6 +2038,20 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						setEditingPost(null);
 						if (profileId) fetchUserPosts(profileId);
 					}}
+			/>
+		)}
+		
+		{/* Wall Post Modal */}
+		{user && profileId && user.id !== profileId && profile && (
+			<NewPostModal
+				isOpen={isWallPostModalOpen}
+				onClose={() => setIsWallPostModalOpen(false)}
+				wallTarget={{
+					id: profileId,
+					display_name: profile.display_name,
+					handle: profile.handle,
+					avatar_url: profile.avatar_url
+				}}
 			/>
 		)}
 		{user && <FloatingActionButton />}

@@ -2911,6 +2911,7 @@ export type Database = {
           quoted_post_id: string | null
           updated_at: string | null
           view_count: number
+          wall_user_id: string | null
         }
         Insert: {
           author_id?: string | null
@@ -2924,6 +2925,7 @@ export type Database = {
           quoted_post_id?: string | null
           updated_at?: string | null
           view_count?: number
+          wall_user_id?: string | null
         }
         Update: {
           author_id?: string | null
@@ -2937,6 +2939,7 @@ export type Database = {
           quoted_post_id?: string | null
           updated_at?: string | null
           view_count?: number
+          wall_user_id?: string | null
         }
         Relationships: [
           {
