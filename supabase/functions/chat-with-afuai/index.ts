@@ -942,8 +942,9 @@ Please use the above search results to provide an accurate, up-to-date response.
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         messages: messages,
+        max_tokens: 4096,
       }),
     });
 
