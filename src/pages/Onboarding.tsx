@@ -983,7 +983,7 @@ const Onboarding = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="w-full max-w-sm mx-auto px-6"
+      className="w-full max-w-sm mx-auto px-6 py-4"
     >
       {/* Premium header with gradient accent */}
       <div className="text-center mb-8">
@@ -1263,7 +1263,7 @@ const Onboarding = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="w-full max-w-sm mx-auto px-6 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-hide"
+      className="w-full max-w-sm mx-auto px-6 pb-8"
     >
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2">Create Your Profile</h2>
@@ -1519,7 +1519,7 @@ const Onboarding = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="w-full max-w-md mx-auto px-6"
+      className="w-full max-w-md mx-auto px-6 pb-8"
     >
       <div className="text-center mb-8">
         <motion.div 
@@ -1626,7 +1626,7 @@ const Onboarding = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="w-full max-w-md mx-auto px-6"
+      className="w-full max-w-md mx-auto px-6 pb-8"
     >
       <div className="text-center mb-8">
         <motion.div 
@@ -1859,7 +1859,7 @@ const Onboarding = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col relative overflow-x-hidden overflow-y-auto">
         {/* Background image */}
         <div className="absolute inset-0 z-0">
           <img 
@@ -1912,7 +1912,7 @@ const Onboarding = () => {
         </header>
         
         {/* Main content */}
-        <main className="relative flex-1 flex items-center justify-center pb-12 z-10">
+        <main className="relative flex-1 flex items-start justify-center pb-12 pt-4 z-10 overflow-y-auto">
           <AnimatePresence mode="wait">
             {currentStep === 0 && renderAuthStep()}
             {currentStep === 1 && renderAccountTypeStep()}
