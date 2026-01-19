@@ -143,26 +143,24 @@ const aggregateReactions = (reactions: Reaction[]) => {
   return Object.entries(counts).map(([emoji, count]) => ({ emoji, count }));
 };
 
-// --- Telegram-style reaction badge displayed below message bubble ---
+// --- Telegram-style reaction badge displayed inside message bubble ---
 const ReactionsDisplay = ({ 
   reactions, 
   onReaction,
   messageId,
-  currentUserId,
-  isOwn
+  currentUserId 
 }: { 
   reactions: Reaction[]; 
   onReaction: (messageId: string, emoji: string) => void;
   messageId: string;
   currentUserId?: string;
-  isOwn?: boolean;
 }) => {
   const aggregated = aggregateReactions(reactions);
   if (aggregated.length === 0) return null;
 
   return (
-    <div className={`absolute -bottom-3 ${isOwn ? 'right-2' : 'left-2'} z-10`}>
-      <div className="flex items-center gap-0.5 bg-card border border-border shadow-md rounded-full px-1.5 py-0.5">
+    <div className="flex items-center gap-1 px-2 pb-1.5 pt-0.5">
+      <div className="flex items-center bg-black/20 rounded-full px-2 py-0.5">
         {aggregated.map(({ emoji, count }) => {
           const hasUserReacted = currentUserId && reactions.some(
             r => r.reaction === emoji && r.user_id === currentUserId
@@ -174,12 +172,12 @@ const ReactionsDisplay = ({
                 e.stopPropagation();
                 onReaction(messageId, emoji);
               }}
-              className={`flex items-center text-sm transition-transform hover:scale-110 ${
-                hasUserReacted ? 'opacity-100' : 'opacity-80'
+              className={`flex items-center text-base transition-transform hover:scale-110 ${
+                hasUserReacted ? 'opacity-100' : 'opacity-90'
               }`}
             >
               <span>{emoji}</span>
-              {count > 1 && <span className="text-[10px] text-muted-foreground ml-0.5">{count}</span>}
+              {count > 1 && <span className="text-xs text-white/80 ml-0.5">{count}</span>}
             </button>
           );
         })}
@@ -410,10 +408,9 @@ export const MessageBubble = ({
         // For channels, all messages appear left-aligned (from the channel)
         isChannel ? 'justify-start' : (isOwn ? 'justify-end' : 'justify-start')
       } ${
-        isLastInGroup ? (hasReactions ? 'mb-5' : 'mb-1') : 'mb-px'
+        isLastInGroup ? 'mb-1' : 'mb-px'
       }`}
     >
-      <div className="relative">
       <div
         className={`${
           // For channels, all messages use receiver styling (muted background)
@@ -539,19 +536,18 @@ export const MessageBubble = ({
           </div>
           )}
         
-        {/* Telegram-style Reactions Display - below bubble */}
+        {/* Telegram-style Reactions Display - inside bubble */}
         {hasReactions && (
           <ReactionsDisplay
             reactions={message.message_reactions!}
             onReaction={onReaction}
             messageId={message.id}
             currentUserId={user?.id}
-            isOwn={isOwn}
           />
         )}
-        </div>
       </div>
     </motion.div>
+
     <MessageActionsMenu
       open={actionsSheetOpen}
       onOpenChange={setActionsSheetOpen}
