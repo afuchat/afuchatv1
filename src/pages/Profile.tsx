@@ -1402,13 +1402,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						<div className="flex flex-col gap-2">
 							</div>
 						) : (
-							<div className="flex gap-2 flex-1 justify-end">
-								{/* Post on Wall button */}
-								{isFollowing && (
-									<Button onClick={() => setIsWallPostModalOpen(true)} variant="outline" size="icon" className="rounded-full bg-card border-border" title="Post on wall">
-										<FileEdit className="h-5 w-5" />
-									</Button>
-								)}
+							<div className="flex gap-2 flex-1 justify-end flex-wrap">
 								{isFollowing && (
 									<Button onClick={handleStartChat} variant="outline" size="icon" className="rounded-full bg-card border-border" disabled={isChatLoading}>
 										<MessageSquare className="h-5 w-5" />
@@ -2054,7 +2048,14 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				}}
 			/>
 		)}
-		{user && <FloatingActionButton />}
+		{user && (
+			<FloatingActionButton 
+				wallPostAction={isFollowing && profileId && user.id !== profileId && profile ? {
+					targetName: profile.display_name,
+					onClick: () => setIsWallPostModalOpen(true)
+				} : undefined}
+			/>
+		)}
 	</div>
 );
 };

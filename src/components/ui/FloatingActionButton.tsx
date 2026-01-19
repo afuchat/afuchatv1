@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Feather, X, Send, Gamepad2 } from 'lucide-react';
+import { Feather, X, Send, Gamepad2, FileEdit } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,7 +10,14 @@ interface FabAction {
   onClick: () => void;
 }
 
-const FloatingActionButton = () => {
+interface FloatingActionButtonProps {
+  wallPostAction?: {
+    targetName: string;
+    onClick: () => void;
+  };
+}
+
+const FloatingActionButton = ({ wallPostAction }: FloatingActionButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -62,6 +69,11 @@ const FloatingActionButton = () => {
       label: 'Post',
       onClick: () => handleActionClick(handleNewPost),
     },
+    ...(wallPostAction ? [{
+      icon: <FileEdit className="h-6 w-6" strokeWidth={2.5} />,
+      label: `Post on ${wallPostAction.targetName}'s wall`,
+      onClick: () => handleActionClick(wallPostAction.onClick),
+    }] : []),
     {
       icon: <Send className="h-6 w-6" strokeWidth={2.5} />,
       label: 'Transfer',
@@ -132,10 +144,10 @@ const FloatingActionButton = () => {
                   onClick={action.onClick}
                   className="flex items-center gap-3"
                 >
-                  <span className="text-sm font-semibold text-foreground bg-card px-4 py-2 rounded-full shadow-lg border border-border/40">
+                  <span className="text-sm font-semibold text-foreground bg-card px-4 py-2 rounded-full shadow-lg border border-border/40 max-w-[200px] truncate">
                     {action.label}
                   </span>
-                  <div className="h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/25 flex items-center justify-center">
+                  <div className="h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/25 flex items-center justify-center flex-shrink-0">
                     {action.icon}
                   </div>
                 </motion.button>
