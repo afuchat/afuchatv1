@@ -1284,25 +1284,46 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							className="w-full h-full object-cover"
 						/>
 					) : null}
+					
+					{/* Top right action buttons on banner - only for own profile */}
+					{user && user.id === profileId && (
+						<div className="absolute top-4 right-4 flex items-center gap-2">
+							{/* Profile Views */}
+							<button
+								onClick={() => setIsProfileViewsOpen(true)}
+								className="relative p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors shadow-sm"
+							>
+								<Footprints className="h-5 w-5 text-foreground" />
+								{profileViewsCount > 0 && (
+									<span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+										{profileViewsCount > 99 ? '99+' : profileViewsCount}
+									</span>
+								)}
+							</button>
+							
+							{/* Banner Upload */}
+							<label className="p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors shadow-sm">
+								<input
+									type="file"
+									accept="image/*"
+									onChange={handleBannerUpload}
+									disabled={isUploadingBanner}
+									className="hidden"
+								/>
+								{isUploadingBanner ? (
+									<ButtonLoader className="h-5 w-5" />
+								) : (
+									<Camera className="h-5 w-5 text-foreground" />
+								)}
+							</label>
+						</div>
+					)}
 				</div>
 
 				<div className="p-4 relative">
 				{/* Edit Profile Button - Right side, overlapping banner/content */}
 				{user && user.id === profileId && (
 					<div className="absolute top-4 right-4 z-10 flex gap-2 items-center">
-						{/* Profile Views */}
-						<button
-							onClick={() => setIsProfileViewsOpen(true)}
-							className="relative p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors"
-						>
-							<Footprints className="h-5 w-5 text-foreground" />
-							{profileViewsCount > 0 && (
-								<span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-									{profileViewsCount > 99 ? '99+' : profileViewsCount}
-								</span>
-							)}
-						</button>
-						
 						{/* Share Profile */}
 						<button
 							onClick={() => {
@@ -1322,22 +1343,6 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						>
 							<Share2 className="h-5 w-5 text-foreground" />
 						</button>
-						
-						{/* Banner Upload */}
-						<label className="p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors">
-							<input
-								type="file"
-								accept="image/*"
-								onChange={handleBannerUpload}
-								disabled={isUploadingBanner}
-								className="hidden"
-							/>
-							{isUploadingBanner ? (
-								<ButtonLoader className="h-5 w-5" />
-							) : (
-								<Camera className="h-5 w-5 text-foreground" />
-							)}
-						</label>
 						
 						{/* Follow Requests Button for private accounts */}
 						{profile?.is_private && pendingRequestsCount > 0 && (
