@@ -44,6 +44,7 @@ interface EditProfileForm {
   show_online_status: boolean;
   show_read_receipts: boolean;
   show_balance: boolean;
+  tipping_enabled: boolean;
   avatar_url: string | null;
   country: string;
   business_category: string;
@@ -71,6 +72,7 @@ const EditProfile: React.FC = () => {
     show_online_status: true,
     show_read_receipts: true,
     show_balance: true,
+    tipping_enabled: false,
     avatar_url: null,
     country: '',
     business_category: '',
@@ -135,6 +137,7 @@ const EditProfile: React.FC = () => {
             show_online_status: data.show_online_status || true,
             show_read_receipts: data.show_read_receipts || true,
             show_balance: data.show_balance ?? true,
+            tipping_enabled: (data as any).tipping_enabled ?? false,
             avatar_url: data.avatar_url || null,
             country: data.country || '',
             business_category: data.business_category || '',
@@ -157,6 +160,7 @@ const EditProfile: React.FC = () => {
             show_online_status: true,
             show_read_receipts: true,
             show_balance: true,
+            tipping_enabled: false,
             avatar_url: null,
             country: '',
             business_category: '',
@@ -278,7 +282,7 @@ const EditProfile: React.FC = () => {
     setProfile((prev) => ({ ...prev, [name as keyof EditProfileForm]: value }));
   };
 
-  const handleToggleChange = (key: keyof Pick<EditProfileForm, 'is_private' | 'show_online_status' | 'show_read_receipts' | 'show_balance'>) => {
+  const handleToggleChange = (key: keyof Pick<EditProfileForm, 'is_private' | 'show_online_status' | 'show_read_receipts' | 'show_balance' | 'tipping_enabled'>) => {
     setProfile((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
@@ -969,6 +973,24 @@ const EditProfile: React.FC = () => {
                 <Switch
                   checked={profile.show_balance}
                   onCheckedChange={() => handleToggleChange('show_balance')}
+                  disabled={saving}
+                />
+              </div>
+
+              {/* Enable Tipping Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
+                <div className="flex-1 pr-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-sm font-medium cursor-pointer">Enable Tipping</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Allow others to send you tips on your profile
+                  </p>
+                </div>
+                <Switch
+                  checked={profile.tipping_enabled}
+                  onCheckedChange={() => handleToggleChange('tipping_enabled')}
                   disabled={saving}
                 />
               </div>

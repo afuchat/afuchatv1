@@ -3158,6 +3158,7 @@ export type Database = {
           show_balance: boolean | null
           show_online_status: boolean | null
           show_read_receipts: boolean | null
+          tipping_enabled: boolean | null
           updated_at: string | null
           verification_source: string | null
           warned_at: string | null
@@ -3214,6 +3215,7 @@ export type Database = {
           show_balance?: boolean | null
           show_online_status?: boolean | null
           show_read_receipts?: boolean | null
+          tipping_enabled?: boolean | null
           updated_at?: string | null
           verification_source?: string | null
           warned_at?: string | null
@@ -3270,6 +3272,7 @@ export type Database = {
           show_balance?: boolean | null
           show_online_status?: boolean | null
           show_read_receipts?: boolean | null
+          tipping_enabled?: boolean | null
           updated_at?: string | null
           verification_source?: string | null
           warned_at?: string | null
