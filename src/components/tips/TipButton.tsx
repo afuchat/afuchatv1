@@ -124,9 +124,9 @@ export const TipButton = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant={variant} size={size} className={`gap-2 group ${className || ''}`}>
-          <Banknote className="w-5 h-5 text-green-500 money-pulse group-hover:animate-none group-hover:scale-125 transition-transform" />
-          {showLabel && <span className="text-green-500 font-semibold">Tip</span>}
+        <Button variant={variant} size={size} className={`gap-1.5 ${className || ''}`}>
+          <Banknote className="w-4 h-4 text-green-500" />
+          {showLabel && <span className="text-green-500 font-semibold text-sm">Tip</span>}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
