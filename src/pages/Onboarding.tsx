@@ -1069,6 +1069,18 @@ const Onboarding = () => {
           </div>
         </div>
         
+        {authMode === 'login' && (
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={() => navigate('/auth/forgot-password')}
+              className="text-sm text-primary hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
+        )}
+        
         <Button 
           onClick={handleAuth} 
           disabled={loading}
