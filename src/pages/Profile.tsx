@@ -84,6 +84,7 @@ interface Profile {
 	last_seen?: string | null;
 	show_online_status?: boolean;
 	show_balance?: boolean;
+	tipping_enabled?: boolean;
 }
 
 interface Post {
@@ -1283,25 +1284,26 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							className="w-full h-full object-cover"
 						/>
 					) : null}
-					
-					{/* Top right action buttons */}
-					<div className="absolute top-4 right-4 flex items-center gap-2">
-						{/* Profile Views - only for own profile */}
-						{user && user.id === profileId && (
-							<button
-								onClick={() => setIsProfileViewsOpen(true)}
-								className="relative p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors shadow-sm"
-							>
-								<Footprints className="h-5 w-5 text-foreground" />
-								{profileViewsCount > 0 && (
-									<span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-										{profileViewsCount > 99 ? '99+' : profileViewsCount}
-									</span>
-								)}
-							</button>
-						)}
+				</div>
+
+				<div className="p-4 relative">
+				{/* Edit Profile Button - Right side, overlapping banner/content */}
+				{user && user.id === profileId && (
+					<div className="absolute top-4 right-4 z-10 flex gap-2 items-center">
+						{/* Profile Views */}
+						<button
+							onClick={() => setIsProfileViewsOpen(true)}
+							className="relative p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors"
+						>
+							<Footprints className="h-5 w-5 text-foreground" />
+							{profileViewsCount > 0 && (
+								<span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+									{profileViewsCount > 99 ? '99+' : profileViewsCount}
+								</span>
+							)}
+						</button>
 						
-						{/* Share Profile Button */}
+						{/* Share Profile */}
 						<button
 							onClick={() => {
 								const profileUrl = `${window.location.origin}/${profile?.handle}`;
@@ -1316,35 +1318,27 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									toast.success(t('profile.linkCopied', 'Profile link copied!'));
 								}
 							}}
-							className="p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors shadow-sm"
+							className="p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors"
 						>
 							<Share2 className="h-5 w-5 text-foreground" />
 						</button>
 						
-						{/* Banner Upload - only for own profile */}
-						{user && user.id === profileId && (
-							<label className="p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors shadow-sm">
-								<input
-									type="file"
-									accept="image/*"
-									onChange={handleBannerUpload}
-									disabled={isUploadingBanner}
-									className="hidden"
-								/>
-								{isUploadingBanner ? (
-									<ButtonLoader className="h-5 w-5" />
-								) : (
-									<Camera className="h-5 w-5 text-foreground" />
-								)}
-							</label>
-						)}
-					</div>
-				</div>
-
-				<div className="p-4 relative">
-				{/* Edit Profile Button - Right side, overlapping banner/content */}
-				{user && user.id === profileId && (
-					<div className="absolute top-4 right-4 z-10 flex gap-2">
+						{/* Banner Upload */}
+						<label className="p-2 rounded-full bg-card border border-border hover:bg-muted cursor-pointer transition-colors">
+							<input
+								type="file"
+								accept="image/*"
+								onChange={handleBannerUpload}
+								disabled={isUploadingBanner}
+								className="hidden"
+							/>
+							{isUploadingBanner ? (
+								<ButtonLoader className="h-5 w-5" />
+							) : (
+								<Camera className="h-5 w-5 text-foreground" />
+							)}
+						</label>
+						
 						{/* Follow Requests Button for private accounts */}
 						{profile?.is_private && pendingRequestsCount > 0 && (
 							<Button 
@@ -1408,7 +1402,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 										<MessageSquare className="h-5 w-5" />
 									</Button>
 								)}
-								{isFollowing && (
+								{isFollowing && profile?.tipping_enabled && (
 									<TipButton
 										receiverId={profileId}
 										receiverName={profile.display_name}
@@ -1481,6 +1475,27 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 										)}
 									</Button>
 								)}
+								{/* Share Profile Button */}
+								<Button
+									variant="outline"
+									size="icon"
+									className="rounded-full bg-card border-border"
+									onClick={() => {
+										const profileUrl = `${window.location.origin}/${profile?.handle}`;
+										if (navigator.share) {
+											navigator.share({
+												title: `${profile?.display_name} on AfuChat`,
+												text: `Check out ${profile?.display_name}'s profile on AfuChat`,
+												url: profileUrl,
+											}).catch(() => {});
+										} else {
+											navigator.clipboard.writeText(profileUrl);
+											toast.success(t('profile.linkCopied', 'Profile link copied!'));
+										}
+									}}
+								>
+									<Share2 className="h-5 w-5" />
+								</Button>
 								{/* More options button for block/report */}
 								<Button 
 									variant="outline" 
