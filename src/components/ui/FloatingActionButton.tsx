@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Feather, X, Send, Gamepad2, FileEdit } from 'lucide-react';
+import { Feather, X, Send, FileEdit, MessageSquare } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,14 +15,22 @@ interface FloatingActionButtonProps {
     targetName: string;
     onClick: () => void;
   };
+  profileActions?: {
+    userId: string;
+    userName: string;
+    onMessage?: () => void;
+  };
 }
 
-const FloatingActionButton = ({ wallPostAction }: FloatingActionButtonProps) => {
+const FloatingActionButton = ({ wallPostAction, profileActions }: FloatingActionButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Check if we're on a profile page (not home/feed)
+  const isProfilePage = profileActions !== undefined;
 
   // Close FAB when route changes
   useEffect(() => {
@@ -63,12 +71,8 @@ const FloatingActionButton = ({ wallPostAction }: FloatingActionButtonProps) => 
     }
   };
 
-  const actions: FabAction[] = [
-    {
-      icon: <Feather className="h-6 w-6" strokeWidth={2.5} />,
-      label: 'Post',
-      onClick: () => handleActionClick(handleNewPost),
-    },
+  // Profile-specific actions (when viewing another user's profile)
+  const profilePageActions: FabAction[] = profileActions ? [
     ...(wallPostAction ? [{
       icon: <FileEdit className="h-6 w-6" strokeWidth={2.5} />,
       label: `Post on ${wallPostAction.targetName}'s wall`,
@@ -76,15 +80,36 @@ const FloatingActionButton = ({ wallPostAction }: FloatingActionButtonProps) => 
     }] : []),
     {
       icon: <Send className="h-6 w-6" strokeWidth={2.5} />,
+      label: `Transfer to ${profileActions.userName}`,
+      onClick: () => handleActionClick(() => navigate(`/transfer?to=${profileActions.userId}`)),
+    },
+    ...(profileActions.onMessage ? [{
+      icon: <MessageSquare className="h-6 w-6" strokeWidth={2.5} />,
+      label: `Message ${profileActions.userName}`,
+      onClick: () => handleActionClick(profileActions.onMessage!),
+    }] : []),
+  ] : [];
+
+  // Default actions for other pages (home, feed, etc.)
+  const defaultActions: FabAction[] = [
+    {
+      icon: <Feather className="h-6 w-6" strokeWidth={2.5} />,
+      label: 'Post',
+      onClick: () => handleActionClick(handleNewPost),
+    },
+    {
+      icon: <Send className="h-6 w-6" strokeWidth={2.5} />,
       label: 'Transfer',
       onClick: () => handleActionClick(() => navigate('/transfer')),
     },
-    {
-      icon: <Gamepad2 className="h-6 w-6" strokeWidth={2.5} />,
-      label: 'Games',
-      onClick: () => handleActionClick(() => navigate('/games')),
-    }
   ];
+
+  const actions = isProfilePage ? profilePageActions : defaultActions;
+
+  // Don't render if no actions available
+  if (actions.length === 0) {
+    return null;
+  }
 
   return (
     <>

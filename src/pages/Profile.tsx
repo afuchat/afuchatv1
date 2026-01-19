@@ -2049,13 +2049,21 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				}}
 			/>
 		)}
-		{user && (
+		{user && user.id !== profileId && profileId && profile && (
 			<FloatingActionButton 
-				wallPostAction={isFollowing && profileId && user.id !== profileId && profile ? {
+				wallPostAction={isFollowing ? {
 					targetName: profile.display_name,
 					onClick: () => setIsWallPostModalOpen(true)
 				} : undefined}
+				profileActions={{
+					userId: profileId,
+					userName: profile.display_name,
+					onMessage: isFollowing ? handleStartChat : undefined
+				}}
 			/>
+		)}
+		{user && user.id === profileId && (
+			<FloatingActionButton />
 		)}
 	</div>
 );
