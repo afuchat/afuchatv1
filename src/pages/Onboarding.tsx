@@ -993,8 +993,8 @@ const Onboarding = () => {
           transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
           className="relative mx-auto mb-6"
         >
-          <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center mx-auto shadow-lg shadow-primary/25">
-            <User className="h-10 w-10 text-primary-foreground" />
+          <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 flex items-center justify-center mx-auto shadow-lg shadow-primary/10 border border-primary/20">
+            <Logo size="lg" />
           </div>
           <motion.div 
             initial={{ scale: 0 }}
