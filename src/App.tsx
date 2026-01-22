@@ -110,6 +110,8 @@ const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const MerchantOrders = lazy(() => import("./pages/MerchantOrders"));
 const MerchantOrderDetail = lazy(() => import("./pages/MerchantOrderDetail"));
+const MiniProgramOrders = lazy(() => import("./pages/MiniProgramOrders"));
+const MiniProgramOrderDetail = lazy(() => import("./pages/MiniProgramOrderDetail"));
 import Layout from "./components/Layout";
 
 const queryClient = new QueryClient({
@@ -227,6 +229,10 @@ const AppRoutes = () => {
       <Route path="/travel/hotel/:id" element={<Layout><HotelDetail /></Layout>} />
       <Route path="/events" element={<Layout><Events /></Layout>} />
       <Route path="/events/:id" element={<Layout><EventDetail /></Layout>} />
+      
+      {/* Mini Program Orders */}
+      <Route path="/mini-program-orders" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><MiniProgramOrders /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/mini-program-orders/:id" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><MiniProgramOrderDetail /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       
       {/* Merchant Shop Routes */}
       <Route path="/shop/:merchantId" element={<MerchantShop />} />
