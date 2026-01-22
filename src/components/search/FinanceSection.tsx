@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, MapPin, RefreshCw } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, MapPin, RefreshCw, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +11,6 @@ interface CurrencyRate {
   symbol: string;
   name: string;
   rate: number;
-  change: number;
   flag?: string;
   isLocal?: boolean;
 }
@@ -48,7 +47,8 @@ const currencyFlags: Record<string, string> = {
   BRL: "🇧🇷", MXN: "🇲🇽", TRY: "🇹🇷", RUB: "🇷🇺", PLN: "🇵🇱",
   SEK: "🇸🇪", NOK: "🇳🇴", DKK: "🇩🇰", ZMW: "🇿🇲", BWP: "🇧🇼",
   MWK: "🇲🇼", MZN: "🇲🇿", NAD: "🇳🇦", AOA: "🇦🇴", CDF: "🇨🇩",
-  NZD: "🇳🇿",
+  NZD: "🇳🇿", HKD: "🇭🇰", TWD: "🇹🇼", CZK: "🇨🇿", HUF: "🇭🇺",
+  ILS: "🇮🇱", CLP: "🇨🇱", COP: "🇨🇴", PEN: "🇵🇪", ARS: "🇦🇷",
 };
 
 // Currency names
@@ -64,21 +64,24 @@ const currencyNames: Record<string, string> = {
   PHP: "Philippine Peso", VND: "Vietnamese Dong", KRW: "South Korean Won",
   BRL: "Brazilian Real", MXN: "Mexican Peso", TRY: "Turkish Lira",
   RUB: "Russian Ruble", PLN: "Polish Zloty", SEK: "Swedish Krona",
-  NOK: "Norwegian Krone", NZD: "New Zealand Dollar",
+  NOK: "Norwegian Krone", NZD: "New Zealand Dollar", HKD: "Hong Kong Dollar",
+  TWD: "Taiwan Dollar", CZK: "Czech Koruna", HUF: "Hungarian Forint",
+  ILS: "Israeli Shekel", CLP: "Chilean Peso", COP: "Colombian Peso",
+  PEN: "Peruvian Sol", ARS: "Argentine Peso",
 };
 
 // Major currencies to always show
-const majorCurrencies = ["USD", "EUR", "GBP", "JPY", "CNY"];
+const majorCurrencies = ["USD", "EUR", "GBP", "JPY", "CNY", "CHF", "AUD", "CAD"];
 
 // Regional currencies by continent/region
 const africanCurrencies = ["KES", "UGX", "TZS", "NGN", "ZAR", "GHS", "EGP"];
-const asianCurrencies = ["INR", "PKR", "IDR", "MYR", "SGD", "THB", "PHP"];
-const europeanCurrencies = ["PLN", "TRY", "SEK", "NOK", "CHF"];
+const asianCurrencies = ["INR", "PKR", "IDR", "MYR", "SGD", "THB", "PHP", "KRW"];
+const europeanCurrencies = ["PLN", "TRY", "SEK", "NOK", "CZK", "HUF"];
 
 // Country lists for regional detection
 const africanCountries = ["Uganda", "Kenya", "Tanzania", "Rwanda", "Nigeria", "Ghana", "South Africa", "Egypt", "Ethiopia"];
-const asianCountries = ["India", "Pakistan", "Bangladesh", "Indonesia", "Malaysia", "Singapore", "Thailand", "Philippines", "Vietnam"];
-const europeanCountries = ["Germany", "France", "Italy", "Spain", "Poland", "Turkey", "Russia", "Ukraine", "Sweden", "Norway"];
+const asianCountries = ["India", "Pakistan", "Bangladesh", "Indonesia", "Malaysia", "Singapore", "Thailand", "Philippines", "Vietnam", "South Korea"];
+const europeanCountries = ["Germany", "France", "Italy", "Spain", "Poland", "Turkey", "Russia", "Ukraine", "Sweden", "Norway", "Czech Republic", "Hungary"];
 
 interface CurrencyTickerProps {
   rates: CurrencyRate[];
@@ -158,19 +161,44 @@ const CurrencyTicker = ({ rates, isLoading }: CurrencyTickerProps) => {
   );
 };
 
+// Real-time clock component
+const RealTimeClock = () => {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex items-center gap-2 text-sm font-mono bg-muted/50 px-3 py-1.5 rounded-lg">
+      <Clock className="h-4 w-4 text-primary" />
+      <span className="text-foreground font-semibold">
+        {time.toLocaleTimeString()}
+      </span>
+      <span className="text-muted-foreground text-xs">
+        {time.toLocaleDateString()}
+      </span>
+    </div>
+  );
+};
+
 export const FinanceSection = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [ratesLoading, setRatesLoading] = useState(true);
   const [stocksLoading, setStocksLoading] = useState(true);
   const [userCountry, setUserCountry] = useState<string | null>(null);
+  const [userCurrencyCode, setUserCurrencyCode] = useState<string>('USD');
   const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
   const [stocks, setStocks] = useState<StockData[]>([]);
-  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
-  const [stocksLastUpdate, setStocksLastUpdate] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchRates = async (userCurrencyCode: string, country: string | null) => {
-    setRatesLoading(true);
+  const fetchRates = useCallback(async (currencyCode: string, country: string | null, isAutoRefresh = false) => {
+    if (!isAutoRefresh) setRatesLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('fetch-currency-rates', {
         body: { baseCurrency: 'USD' },
@@ -183,26 +211,24 @@ export const FinanceSection = () => {
         const apiRates = data.rates as Record<string, number>;
 
         // Add user's local currency first
-        if (userCurrencyCode !== "USD" && apiRates[userCurrencyCode]) {
+        if (currencyCode !== "USD" && apiRates[currencyCode]) {
           rates.push({
-            symbol: `USD/${userCurrencyCode}`,
-            name: currencyNames[userCurrencyCode] || userCurrencyCode,
-            rate: apiRates[userCurrencyCode],
-            change: 0,
-            flag: currencyFlags[userCurrencyCode] || '💱',
+            symbol: `USD/${currencyCode}`,
+            name: currencyNames[currencyCode] || currencyCode,
+            rate: apiRates[currencyCode],
+            flag: currencyFlags[currencyCode] || '💱',
             isLocal: true,
           });
         }
 
         // Add major currencies
         majorCurrencies.forEach(code => {
-          if (code === userCurrencyCode || code === "USD") return;
+          if (code === currencyCode || code === "USD") return;
           if (apiRates[code]) {
             rates.push({
               symbol: `USD/${code}`,
               name: currencyNames[code] || code,
               rate: apiRates[code],
-              change: 0,
               flag: currencyFlags[code] || '💱',
             });
           }
@@ -217,34 +243,33 @@ export const FinanceSection = () => {
         } else if (country && europeanCountries.includes(country)) {
           regionalCodes = europeanCurrencies;
         } else {
-          regionalCodes = ["KES", "NGN", "INR", "AED"];
+          regionalCodes = ["KES", "NGN", "INR", "AED", "BRL", "MXN"];
         }
 
         regionalCodes.forEach(code => {
-          if (code === userCurrencyCode || majorCurrencies.includes(code)) return;
+          if (code === currencyCode || majorCurrencies.includes(code)) return;
           if (apiRates[code]) {
             rates.push({
               symbol: `USD/${code}`,
               name: currencyNames[code] || code,
               rate: apiRates[code],
-              change: 0,
               flag: currencyFlags[code] || '💱',
             });
           }
         });
 
         setCurrencyRates(rates);
-        setLastUpdate(data.lastUpdate);
+        setLastUpdate(new Date());
       }
     } catch (error) {
       console.error('Error fetching currency rates:', error);
     } finally {
-      setRatesLoading(false);
+      if (!isAutoRefresh) setRatesLoading(false);
     }
-  };
+  }, []);
 
-  const fetchStocks = async () => {
-    setStocksLoading(true);
+  const fetchStocks = useCallback(async (isAutoRefresh = false) => {
+    if (!isAutoRefresh) setStocksLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('fetch-stock-data');
 
@@ -259,32 +284,32 @@ export const FinanceSection = () => {
           changePercent: stock.changePercent,
         }));
         setStocks(formattedStocks);
-        setStocksLastUpdate(data.timestamp);
+        setLastUpdate(new Date());
       }
     } catch (error) {
       console.error('Error fetching stock data:', error);
-      // Keep existing mock data as fallback
-      setStocks([
-        { symbol: 'AAPL', name: 'Apple Inc.', price: 185.92, change: 2.34, changePercent: 1.27 },
-        { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 141.80, change: -0.85, changePercent: -0.60 },
-        { symbol: 'MSFT', name: 'Microsoft Corp.', price: 378.91, change: 4.21, changePercent: 1.12 },
-        { symbol: 'AMZN', name: 'Amazon.com', price: 178.25, change: 1.56, changePercent: 0.88 },
-        { symbol: 'TSLA', name: 'Tesla Inc.', price: 248.48, change: -3.72, changePercent: -1.47 },
-        { symbol: 'META', name: 'Meta Platforms', price: 505.95, change: 8.32, changePercent: 1.67 },
-        { symbol: 'NVDA', name: 'NVIDIA Corp.', price: 875.28, change: 15.42, changePercent: 1.79 },
-        { symbol: 'JPM', name: 'JPMorgan Chase', price: 195.34, change: 1.23, changePercent: 0.63 },
-      ]);
     } finally {
-      setStocksLoading(false);
+      if (!isAutoRefresh) setStocksLoading(false);
     }
-  };
+  }, []);
 
+  const refreshAll = useCallback(async () => {
+    setIsRefreshing(true);
+    await Promise.all([
+      fetchRates(userCurrencyCode, userCountry, true),
+      fetchStocks(true),
+    ]);
+    setIsRefreshing(false);
+  }, [fetchRates, fetchStocks, userCurrencyCode, userCountry]);
+
+  // Initial data fetch
   useEffect(() => {
     const fetchUserCountry = async () => {
       if (!user) {
         setLoading(false);
         setRatesLoading(false);
         fetchStocks();
+        fetchRates('USD', null);
         return;
       }
 
@@ -297,8 +322,9 @@ export const FinanceSection = () => {
 
         if (profile?.country) {
           setUserCountry(profile.country);
-          const userCurrency = getCurrencyForCountry(profile.country);
-          fetchRates(userCurrency.code, profile.country);
+          const currency = getCurrencyForCountry(profile.country);
+          setUserCurrencyCode(currency.code);
+          fetchRates(currency.code, profile.country);
         } else {
           fetchRates('USD', null);
         }
@@ -313,7 +339,16 @@ export const FinanceSection = () => {
     };
 
     fetchUserCountry();
-  }, [user]);
+  }, [user, fetchRates, fetchStocks]);
+
+  // Auto-refresh every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshAll();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [refreshAll]);
 
   if (loading) {
     return (
@@ -333,6 +368,19 @@ export const FinanceSection = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header with Real-time Clock */}
+      <div className="px-4 pt-4 flex items-center justify-between">
+        <RealTimeClock />
+        <button
+          onClick={refreshAll}
+          disabled={isRefreshing}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors bg-muted/50 px-2 py-1.5 rounded-lg"
+        >
+          <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Updating...' : 'Refresh'}
+        </button>
+      </div>
+
       {/* Currency Ticker */}
       <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-b border-border">
         <div className="px-4 pt-4 pb-2">
@@ -340,6 +388,10 @@ export const FinanceSection = () => {
             <div className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-primary" />
               <h2 className="font-semibold text-lg text-foreground">Live Currency Rates</h2>
+              <span className="flex items-center gap-1 text-xs text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                LIVE
+              </span>
             </div>
             {userCountry && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
@@ -350,9 +402,8 @@ export const FinanceSection = () => {
             )}
           </div>
           {lastUpdate && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <RefreshCw className="h-3 w-3" />
-              Updated: {new Date(lastUpdate).toLocaleString()}
+            <p className="text-xs text-muted-foreground">
+              Last updated: {lastUpdate.toLocaleTimeString()}
             </p>
           )}
         </div>
@@ -367,13 +418,11 @@ export const FinanceSection = () => {
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
             <h2 className="font-semibold text-lg text-foreground">Market Overview</h2>
+            <span className="flex items-center gap-1 text-xs text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              LIVE
+            </span>
           </div>
-          {stocksLastUpdate && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <RefreshCw className="h-3 w-3" />
-              Live
-            </p>
-          )}
         </div>
 
         {stocksLoading ? (
