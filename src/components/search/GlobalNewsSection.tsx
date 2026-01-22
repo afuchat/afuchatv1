@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { RefreshCw, Heart, Share2, MoreVertical, Clock, Newspaper, ExternalLink, ArrowLeft } from 'lucide-react';
+import { RefreshCw, Heart, Share2, MoreVertical, Clock, Newspaper, ExternalLink, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -42,17 +42,26 @@ export const GlobalNewsSection = ({ category = 'general' }: GlobalNewsSectionPro
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
   const [articleContent, setArticleContent] = useState<string>('');
   const [loadingContent, setLoadingContent] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const fetchNews = useCallback(async () => {
+  const fetchNews = useCallback(async (pageNum: number = 1, append: boolean = false) => {
+    if (append) {
+      setLoadingMore(true);
+    }
+    
     try {
       const { data, error } = await supabase.functions.invoke('fetch-news', {
         body: { 
           category,
           country: 'us',
-          pageSize: 15 
+          pageSize: 10,
+          page: pageNum
         },
       });
 
@@ -62,7 +71,13 @@ export const GlobalNewsSection = ({ category = 'general' }: GlobalNewsSectionPro
       }
 
       if (data?.success && data.articles) {
-        setNews(data.articles);
+        if (append) {
+          setNews(prev => [...prev, ...data.articles]);
+        } else {
+          setNews(data.articles);
+        }
+        setHasMore(data.hasMore ?? false);
+        setPage(pageNum);
       } else if (data?.error) {
         console.log('News API:', data.error);
       }
@@ -71,16 +86,41 @@ export const GlobalNewsSection = ({ category = 'general' }: GlobalNewsSectionPro
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
   }, [category]);
 
   useEffect(() => {
-    fetchNews();
-  }, [fetchNews]);
+    setNews([]);
+    setPage(1);
+    setHasMore(true);
+    setLoading(true);
+    fetchNews(1, false);
+  }, [category]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          fetchNews(page + 1, true);
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loading, page, fetchNews]);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchNews();
+    setPage(1);
+    setHasMore(true);
+    fetchNews(1, false);
   };
 
   const getTimeAgo = (dateString?: string) => {
@@ -333,16 +373,14 @@ export const GlobalNewsSection = ({ category = 'general' }: GlobalNewsSectionPro
           ))}
         </AnimatePresence>
 
-        {/* View More */}
-        <div className="px-4 pb-4">
-          <Button 
-            variant="ghost" 
-            className="w-full text-primary hover:text-primary/80 hover:bg-primary/10"
-            onClick={handleRefresh}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Stories
-          </Button>
+        {/* Infinite scroll trigger */}
+        <div ref={loadMoreRef} className="px-4 py-6 flex justify-center">
+          {loadingMore && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="text-sm">Loading more stories...</span>
+            </div>
+          )}
         </div>
       </div>
 
