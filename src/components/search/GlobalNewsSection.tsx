@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { RefreshCw, Heart, Share2, MoreVertical, Clock, Newspaper, ExternalLink, ArrowLeft, Globe, Tv, Radio, Mic2, Building2, Rss } from 'lucide-react';
+import { RefreshCw, Heart, Share2, MoreVertical, Clock, Newspaper, ExternalLink, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,28 +26,13 @@ interface GlobalNewsSectionProps {
   category?: 'general' | 'technology' | 'sports' | 'entertainment' | 'business';
 }
 
-const getSourceIcon = (source: string) => {
-  const sourceLower = source.toLowerCase();
-  
-  if (sourceLower.includes('cnn') || sourceLower.includes('bbc') || sourceLower.includes('fox') || sourceLower.includes('nbc') || sourceLower.includes('abc') || sourceLower.includes('cbs')) {
-    return Tv;
+const getFaviconUrl = (url: string) => {
+  try {
+    const domain = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  } catch {
+    return null;
   }
-  if (sourceLower.includes('radio') || sourceLower.includes('npr')) {
-    return Radio;
-  }
-  if (sourceLower.includes('podcast') || sourceLower.includes('interview')) {
-    return Mic2;
-  }
-  if (sourceLower.includes('reuters') || sourceLower.includes('associated press') || sourceLower.includes('ap news') || sourceLower.includes('bloomberg') || sourceLower.includes('business')) {
-    return Building2;
-  }
-  if (sourceLower.includes('rss') || sourceLower.includes('feed')) {
-    return Rss;
-  }
-  if (sourceLower.includes('.com') || sourceLower.includes('online') || sourceLower.includes('digital')) {
-    return Globe;
-  }
-  return Newspaper;
 };
 
 export const GlobalNewsSection = ({ category = 'general' }: GlobalNewsSectionProps) => {
@@ -246,14 +231,21 @@ export const GlobalNewsSection = ({ category = 'general' }: GlobalNewsSectionPro
                 {/* Source Header */}
                 <div className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-2">
-                    {(() => {
-                      const SourceIcon = getSourceIcon(item.source);
-                      return (
-                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                          <SourceIcon className="h-3.5 w-3.5 text-primary" />
-                        </div>
-                      );
-                    })()}
+                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                      {getFaviconUrl(item.url) ? (
+                        <img 
+                          src={getFaviconUrl(item.url)!} 
+                          alt={item.source}
+                          className="h-5 w-5 object-contain"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <Newspaper className={`h-3.5 w-3.5 text-muted-foreground ${getFaviconUrl(item.url) ? 'hidden' : ''}`} />
+                    </div>
                     <span className="font-medium text-sm text-foreground">{item.source}</span>
                   </div>
                   <Button 
