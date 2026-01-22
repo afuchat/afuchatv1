@@ -21,14 +21,11 @@ import { VerifiedBadge as PlatformVerifiedBadge } from '@/components/VerifiedBad
 import { SearchSuggestions } from '@/components/search/SearchSuggestions';
 import { AdvancedSearchFilters, SearchFilters, DEFAULT_FILTERS } from '@/components/search/AdvancedSearchFilters';
 import { 
-  ContentCategory, 
-  categorizeContent, 
-  getPrimaryCategory,
-  mapTabToCategory,
   detectContentType,
   filterByMediaType,
   MediaType
 } from '@/lib/contentCategorization';
+import { GlobalNewsSection } from '@/components/search/GlobalNewsSection';
 
 const SEARCH_HISTORY_KEY = 'afuchat_search_history';
 const MAX_SEARCH_HISTORY = 10;
@@ -283,142 +280,80 @@ const TrendingSection = ({
 }) => {
   const { t } = useTranslation();
   const [trends, setTrends] = useState<ExtendedTrend[]>([]);
-  const [categoryPosts, setCategoryPosts] = useState<CategoryPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTrend, setSelectedTrend] = useState<ExtendedTrend | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     const fetchContent = async () => {
+      // Only fetch trending for For You and Trending tabs
+      // News, Sports, Entertainment are handled by GlobalNewsSection
+      if (activeTab !== 'For You' && activeTab !== 'Trending') {
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       
-      if (activeTab === 'For You' || activeTab === 'Trending') {
-        // Fetch trending topics
-        try {
-          const { data, error } = await supabase.rpc('get_trending_topics', {
-            hours_ago: 24,
-            num_topics: 10,
-          });
+      try {
+        const { data, error } = await supabase.rpc('get_trending_topics', {
+          hours_ago: 24,
+          num_topics: 10,
+        });
 
-          if (error) {
-            console.error('Error fetching trends:', error);
-            setTrends([]);
-          } else if (Array.isArray(data)) {
-            // Fetch related hashtags and top posts for each trend
-            const enhancedTrends = await Promise.all(
-              data.map(async (d: Trend, idx: number) => {
-                const topic = d.topic.charAt(0).toUpperCase() + d.topic.slice(1);
-                
-                // Fetch top posts for this topic
-                const { data: topPostsData } = await supabase
-                  .from('posts')
-                  .select('id, content, profiles!author_id(handle)')
-                  .textSearch('content', d.topic, { type: 'plain', config: 'english' })
-                  .order('created_at', { ascending: false })
-                  .limit(5);
+        if (error) {
+          console.error('Error fetching trends:', error);
+          setTrends([]);
+        } else if (Array.isArray(data)) {
+          // Fetch related hashtags and top posts for each trend
+          const enhancedTrends = await Promise.all(
+            data.map(async (d: Trend, idx: number) => {
+              const topic = d.topic.charAt(0).toUpperCase() + d.topic.slice(1);
+              
+              // Fetch top posts for this topic
+              const { data: topPostsData } = await supabase
+                .from('posts')
+                .select('id, content, profiles!author_id(handle)')
+                .textSearch('content', d.topic, { type: 'plain', config: 'english' })
+                .order('created_at', { ascending: false })
+                .limit(5);
 
-                // Extract related hashtags from top posts
-                const relatedHashtags: string[] = [];
-                topPostsData?.forEach((post: any) => {
-                  const matches = post.content.match(/#[\w\u0590-\u05ff\u0600-\u06ff]+/g);
-                  if (matches) {
-                    matches.forEach((tag: string) => {
-                      const normalized = tag.replace('#', '').toLowerCase();
-                      if (!relatedHashtags.includes(normalized) && normalized !== d.topic.toLowerCase()) {
-                        relatedHashtags.push(normalized);
-                      }
-                    });
-                  }
-                });
+              // Extract related hashtags from top posts
+              const relatedHashtags: string[] = [];
+              topPostsData?.forEach((post: any) => {
+                const matches = post.content.match(/#[\w\u0590-\u05ff\u0600-\u06ff]+/g);
+                if (matches) {
+                  matches.forEach((tag: string) => {
+                    const normalized = tag.replace('#', '').toLowerCase();
+                    if (!relatedHashtags.includes(normalized) && normalized !== d.topic.toLowerCase()) {
+                      relatedHashtags.push(normalized);
+                    }
+                  });
+                }
+              });
 
-                return {
-                  topic,
-                  post_count: d.post_count,
-                  category: idx % 5 === 0 ? 'Trending' : 
-                           idx % 5 === 1 ? 'Politics · Trending' : 
-                           idx % 5 === 2 ? 'Entertainment · Trending' : 
-                           idx % 5 === 3 ? 'Sports · Trending' : 'Technology · Trending',
-                  relatedHashtags: relatedHashtags.slice(0, 5),
-                  topPosts: topPostsData?.slice(0, 3).map((p: any) => ({
-                    id: p.id,
-                    content: p.content,
-                    author: p.profiles?.handle || 'unknown'
-                  })) || []
-                };
-              })
-            );
-            setTrends(enhancedTrends);
-          } else {
-            setTrends([]);
-          }
-        } catch (error) {
-          console.error('RPC call failed:', error);
+              return {
+                topic,
+                post_count: d.post_count,
+                category: idx % 5 === 0 ? 'Trending' : 
+                         idx % 5 === 1 ? 'Politics · Trending' : 
+                         idx % 5 === 2 ? 'Entertainment · Trending' : 
+                         idx % 5 === 3 ? 'Sports · Trending' : 'Technology · Trending',
+                relatedHashtags: relatedHashtags.slice(0, 5),
+                topPosts: topPostsData?.slice(0, 3).map((p: any) => ({
+                  id: p.id,
+                  content: p.content,
+                  author: p.profiles?.handle || 'unknown'
+                })) || []
+              };
+            })
+          );
+          setTrends(enhancedTrends);
+        } else {
           setTrends([]);
         }
-        setCategoryPosts([]);
-      } else {
-        // Fetch posts and filter by category using the algorithm
-        const targetCategory = mapTabToCategory(activeTab);
-        
-        try {
-          // Fetch recent posts (more than needed to filter)
-          const { data, error } = await supabase
-            .from('posts')
-            .select(`
-              id, content, created_at, image_url,
-              profiles!author_id(display_name, handle, avatar_url, is_verified, is_organization_verified),
-              post_images(id, image_url, display_order),
-              post_acknowledgments(id)
-            `)
-            .order('created_at', { ascending: false })
-            .limit(100);
-
-          if (error) {
-            console.error('Error fetching posts:', error);
-            setCategoryPosts([]);
-          } else if (data && targetCategory) {
-            // Use the categorization algorithm to filter posts
-            const categorizedPosts = data
-              .map((p: any) => {
-                const scores = categorizeContent(p.content);
-                const primaryCategory = getPrimaryCategory(p.content, 20);
-                const categoryScore = scores.find(s => s.category === targetCategory);
-                
-                return {
-                  post: p,
-                  category: primaryCategory,
-                  confidence: categoryScore?.confidence || 0,
-                  matches: primaryCategory === targetCategory || (categoryScore && categoryScore.confidence >= 15)
-                };
-              })
-              .filter(item => item.matches)
-              .sort((a, b) => b.confidence - a.confidence)
-              .slice(0, 20);
-
-            const formattedPosts: CategoryPost[] = categorizedPosts.map(({ post: p, confidence }) => ({
-              id: p.id,
-              content: p.content,
-              created_at: p.created_at,
-              image_url: p.image_url,
-              post_images: p.post_images?.sort((a: any, b: any) => a.display_order - b.display_order) || [],
-              like_count: p.post_acknowledgments?.length || 0,
-              confidence,
-              author: {
-                display_name: p.profiles?.display_name || 'Unknown',
-                handle: p.profiles?.handle || 'unknown',
-                avatar_url: p.profiles?.avatar_url,
-                is_verified: p.profiles?.is_verified,
-                is_organization_verified: p.profiles?.is_organization_verified,
-              },
-            }));
-            setCategoryPosts(formattedPosts);
-          } else {
-            setCategoryPosts([]);
-          }
-        } catch (error) {
-          console.error('Category fetch failed:', error);
-          setCategoryPosts([]);
-        }
+      } catch (error) {
+        console.error('RPC call failed:', error);
         setTrends([]);
       }
       
@@ -442,6 +377,19 @@ const TrendingSection = ({
         ))}
       </div>
     );
+  }
+
+  // Show global news for News, Sports, and Entertainment tabs
+  if (activeTab === 'News') {
+    return <GlobalNewsSection category="general" />;
+  }
+  
+  if (activeTab === 'Sports') {
+    return <GlobalNewsSection category="sports" />;
+  }
+  
+  if (activeTab === 'Entertainment') {
+    return <GlobalNewsSection category="entertainment" />;
   }
 
   // Show trending topics for For You and Trending tabs
@@ -481,29 +429,8 @@ const TrendingSection = ({
     );
   }
 
-  // Show category posts for News, Sports, Entertainment
-  if (categoryPosts.length === 0) {
-    return (
-      <div className="text-center text-muted-foreground py-12 text-sm">
-        No {activeTab.toLowerCase()} posts found
-      </div>
-    );
-  }
-
-  return (
-    <div className="divide-y divide-border">
-      <h2 className="px-4 py-3 text-[20px] font-extrabold text-foreground">
-        {activeTab}
-      </h2>
-      {categoryPosts.map((post) => (
-        <CategoryPostItem
-          key={post.id}
-          post={post}
-          onClick={() => onPostClick(post.id)}
-        />
-      ))}
-    </div>
-  );
+  // Fallback - should not reach here with current tabs
+  return null;
 };
 
 const SearchHistorySection = ({ 
