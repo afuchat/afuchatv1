@@ -62,3 +62,21 @@ verify_jwt = false
 
 [functions.send-password-reset]
 verify_jwt = false
+
+[functions.firecrawl-scrape]
+verify_jwt = false
+
+[functions.firecrawl-search]
+verify_jwt = false
+
+[functions.firecrawl-map]
+verify_jwt = false
+
+[functions.elevenlabs-tts]
+verify_jwt = false
+
+[functions.elevenlabs-tts-stream]
+verify_jwt = false
+
+[functions.elevenlabs-voices]
+verify_jwt = false
