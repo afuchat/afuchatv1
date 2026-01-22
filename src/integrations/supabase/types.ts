@@ -2454,6 +2454,63 @@ export type Database = {
         }
         Relationships: []
       }
+      mini_program_orders: {
+        Row: {
+          created_at: string
+          id: string
+          item_details: Json | null
+          item_id: string
+          item_name: string
+          notes: string | null
+          order_number: string
+          order_type: string
+          payment_status: string
+          scheduled_date: string | null
+          status: string
+          subtotal: number
+          total_amount: number
+          transaction_fee: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_details?: Json | null
+          item_id: string
+          item_name: string
+          notes?: string | null
+          order_number?: string
+          order_type: string
+          payment_status?: string
+          scheduled_date?: string | null
+          status?: string
+          subtotal?: number
+          total_amount?: number
+          transaction_fee?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_details?: Json | null
+          item_id?: string
+          item_name?: string
+          notes?: string | null
+          order_number?: string
+          order_type?: string
+          payment_status?: string
+          scheduled_date?: string | null
+          status?: string
+          subtotal?: number
+          total_amount?: number
+          transaction_fee?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mini_programs: {
         Row: {
           apk_url: string | null
