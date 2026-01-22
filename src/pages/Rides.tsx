@@ -1,60 +1,94 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Star, Car, Users, Clock, Navigation, DollarSign } from 'lucide-react';
+import { MapPin, Star, Car, Users, Clock, Navigation, DollarSign, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-const rideOptions = [
-  { 
-    id: 'economy', 
-    name: 'Economy', 
-    description: 'Affordable everyday rides', 
-    capacity: '4 passengers', 
-    price: '50', 
-    image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop', 
-    time: '3 min',
-    features: ['Standard seating', 'AC', 'Music']
-  },
-  { 
-    id: 'comfort', 
-    name: 'Comfort', 
-    description: 'Extra space and comfort', 
-    capacity: '4 passengers', 
-    price: '75', 
-    image: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&h=300&fit=crop', 
-    time: '5 min',
-    features: ['Spacious seats', 'Premium AC', 'USB charging']
-  },
-  { 
-    id: 'xl', 
-    name: 'XL', 
-    description: 'Extra room for groups', 
-    capacity: '6 passengers', 
-    price: '100', 
-    image: 'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?w=400&h=300&fit=crop', 
-    time: '6 min',
-    features: ['Large vehicle', 'Group travel', 'Extra luggage']
-  },
-  { 
-    id: 'premium', 
-    name: 'Premium', 
-    description: 'Luxury experience', 
-    capacity: '4 passengers', 
-    price: '150', 
-    image: 'https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=400&h=300&fit=crop', 
-    time: '8 min',
-    features: ['Luxury sedan', 'Professional driver', 'Premium service']
-  },
-];
+interface RideOption {
+  id: string;
+  name: string;
+  description: string;
+  capacity: string;
+  price: string;
+  image: string;
+  time: string;
+  features: string[];
+}
+
+const getRideOptionsForCountry = (country: string | null): RideOption[] => {
+  const ridesByCountry: Record<string, RideOption[]> = {
+    'Uganda': [
+      { id: 'boda', name: 'Boda Boda', description: 'Quick motorcycle rides', capacity: '1 passenger', price: '10', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop', time: '2 min', features: ['Fast', 'Beat traffic', 'Affordable'] },
+      { id: 'economy', name: 'SafeBoda Economy', description: 'Affordable car rides', capacity: '4 passengers', price: '30', image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop', time: '5 min', features: ['AC', 'Affordable', 'Safe'] },
+      { id: 'comfort', name: 'SafeBoda Comfort', description: 'Premium car rides', capacity: '4 passengers', price: '50', image: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&h=300&fit=crop', time: '7 min', features: ['Premium cars', 'WiFi', 'Water'] },
+      { id: 'xl', name: 'SafeBoda XL', description: 'For groups and families', capacity: '6 passengers', price: '80', image: 'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?w=400&h=300&fit=crop', time: '10 min', features: ['Large vehicle', 'Luggage space', 'Group travel'] },
+    ],
+    'Kenya': [
+      { id: 'economy', name: 'Bolt Economy', description: 'Affordable everyday rides', capacity: '4 passengers', price: '200', image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop', time: '4 min', features: ['AC', 'Affordable', 'Quick'] },
+      { id: 'comfort', name: 'Uber Comfort', description: 'Extra space and comfort', capacity: '4 passengers', price: '350', image: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&h=300&fit=crop', time: '6 min', features: ['Spacious', 'Premium AC', 'USB charging'] },
+      { id: 'xl', name: 'Uber XL', description: 'Extra room for groups', capacity: '6 passengers', price: '500', image: 'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?w=400&h=300&fit=crop', time: '8 min', features: ['Large vehicle', 'Group travel', 'Luggage'] },
+      { id: 'boda', name: 'Uber Boda', description: 'Quick motorcycle rides', capacity: '1 passenger', price: '100', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop', time: '2 min', features: ['Fast', 'Beat traffic', 'Affordable'] },
+    ],
+    'Tanzania': [
+      { id: 'bajaji', name: 'Bajaji', description: 'Three-wheeler rides', capacity: '3 passengers', price: '3000', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop', time: '3 min', features: ['Affordable', 'Local', 'Quick'] },
+      { id: 'economy', name: 'Bolt Economy', description: 'Affordable car rides', capacity: '4 passengers', price: '8000', image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop', time: '5 min', features: ['AC', 'Safe', 'Tracked'] },
+      { id: 'comfort', name: 'Uber Comfort', description: 'Premium rides', capacity: '4 passengers', price: '15000', image: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&h=300&fit=crop', time: '8 min', features: ['Premium', 'WiFi', 'Water'] },
+    ],
+    'Nigeria': [
+      { id: 'keke', name: 'Keke Napep', description: 'Tricycle rides', capacity: '3 passengers', price: '300', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop', time: '3 min', features: ['Cheap', 'Quick', 'Local'] },
+      { id: 'economy', name: 'Bolt Economy', description: 'Affordable rides', capacity: '4 passengers', price: '800', image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop', time: '5 min', features: ['AC', 'Tracked', 'Safe'] },
+      { id: 'comfort', name: 'Uber Comfort', description: 'Premium experience', capacity: '4 passengers', price: '1500', image: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&h=300&fit=crop', time: '7 min', features: ['Premium cars', 'Professional drivers', 'WiFi'] },
+      { id: 'xl', name: 'Uber XL', description: 'Group rides', capacity: '6 passengers', price: '2500', image: 'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?w=400&h=300&fit=crop', time: '10 min', features: ['Large vehicle', 'Luggage', 'Group travel'] },
+    ],
+  };
+
+  const defaultRides: RideOption[] = [
+    { id: 'economy', name: 'Economy', description: 'Affordable everyday rides', capacity: '4 passengers', price: '50', image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop', time: '3 min', features: ['Standard seating', 'AC', 'Music'] },
+    { id: 'comfort', name: 'Comfort', description: 'Extra space and comfort', capacity: '4 passengers', price: '75', image: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&h=300&fit=crop', time: '5 min', features: ['Spacious seats', 'Premium AC', 'USB charging'] },
+    { id: 'xl', name: 'XL', description: 'Extra room for groups', capacity: '6 passengers', price: '100', image: 'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?w=400&h=300&fit=crop', time: '6 min', features: ['Large vehicle', 'Group travel', 'Extra luggage'] },
+    { id: 'premium', name: 'Premium', description: 'Luxury experience', capacity: '4 passengers', price: '150', image: 'https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=400&h=300&fit=crop', time: '8 min', features: ['Luxury sedan', 'Professional driver', 'Premium service'] },
+  ];
+
+  return country && ridesByCountry[country] ? ridesByCountry[country] : defaultRides;
+};
 
 const Rides = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [pickup, setPickup] = useState('');
   const [destination, setDestination] = useState('');
   const [selectedRide, setSelectedRide] = useState('economy');
+  const [userCountry, setUserCountry] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [rideOptions, setRideOptions] = useState<RideOption[]>([]);
+
+  useEffect(() => {
+    const fetchUserCountry = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('country')
+          .eq('id', user.id)
+          .single();
+        setUserCountry(data?.country || null);
+      }
+      setLoading(false);
+    };
+    fetchUserCountry();
+  }, [user]);
+
+  useEffect(() => {
+    const rides = getRideOptionsForCountry(userCountry);
+    setRideOptions(rides);
+    if (rides.length > 0) {
+      setSelectedRide(rides[0].id);
+    }
+  }, [userCountry]);
 
   const handleBookRide = () => {
     if (!pickup || !destination) {
@@ -62,10 +96,18 @@ const Rides = () => {
       return;
     }
     const ride = rideOptions.find(r => r.id === selectedRide);
-    toast.success(`Booking ${ride?.name} ride...`);
+    toast.success(`Booking ${ride?.name} ride from ${pickup} to ${destination}...`);
   };
 
   const selectedRideData = rideOptions.find(r => r.id === selectedRide);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -76,7 +118,9 @@ const Rides = () => {
             <Car className="h-8 w-8 text-green-600" />
             <h1 className="text-3xl md:text-4xl font-bold">Book a Ride</h1>
           </div>
-          <p className="text-muted-foreground text-lg">Fast, reliable rides at your fingertips</p>
+          <p className="text-muted-foreground text-lg">
+            {userCountry ? `Rides available in ${userCountry}` : 'Fast, reliable rides at your fingertips'}
+          </p>
         </div>
       </div>
 
