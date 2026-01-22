@@ -26,10 +26,13 @@ interface GlobalNewsSectionProps {
   category?: 'general' | 'technology' | 'sports' | 'entertainment' | 'business';
 }
 
+const FAVICON_SIZE = 64;
+
 const getFaviconUrl = (url: string) => {
   try {
     const domain = new URL(url).hostname;
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    // Note: include a version param to bust any stale SW/browser caches.
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=${FAVICON_SIZE}&v=1`;
   } catch {
     return null;
   }
