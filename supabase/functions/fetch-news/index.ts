@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { category = 'general', country = 'us', pageSize = 10 } = await req.json();
+    const { category = 'general', country = 'us', pageSize = 10, page = 1 } = await req.json();
 
     const apiKey = Deno.env.get('NEWS_API_KEY');
     if (!apiKey) {
@@ -43,8 +43,9 @@ Deno.serve(async (req) => {
     url.searchParams.set('category', category);
     url.searchParams.set('country', country);
     url.searchParams.set('pageSize', String(pageSize));
+    url.searchParams.set('page', String(page));
 
-    console.log('Fetching news for category:', category);
+    console.log('Fetching news for category:', category, 'page:', page);
 
     const response = await fetch(url.toString());
     const data: NewsAPIResponse = await response.json();
@@ -71,10 +72,13 @@ Deno.serve(async (req) => {
         author: article.author,
       }));
 
-    console.log(`Fetched ${articles.length} articles`);
+    console.log(`Fetched ${articles.length} articles for page ${page}`);
+
+    const totalPages = Math.ceil(data.totalResults / pageSize);
+    const hasMore = page < totalPages && articles.length > 0;
 
     return new Response(
-      JSON.stringify({ success: true, articles }),
+      JSON.stringify({ success: true, articles, hasMore, totalResults: data.totalResults }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
