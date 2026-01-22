@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw, Heart, Share2, MoreVertical, Clock, Newspaper } from 'lucide-react';
-import { firecrawlApi } from '@/lib/api/firecrawl';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +16,7 @@ interface NewsItem {
   source: string;
   image?: string;
   publishedAt?: string;
+  author?: string;
 }
 
 interface GlobalNewsSectionProps {
@@ -29,46 +30,23 @@ export const GlobalNewsSection = ({ category = 'general' }: GlobalNewsSectionPro
 
   const fetchNews = useCallback(async () => {
     try {
-      const queryMap: Record<string, string> = {
-        general: 'latest global news headlines today',
-        technology: 'latest technology news AI startups',
-        sports: 'sports news football basketball today',
-        entertainment: 'entertainment celebrity news movies',
-        business: 'business finance stock market news'
-      };
-
-      const response = await firecrawlApi.search(queryMap[category], {
-        limit: 10,
-        tbs: 'qdr:d', // Last day
+      const { data, error } = await supabase.functions.invoke('fetch-news', {
+        body: { 
+          category,
+          country: 'us',
+          pageSize: 15 
+        },
       });
 
-      if (response.success && response.data) {
-        const newsItems: NewsItem[] = response.data.slice(0, 10).map((item: any, index: number) => {
-          // Extract source from URL
-          let source = 'News';
-          try {
-            const url = new URL(item.url);
-            source = url.hostname.replace('www.', '').split('.')[0];
-            source = source.charAt(0).toUpperCase() + source.slice(1);
-          } catch {
-            source = 'News Source';
-          }
+      if (error) {
+        console.error('Error fetching news:', error);
+        return;
+      }
 
-          return {
-            id: `news-${index}-${Date.now()}`,
-            title: item.title || 'Untitled',
-            description: item.description || item.markdown?.slice(0, 200) || '',
-            url: item.url,
-            source,
-            image: item.screenshot || item.metadata?.ogImage,
-            publishedAt: item.metadata?.publishedTime || new Date().toISOString(),
-          };
-        });
-
-        setNews(newsItems);
-      } else if (response.error?.includes('connector not configured')) {
-        // Don't show error for unconfigured connector, just show empty state
-        console.log('Firecrawl connector not configured');
+      if (data?.success && data.articles) {
+        setNews(data.articles);
+      } else if (data?.error) {
+        console.log('News API:', data.error);
       }
     } catch (error) {
       console.error('Failed to fetch news:', error);

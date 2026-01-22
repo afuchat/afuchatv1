@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.elevenlabs-voices]
 verify_jwt = false
+
+[functions.fetch-news]
+verify_jwt = false
