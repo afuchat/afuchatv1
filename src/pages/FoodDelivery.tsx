@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +11,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { AddListingDialog } from '@/components/mini-programs/AddListingDialog';
 
 interface Restaurant {
   id: string;
@@ -37,43 +37,21 @@ const categories = [
   { id: 'healthy', name: 'Healthy', icon: Salad },
 ];
 
-const getRestaurantsForCountry = (country: string | null): Restaurant[] => {
+const getPlaceholderRestaurants = (country: string | null): Restaurant[] => {
   const restaurantsByCountry: Record<string, Restaurant[]> = {
     'Uganda': [
-      { id: '1', name: 'Cafe Javas', cuisine: 'International', rating: 4.8, deliveryTime: '25-35', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop', category: 'local', featured: true, minOrder: '30', deliveryFee: '5' },
-      { id: '2', name: 'Rolex Stand - Wandegeya', cuisine: 'Street Food', rating: 4.9, deliveryTime: '15-20', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop', category: 'local', featured: true, minOrder: '10', deliveryFee: '0' },
-      { id: '3', name: 'Piato Restaurant', cuisine: 'Italian', rating: 4.7, deliveryTime: '30-40', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&h=400&fit=crop', category: 'pizza', featured: true, minOrder: '50', deliveryFee: '10' },
-      { id: '4', name: 'Endiro Coffee', cuisine: 'Cafe & Bakery', rating: 4.8, deliveryTime: '15-25', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=400&fit=crop', category: 'coffee', featured: false, minOrder: '15', deliveryFee: '5' },
-      { id: '5', name: 'Chicken Tonight', cuisine: 'Fast Food', rating: 4.5, deliveryTime: '20-30', image: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?w=600&h=400&fit=crop', category: 'fast', featured: false, minOrder: '25', deliveryFee: '0' },
-      { id: '6', name: 'Fang Fang Chinese', cuisine: 'Chinese', rating: 4.6, deliveryTime: '35-45', image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=600&h=400&fit=crop', category: 'local', featured: false, minOrder: '40', deliveryFee: '8' },
-      { id: '7', name: 'Mediterraneo', cuisine: 'Mediterranean', rating: 4.8, deliveryTime: '30-40', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=400&fit=crop', category: 'healthy', featured: true, minOrder: '60', deliveryFee: '10' },
-      { id: '8', name: 'The Lawns', cuisine: 'Fine Dining', rating: 4.9, deliveryTime: '40-50', image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop', category: 'local', featured: false, minOrder: '100', deliveryFee: '15' },
+      { id: 'p1', name: 'Cafe Javas', cuisine: 'International', rating: 4.8, deliveryTime: '25-35', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop', category: 'local', featured: true, minOrder: '30', deliveryFee: '5' },
+      { id: 'p2', name: 'Rolex Stand - Wandegeya', cuisine: 'Street Food', rating: 4.9, deliveryTime: '15-20', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop', category: 'local', featured: true, minOrder: '10', deliveryFee: '0' },
     ],
     'Kenya': [
-      { id: '1', name: 'Java House', cuisine: 'International', rating: 4.7, deliveryTime: '25-35', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop', category: 'local', featured: true, minOrder: '500', deliveryFee: '100' },
-      { id: '2', name: 'Mama Oliech', cuisine: 'Kenyan', rating: 4.9, deliveryTime: '30-40', image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&h=400&fit=crop', category: 'local', featured: true, minOrder: '400', deliveryFee: '0' },
-      { id: '3', name: 'Artcaffe', cuisine: 'Cafe', rating: 4.6, deliveryTime: '20-30', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=400&fit=crop', category: 'coffee', featured: true, minOrder: '300', deliveryFee: '50' },
-      { id: '4', name: 'Carnivore', cuisine: 'Grill', rating: 4.8, deliveryTime: '35-45', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=400&fit=crop', category: 'local', featured: false, minOrder: '800', deliveryFee: '150' },
-    ],
-    'Tanzania': [
-      { id: '1', name: 'Slipway Restaurant', cuisine: 'Seafood', rating: 4.8, deliveryTime: '30-40', image: 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?w=600&h=400&fit=crop', category: 'seafood', featured: true, minOrder: '20000', deliveryFee: '3000' },
-      { id: '2', name: 'Chapan Bhog', cuisine: 'Indian', rating: 4.7, deliveryTime: '25-35', image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&h=400&fit=crop', category: 'local', featured: true, minOrder: '15000', deliveryFee: '2000' },
-      { id: '3', name: 'Africana Restaurant', cuisine: 'African', rating: 4.6, deliveryTime: '35-45', image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&h=400&fit=crop', category: 'local', featured: false, minOrder: '18000', deliveryFee: '2500' },
-    ],
-    'Nigeria': [
-      { id: '1', name: 'Yellow Chilli', cuisine: 'Nigerian', rating: 4.8, deliveryTime: '30-40', image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&h=400&fit=crop', category: 'local', featured: true, minOrder: '3000', deliveryFee: '500' },
-      { id: '2', name: 'Chicken Republic', cuisine: 'Fast Food', rating: 4.5, deliveryTime: '20-30', image: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?w=600&h=400&fit=crop', category: 'fast', featured: true, minOrder: '2000', deliveryFee: '0' },
-      { id: '3', name: 'Kilimanjaro', cuisine: 'Fast Food', rating: 4.6, deliveryTime: '25-35', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=400&fit=crop', category: 'fast', featured: false, minOrder: '2500', deliveryFee: '400' },
+      { id: 'p1', name: 'Java House', cuisine: 'International', rating: 4.7, deliveryTime: '25-35', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop', category: 'local', featured: true, minOrder: '500', deliveryFee: '100' },
+      { id: 'p2', name: 'Mama Oliech', cuisine: 'Kenyan', rating: 4.9, deliveryTime: '30-40', image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&h=400&fit=crop', category: 'local', featured: true, minOrder: '400', deliveryFee: '0' },
     ],
   };
 
   const defaultRestaurants: Restaurant[] = [
-    { id: '1', name: 'Italian Kitchen', cuisine: 'Italian', rating: 4.8, deliveryTime: '25-35', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&h=400&fit=crop', category: 'pizza', featured: true, minOrder: '50', deliveryFee: '10' },
-    { id: '2', name: 'Coffee Corner', cuisine: 'Cafe', rating: 4.7, deliveryTime: '15-20', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=400&fit=crop', category: 'coffee', featured: true, minOrder: '20', deliveryFee: '5' },
-    { id: '3', name: 'Sweet Delights', cuisine: 'Desserts', rating: 4.9, deliveryTime: '20-30', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&h=400&fit=crop', category: 'dessert', featured: false, minOrder: '30', deliveryFee: '8' },
-    { id: '4', name: 'Burger Hub', cuisine: 'American', rating: 4.6, deliveryTime: '30-40', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=400&fit=crop', category: 'fast', featured: true, minOrder: '40', deliveryFee: '0' },
-    { id: '5', name: 'Ocean Catch', cuisine: 'Seafood', rating: 4.8, deliveryTime: '35-45', image: 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?w=600&h=400&fit=crop', category: 'seafood', featured: false, minOrder: '80', deliveryFee: '15' },
-    { id: '6', name: 'Green Bowl', cuisine: 'Healthy', rating: 4.7, deliveryTime: '20-25', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop', category: 'healthy', featured: false, minOrder: '35', deliveryFee: '5' },
+    { id: 'p1', name: 'Italian Kitchen', cuisine: 'Italian', rating: 4.8, deliveryTime: '25-35', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&h=400&fit=crop', category: 'pizza', featured: true, minOrder: '50', deliveryFee: '10' },
+    { id: 'p2', name: 'Coffee Corner', cuisine: 'Cafe', rating: 4.7, deliveryTime: '15-20', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=400&fit=crop', category: 'coffee', featured: true, minOrder: '20', deliveryFee: '5' },
   ];
 
   return country && restaurantsByCountry[country] ? restaurantsByCountry[country] : defaultRestaurants;
@@ -87,6 +65,31 @@ const FoodDelivery = () => {
   const [userCountry, setUserCountry] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [userListings, setUserListings] = useState<Restaurant[]>([]);
+
+  const fetchUserListings = async () => {
+    const { data } = await supabase
+      .from('mini_program_listings')
+      .select('*')
+      .eq('listing_type', 'food')
+      .eq('status', 'approved');
+
+    if (data) {
+      const mapped = data.map(item => ({
+        id: item.id,
+        name: item.title,
+        cuisine: item.category || 'Various',
+        rating: Number(item.rating) || 4.5,
+        deliveryTime: '25-35',
+        image: item.image_url || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop',
+        category: 'local',
+        featured: item.featured,
+        minOrder: item.price || '0',
+        deliveryFee: '0',
+      }));
+      setUserListings(mapped);
+    }
+  };
 
   useEffect(() => {
     const fetchUserCountry = async () => {
@@ -101,11 +104,13 @@ const FoodDelivery = () => {
       setLoading(false);
     };
     fetchUserCountry();
+    fetchUserListings();
   }, [user]);
 
   useEffect(() => {
-    setRestaurants(getRestaurantsForCountry(userCountry));
-  }, [userCountry]);
+    const placeholders = getPlaceholderRestaurants(userCountry);
+    setRestaurants([...userListings, ...placeholders]);
+  }, [userCountry, userListings]);
 
   const filteredRestaurants = restaurants.filter(rest => {
     const matchesSearch = rest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -129,11 +134,19 @@ const FoodDelivery = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Hero Header */}
-      <div className="bg-gradient-to-br from-orange-500/10 via-red-500/5 to-background border-b">
+      <div className="bg-gradient-to-br from-orange-500/10 via-red-500/5 to-background">
         <div className="container max-w-6xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Utensils className="h-8 w-8 text-orange-600" />
-            <h1 className="text-3xl md:text-4xl font-bold">Food Delivery</h1>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <Utensils className="h-8 w-8 text-orange-600" />
+              <h1 className="text-3xl md:text-4xl font-bold">Food Delivery</h1>
+            </div>
+            <AddListingDialog 
+              listingType="food" 
+              categories={['Local', 'Pizza', 'Cafe', 'Fast Food', 'Seafood', 'Healthy', 'Dessert']}
+              onSuccess={fetchUserListings}
+              buttonText="Add Restaurant"
+            />
           </div>
           <div className="flex items-center gap-2 text-muted-foreground text-lg">
             <MapPin className="h-5 w-5" />
@@ -159,7 +172,7 @@ const FoodDelivery = () => {
           {categories.map((cat) => (
             <Button
               key={cat.id}
-              variant={selectedCategory === cat.id ? 'default' : 'outline'}
+              variant={selectedCategory === cat.id ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setSelectedCategory(cat.id)}
               className="shrink-0 gap-2"
@@ -171,7 +184,7 @@ const FoodDelivery = () => {
         </div>
 
         <Tabs defaultValue="delivery" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-12">
+          <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/50">
             <TabsTrigger value="delivery" className="text-base">Delivery</TabsTrigger>
             <TabsTrigger value="pickup" className="text-base">Pickup</TabsTrigger>
           </TabsList>
@@ -186,16 +199,16 @@ const FoodDelivery = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredRestaurants.filter(r => r.featured).map((restaurant) => (
-                    <Card 
+                    <div 
                       key={restaurant.id} 
-                      className="overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
+                      className="overflow-hidden cursor-pointer group rounded-xl bg-card"
                       onClick={() => handleOrder(restaurant.name, restaurant.id)}
                     >
                       <div className="aspect-video relative overflow-hidden">
                         <img 
                           src={restaurant.image} 
                           alt={restaurant.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <Button
@@ -209,7 +222,7 @@ const FoodDelivery = () => {
                           <Badge className="absolute top-2 left-2 bg-green-600">Free Delivery</Badge>
                         )}
                       </div>
-                      <CardContent className="p-4">
+                      <div className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <div>
                             <h3 className="font-bold text-lg">{restaurant.name}</h3>
@@ -231,8 +244,8 @@ const FoodDelivery = () => {
                         <Button className="w-full" onClick={() => handleOrder(restaurant.name, restaurant.id)}>
                           Order Now
                         </Button>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </section>
@@ -243,9 +256,9 @@ const FoodDelivery = () => {
               <h2 className="text-xl font-bold mb-4">All Restaurants</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredRestaurants.filter(r => !r.featured).map((restaurant) => (
-                  <Card 
+                  <div 
                     key={restaurant.id} 
-                    className="overflow-hidden cursor-pointer hover:shadow-lg transition-all"
+                    className="overflow-hidden cursor-pointer rounded-xl bg-card"
                     onClick={() => handleOrder(restaurant.name, restaurant.id)}
                   >
                     <div className="aspect-video relative overflow-hidden">
@@ -258,7 +271,7 @@ const FoodDelivery = () => {
                         <Badge className="absolute top-2 left-2 bg-green-600 text-xs">Free Delivery</Badge>
                       )}
                     </div>
-                    <CardContent className="p-4">
+                    <div className="p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h3 className="font-semibold">{restaurant.name}</h3>
@@ -273,14 +286,14 @@ const FoodDelivery = () => {
                         <Clock className="h-3 w-3" />
                         {restaurant.deliveryTime} min • Min {restaurant.minOrder} Nexa
                       </div>
-                      <Button variant="outline" className="w-full" onClick={(e) => {
+                      <Button variant="ghost" className="w-full" onClick={(e) => {
                         e.stopPropagation();
                         handleOrder(restaurant.name, restaurant.id);
                       }}>
                         View Menu
                       </Button>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 ))}
               </div>
             </section>
@@ -289,7 +302,7 @@ const FoodDelivery = () => {
               <div className="text-center py-16">
                 <Utensils className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <p className="text-muted-foreground text-lg">No restaurants found</p>
-                <p className="text-sm text-muted-foreground mt-2">Try adjusting your search</p>
+                <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or add your restaurant</p>
               </div>
             )}
           </TabsContent>
@@ -297,24 +310,20 @@ const FoodDelivery = () => {
           <TabsContent value="pickup" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {restaurants.slice(0, 4).map((restaurant) => (
-                <Card 
+                <div 
                   key={restaurant.id} 
-                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-all"
+                  className="overflow-hidden cursor-pointer rounded-xl bg-card"
                   onClick={() => handleOrder(restaurant.name, restaurant.id)}
                 >
                   <div className="aspect-video relative overflow-hidden">
                     <img src={restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
-                    <Badge className="absolute top-2 left-2 bg-primary">Pickup Available</Badge>
                   </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-bold mb-1">{restaurant.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">{restaurant.cuisine}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Ready in 15-20 min</span>
-                      <Button size="sm">Order</Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div className="p-4">
+                    <h3 className="font-semibold">{restaurant.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">{restaurant.cuisine}</p>
+                    <Button variant="ghost" className="w-full">Select for Pickup</Button>
+                  </div>
+                </div>
               ))}
             </div>
           </TabsContent>
