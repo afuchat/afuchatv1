@@ -2394,6 +2394,66 @@ export type Database = {
           },
         ]
       }
+      mini_program_listings: {
+        Row: {
+          category: string | null
+          country: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          featured: boolean | null
+          id: string
+          image_url: string | null
+          listing_type: string
+          location: string | null
+          metadata: Json | null
+          price: string | null
+          rating: number | null
+          status: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          listing_type: string
+          location?: string | null
+          metadata?: Json | null
+          price?: string | null
+          rating?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          listing_type?: string
+          location?: string | null
+          metadata?: Json | null
+          price?: string | null
+          rating?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mini_programs: {
         Row: {
           apk_url: string | null
