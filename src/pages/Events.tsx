@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AddListingDialog } from '@/components/mini-programs/AddListingDialog';
+import { MiniProgramHeader } from '@/components/mini-programs/MiniProgramHeader';
 
 interface Event {
   id: string;
@@ -137,26 +138,16 @@ const Events = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background">
-        <div className="container max-w-6xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <Ticket className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl md:text-4xl font-bold">Events & Tickets</h1>
-            </div>
-            <AddListingDialog 
-              listingType="event" 
-              categories={categories.filter(c => c !== 'All')}
-              onSuccess={fetchUserListings}
-              buttonText="Add Event"
-            />
-          </div>
-          <p className="text-muted-foreground text-lg">
-            {userCountry ? `Discover events in ${userCountry}` : 'Discover and book amazing events near you'}
-          </p>
-        </div>
-      </div>
+      <MiniProgramHeader 
+        rightContent={
+          <AddListingDialog 
+            listingType="event" 
+            categories={categories.filter(c => c !== 'All')}
+            onSuccess={fetchUserListings}
+            buttonText="Add Event"
+          />
+        }
+      />
 
       <main className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Search */}

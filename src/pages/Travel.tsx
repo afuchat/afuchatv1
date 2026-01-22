@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AddListingDialog } from '@/components/mini-programs/AddListingDialog';
+import { MiniProgramHeader } from '@/components/mini-programs/MiniProgramHeader';
 
 interface Flight {
   id: string;
@@ -172,32 +173,22 @@ const Travel = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-background">
-        <div className="container max-w-6xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <Plane className="h-8 w-8 text-blue-600" />
-              <h1 className="text-3xl md:text-4xl font-bold">Travel & Hotels</h1>
-            </div>
-            <div className="flex gap-2">
-              <AddListingDialog 
-                listingType="travel_flight" 
-                onSuccess={fetchUserListings}
-                buttonText="Add Flight"
-              />
-              <AddListingDialog 
-                listingType="travel_hotel" 
-                onSuccess={fetchUserListings}
-                buttonText="Add Hotel"
-              />
-            </div>
+      <MiniProgramHeader 
+        rightContent={
+          <div className="flex gap-2">
+            <AddListingDialog 
+              listingType="travel_flight" 
+              onSuccess={fetchUserListings}
+              buttonText="Add Flight"
+            />
+            <AddListingDialog 
+              listingType="travel_hotel" 
+              onSuccess={fetchUserListings}
+              buttonText="Add Hotel"
+            />
           </div>
-          <p className="text-muted-foreground text-lg">
-            {userCountry ? `Flights and hotels from ${userCountry}` : 'Book flights and hotels for your next adventure'}
-          </p>
-        </div>
-      </div>
+        }
+      />
 
       <main className="container max-w-6xl mx-auto px-4 py-6">
         <Tabs defaultValue="flights" className="w-full">

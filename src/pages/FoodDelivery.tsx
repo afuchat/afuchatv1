@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AddListingDialog } from '@/components/mini-programs/AddListingDialog';
+import { MiniProgramHeader } from '@/components/mini-programs/MiniProgramHeader';
 
 interface Restaurant {
   id: string;
@@ -133,27 +134,16 @@ const FoodDelivery = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-br from-orange-500/10 via-red-500/5 to-background">
-        <div className="container max-w-6xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <Utensils className="h-8 w-8 text-orange-600" />
-              <h1 className="text-3xl md:text-4xl font-bold">Food Delivery</h1>
-            </div>
-            <AddListingDialog 
-              listingType="food" 
-              categories={['Local', 'Pizza', 'Cafe', 'Fast Food', 'Seafood', 'Healthy', 'Dessert']}
-              onSuccess={fetchUserListings}
-              buttonText="Add Restaurant"
-            />
-          </div>
-          <div className="flex items-center gap-2 text-muted-foreground text-lg">
-            <MapPin className="h-5 w-5" />
-            <span>{userCountry ? `Delivering in ${userCountry}` : 'Deliver to Current Location'}</span>
-          </div>
-        </div>
-      </div>
+      <MiniProgramHeader 
+        rightContent={
+          <AddListingDialog 
+            listingType="food" 
+            categories={['Local', 'Pizza', 'Cafe', 'Fast Food', 'Seafood', 'Healthy', 'Dessert']}
+            onSuccess={fetchUserListings}
+            buttonText="Add Restaurant"
+          />
+        }
+      />
 
       <main className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Search */}

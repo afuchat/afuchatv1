@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AddListingDialog } from '@/components/mini-programs/AddListingDialog';
+import { MiniProgramHeader } from '@/components/mini-programs/MiniProgramHeader';
 
 interface Service {
   id: string;
@@ -124,26 +125,16 @@ const Bookings = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-br from-purple-500/10 via-pink-500/5 to-background">
-        <div className="container max-w-6xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <CalendarCheck className="h-8 w-8 text-purple-600" />
-              <h1 className="text-3xl md:text-4xl font-bold">Bookings</h1>
-            </div>
-            <AddListingDialog 
-              listingType="booking" 
-              categories={categories.filter(c => c !== 'all')}
-              onSuccess={fetchUserListings}
-              buttonText="Add Service"
-            />
-          </div>
-          <p className="text-muted-foreground text-lg">
-            {userCountry ? `Book services in ${userCountry}` : 'Book appointments and reserve services'}
-          </p>
-        </div>
-      </div>
+      <MiniProgramHeader 
+        rightContent={
+          <AddListingDialog 
+            listingType="booking" 
+            categories={categories.filter(c => c !== 'all')}
+            onSuccess={fetchUserListings}
+            buttonText="Add Service"
+          />
+        }
+      />
 
       <main className="container max-w-6xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
