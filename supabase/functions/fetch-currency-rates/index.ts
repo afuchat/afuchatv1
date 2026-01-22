@@ -18,28 +18,35 @@ serve(async (req) => {
       throw new Error('Exchange rate API key not configured');
     }
 
-    // Fetch rates from ExchangeRate-API
+    // Fetch rates from FastForex API
     const response = await fetch(
-      `https://v6.exchangerate-api.com/v6/${apiKey}/latest/${baseCurrency}`
+      `https://api.fastforex.io/fetch-all?from=${baseCurrency}`,
+      {
+        headers: {
+          'X-API-Key': apiKey,
+        },
+      }
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('FastForex API error:', response.status, errorText);
       throw new Error(`API request failed: ${response.status}`);
     }
 
     const data = await response.json();
 
-    if (data.result !== 'success') {
-      throw new Error(data['error-type'] || 'Failed to fetch rates');
+    if (data.error) {
+      throw new Error(data.error);
     }
 
     // Return the rates
     return new Response(
       JSON.stringify({
         success: true,
-        base: data.base_code,
-        rates: data.conversion_rates,
-        lastUpdate: data.time_last_update_utc,
+        base: data.base,
+        rates: data.results,
+        lastUpdate: data.updated,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
