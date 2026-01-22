@@ -1891,28 +1891,37 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     setCurrentPage(prev => prev + 1);
   }, [loadingMore, hasMore, loading, currentPage, fetchPosts]);
 
-  // Save scroll position and detect bottom for pagination - use window scroll
+  // Infinite scroll with IntersectionObserver for smoother loading
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     const handleWindowScroll = () => {
-      // Save scroll position
       sessionStorage.setItem('feedScrollPosition', window.scrollY.toString());
-      
-      // Check if near bottom for pagination - trigger earlier for smoother experience
-      const scrollTop = window.scrollY;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = window.innerHeight;
-      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 800; // Trigger 800px before bottom
-      
-      if (isNearBottom && !loadingMore && hasMore && !loading) {
-        handleLoadMore();
-      }
     };
 
     window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleWindowScroll);
+  }, []);
 
-    return () => {
-      window.removeEventListener('scroll', handleWindowScroll);
-    };
+  // IntersectionObserver for infinite scroll - triggers load when sentinel is visible
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          handleLoadMore();
+        }
+      },
+      { 
+        threshold: 0.1,
+        rootMargin: '200px' // Start loading 200px before reaching the end
+      }
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
   }, [handleLoadMore, loadingMore, hasMore, loading]);
 
 
@@ -2467,29 +2476,29 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                       ))}
                     </AnimatePresence>
                   
-                  {/* Loading more indicator */}
-                  {loadingMore && (
-                    <InlineSkeleton className="py-8" />
-                  )}
+                  {/* Infinite scroll sentinel */}
+                  <div ref={loadMoreRef} className="h-1" />
 
-                  {/* Manual load more button as fallback */}
-                  {hasMore && !loadingMore && currentPosts.length > 0 && (
-                    <div className="py-6 flex justify-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleLoadMore}
-                        className="text-xs sm:text-sm"
-                      >
-                        {t('feed.loadMore') || 'Load more posts'}
-                      </Button>
+                  {/* Loading more indicator - inline smooth loader */}
+                  {loadingMore && (
+                    <div className="py-6 flex flex-col items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                      <span className="text-xs text-muted-foreground">Loading more posts...</span>
                     </div>
                   )}
-                  
+
                   {/* End of feed indicator */}
-                  {!hasMore && currentPosts.length > 0 && (
-                    <div className="py-8 text-center text-muted-foreground text-sm">
-                      {t('feed.noMorePosts') || 'You\'ve reached the end'}
+                  {!hasMore && currentPosts.length > 0 && !loadingMore && (
+                    <div className="py-8 text-center">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50">
+                        <span className="text-sm text-muted-foreground">
+                          {t('feed.noMorePosts') || "You've caught up with everything!"}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </>
