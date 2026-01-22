@@ -1227,7 +1227,7 @@ const MiniPrograms = () => {
               variant="ghost" 
               size="sm" 
               className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
-              onClick={() => window.open('https://t.me/afuchat', '_blank')}
+              onClick={() => window.location.href = '/settings'}
             >
               <Code className="h-4 w-4" />
               <span className="text-sm font-medium">For Developers</span>
@@ -1236,7 +1236,7 @@ const MiniPrograms = () => {
               variant="ghost" 
               size="sm" 
               className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
-              onClick={() => window.open('https://t.me/afuchat', '_blank')}
+              onClick={() => window.location.href = '/support'}
             >
               <Heart className="h-4 w-4" />
               <span className="text-sm font-medium">Support</span>
