@@ -444,9 +444,12 @@ const MiniPrograms = () => {
     }
   };
 
-  // Check if app is available - all built-in apps are now open for everyone
+  // Check if app is available - all built-in apps are open except AfuMail
   const isAppAvailable = (app: BuiltInApp) => {
-    // All built-in apps are available to everyone
+    // AfuMail is coming soon
+    if (app.id === 'afumail') return false;
+    
+    // All other built-in apps are available to everyone
     return true;
   };
 
@@ -1136,12 +1139,7 @@ const MiniPrograms = () => {
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-bold">Services</h2>
-                {!isAdmin && (
-                  <Badge variant="secondary" className="gap-1 text-[10px]">
-                    <Clock className="h-3 w-3" />
-                    Coming Soon
-                  </Badge>
-                )}
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
               <AppGrid
                 apps={builtInServices.filter(
@@ -1209,7 +1207,7 @@ const MiniPrograms = () => {
               variant="ghost" 
               size="sm" 
               className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
-              onClick={() => toast.info('Coming soon!')}
+              onClick={() => window.open('https://t.me/afuchat', '_blank')}
             >
               <Send className="h-4 w-4" />
               <span className="text-sm font-medium">Join Channel</span>
@@ -1229,7 +1227,7 @@ const MiniPrograms = () => {
               variant="ghost" 
               size="sm" 
               className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
-              onClick={() => toast.info('Developer SDK coming soon')}
+              onClick={() => window.open('https://t.me/afuchat', '_blank')}
             >
               <Code className="h-4 w-4" />
               <span className="text-sm font-medium">For Developers</span>
@@ -1238,7 +1236,7 @@ const MiniPrograms = () => {
               variant="ghost" 
               size="sm" 
               className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
-              onClick={() => toast.info('Support coming soon')}
+              onClick={() => window.open('https://t.me/afuchat', '_blank')}
             >
               <Heart className="h-4 w-4" />
               <span className="text-sm font-medium">Support</span>
