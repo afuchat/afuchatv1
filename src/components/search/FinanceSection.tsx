@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCurrencyForCountry, countryCurrencyMap } from '@/lib/currencyUtils';
 
 interface CurrencyRate {
   symbol: string;
@@ -10,6 +13,7 @@ interface CurrencyRate {
   rate: number;
   change: number;
   flag?: string;
+  isLocal?: boolean;
 }
 
 interface StockData {
@@ -20,21 +24,147 @@ interface StockData {
   changePercent: number;
 }
 
-// Mock currency data
-const CURRENCY_RATES: CurrencyRate[] = [
-  { symbol: 'EUR/USD', name: 'Euro', rate: 1.0847, change: 0.12, flag: '🇪🇺' },
-  { symbol: 'GBP/USD', name: 'British Pound', rate: 1.2634, change: -0.08, flag: '🇬🇧' },
-  { symbol: 'USD/JPY', name: 'Japanese Yen', rate: 154.32, change: 0.24, flag: '🇯🇵' },
-  { symbol: 'USD/CHF', name: 'Swiss Franc', rate: 0.8812, change: -0.15, flag: '🇨🇭' },
-  { symbol: 'AUD/USD', name: 'Australian Dollar', rate: 0.6543, change: 0.05, flag: '🇦🇺' },
-  { symbol: 'USD/CAD', name: 'Canadian Dollar', rate: 1.3567, change: -0.11, flag: '🇨🇦' },
-  { symbol: 'NZD/USD', name: 'New Zealand Dollar', rate: 0.5987, change: 0.03, flag: '🇳🇿' },
-  { symbol: 'USD/CNY', name: 'Chinese Yuan', rate: 7.2456, change: 0.18, flag: '🇨🇳' },
-  { symbol: 'USD/INR', name: 'Indian Rupee', rate: 83.12, change: -0.02, flag: '🇮🇳' },
-  { symbol: 'USD/KES', name: 'Kenyan Shilling', rate: 153.50, change: 0.35, flag: '🇰🇪' },
-  { symbol: 'USD/UGX', name: 'Ugandan Shilling', rate: 3742.50, change: -0.22, flag: '🇺🇬' },
-  { symbol: 'USD/NGN', name: 'Nigerian Naira', rate: 1520.00, change: 1.25, flag: '🇳🇬' },
-  { symbol: 'USD/ZAR', name: 'South African Rand', rate: 18.45, change: 0.42, flag: '🇿🇦' },
+// Country to flag emoji mapping
+const countryFlags: Record<string, string> = {
+  "Uganda": "🇺🇬",
+  "Kenya": "🇰🇪",
+  "Tanzania": "🇹🇿",
+  "Rwanda": "🇷🇼",
+  "Burundi": "🇧🇮",
+  "South Sudan": "🇸🇸",
+  "Ethiopia": "🇪🇹",
+  "Somalia": "🇸🇴",
+  "Democratic Republic of the Congo": "🇨🇩",
+  "Congo": "🇨🇬",
+  "Nigeria": "🇳🇬",
+  "Ghana": "🇬🇭",
+  "South Africa": "🇿🇦",
+  "Egypt": "🇪🇬",
+  "Morocco": "🇲🇦",
+  "United States": "🇺🇸",
+  "United Kingdom": "🇬🇧",
+  "Germany": "🇩🇪",
+  "France": "🇫🇷",
+  "Italy": "🇮🇹",
+  "Spain": "🇪🇸",
+  "Netherlands": "🇳🇱",
+  "Belgium": "🇧🇪",
+  "Austria": "🇦🇹",
+  "Ireland": "🇮🇪",
+  "Portugal": "🇵🇹",
+  "Greece": "🇬🇷",
+  "Finland": "🇫🇮",
+  "Canada": "🇨🇦",
+  "Australia": "🇦🇺",
+  "New Zealand": "🇳🇿",
+  "Japan": "🇯🇵",
+  "China": "🇨🇳",
+  "India": "🇮🇳",
+  "Pakistan": "🇵🇰",
+  "Bangladesh": "🇧🇩",
+  "Indonesia": "🇮🇩",
+  "Malaysia": "🇲🇾",
+  "Singapore": "🇸🇬",
+  "Thailand": "🇹🇭",
+  "Vietnam": "🇻🇳",
+  "Philippines": "🇵🇭",
+  "South Korea": "🇰🇷",
+  "Brazil": "🇧🇷",
+  "Mexico": "🇲🇽",
+  "Argentina": "🇦🇷",
+  "Colombia": "🇨🇴",
+  "Chile": "🇨🇱",
+  "Peru": "🇵🇪",
+  "United Arab Emirates": "🇦🇪",
+  "Saudi Arabia": "🇸🇦",
+  "Qatar": "🇶🇦",
+  "Kuwait": "🇰🇼",
+  "Bahrain": "🇧🇭",
+  "Oman": "🇴🇲",
+  "Israel": "🇮🇱",
+  "Turkey": "🇹🇷",
+  "Russia": "🇷🇺",
+  "Ukraine": "🇺🇦",
+  "Poland": "🇵🇱",
+  "Czech Republic": "🇨🇿",
+  "Hungary": "🇭🇺",
+  "Romania": "🇷🇴",
+  "Sweden": "🇸🇪",
+  "Norway": "🇳🇴",
+  "Denmark": "🇩🇰",
+  "Switzerland": "🇨🇭",
+  "Zimbabwe": "🇿🇼",
+  "Zambia": "🇿🇲",
+  "Malawi": "🇲🇼",
+  "Mozambique": "🇲🇿",
+  "Botswana": "🇧🇼",
+  "Namibia": "🇳🇦",
+  "Angola": "🇦🇴",
+  "Senegal": "🇸🇳",
+  "Ivory Coast": "🇨🇮",
+  "Cameroon": "🇨🇲",
+};
+
+// Base rates for different currency pairs (approximate)
+const baseRates: Record<string, { rate: number; change: number }> = {
+  "USD": { rate: 1, change: 0 },
+  "EUR": { rate: 0.92, change: -0.12 },
+  "GBP": { rate: 0.79, change: 0.08 },
+  "JPY": { rate: 154.32, change: 0.24 },
+  "CHF": { rate: 0.88, change: -0.15 },
+  "AUD": { rate: 1.53, change: 0.05 },
+  "CAD": { rate: 1.36, change: -0.11 },
+  "CNY": { rate: 7.25, change: 0.18 },
+  "INR": { rate: 83.12, change: -0.02 },
+  "KES": { rate: 153.50, change: 0.35 },
+  "UGX": { rate: 3742.50, change: -0.22 },
+  "TZS": { rate: 2650.00, change: 0.15 },
+  "RWF": { rate: 1285.00, change: 0.08 },
+  "NGN": { rate: 1520.00, change: 1.25 },
+  "ZAR": { rate: 18.45, change: 0.42 },
+  "GHS": { rate: 15.20, change: 0.55 },
+  "EGP": { rate: 48.50, change: 0.32 },
+  "MAD": { rate: 10.05, change: -0.08 },
+  "ETB": { rate: 56.80, change: 0.18 },
+  "BIF": { rate: 2870.00, change: 0.05 },
+  "SSP": { rate: 1325.00, change: 0.75 },
+  "SOS": { rate: 571.00, change: 0.12 },
+  "XAF": { rate: 605.00, change: -0.10 },
+  "XOF": { rate: 605.00, change: -0.10 },
+  "AED": { rate: 3.67, change: 0.01 },
+  "SAR": { rate: 3.75, change: 0.02 },
+  "PKR": { rate: 278.50, change: 0.45 },
+  "BDT": { rate: 119.50, change: 0.22 },
+  "IDR": { rate: 15850.00, change: 0.18 },
+  "MYR": { rate: 4.72, change: -0.05 },
+  "SGD": { rate: 1.35, change: 0.03 },
+  "THB": { rate: 35.80, change: 0.15 },
+  "PHP": { rate: 55.80, change: 0.08 },
+  "VND": { rate: 24850.00, change: 0.12 },
+  "KRW": { rate: 1345.00, change: 0.28 },
+  "BRL": { rate: 4.95, change: 0.35 },
+  "MXN": { rate: 17.15, change: -0.18 },
+  "TRY": { rate: 32.50, change: 0.85 },
+  "RUB": { rate: 92.50, change: 0.42 },
+  "PLN": { rate: 4.02, change: 0.12 },
+  "SEK": { rate: 10.45, change: 0.08 },
+  "NOK": { rate: 10.85, change: 0.15 },
+  "DKK": { rate: 6.88, change: -0.05 },
+  "ZMW": { rate: 26.50, change: 0.22 },
+  "BWP": { rate: 13.65, change: 0.08 },
+  "MWK": { rate: 1720.00, change: 0.45 },
+  "MZN": { rate: 63.80, change: 0.18 },
+  "NAD": { rate: 18.45, change: 0.42 },
+  "AOA": { rate: 825.00, change: 0.55 },
+  "CDF": { rate: 2720.00, change: 0.32 },
+  "ZWL": { rate: 14500.00, change: 2.15 },
+};
+
+// Major currencies to always show
+const majorCurrencies = ["USD", "EUR", "GBP", "JPY", "CNY"];
+
+// Crypto and commodities
+const cryptoAndCommodities: CurrencyRate[] = [
   { symbol: 'BTC/USD', name: 'Bitcoin', rate: 42567.00, change: 2.34, flag: '₿' },
   { symbol: 'ETH/USD', name: 'Ethereum', rate: 2234.50, change: 1.87, flag: 'Ξ' },
   { symbol: 'XAU/USD', name: 'Gold', rate: 2024.30, change: 0.45, flag: '🥇' },
@@ -52,10 +182,107 @@ const STOCK_DATA: StockData[] = [
   { symbol: 'JPM', name: 'JPMorgan Chase', price: 195.34, change: 1.23, changePercent: 0.63 },
 ];
 
-const CurrencyTicker = () => {
-  const [rates, setRates] = useState<CurrencyRate[]>(CURRENCY_RATES);
+const generateRatesForCountry = (userCountry: string | null): CurrencyRate[] => {
+  const userCurrency = getCurrencyForCountry(userCountry);
+  const userCurrencyCode = userCurrency.code;
+  const userFlag = userCountry ? countryFlags[userCountry] || '🌍' : '🌍';
+  
+  const rates: CurrencyRate[] = [];
+  
+  // Add user's local currency first (against USD)
+  if (userCurrencyCode !== "USD" && baseRates[userCurrencyCode]) {
+    rates.push({
+      symbol: `USD/${userCurrencyCode}`,
+      name: userCurrency.name,
+      rate: baseRates[userCurrencyCode].rate,
+      change: baseRates[userCurrencyCode].change,
+      flag: userFlag,
+      isLocal: true,
+    });
+  }
+  
+  // Add major currencies against user's currency or USD
+  majorCurrencies.forEach(code => {
+    if (code === userCurrencyCode) return;
+    
+    const currencyInfo = Object.entries(countryCurrencyMap).find(([_, info]) => info.code === code);
+    const flag = code === "USD" ? "🇺🇸" : 
+                 code === "EUR" ? "🇪🇺" :
+                 code === "GBP" ? "🇬🇧" :
+                 code === "JPY" ? "🇯🇵" :
+                 code === "CNY" ? "🇨🇳" : "💱";
+    
+    if (baseRates[code]) {
+      if (userCurrencyCode === "USD") {
+        // Show other currencies against USD
+        rates.push({
+          symbol: code === "JPY" || code === "CNY" ? `USD/${code}` : `${code}/USD`,
+          name: currencyInfo?.[1].name || code,
+          rate: code === "JPY" || code === "CNY" ? baseRates[code].rate : 1 / baseRates[code].rate,
+          change: baseRates[code].change,
+          flag,
+        });
+      } else {
+        // Show USD and major currencies against user's local currency
+        const localRate = baseRates[userCurrencyCode]?.rate || 1;
+        const crossRate = localRate / (baseRates[code]?.rate || 1);
+        rates.push({
+          symbol: `${code}/${userCurrencyCode}`,
+          name: currencyInfo?.[1].name || code,
+          rate: crossRate,
+          change: baseRates[code].change,
+          flag,
+        });
+      }
+    }
+  });
+  
+  // Add regional currencies based on user's location
+  const africanCountries = ["Uganda", "Kenya", "Tanzania", "Rwanda", "Nigeria", "Ghana", "South Africa", "Egypt", "Ethiopia"];
+  const asianCountries = ["India", "Pakistan", "Bangladesh", "Indonesia", "Malaysia", "Singapore", "Thailand", "Philippines", "Vietnam"];
+  const europeanCountries = ["Germany", "France", "Italy", "Spain", "Poland", "Turkey", "Russia", "Ukraine"];
+  
+  let regionalCurrencies: string[] = [];
+  
+  if (userCountry && africanCountries.includes(userCountry)) {
+    regionalCurrencies = ["KES", "UGX", "TZS", "NGN", "ZAR", "GHS"].filter(c => c !== userCurrencyCode);
+  } else if (userCountry && asianCountries.includes(userCountry)) {
+    regionalCurrencies = ["INR", "PKR", "IDR", "MYR", "SGD", "THB"].filter(c => c !== userCurrencyCode);
+  } else if (userCountry && europeanCountries.includes(userCountry)) {
+    regionalCurrencies = ["PLN", "TRY", "RUB", "SEK", "NOK", "CHF"].filter(c => c !== userCurrencyCode);
+  }
+  
+  regionalCurrencies.slice(0, 3).forEach(code => {
+    if (baseRates[code]) {
+      const country = Object.entries(countryCurrencyMap).find(([_, info]) => info.code === code)?.[0];
+      rates.push({
+        symbol: `USD/${code}`,
+        name: countryCurrencyMap[country || ""]?.name || code,
+        rate: baseRates[code].rate,
+        change: baseRates[code].change,
+        flag: country ? countryFlags[country] || '💱' : '💱',
+      });
+    }
+  });
+  
+  // Add crypto and commodities
+  rates.push(...cryptoAndCommodities);
+  
+  return rates;
+};
+
+interface CurrencyTickerProps {
+  userCountry: string | null;
+}
+
+const CurrencyTicker = ({ userCountry }: CurrencyTickerProps) => {
+  const [rates, setRates] = useState<CurrencyRate[]>(() => generateRatesForCountry(userCountry));
   const [isPaused, setIsPaused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setRates(generateRatesForCountry(userCountry));
+  }, [userCountry]);
 
   // Simulate rate updates
   useEffect(() => {
@@ -100,11 +327,20 @@ const CurrencyTicker = () => {
         {duplicatedRates.map((rate, index) => (
           <div 
             key={`${rate.symbol}-${index}`}
-            className="flex items-center gap-2 whitespace-nowrap select-none px-3 py-2 rounded-lg bg-card/50 border border-border/50"
+            className={`flex items-center gap-2 whitespace-nowrap select-none px-3 py-2 rounded-lg border ${
+              rate.isLocal 
+                ? 'bg-primary/10 border-primary/30' 
+                : 'bg-card/50 border-border/50'
+            }`}
           >
             <span className="text-lg">{rate.flag}</span>
             <div className="flex flex-col">
-              <span className="font-semibold text-sm text-foreground">{rate.symbol}</span>
+              <div className="flex items-center gap-1">
+                <span className="font-semibold text-sm text-foreground">{rate.symbol}</span>
+                {rate.isLocal && (
+                  <span className="text-[10px] bg-primary/20 text-primary px-1 rounded">YOUR CURRENCY</span>
+                )}
+              </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-muted-foreground font-mono">
                   {rate.rate.toLocaleString(undefined, { 
@@ -134,14 +370,37 @@ const CurrencyTicker = () => {
 };
 
 export const FinanceSection = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [userCountry, setUserCountry] = useState<string | null>(null);
   const [stocks, setStocks] = useState<StockData[]>(STOCK_DATA);
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchUserCountry = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('country')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.country) {
+          setUserCountry(profile.country);
+        }
+      } catch (error) {
+        console.error('Error fetching user country:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserCountry();
+  }, [user]);
 
   // Simulate stock updates
   useEffect(() => {
@@ -176,18 +435,29 @@ export const FinanceSection = () => {
     );
   }
 
+  const userCurrency = getCurrencyForCountry(userCountry);
+
   return (
     <div className="space-y-6">
       {/* Currency Ticker */}
       <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-b border-border">
         <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2 mb-3">
-            <DollarSign className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold text-lg text-foreground">Currency Rates</h2>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold text-lg text-foreground">Currency Rates</h2>
+            </div>
+            {userCountry && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
+                <MapPin className="h-3 w-3" />
+                <span>{userCountry}</span>
+                <span className="font-medium text-foreground">({userCurrency.code})</span>
+              </div>
+            )}
           </div>
         </div>
         <div className="px-2">
-          <CurrencyTicker />
+          <CurrencyTicker userCountry={userCountry} />
         </div>
       </div>
 
