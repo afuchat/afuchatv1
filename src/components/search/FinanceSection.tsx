@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, MapPin } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, MapPin, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -105,70 +105,108 @@ const countryFlags: Record<string, string> = {
   "Cameroon": "🇨🇲",
 };
 
-// Base rates for different currency pairs (approximate)
-const baseRates: Record<string, { rate: number; change: number }> = {
-  "USD": { rate: 1, change: 0 },
-  "EUR": { rate: 0.92, change: -0.12 },
-  "GBP": { rate: 0.79, change: 0.08 },
-  "JPY": { rate: 154.32, change: 0.24 },
-  "CHF": { rate: 0.88, change: -0.15 },
-  "AUD": { rate: 1.53, change: 0.05 },
-  "CAD": { rate: 1.36, change: -0.11 },
-  "CNY": { rate: 7.25, change: 0.18 },
-  "INR": { rate: 83.12, change: -0.02 },
-  "KES": { rate: 153.50, change: 0.35 },
-  "UGX": { rate: 3742.50, change: -0.22 },
-  "TZS": { rate: 2650.00, change: 0.15 },
-  "RWF": { rate: 1285.00, change: 0.08 },
-  "NGN": { rate: 1520.00, change: 1.25 },
-  "ZAR": { rate: 18.45, change: 0.42 },
-  "GHS": { rate: 15.20, change: 0.55 },
-  "EGP": { rate: 48.50, change: 0.32 },
-  "MAD": { rate: 10.05, change: -0.08 },
-  "ETB": { rate: 56.80, change: 0.18 },
-  "BIF": { rate: 2870.00, change: 0.05 },
-  "SSP": { rate: 1325.00, change: 0.75 },
-  "SOS": { rate: 571.00, change: 0.12 },
-  "XAF": { rate: 605.00, change: -0.10 },
-  "XOF": { rate: 605.00, change: -0.10 },
-  "AED": { rate: 3.67, change: 0.01 },
-  "SAR": { rate: 3.75, change: 0.02 },
-  "PKR": { rate: 278.50, change: 0.45 },
-  "BDT": { rate: 119.50, change: 0.22 },
-  "IDR": { rate: 15850.00, change: 0.18 },
-  "MYR": { rate: 4.72, change: -0.05 },
-  "SGD": { rate: 1.35, change: 0.03 },
-  "THB": { rate: 35.80, change: 0.15 },
-  "PHP": { rate: 55.80, change: 0.08 },
-  "VND": { rate: 24850.00, change: 0.12 },
-  "KRW": { rate: 1345.00, change: 0.28 },
-  "BRL": { rate: 4.95, change: 0.35 },
-  "MXN": { rate: 17.15, change: -0.18 },
-  "TRY": { rate: 32.50, change: 0.85 },
-  "RUB": { rate: 92.50, change: 0.42 },
-  "PLN": { rate: 4.02, change: 0.12 },
-  "SEK": { rate: 10.45, change: 0.08 },
-  "NOK": { rate: 10.85, change: 0.15 },
-  "DKK": { rate: 6.88, change: -0.05 },
-  "ZMW": { rate: 26.50, change: 0.22 },
-  "BWP": { rate: 13.65, change: 0.08 },
-  "MWK": { rate: 1720.00, change: 0.45 },
-  "MZN": { rate: 63.80, change: 0.18 },
-  "NAD": { rate: 18.45, change: 0.42 },
-  "AOA": { rate: 825.00, change: 0.55 },
-  "CDF": { rate: 2720.00, change: 0.32 },
-  "ZWL": { rate: 14500.00, change: 2.15 },
+// Currency code to flag mapping
+const currencyFlags: Record<string, string> = {
+  USD: "🇺🇸",
+  EUR: "🇪🇺",
+  GBP: "🇬🇧",
+  JPY: "🇯🇵",
+  CHF: "🇨🇭",
+  AUD: "🇦🇺",
+  CAD: "🇨🇦",
+  CNY: "🇨🇳",
+  INR: "🇮🇳",
+  KES: "🇰🇪",
+  UGX: "🇺🇬",
+  TZS: "🇹🇿",
+  RWF: "🇷🇼",
+  NGN: "🇳🇬",
+  ZAR: "🇿🇦",
+  GHS: "🇬🇭",
+  EGP: "🇪🇬",
+  MAD: "🇲🇦",
+  ETB: "🇪🇹",
+  BIF: "🇧🇮",
+  SSP: "🇸🇸",
+  SOS: "🇸🇴",
+  XAF: "🇨🇲",
+  XOF: "🇸🇳",
+  AED: "🇦🇪",
+  SAR: "🇸🇦",
+  PKR: "🇵🇰",
+  BDT: "🇧🇩",
+  IDR: "🇮🇩",
+  MYR: "🇲🇾",
+  SGD: "🇸🇬",
+  THB: "🇹🇭",
+  PHP: "🇵🇭",
+  VND: "🇻🇳",
+  KRW: "🇰🇷",
+  BRL: "🇧🇷",
+  MXN: "🇲🇽",
+  TRY: "🇹🇷",
+  RUB: "🇷🇺",
+  PLN: "🇵🇱",
+  SEK: "🇸🇪",
+  NOK: "🇳🇴",
+  DKK: "🇩🇰",
+  ZMW: "🇿🇲",
+  BWP: "🇧🇼",
+  MWK: "🇲🇼",
+  MZN: "🇲🇿",
+  NAD: "🇳🇦",
+  AOA: "🇦🇴",
+  CDF: "🇨🇩",
+  NZD: "🇳🇿",
+};
+
+// Currency names
+const currencyNames: Record<string, string> = {
+  USD: "US Dollar",
+  EUR: "Euro",
+  GBP: "British Pound",
+  JPY: "Japanese Yen",
+  CHF: "Swiss Franc",
+  AUD: "Australian Dollar",
+  CAD: "Canadian Dollar",
+  CNY: "Chinese Yuan",
+  INR: "Indian Rupee",
+  KES: "Kenyan Shilling",
+  UGX: "Ugandan Shilling",
+  TZS: "Tanzanian Shilling",
+  RWF: "Rwandan Franc",
+  NGN: "Nigerian Naira",
+  ZAR: "South African Rand",
+  GHS: "Ghanaian Cedi",
+  EGP: "Egyptian Pound",
+  AED: "UAE Dirham",
+  SAR: "Saudi Riyal",
+  PKR: "Pakistani Rupee",
+  BDT: "Bangladeshi Taka",
+  IDR: "Indonesian Rupiah",
+  MYR: "Malaysian Ringgit",
+  SGD: "Singapore Dollar",
+  THB: "Thai Baht",
+  PHP: "Philippine Peso",
+  VND: "Vietnamese Dong",
+  KRW: "South Korean Won",
+  BRL: "Brazilian Real",
+  MXN: "Mexican Peso",
+  TRY: "Turkish Lira",
+  RUB: "Russian Ruble",
+  PLN: "Polish Zloty",
+  SEK: "Swedish Krona",
+  NOK: "Norwegian Krone",
+  NZD: "New Zealand Dollar",
 };
 
 // Major currencies to always show
 const majorCurrencies = ["USD", "EUR", "GBP", "JPY", "CNY"];
 
-// Crypto and commodities
-const cryptoAndCommodities: CurrencyRate[] = [
-  { symbol: 'BTC/USD', name: 'Bitcoin', rate: 42567.00, change: 2.34, flag: '₿' },
-  { symbol: 'ETH/USD', name: 'Ethereum', rate: 2234.50, change: 1.87, flag: 'Ξ' },
-  { symbol: 'XAU/USD', name: 'Gold', rate: 2024.30, change: 0.45, flag: '🥇' },
-];
+// Regional currencies by continent/region
+const africanCurrencies = ["KES", "UGX", "TZS", "NGN", "ZAR", "GHS", "EGP"];
+const asianCurrencies = ["INR", "PKR", "IDR", "MYR", "SGD", "THB", "PHP"];
+const europeanCurrencies = ["PLN", "TRY", "SEK", "NOK", "CHF"];
 
 // Mock stock data
 const STOCK_DATA: StockData[] = [
@@ -182,120 +220,24 @@ const STOCK_DATA: StockData[] = [
   { symbol: 'JPM', name: 'JPMorgan Chase', price: 195.34, change: 1.23, changePercent: 0.63 },
 ];
 
-const generateRatesForCountry = (userCountry: string | null): CurrencyRate[] => {
-  const userCurrency = getCurrencyForCountry(userCountry);
-  const userCurrencyCode = userCurrency.code;
-  const userFlag = userCountry ? countryFlags[userCountry] || '🌍' : '🌍';
-  
-  const rates: CurrencyRate[] = [];
-  
-  // Add user's local currency first (against USD)
-  if (userCurrencyCode !== "USD" && baseRates[userCurrencyCode]) {
-    rates.push({
-      symbol: `USD/${userCurrencyCode}`,
-      name: userCurrency.name,
-      rate: baseRates[userCurrencyCode].rate,
-      change: baseRates[userCurrencyCode].change,
-      flag: userFlag,
-      isLocal: true,
-    });
-  }
-  
-  // Add major currencies against user's currency or USD
-  majorCurrencies.forEach(code => {
-    if (code === userCurrencyCode) return;
-    
-    const currencyInfo = Object.entries(countryCurrencyMap).find(([_, info]) => info.code === code);
-    const flag = code === "USD" ? "🇺🇸" : 
-                 code === "EUR" ? "🇪🇺" :
-                 code === "GBP" ? "🇬🇧" :
-                 code === "JPY" ? "🇯🇵" :
-                 code === "CNY" ? "🇨🇳" : "💱";
-    
-    if (baseRates[code]) {
-      if (userCurrencyCode === "USD") {
-        // Show other currencies against USD
-        rates.push({
-          symbol: code === "JPY" || code === "CNY" ? `USD/${code}` : `${code}/USD`,
-          name: currencyInfo?.[1].name || code,
-          rate: code === "JPY" || code === "CNY" ? baseRates[code].rate : 1 / baseRates[code].rate,
-          change: baseRates[code].change,
-          flag,
-        });
-      } else {
-        // Show USD and major currencies against user's local currency
-        const localRate = baseRates[userCurrencyCode]?.rate || 1;
-        const crossRate = localRate / (baseRates[code]?.rate || 1);
-        rates.push({
-          symbol: `${code}/${userCurrencyCode}`,
-          name: currencyInfo?.[1].name || code,
-          rate: crossRate,
-          change: baseRates[code].change,
-          flag,
-        });
-      }
-    }
-  });
-  
-  // Add regional currencies based on user's location
-  const africanCountries = ["Uganda", "Kenya", "Tanzania", "Rwanda", "Nigeria", "Ghana", "South Africa", "Egypt", "Ethiopia"];
-  const asianCountries = ["India", "Pakistan", "Bangladesh", "Indonesia", "Malaysia", "Singapore", "Thailand", "Philippines", "Vietnam"];
-  const europeanCountries = ["Germany", "France", "Italy", "Spain", "Poland", "Turkey", "Russia", "Ukraine"];
-  
-  let regionalCurrencies: string[] = [];
-  
-  if (userCountry && africanCountries.includes(userCountry)) {
-    regionalCurrencies = ["KES", "UGX", "TZS", "NGN", "ZAR", "GHS"].filter(c => c !== userCurrencyCode);
-  } else if (userCountry && asianCountries.includes(userCountry)) {
-    regionalCurrencies = ["INR", "PKR", "IDR", "MYR", "SGD", "THB"].filter(c => c !== userCurrencyCode);
-  } else if (userCountry && europeanCountries.includes(userCountry)) {
-    regionalCurrencies = ["PLN", "TRY", "RUB", "SEK", "NOK", "CHF"].filter(c => c !== userCurrencyCode);
-  }
-  
-  regionalCurrencies.slice(0, 3).forEach(code => {
-    if (baseRates[code]) {
-      const country = Object.entries(countryCurrencyMap).find(([_, info]) => info.code === code)?.[0];
-      rates.push({
-        symbol: `USD/${code}`,
-        name: countryCurrencyMap[country || ""]?.name || code,
-        rate: baseRates[code].rate,
-        change: baseRates[code].change,
-        flag: country ? countryFlags[country] || '💱' : '💱',
-      });
-    }
-  });
-  
-  // Add crypto and commodities
-  rates.push(...cryptoAndCommodities);
-  
-  return rates;
-};
-
 interface CurrencyTickerProps {
-  userCountry: string | null;
+  rates: CurrencyRate[];
+  isLoading: boolean;
 }
 
-const CurrencyTicker = ({ userCountry }: CurrencyTickerProps) => {
-  const [rates, setRates] = useState<CurrencyRate[]>(() => generateRatesForCountry(userCountry));
+const CurrencyTicker = ({ rates, isLoading }: CurrencyTickerProps) => {
   const [isPaused, setIsPaused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setRates(generateRatesForCountry(userCountry));
-  }, [userCountry]);
-
-  // Simulate rate updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRates(prev => prev.map(rate => ({
-        ...rate,
-        rate: rate.rate * (1 + (Math.random() - 0.5) * 0.001),
-        change: rate.change + (Math.random() - 0.5) * 0.1
-      })));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
+  if (isLoading || rates.length === 0) {
+    return (
+      <div className="flex gap-4 py-3 overflow-hidden">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 w-32 rounded-lg shrink-0" />
+        ))}
+      </div>
+    );
+  }
 
   // Duplicate rates for seamless loop
   const duplicatedRates = [...rates, ...rates];
@@ -310,15 +252,15 @@ const CurrencyTicker = ({ userCountry }: CurrencyTickerProps) => {
     >
       <motion.div
         ref={containerRef}
-        className="flex gap-6 py-3"
+        className="flex gap-4 py-3"
         animate={{
-          x: isPaused ? undefined : [0, -50 * rates.length],
+          x: isPaused ? undefined : [0, -160 * rates.length],
         }}
         transition={{
           x: {
             repeat: Infinity,
             repeatType: "loop",
-            duration: 40,
+            duration: rates.length * 3,
             ease: "linear",
           },
         }}
@@ -327,7 +269,7 @@ const CurrencyTicker = ({ userCountry }: CurrencyTickerProps) => {
         {duplicatedRates.map((rate, index) => (
           <div 
             key={`${rate.symbol}-${index}`}
-            className={`flex items-center gap-2 whitespace-nowrap select-none px-3 py-2 rounded-lg border ${
+            className={`flex items-center gap-2 whitespace-nowrap select-none px-3 py-2 rounded-lg border shrink-0 ${
               rate.isLocal 
                 ? 'bg-primary/10 border-primary/30' 
                 : 'bg-card/50 border-border/50'
@@ -338,7 +280,7 @@ const CurrencyTicker = ({ userCountry }: CurrencyTickerProps) => {
               <div className="flex items-center gap-1">
                 <span className="font-semibold text-sm text-foreground">{rate.symbol}</span>
                 {rate.isLocal && (
-                  <span className="text-[10px] bg-primary/20 text-primary px-1 rounded">YOUR CURRENCY</span>
+                  <span className="text-[10px] bg-primary/20 text-primary px-1 rounded">LOCAL</span>
                 )}
               </div>
               <div className="flex items-center gap-1.5">
@@ -347,18 +289,6 @@ const CurrencyTicker = ({ userCountry }: CurrencyTickerProps) => {
                     minimumFractionDigits: rate.rate > 100 ? 2 : 4,
                     maximumFractionDigits: rate.rate > 100 ? 2 : 4 
                   })}
-                </span>
-                <span className={`flex items-center gap-0.5 text-xs font-medium ${
-                  rate.change > 0 ? 'text-green-500' : rate.change < 0 ? 'text-red-500' : 'text-muted-foreground'
-                }`}>
-                  {rate.change > 0 ? (
-                    <TrendingUp className="h-3 w-3" />
-                  ) : rate.change < 0 ? (
-                    <TrendingDown className="h-3 w-3" />
-                  ) : (
-                    <Minus className="h-3 w-3" />
-                  )}
-                  {Math.abs(rate.change).toFixed(2)}%
                 </span>
               </div>
             </div>
@@ -372,13 +302,97 @@ const CurrencyTicker = ({ userCountry }: CurrencyTickerProps) => {
 export const FinanceSection = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [ratesLoading, setRatesLoading] = useState(true);
   const [userCountry, setUserCountry] = useState<string | null>(null);
+  const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [stocks, setStocks] = useState<StockData[]>(STOCK_DATA);
+
+  const fetchRates = async (userCurrencyCode: string) => {
+    setRatesLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-currency-rates', {
+        body: { baseCurrency: 'USD' },
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.rates) {
+        const rates: CurrencyRate[] = [];
+        const apiRates = data.rates as Record<string, number>;
+
+        // Add user's local currency first
+        if (userCurrencyCode !== "USD" && apiRates[userCurrencyCode]) {
+          rates.push({
+            symbol: `USD/${userCurrencyCode}`,
+            name: currencyNames[userCurrencyCode] || userCurrencyCode,
+            rate: apiRates[userCurrencyCode],
+            change: 0,
+            flag: currencyFlags[userCurrencyCode] || '💱',
+            isLocal: true,
+          });
+        }
+
+        // Add major currencies
+        majorCurrencies.forEach(code => {
+          if (code === userCurrencyCode || code === "USD") return;
+          if (apiRates[code]) {
+            rates.push({
+              symbol: `USD/${code}`,
+              name: currencyNames[code] || code,
+              rate: apiRates[code],
+              change: 0,
+              flag: currencyFlags[code] || '💱',
+            });
+          }
+        });
+
+        // Determine regional currencies based on user's country
+        let regionalCodes: string[] = [];
+        const africanCountries = ["Uganda", "Kenya", "Tanzania", "Rwanda", "Nigeria", "Ghana", "South Africa", "Egypt", "Ethiopia"];
+        const asianCountries = ["India", "Pakistan", "Bangladesh", "Indonesia", "Malaysia", "Singapore", "Thailand", "Philippines", "Vietnam"];
+        const europeanCountries = ["Germany", "France", "Italy", "Spain", "Poland", "Turkey", "Russia", "Ukraine", "Sweden", "Norway"];
+
+        if (userCountry && africanCountries.includes(userCountry)) {
+          regionalCodes = africanCurrencies;
+        } else if (userCountry && asianCountries.includes(userCountry)) {
+          regionalCodes = asianCurrencies;
+        } else if (userCountry && europeanCountries.includes(userCountry)) {
+          regionalCodes = europeanCurrencies;
+        } else {
+          // Default mix
+          regionalCodes = ["KES", "NGN", "INR", "AED"];
+        }
+
+        regionalCodes.forEach(code => {
+          if (code === userCurrencyCode || majorCurrencies.includes(code)) return;
+          if (apiRates[code]) {
+            rates.push({
+              symbol: `USD/${code}`,
+              name: currencyNames[code] || code,
+              rate: apiRates[code],
+              change: 0,
+              flag: currencyFlags[code] || '💱',
+            });
+          }
+        });
+
+        setCurrencyRates(rates);
+        setLastUpdate(data.lastUpdate);
+      }
+    } catch (error) {
+      console.error('Error fetching currency rates:', error);
+      // Fallback to showing empty state
+    } finally {
+      setRatesLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserCountry = async () => {
       if (!user) {
         setLoading(false);
+        setRatesLoading(false);
         return;
       }
 
@@ -391,9 +405,14 @@ export const FinanceSection = () => {
 
         if (profile?.country) {
           setUserCountry(profile.country);
+          const userCurrency = getCurrencyForCountry(profile.country);
+          fetchRates(userCurrency.code);
+        } else {
+          fetchRates('USD');
         }
       } catch (error) {
         console.error('Error fetching user country:', error);
+        fetchRates('USD');
       } finally {
         setLoading(false);
       }
@@ -442,10 +461,10 @@ export const FinanceSection = () => {
       {/* Currency Ticker */}
       <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-b border-border">
         <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-primary" />
-              <h2 className="font-semibold text-lg text-foreground">Currency Rates</h2>
+              <h2 className="font-semibold text-lg text-foreground">Live Currency Rates</h2>
             </div>
             {userCountry && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
@@ -455,9 +474,15 @@ export const FinanceSection = () => {
               </div>
             )}
           </div>
+          {lastUpdate && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <RefreshCw className="h-3 w-3" />
+              Updated: {new Date(lastUpdate).toLocaleString()}
+            </p>
+          )}
         </div>
         <div className="px-2">
-          <CurrencyTicker userCountry={userCountry} />
+          <CurrencyTicker rates={currencyRates} isLoading={ratesLoading} />
         </div>
       </div>
 
