@@ -37,32 +37,66 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Build the API URL for top headlines
-    const url = new URL('https://newsapi.org/v2/top-headlines');
-    url.searchParams.set('apiKey', apiKey);
-    url.searchParams.set('category', category);
-    url.searchParams.set('country', country);
-    url.searchParams.set('pageSize', String(pageSize));
-    url.searchParams.set('page', String(page));
-
     console.log('Fetching news for category:', category, 'page:', page);
 
-    const response = await fetch(url.toString());
-    const data: NewsAPIResponse = await response.json();
+    // Fetch from top headlines for latest news
+    const topHeadlinesUrl = new URL('https://newsapi.org/v2/top-headlines');
+    topHeadlinesUrl.searchParams.set('apiKey', apiKey);
+    topHeadlinesUrl.searchParams.set('category', category);
+    topHeadlinesUrl.searchParams.set('country', country);
+    topHeadlinesUrl.searchParams.set('pageSize', String(Math.ceil(pageSize / 2)));
+    topHeadlinesUrl.searchParams.set('page', String(page));
 
-    if (!response.ok || data.status !== 'ok') {
-      console.error('News API error:', data);
+    // Fetch from everything endpoint for older news (1-2 days ago)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+    const everythingUrl = new URL('https://newsapi.org/v2/everything');
+    everythingUrl.searchParams.set('apiKey', apiKey);
+    everythingUrl.searchParams.set('q', category === 'general' ? 'news' : category);
+    everythingUrl.searchParams.set('language', 'en');
+    everythingUrl.searchParams.set('from', twoDaysAgo.toISOString().split('T')[0]);
+    everythingUrl.searchParams.set('to', yesterday.toISOString().split('T')[0]);
+    everythingUrl.searchParams.set('sortBy', 'publishedAt');
+    everythingUrl.searchParams.set('pageSize', String(Math.ceil(pageSize / 2)));
+    everythingUrl.searchParams.set('page', String(page));
+
+    const [topResponse, everythingResponse] = await Promise.all([
+      fetch(topHeadlinesUrl.toString()),
+      fetch(everythingUrl.toString())
+    ]);
+
+    const topData: NewsAPIResponse = await topResponse.json();
+    const everythingData: NewsAPIResponse = await everythingResponse.json();
+
+    // Combine and format articles
+    const allArticles: NewsArticle[] = [];
+    
+    if (topResponse.ok && topData.status === 'ok') {
+      allArticles.push(...topData.articles);
+    }
+    
+    if (everythingResponse.ok && everythingData.status === 'ok') {
+      allArticles.push(...everythingData.articles);
+    }
+
+    if (allArticles.length === 0) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Failed to fetch news' }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: 'No news found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Shuffle to mix latest with older articles
+    const shuffled = allArticles.sort(() => Math.random() - 0.5);
+
     // Format the articles for the frontend
-    const articles = data.articles
+    const articles = shuffled
       .filter(article => article.title && article.title !== '[Removed]')
       .map((article, index) => ({
-        id: `news-${index}-${Date.now()}`,
+        id: `news-${page}-${index}-${Date.now()}`,
         title: article.title,
         description: article.description || '',
         url: article.url,
@@ -72,13 +106,13 @@ Deno.serve(async (req) => {
         author: article.author,
       }));
 
-    console.log(`Fetched ${articles.length} articles for page ${page}`);
+    console.log(`Fetched ${articles.length} mixed articles for page ${page}`);
 
-    const totalPages = Math.ceil(data.totalResults / pageSize);
-    const hasMore = page < totalPages && articles.length > 0;
+    const totalResults = (topData.totalResults || 0) + (everythingData.totalResults || 0);
+    const hasMore = articles.length >= pageSize / 2;
 
     return new Response(
-      JSON.stringify({ success: true, articles, hasMore, totalResults: data.totalResults }),
+      JSON.stringify({ success: true, articles, hasMore, totalResults }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

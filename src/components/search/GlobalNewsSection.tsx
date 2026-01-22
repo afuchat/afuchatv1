@@ -182,7 +182,7 @@ export const GlobalNewsSection = ({ category = 'general' }: GlobalNewsSectionPro
   };
 
   const formatMarkdownContent = (content: string) => {
-    // Simple markdown to text cleanup for display
+    // Clean up markdown and remove navigation/UI elements
     return content
       .replace(/#{1,6}\s/g, '') // Remove headers
       .replace(/\*\*/g, '') // Remove bold
@@ -193,6 +193,12 @@ export const GlobalNewsSection = ({ category = 'general' }: GlobalNewsSectionPro
       .replace(/`([^`]+)`/g, '$1') // Remove inline code
       .replace(/^\s*[-*+]\s/gm, '• ') // Convert list items
       .replace(/^\s*\d+\.\s/gm, '') // Remove numbered lists
+      .replace(/^(Menu|Navigation|Home|About|Contact|Sign In|Sign Up|Subscribe|Newsletter|Follow Us|Share|Comments|Related|Read More|Advertisement|Ad|Sponsored|Cookie|Privacy Policy|Terms|Footer|Header|Sidebar|Search|Log ?[Ii]n|Register).*$/gim, '') // Remove common nav text
+      .replace(/^(Skip to|Jump to|Go to|Back to|Return to).*$/gim, '') // Remove nav instructions
+      .replace(/^.*?(facebook|twitter|linkedin|instagram|youtube|tiktok|pinterest|whatsapp|telegram|email|share|copy link).*$/gim, '') // Remove social sharing lines
+      .replace(/^\s*[\|│]\s*/gm, '') // Remove table borders
+      .replace(/\n{3,}/g, '\n\n') // Collapse multiple newlines
+      .replace(/^\s+|\s+$/g, '') // Trim whitespace
       .trim();
   };
 
