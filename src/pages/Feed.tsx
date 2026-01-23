@@ -1805,8 +1805,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       // Current user liked set
       const likedSet = new Set<string>((likedData as any)?.data?.map((r: any) => r.post_id) || []);
 
-      // Map posts
-      const mapPost = (post: any) => {
+      // Map posts - returns null for posts with deleted/invalid profiles
+      const mapPost = (post: any): Post | null => {
         const replies = repliesByPostId.get(post.id) || [];
 
         if (post.profiles?.affiliated_business_id) {
@@ -1819,9 +1819,14 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           quotedPost.is_developer = developerData.has(quotedPost.author_id);
         }
 
+        // Skip posts without valid profiles (deleted accounts)
+        if (!post.profiles) {
+          return null;
+        }
+
         return {
           ...post,
-          profiles: post.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, is_affiliate: false, is_business_mode: false, avatar_url: null, affiliated_business_id: null, affiliated_business: null, last_seen: null, show_online_status: false, is_warned: false, warning_reason: null, verification_source: null },
+          profiles: post.profiles,
           quoted_post: quotedPost,
           replies,
           reply_count: replies.length,
@@ -1835,8 +1840,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
       // Apply personalized feed algorithm for "For You" tab
       // Following tab stays chronological for fresh content from followed users
-      const mappedPosts = postData.map(mapPost);
-      const mappedFollowingPosts = followingPostData.map(mapPost);
+      // Filter out null posts (from deleted accounts)
+      const mappedPosts = postData.map(mapPost).filter((p): p is Post => p !== null);
+      const mappedFollowingPosts = followingPostData.map(mapPost).filter((p): p is Post => p !== null);
       
       // Sort posts with personalization when logged in, random shuffle for guests
       const shuffleArray = <T,>(array: T[]): T[] => {
