@@ -181,15 +181,98 @@ html.telegram-mini-app .sticky.top-0 {
     @apply bg-card/80 backdrop-blur-xl border border-border/50;
   }
 
-  /* Liquid glass effect for active navigation items */
+  /* Animated liquid glass effect for active navigation items */
   .nav-glass-active {
-    background: rgba(0, 194, 203, 0.12);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(0, 194, 203, 0.2);
+    position: relative;
+    background: radial-gradient(
+      ellipse 120% 80% at 50% 50%,
+      rgba(0, 194, 203, 0.18) 0%,
+      rgba(0, 194, 203, 0.08) 50%,
+      rgba(0, 194, 203, 0.04) 100%
+    );
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid rgba(0, 194, 203, 0.25);
+    border-radius: 16px;
     box-shadow: 
-      0 0 16px rgba(0, 194, 203, 0.25),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      0 0 20px rgba(0, 194, 203, 0.35),
+      0 0 40px rgba(0, 194, 203, 0.15),
+      inset 0 1px 1px rgba(255, 255, 255, 0.12),
+      inset 0 -1px 1px rgba(0, 194, 203, 0.1);
+    animation: liquid-pulse 3s ease-in-out infinite;
+    overflow: hidden;
+  }
+  
+  .nav-glass-active::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgba(0, 194, 203, 0.08) 60deg,
+      transparent 120deg,
+      rgba(0, 194, 203, 0.05) 180deg,
+      transparent 240deg,
+      rgba(0, 194, 203, 0.08) 300deg,
+      transparent 360deg
+    );
+    animation: liquid-rotate 8s linear infinite;
+    pointer-events: none;
+  }
+  
+  .nav-glass-active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.15) 0%,
+      transparent 40%,
+      transparent 60%,
+      rgba(0, 194, 203, 0.1) 100%
+    );
+    border-radius: inherit;
+    animation: liquid-shimmer 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes liquid-pulse {
+    0%, 100% {
+      box-shadow: 
+        0 0 20px rgba(0, 194, 203, 0.35),
+        0 0 40px rgba(0, 194, 203, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12),
+        inset 0 -1px 1px rgba(0, 194, 203, 0.1);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 
+        0 0 28px rgba(0, 194, 203, 0.45),
+        0 0 56px rgba(0, 194, 203, 0.2),
+        inset 0 1px 2px rgba(255, 255, 255, 0.18),
+        inset 0 -1px 2px rgba(0, 194, 203, 0.15);
+      transform: scale(1.02);
+    }
+  }
+  
+  @keyframes liquid-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  @keyframes liquid-shimmer {
+    0%, 100% {
+      opacity: 0.6;
+      transform: translateX(-5%) translateY(-5%);
+    }
+    50% {
+      opacity: 1;
+      transform: translateX(5%) translateY(5%);
+    }
   }
 
   /* Money icon animation for tip button */
