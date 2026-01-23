@@ -327,39 +327,42 @@ html.telegram-mini-app .sticky.top-0 {
   }
 
   .dark {
-    /* Brand Cyan #00C2CB */
+    /* AfuChat Brand Cyan #00C2CB */
     --primary: 183 100% 40%;
     --primary-foreground: 0 0% 100%;
     
-    /* Accent */
-    --accent: 183 80% 50%;
+    /* Hover/Active state #00A9B1 */
+    --primary-hover: 183 100% 35%;
+    
+    /* Accent - Brand cyan */
+    --accent: 183 100% 40%;
     --accent-foreground: 0 0% 100%;
     
-    /* App Background - Deep premium dark */
-    --background: 222 20% 7%;
+    /* X-style Dark Background #15202B */
+    --background: 210 33% 13%;
     
-    /* Text Colors */
-    --foreground: 0 0% 98%;
+    /* Primary Text #FFFFFF */
+    --foreground: 0 0% 100%;
     
-    /* Card/Post Background - Elevated dark */
-    --card: 222 17% 10%;
-    --card-foreground: 0 0% 98%;
+    /* Card/Surface Background #192734 */
+    --card: 207 32% 15%;
+    --card-foreground: 0 0% 100%;
     
-    /* Popover */
-    --popover: 222 17% 10%;
-    --popover-foreground: 0 0% 98%;
+    /* Popover - Same as card */
+    --popover: 207 32% 15%;
+    --popover-foreground: 0 0% 100%;
     
-    /* Muted */
-    --muted: 222 15% 14%;
-    --muted-foreground: 220 10% 54%;
+    /* Muted - Slightly elevated surface */
+    --muted: 207 28% 18%;
+    --muted-foreground: 203 19% 59%;
     
     /* Secondary */
-    --secondary: 222 15% 14%;
-    --secondary-foreground: 220 10% 78%;
+    --secondary: 207 28% 18%;
+    --secondary-foreground: 203 19% 75%;
     
-    /* Borders - Subtle dark */
-    --border: 222 12% 18%;
-    --input: 222 12% 18%;
+    /* Borders #38444D */
+    --border: 203 15% 26%;
+    --input: 203 15% 26%;
     --ring: 183 100% 40%;
     
     /* Destructive */
@@ -374,15 +377,18 @@ html.telegram-mini-app .sticky.top-0 {
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
     
-    /* Sidebar */
-    --sidebar-background: 222 17% 10%;
-    --sidebar-foreground: 0 0% 98%;
+    /* Sidebar - X-style dark */
+    --sidebar-background: 207 32% 15%;
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 183 100% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 183 80% 50%;
+    --sidebar-accent: 183 100% 40%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 222 12% 18%;
+    --sidebar-border: 203 15% 26%;
     --sidebar-ring: 183 100% 40%;
+    
+    /* Soft accent background for subtle highlights */
+    --accent-soft: 183 100% 40% / 0.15;
   }
 }
 
