@@ -298,21 +298,13 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
         </motion.div>
       </main>
 
-      {/* Mobile Bottom Navigation - Liquid Glass with AfuAI center */}
+      {/* Mobile Bottom Navigation - Solid bar with liquid glass on active tabs */}
       {!shouldHideNav && (
         <div className={cn(
           "lg:hidden fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
           (isScrollingDown || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
         )}>
-          <nav 
-            className="rounded-t-[20px] border-t border-white/[0.08]"
-            style={{
-              background: 'rgba(21, 32, 43, 0.85)',
-              backdropFilter: 'blur(14px)',
-              WebkitBackdropFilter: 'blur(14px)',
-              boxShadow: '0 -8px 24px rgba(0, 194, 203, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-            }}
-          >
+          <nav className="bg-background border-t border-border">
             <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
               {/* Home */}
               <Link
@@ -324,70 +316,66 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                     window.dispatchEvent(new Event('refresh-feed-order'));
                   }
                 }}
-                className="flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group"
+                className={cn(
+                  "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group",
+                  (isActive('/') || isActive('/home')) && "nav-glass-active"
+                )}
               >
                 <Home 
                   className={cn(
                     "h-6 w-6 transition-colors duration-200",
                     (isActive('/') || isActive('/home')) 
                       ? "text-primary" 
-                      : "text-[#8899A6] group-hover:text-primary/80"
+                      : "text-muted-foreground group-hover:text-primary/80"
                   )} 
                   strokeWidth={(isActive('/') || isActive('/home')) ? 2.5 : 2}
                   fill={(isActive('/') || isActive('/home')) ? 'currentColor' : 'none'}
                 />
-                {(isActive('/') || isActive('/home')) && (
-                  <div className="w-1 h-1 rounded-full bg-primary mt-1 shadow-[0_0_6px_rgba(0,194,203,0.8)]" />
-                )}
               </Link>
               
               {/* Search */}
               <Link
                 to="/search"
-                className="flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group"
+                className={cn(
+                  "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group",
+                  isActive('/search') && "nav-glass-active"
+                )}
               >
                 <Search 
                   className={cn(
                     "h-6 w-6 transition-colors duration-200",
                     isActive('/search') 
                       ? "text-primary" 
-                      : "text-[#8899A6] group-hover:text-primary/80"
+                      : "text-muted-foreground group-hover:text-primary/80"
                   )} 
                   strokeWidth={isActive('/search') ? 2.5 : 2} 
                 />
-                {isActive('/search') && (
-                  <div className="w-1 h-1 rounded-full bg-primary mt-1 shadow-[0_0_6px_rgba(0,194,203,0.8)]" />
-                )}
               </Link>
               
               {/* AfuAI Center Button - Auth required */}
               {user ? (
                 <Link
                   to="/ai-chat"
-                  className="flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group"
+                  className={cn(
+                    "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group",
+                    isActive('/ai-chat') && "nav-glass-active"
+                  )}
                 >
-                  <div className={cn(
-                    "p-1.5 rounded-xl transition-all duration-200",
-                    isActive('/ai-chat') 
-                      ? "bg-primary/20 shadow-[0_0_12px_rgba(0,194,203,0.4)]" 
-                      : "group-hover:bg-primary/10"
-                  )}>
-                    <img 
-                      src={aiChatIcon} 
-                      alt="AI Chat" 
-                      className={cn(
-                        "h-7 w-7 object-contain select-none transition-opacity duration-200",
-                        isActive('/ai-chat') ? "opacity-100" : "opacity-70 group-hover:opacity-90"
-                      )}
-                      draggable={false}
-                      onContextMenu={(e) => e.preventDefault()}
-                    />
-                  </div>
+                  <img 
+                    src={aiChatIcon} 
+                    alt="AI Chat" 
+                    className={cn(
+                      "h-7 w-7 object-contain select-none transition-opacity duration-200",
+                      isActive('/ai-chat') ? "opacity-100" : "opacity-70 group-hover:opacity-90"
+                    )}
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
+                  />
                 </Link>
               ) : (
                 <Link
                   to="/auth/signin"
-                  className="flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group"
+                  className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group"
                 >
                   <img 
                     src={aiChatIcon} 
@@ -403,7 +391,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
               {user ? (
                 <Link
                   to="/notifications"
-                  className="flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 relative group"
+                  className={cn(
+                    "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 relative group",
+                    isActive('/notifications') && "nav-glass-active"
+                  )}
                 >
                   <div className="relative">
                     <Bell 
@@ -411,7 +402,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                         "h-6 w-6 transition-colors duration-200",
                         isActive('/notifications') 
                           ? "text-primary" 
-                          : "text-[#8899A6] group-hover:text-primary/80"
+                          : "text-muted-foreground group-hover:text-primary/80"
                       )} 
                       strokeWidth={isActive('/notifications') ? 2.5 : 2}
                       fill={isActive('/notifications') ? 'currentColor' : 'none'}
@@ -422,16 +413,13 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                       </span>
                     )}
                   </div>
-                  {isActive('/notifications') && (
-                    <div className="w-1 h-1 rounded-full bg-primary mt-1 shadow-[0_0_6px_rgba(0,194,203,0.8)]" />
-                  )}
                 </Link>
               ) : (
                 <Link
                   to="/auth/signin"
-                  className="flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group"
+                  className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group"
                 >
-                  <Bell className="h-6 w-6 text-[#8899A6] group-hover:text-primary/80 transition-colors duration-200" strokeWidth={2} />
+                  <Bell className="h-6 w-6 text-muted-foreground group-hover:text-primary/80 transition-colors duration-200" strokeWidth={2} />
                 </Link>
               )}
               
@@ -439,7 +427,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
               {user ? (
                 <Link
                   to="/chats"
-                  className="flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 relative group"
+                  className={cn(
+                    "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 relative group",
+                    isActive('/chats') && "nav-glass-active"
+                  )}
                 >
                   <div className="relative">
                     <MessageCircle 
@@ -447,7 +438,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                         "h-6 w-6 transition-colors duration-200",
                         isActive('/chats') 
                           ? "text-primary" 
-                          : "text-[#8899A6] group-hover:text-primary/80"
+                          : "text-muted-foreground group-hover:text-primary/80"
                       )} 
                       strokeWidth={isActive('/chats') ? 2.5 : 2}
                       fill={isActive('/chats') ? 'currentColor' : 'none'}
@@ -458,29 +449,19 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                       </span>
                     )}
                   </div>
-                  {isActive('/chats') && (
-                    <div className="w-1 h-1 rounded-full bg-primary mt-1 shadow-[0_0_6px_rgba(0,194,203,0.8)]" />
-                  )}
                 </Link>
               ) : (
                 <Link
                   to="/auth/signin"
-                  className="flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group"
+                  className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group"
                 >
-                  <MessageCircle className="h-6 w-6 text-[#8899A6] group-hover:text-primary/80 transition-colors duration-200" strokeWidth={2} />
+                  <MessageCircle className="h-6 w-6 text-muted-foreground group-hover:text-primary/80 transition-colors duration-200" strokeWidth={2} />
                 </Link>
               )}
             </div>
           </nav>
-          {/* Safe area padding for devices with home indicator - glass effect continuation */}
-          <div 
-            className="h-[env(safe-area-inset-bottom)]"
-            style={{
-              background: 'rgba(21, 32, 43, 0.85)',
-              backdropFilter: 'blur(14px)',
-              WebkitBackdropFilter: 'blur(14px)'
-            }}
-          />
+          {/* Safe area padding for devices with home indicator */}
+          <div className="bg-background h-[env(safe-area-inset-bottom)]" />
         </div>
       )}
     </div>
