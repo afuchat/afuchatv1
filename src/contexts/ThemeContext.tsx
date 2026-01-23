@@ -42,8 +42,8 @@ const applyTheme = (resolved: 'light' | 'dark') => {
   root.classList.remove('light', 'dark');
   root.classList.add(resolved);
 
-  // Update meta theme-color for status bar
-  const themeColor = resolved === 'dark' ? '#0F1114' : '#F6F6F6';
+  // Update meta theme-color for status bar - X-style dark theme
+  const themeColor = resolved === 'dark' ? '#15202B' : '#F9FAFB';
   const metaThemeColor = document.querySelector('meta[name="theme-color"]:not([media])');
   if (metaThemeColor) {
     metaThemeColor.setAttribute('content', themeColor);
