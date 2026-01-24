@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -88,6 +89,7 @@ interface BuiltInApp {
 const MiniPrograms = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [miniPrograms, setMiniPrograms] = useState<MiniProgram[]>([]);
   const [installedApps, setInstalledApps] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
@@ -467,7 +469,7 @@ const MiniPrograms = () => {
     }
   };
 
-  // Open built-in app in embedded viewer directly
+  // Open built-in app - navigate directly instead of using iframe (avoids ERR_BLOCKED_BY_RESPONSE)
   const openBuiltInApp = (app: BuiltInApp) => {
     if (!isAppAvailable(app)) {
       toast.info('Coming soon!');
@@ -484,12 +486,9 @@ const MiniPrograms = () => {
     });
     setRecentApps(getRecentApps());
     
-    setEmbeddedApp({
-      name: app.name,
-      url: app.route,
-      icon: app.logo,
-      isBuiltIn: true,
-    });
+    // Navigate directly to the route instead of using iframe
+    // This avoids X-Frame-Options / CSP blocking issues in production
+    navigate(app.route);
   };
 
   // Handler for third-party apps - skip preview if used before
