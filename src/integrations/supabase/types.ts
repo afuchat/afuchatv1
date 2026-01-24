@@ -509,6 +509,75 @@ export type Database = {
           },
         ]
       }
+      blog_articles: {
+        Row: {
+          ai_summary: string | null
+          author_id: string | null
+          category: string
+          content: string
+          cover_image: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          is_featured: boolean
+          is_published: boolean
+          meta_description: string | null
+          meta_keywords: string[] | null
+          meta_title: string | null
+          published_at: string | null
+          reading_time_minutes: number
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          ai_summary?: string | null
+          author_id?: string | null
+          category?: string
+          content: string
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          meta_title?: string | null
+          published_at?: string | null
+          reading_time_minutes?: number
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          ai_summary?: string | null
+          author_id?: string | null
+          category?: string
+          content?: string
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          meta_title?: string | null
+          published_at?: string | null
+          reading_time_minutes?: number
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
       chat_folder_assignments: {
         Row: {
           assigned_at: string | null
@@ -4645,6 +4714,7 @@ export type Database = {
         Returns: undefined
       }
       calculate_grade: { Args: { xp_amount: number }; Returns: string }
+      calculate_reading_time: { Args: { content: string }; Returns: number }
       can_claim_red_envelope: { Args: { p_user_id: string }; Returns: boolean }
       cancel_active_subscription: { Args: never; Returns: Json }
       charge_ad_daily_budgets: { Args: never; Returns: number }
@@ -4846,6 +4916,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_article_views: {
+        Args: { article_id: string }
+        Returns: undefined
       }
       increment_mini_program_installs: {
         Args: { program_id: string }
