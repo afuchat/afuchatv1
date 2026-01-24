@@ -304,7 +304,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
           "lg:hidden fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
           (isScrollingDown || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
         )}>
-          <nav className="bg-background border-t border-border">
+          <nav className="bg-background">
             <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
               {/* Home */}
               <Link
