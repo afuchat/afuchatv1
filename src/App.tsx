@@ -91,6 +91,9 @@ const AdminCreatorWithdrawals = lazy(() => import("./pages/AdminCreatorWithdrawa
 const AdManager = lazy(() => import("./pages/AdManager"));
 const AfuMail = lazy(() => import("./pages/AfuMail"));
 const WhatsNew = lazy(() => import("./pages/WhatsNew"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogArticle = lazy(() => import("./pages/BlogArticle"));
+const AdminBlog = lazy(() => import("./pages/admin/AdminBlog"));
 
 const FoodDelivery = lazy(() => import("./pages/FoodDelivery"));
 const Bookings = lazy(() => import("./pages/Bookings"));
@@ -198,6 +201,9 @@ const AppRoutes = () => {
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/whats-new" element={<WhatsNew />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:slug" element={<BlogArticle />} />
+      <Route path="/admin/blog" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><AdminBlog /></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/trending" element={<Layout><TrendingHashtags /></Layout>} />
       <Route path="/admin/affiliate-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminAffiliateRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/admin/creator-withdrawals" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminCreatorWithdrawals /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />

@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Home, Search, Bell, MessageCircle } from 'lucide-react';
 import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load tab content
@@ -56,16 +55,13 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
   const isOnMainTab = currentTabIndex !== -1;
   
   const [activeTab, setActiveTab] = useState<number>(Math.max(0, currentTabIndex));
-  const [direction, setDirection] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
   
   // Sync tab with route changes
   useEffect(() => {
     const newIndex = getTabIndexFromPath(location.pathname);
     if (newIndex !== -1 && newIndex !== activeTab) {
-      setDirection(newIndex > activeTab ? 1 : -1);
       setActiveTab(newIndex);
     }
   }, [location.pathname]);
@@ -128,40 +124,9 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
       return;
     }
     
-    setDirection(index > activeTab ? 1 : -1);
     setActiveTab(index);
     navigate(tab.path, { replace: true });
-  }, [activeTab, user, navigate]);
-
-  const handleSwipe = useCallback((event: any, info: PanInfo) => {
-    const threshold = 50;
-    const velocity = 0.5;
-    
-    if (Math.abs(info.offset.x) > threshold || Math.abs(info.velocity.x) > velocity) {
-      if (info.offset.x > 0 && activeTab > 0) {
-        // Swipe right - go to previous tab
-        handleTabChange(activeTab - 1);
-      } else if (info.offset.x < 0 && activeTab < TABS.length - 1) {
-        // Swipe left - go to next tab
-        handleTabChange(activeTab + 1);
-      }
-    }
-  }, [activeTab, handleTabChange]);
-
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
-  };
+  }, [user, navigate]);
 
   // If not on a main tab route, render children normally
   if (!isOnMainTab) {
@@ -187,35 +152,15 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      {/* Tab Content Area */}
-      <div ref={containerRef} className="flex-1 overflow-hidden relative">
-        <AnimatePresence initial={false} custom={direction} mode="popLayout">
-          <motion.div
-            key={activeTab}
-            custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{
-              x: { type: "spring", stiffness: 300, damping: 30 },
-              opacity: { duration: 0.2 }
-            }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
-            onDragEnd={handleSwipe}
-            className="absolute inset-0 overflow-y-auto pb-20"
-          >
-            <Suspense fallback={
-              <div className="flex items-center justify-center min-h-[50vh]">
-                <CustomLoader size="lg" />
-              </div>
-            }>
-              {renderTabContent(activeTab)}
-            </Suspense>
-          </motion.div>
-        </AnimatePresence>
+      {/* Tab Content Area - No sliding, instant switch */}
+      <div className="flex-1 overflow-y-auto pb-20">
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <CustomLoader size="lg" />
+          </div>
+        }>
+          {renderTabContent(activeTab)}
+        </Suspense>
       </div>
 
       {/* Bottom Tab Bar */}
