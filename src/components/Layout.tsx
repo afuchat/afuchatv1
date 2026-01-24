@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
 import NotificationIcon from '@/components/nav/NotificationIcon';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
+import { MainTabsNavigation } from '@/components/nav/MainTabsNavigation';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +18,12 @@ import { DesktopBlocker } from '@/components/DesktopBlocker';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
+
+// Check if current path is a main tab route
+const MAIN_TAB_ROUTES = ['/', '/home', '/feed', '/search', '/ai-chat', '/notifications', '/chats'];
+const isMainTabRoute = (pathname: string): boolean => {
+  return MAIN_TAB_ROUTES.includes(pathname);
+};
 
 interface LayoutProps {
   children: ReactNode;
@@ -282,6 +289,19 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   const isChatRoom = location.pathname.startsWith('/chat/');
   const shouldHideNav = isChatRoom || hideNav;
   const shouldHideUI = hideNav;
+  
+  // Use MainTabsNavigation for main tab routes (sliding tab behavior)
+  const onMainTab = isMainTabRoute(location.pathname);
+  
+  if (onMainTab && !shouldHideNav) {
+    return (
+      <div className="min-h-screen bg-background select-none">
+        <MainTabsNavigation isScrollingDown={isScrollingDown} chatScrollHide={chatScrollHide}>
+          {children}
+        </MainTabsNavigation>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background select-none overflow-y-auto">
