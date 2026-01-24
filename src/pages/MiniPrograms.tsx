@@ -444,12 +444,9 @@ const MiniPrograms = () => {
     }
   };
 
-  // Check if app is available - all built-in apps are open except AfuMail
+  // Check if app is available - all built-in apps are open
   const isAppAvailable = (app: BuiltInApp) => {
-    // AfuMail is coming soon
-    if (app.id === 'afumail') return false;
-    
-    // All other built-in apps are available to everyone
+    // All built-in apps are available to everyone (including AfuMail)
     return true;
   };
 
