@@ -44,7 +44,7 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
   const { canUseAIPostAnalysis } = useSubscription();
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [shouldShow, setShouldShow] = useState(false);
   const checkedRef = useRef(false);
   const mountedRef = useRef(true);
