@@ -41,6 +41,7 @@ import {
   LogOut,
   Unlink,
   Banknote,
+  BookOpen,
 } from 'lucide-react';
 import { VerifiedBadge } from './VerifiedBadge';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
@@ -268,6 +269,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
     { icon: Crown, label: 'Premium', path: '/premium' },
     { icon: Bot, label: 'AI Chat', path: '/ai-chat', badge: 'Beta', requiresAuth: true },
     { icon: MessageSquare, label: 'Chats', path: '/chats', requiresAuth: true },
+    { icon: BookOpen, label: 'Blog', path: '/blog' },
     { icon: Gift, label: 'Gifts', path: '/gifts' },
     { icon: Wallet, label: 'Wallet', path: '/wallet', requiresAuth: true },
     { icon: Banknote, label: 'Creator Earnings', path: '/creator-earnings', badge: '🇺🇬', requiresAuth: true },

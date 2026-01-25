@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { SEO } from '@/components/SEO';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +20,8 @@ import {
   Flame,
   Tag,
   User,
-  ChevronRight
+  ChevronRight,
+  PenSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -55,12 +57,28 @@ const CATEGORIES = [
 
 const Blog = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [articles, setArticles] = useState<Article[]>([]);
   const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeTab, setActiveTab] = useState<'latest' | 'trending' | 'featured'>('latest');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check admin status
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data } = await supabase
+        .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      setIsAdmin(data === true);
+    };
+    checkAdmin();
+  }, [user]);
 
   useEffect(() => {
     fetchArticles();
@@ -331,7 +349,7 @@ const Blog = () => {
                               {article.category}
                             </Badge>
                             {article.is_featured && (
-                              <Flame className="h-3 w-3 text-orange-500" />
+                              <Flame className="h-3 w-3 text-accent" />
                             )}
                           </div>
                           <h3 className="font-semibold text-sm line-clamp-2 mb-1">
@@ -411,6 +429,29 @@ const Blog = () => {
         </div>
         <div className="bg-background h-[env(safe-area-inset-bottom)]" />
       </nav>
+
+      {/* Admin FAB for creating blog posts */}
+      {isAdmin && (
+        <motion.button
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/admin/blog')}
+          className={cn(
+            "fixed bottom-20 right-4 z-50",
+            "h-14 w-14 rounded-full",
+            "bg-gradient-to-br from-primary via-primary to-accent",
+            "text-primary-foreground shadow-xl shadow-primary/30",
+            "flex items-center justify-center",
+            "before:absolute before:inset-0 before:rounded-full",
+            "before:bg-gradient-to-t before:from-transparent before:to-white/20"
+          )}
+          aria-label="Create blog post"
+        >
+          <PenSquare className="h-6 w-6" />
+        </motion.button>
+      )}
     </div>
   );
 };
