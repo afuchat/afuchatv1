@@ -422,9 +422,10 @@ export const ForYouFeed = ({ onPostClick }: { onPostClick: (postId: string) => v
               <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
             </div>
             <h3 className="font-semibold text-sm line-clamp-2">{article.title}</h3>
-            {article.excerpt && (
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                {article.excerpt}
+            {article.ai_summary && (
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-1 flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-primary flex-shrink-0" />
+                {article.ai_summary}
               </p>
             )}
             <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">

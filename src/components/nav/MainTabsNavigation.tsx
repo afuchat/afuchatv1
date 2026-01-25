@@ -28,8 +28,8 @@ const TABS: { id: TabId; path: string; icon: any; customIcon?: string; label: st
   { id: 'home', path: '/home', icon: Home, label: 'Home', requiresAuth: false },
   { id: 'search', path: '/search', icon: Search, label: 'Search', requiresAuth: false },
   { id: 'ai-chat', path: '/ai-chat', icon: null, customIcon: aiChatIcon, label: 'AI', requiresAuth: true },
-  { id: 'notifications', path: '/notifications', icon: Bell, label: 'Notifications', requiresAuth: true },
-  { id: 'chats', path: '/chats', icon: MessageCircle, label: 'Activity', requiresAuth: true },
+  { id: 'notifications', path: '/notifications', icon: Bell, label: 'Alerts', requiresAuth: true },
+  { id: 'chats', path: '/chats', icon: MessageCircle, label: 'Chats', requiresAuth: true },
 ];
 
 // Map routes to tab indices
@@ -163,13 +163,13 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
         </Suspense>
       </div>
 
-      {/* Bottom Tab Bar - Clean pill style like reference */}
+      {/* Bottom Tab Bar */}
       <div className={cn(
         "fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
         (isScrollingDown || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
       )}>
-        <nav className="bg-background/95 backdrop-blur-md">
-          <div className="flex justify-between items-center h-[72px] px-4 max-w-lg mx-auto">
+        <nav className="bg-background">
+          <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
             {TABS.map((tab, index) => {
               const isActive = activeTab === index;
               const IconComponent = tab.icon;
@@ -182,64 +182,47 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
                   key={tab.id}
                   onClick={() => handleTabChange(index)}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-1 transition-all duration-200 relative",
-                    isActive ? "min-w-[80px]" : "w-14"
+                    "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group relative",
+                    isActive && "nav-glass-active"
                   )}
                 >
-                  {/* Active pill background */}
-                  <div className={cn(
-                    "flex items-center justify-center rounded-full transition-all duration-300",
-                    isActive 
-                      ? "bg-muted/80 px-5 py-2.5" 
-                      : "p-2"
-                  )}>
-                    <div className="relative">
-                      {tab.customIcon ? (
-                        <img 
-                          src={tab.customIcon} 
-                          alt={tab.label}
-                          className={cn(
-                            "h-6 w-6 object-contain select-none transition-all duration-200",
-                            isActive ? "opacity-100 scale-110" : "opacity-60"
-                          )}
-                          draggable={false}
-                          onContextMenu={(e) => e.preventDefault()}
-                        />
-                      ) : (
-                        <IconComponent 
-                          className={cn(
-                            "h-6 w-6 transition-all duration-200",
-                            isActive 
-                              ? "text-primary" 
-                              : "text-muted-foreground/60"
-                          )} 
-                          strokeWidth={isActive ? 2 : 1.5}
-                        />
-                      )}
-                      {showBadge && (
-                        <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full">
-                          {badgeCount > 99 ? '99+' : badgeCount}
-                        </span>
-                      )}
-                    </div>
+                  <div className="relative">
+                    {tab.customIcon ? (
+                      <img 
+                        src={tab.customIcon} 
+                        alt={tab.label}
+                        className={cn(
+                          "h-7 w-7 object-contain select-none transition-opacity duration-200",
+                          isActive ? "opacity-100" : "opacity-70 group-hover:opacity-90"
+                        )}
+                        draggable={false}
+                        onContextMenu={(e) => e.preventDefault()}
+                      />
+                    ) : (
+                      <IconComponent 
+                        className={cn(
+                          "h-6 w-6 transition-colors duration-200",
+                          isActive 
+                            ? "text-primary" 
+                            : "text-muted-foreground group-hover:text-primary/80"
+                        )} 
+                        strokeWidth={isActive ? 2.5 : 2}
+                        fill={isActive ? 'currentColor' : 'none'}
+                      />
+                    )}
+                    {showBadge && (
+                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full shadow-lg">
+                        {badgeCount > 99 ? '99+' : badgeCount}
+                      </span>
+                    )}
                   </div>
-                  
-                  {/* Label - only show for active tab, bold */}
-                  <span className={cn(
-                    "text-[11px] transition-all duration-200",
-                    isActive 
-                      ? "font-semibold text-foreground" 
-                      : "font-normal text-muted-foreground/60"
-                  )}>
-                    {tab.label}
-                  </span>
                 </button>
               );
             })}
           </div>
         </nav>
         {/* Safe area padding for devices with home indicator */}
-        <div className="bg-background/95 h-[env(safe-area-inset-bottom)]" />
+        <div className="bg-background h-[env(safe-area-inset-bottom)]" />
       </div>
     </div>
   );
