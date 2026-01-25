@@ -27,6 +27,7 @@ import {
 } from '@/lib/contentCategorization';
 import { GlobalNewsSection } from '@/components/search/GlobalNewsSection';
 import { FinanceSection } from '@/components/search/FinanceSection';
+import { BlogSection } from '@/components/search/BlogSection';
 
 const SEARCH_HISTORY_KEY = 'afuchat_search_history';
 const MAX_SEARCH_HISTORY = 10;
@@ -131,7 +132,7 @@ const GoldVerifiedBadge = ({ size = 'w-4 h-4' }: { size?: string }) => (
   </svg>
 );
 
-const TABS = ['For You', 'Trending', 'News', 'Finance', 'Sports', 'Entertainment'] as const;
+const TABS = ['For You', 'Trending', 'Blogs', 'News', 'Finance', 'Sports', 'Entertainment'] as const;
 const SEARCH_RESULT_TABS = ['All', 'People', 'Communities', 'Posts', 'Messages'] as const;
 type TabType = typeof TABS[number];
 type SearchResultTabType = typeof SEARCH_RESULT_TABS[number];
@@ -378,6 +379,11 @@ const TrendingSection = ({
         ))}
       </div>
     );
+  }
+
+  // Show blogs tab
+  if (activeTab === 'Blogs') {
+    return <BlogSection />;
   }
 
   // Show global news for News, Sports, and Entertainment tabs
