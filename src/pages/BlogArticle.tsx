@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface Article {
@@ -116,14 +116,14 @@ const BlogArticle = () => {
     
     setGeneratingAiSummary(true);
     try {
-      // Strip HTML tags and limit content to stay under 2000 char limit
+      // Strip HTML tags and limit content
       const plainText = article.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      const truncatedContent = plainText.substring(0, 1500);
+      const truncatedContent = plainText.substring(0, 1200);
       
       const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
         body: {
-          message: `Summarize in 2 sentences: "${article.title}"\n\n${truncatedContent}`,
-          systemPrompt: 'You are a professional content summarizer. Provide a brief 2-sentence summary.'
+          message: `Extract key points from this article in exactly 2 factual sentences. No greetings, no opinions, only facts from the content:\n\n${truncatedContent}`,
+          systemPrompt: 'You are a factual summarizer. Output ONLY 2 sentences that summarize the main facts. No greetings, introductions, or additional commentary. Be direct and factual.'
         }
       });
 
@@ -131,7 +131,6 @@ const BlogArticle = () => {
 
       const summary = data?.reply || 'Unable to generate summary.';
       
-      // Update the article with AI summary
       await supabase
         .from('blog_articles')
         .update({ ai_summary: summary })
@@ -288,28 +287,48 @@ const BlogArticle = () => {
           </div>
         </div>
 
-        {/* AI Summary Card */}
-        <Card className="p-4 mb-6 bg-primary/5 border-primary/20">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-5 w-5 text-primary" />
+        {/* AI Summary Card - Collapsible Quote Style */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowAiSummary(!showAiSummary)}
+            className="flex items-center gap-2 w-full text-left mb-2"
+          >
+            <Sparkles className="h-4 w-4 text-primary" />
             <span className="font-semibold text-sm">AfuAI Summary</span>
-          </div>
-          {article.ai_summary ? (
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {article.ai_summary}
-            </p>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={generateAiSummary}
-              disabled={generatingAiSummary}
-              className="w-full"
-            >
-              {generatingAiSummary ? 'Generating...' : 'Generate AI Summary'}
-            </Button>
-          )}
-        </Card>
+            <ChevronRight className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform ml-auto",
+              showAiSummary && "rotate-90"
+            )} />
+          </button>
+          
+          <AnimatePresence>
+            {showAiSummary && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                {article.ai_summary ? (
+                  <blockquote className="border-l-4 border-primary pl-4 py-2 bg-muted/30 rounded-r-lg italic text-sm text-muted-foreground leading-relaxed">
+                    "{article.ai_summary}"
+                  </blockquote>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={generateAiSummary}
+                    disabled={generatingAiSummary}
+                    className="w-full"
+                  >
+                    {generatingAiSummary ? 'Generating...' : 'Generate AI Summary'}
+                  </Button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Article Body */}
         <div 
@@ -329,35 +348,36 @@ const BlogArticle = () => {
           </div>
         )}
 
-        {/* Related Articles */}
+        {/* Related Articles - Horizontal Scroll */}
         {relatedArticles.length > 0 && (
           <div className="border-t border-border pt-6">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <BookOpen className="h-5 w-5" />
-              Related Articles
+              Similar Content
             </h3>
-            <div className="space-y-3">
-              {relatedArticles.map((related) => (
-                <Link key={related.id} to={`/blog/${related.slug}`}>
-                  <Card className="flex items-center p-3 hover:border-primary/50 transition-colors">
-                    {related.cover_image && (
-                      <img
-                        src={related.cover_image}
-                        alt={related.title}
-                        className="w-16 h-16 rounded-lg object-cover mr-3"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm line-clamp-2">{related.title}</h4>
-                      <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                        <Clock className="h-3 w-3" />
-                        {related.reading_time_minutes} min read
-                      </span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  </Card>
-                </Link>
-              ))}
+            <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+              <div className="flex gap-3" style={{ width: 'max-content' }}>
+                {relatedArticles.map((related) => (
+                  <Link key={related.id} to={`/blog/${related.slug}`}>
+                    <Card className="w-40 overflow-hidden hover:border-primary/50 transition-colors flex-shrink-0">
+                      {related.cover_image && (
+                        <img
+                          src={related.cover_image}
+                          alt={related.title}
+                          className="w-full h-24 object-cover"
+                        />
+                      )}
+                      <div className="p-2">
+                        <h4 className="font-medium text-xs line-clamp-2 mb-1">{related.title}</h4>
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-2.5 w-2.5" />
+                          {related.reading_time_minutes} min
+                        </span>
+                      </div>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         )}

@@ -268,57 +268,60 @@ const Blog = () => {
           </div>
         ) : (
           <AnimatePresence mode="popLayout">
-            {/* Featured Hero (only on latest tab) */}
+            {/* Featured Hero - Horizontal Scroll (only on latest tab) */}
             {activeTab === 'latest' && featuredArticles.length > 0 && !searchQuery && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-6"
               >
-                <Link to={`/blog/${featuredArticles[0].slug}`}>
-                  <Card className="overflow-hidden group">
-                    {featuredArticles[0].cover_image && (
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={featuredArticles[0].cover_image}
-                          alt={featuredArticles[0].title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                        <Badge className="absolute top-3 left-3 bg-primary">Featured</Badge>
-                        <div className="absolute bottom-3 left-3 right-3">
-                          <h2 className="text-white font-bold text-lg line-clamp-2">
-                            {featuredArticles[0].title}
-                          </h2>
-                        </div>
-                      </div>
-                    )}
-                    <div className="p-4">
-                      {featuredArticles[0].ai_summary && (
-                        <div className="flex items-start gap-2 p-3 bg-primary/10 rounded-lg mb-3">
-                          <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {featuredArticles[0].ai_summary}
-                          </p>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {featuredArticles[0].reading_time_minutes} min read
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          {featuredArticles[0].views_count.toLocaleString()}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(featuredArticles[0].published_at)}
-                        </span>
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
+                <h2 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Flame className="h-4 w-4 text-accent" />
+                  Featured
+                </h2>
+                <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+                  <div className="flex gap-3" style={{ width: 'max-content' }}>
+                    {featuredArticles.map((featured) => (
+                      <Link key={featured.id} to={`/blog/${featured.slug}`}>
+                        <Card className="w-64 overflow-hidden group flex-shrink-0 hover:border-primary/50 transition-colors">
+                          {featured.cover_image && (
+                            <div className="relative h-32 overflow-hidden">
+                              <img
+                                src={featured.cover_image}
+                                alt={featured.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                              <Badge className="absolute top-2 left-2 bg-primary text-[10px] px-1.5 py-0.5">Featured</Badge>
+                              <div className="absolute bottom-2 left-2 right-2">
+                                <h3 className="text-white font-bold text-sm line-clamp-2">
+                                  {featured.title}
+                                </h3>
+                              </div>
+                            </div>
+                          )}
+                          <div className="p-3">
+                            {featured.ai_summary && (
+                              <blockquote className="border-l-2 border-primary pl-2 text-xs text-muted-foreground line-clamp-2 italic mb-2">
+                                "{featured.ai_summary}"
+                              </blockquote>
+                            )}
+                            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                              <span className="flex items-center gap-0.5">
+                                <Clock className="h-2.5 w-2.5" />
+                                {featured.reading_time_minutes}m
+                              </span>
+                              <span className="flex items-center gap-0.5">
+                                <Eye className="h-2.5 w-2.5" />
+                                {featured.views_count.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               </motion.div>
             )}
 
