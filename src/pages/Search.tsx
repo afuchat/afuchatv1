@@ -28,6 +28,7 @@ import {
 import { GlobalNewsSection } from '@/components/search/GlobalNewsSection';
 import { FinanceSection } from '@/components/search/FinanceSection';
 import { BlogSection } from '@/components/search/BlogSection';
+import { ForYouFeed } from '@/components/search/ForYouFeed';
 
 const SEARCH_HISTORY_KEY = 'afuchat_search_history';
 const MAX_SEARCH_HISTORY = 10;
@@ -403,8 +404,13 @@ const TrendingSection = ({
     return <GlobalNewsSection category="entertainment" />;
   }
 
-  // Show trending topics for For You and Trending tabs
-  if (activeTab === 'For You' || activeTab === 'Trending') {
+  // Show For You mixed feed
+  if (activeTab === 'For You') {
+    return <ForYouFeed onPostClick={onPostClick} />;
+  }
+
+  // Show trending topics for Trending tab only
+  if (activeTab === 'Trending') {
     if (trends.length === 0) {
       return (
         <div className="text-center text-muted-foreground py-12 text-sm">
@@ -417,7 +423,7 @@ const TrendingSection = ({
       <>
         <div className="divide-y divide-border">
           <h2 className="px-4 py-3 text-[20px] font-extrabold text-foreground">
-            {activeTab === 'For You' ? 'Trends for you' : 'What\'s happening'}
+            What's happening
           </h2>
           {trends.map((trend, index) => (
             <TrendingItem
