@@ -116,10 +116,14 @@ const BlogArticle = () => {
     
     setGeneratingAiSummary(true);
     try {
+      // Strip HTML tags and limit content to stay under 2000 char limit
+      const plainText = article.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      const truncatedContent = plainText.substring(0, 1500);
+      
       const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
         body: {
-          message: `Summarize this article in 2 concise sentences for quick reading: "${article.title}"\n\n${article.content.substring(0, 2000)}`,
-          systemPrompt: 'You are a professional content summarizer. Provide a brief, informative 2-sentence summary that captures the key points.'
+          message: `Summarize in 2 sentences: "${article.title}"\n\n${truncatedContent}`,
+          systemPrompt: 'You are a professional content summarizer. Provide a brief 2-sentence summary.'
         }
       });
 
