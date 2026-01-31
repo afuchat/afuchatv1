@@ -344,10 +344,6 @@ export const ForYouFeed = ({ onPostClick }: { onPostClick: (postId: string) => v
                 <MessageCircle className="h-4 w-4" />
                 {post.reply_count}
               </span>
-              <span className="flex items-center gap-1.5 text-sm">
-                <Eye className="h-4 w-4" />
-                {post.view_count}
-              </span>
             </div>
           </div>
         </div>
