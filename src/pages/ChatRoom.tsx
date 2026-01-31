@@ -600,12 +600,21 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       )
       .subscribe();
 
+    // Always refetch gifts when a gift is sent (even if realtime filters miss it)
+    const onGiftSent = (event: Event) => {
+      const custom = event as CustomEvent<{ chatId?: string }>;
+      if (!custom.detail?.chatId || custom.detail.chatId !== chatId) return;
+      fetchChatGifts();
+    };
+    window.addEventListener('chat-gift-sent', onGiftSent);
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(envelopeChannel);
       supabase.removeChannel(giftChannel);
       supabase.removeChannel(statusChannel);
       supabase.removeChannel(reactionsChannel);
+      window.removeEventListener('chat-gift-sent', onGiftSent);
       stopRecording();
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
