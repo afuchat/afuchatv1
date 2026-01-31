@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search as SearchIcon, User, MessageSquare, Users, Clock, X, Trash2, MoreHorizontal, Hash, Radio, Crown, Lock, Megaphone } from 'lucide-react';
+import { Search as SearchIcon, User, MessageSquare, Users, Clock, X, Trash2, MoreHorizontal, Hash, Radio, Crown, Lock, Megaphone, Globe } from 'lucide-react';
 import { PostInteractionButtons } from '@/components/feed/PostInteractionButtons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -1017,8 +1017,8 @@ const Search = () => {
           </div>
         </div>
 
-        {/* Category Tabs - shown when no search */}
-        {!isSearchActive && (
+        {/* Category Tabs - always show, with Web tab highlighted when active */}
+        {(!isSearchActive || activeTab === 'Web') && (
           <ScrollArea className="w-full">
             <div className="flex border-b border-border">
               {TABS.map((tab) => (
@@ -1042,10 +1042,18 @@ const Search = () => {
           </ScrollArea>
         )}
 
-        {/* Search Result Category Tabs - shown when searching */}
-        {isSearchActive && hasAnyResults && (
+        {/* Search Result Category Tabs with Web option - shown when searching and not on Web tab */}
+        {isSearchActive && activeTab !== 'Web' && (
           <ScrollArea className="w-full">
             <div className="flex border-b border-border">
+              {/* Web Search Tab */}
+              <button
+                onClick={() => setActiveTab('Web')}
+                className="flex-shrink-0 px-4 py-3 text-[15px] font-medium transition-colors relative text-primary hover:text-primary/80 flex items-center gap-1.5"
+              >
+                <Globe className="h-4 w-4" />
+                Web
+              </button>
               {SEARCH_RESULT_TABS.map((tab) => {
                 const count = getTabCount(tab);
                 const isMessagesTab = tab === 'Messages';
@@ -1101,7 +1109,10 @@ const Search = () => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {loading && isSearchActive ? (
+        {/* Web Search Tab - always show when Web tab is active */}
+        {activeTab === 'Web' ? (
+          <WebSearchSection query={query} />
+        ) : loading && isSearchActive ? (
           <div className="divide-y divide-border">
             {Array.from({ length: 5 }).map((_, i) => (
               <PostSkeleton key={i} />
