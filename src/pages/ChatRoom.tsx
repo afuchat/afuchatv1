@@ -186,6 +186,8 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   const [isMember, setIsMember] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const [prevMessageCount, setPrevMessageCount] = useState(0);
+  const [prevGiftCount, setPrevGiftCount] = useState(0);
+  const [prevEnvelopeCount, setPrevEnvelopeCount] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -212,6 +214,21 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       setPrevMessageCount(messages.length);
     }
   }, [messages.length, prevMessageCount]);
+
+  // Also scroll when gifts or red envelopes arrive (they're part of the same timeline)
+  useEffect(() => {
+    if (chatGifts.length > prevGiftCount) {
+      scrollToBottom(prevGiftCount > 0);
+      setPrevGiftCount(chatGifts.length);
+    }
+  }, [chatGifts.length, prevGiftCount]);
+
+  useEffect(() => {
+    if (redEnvelopes.length > prevEnvelopeCount) {
+      scrollToBottom(prevEnvelopeCount > 0);
+      setPrevEnvelopeCount(redEnvelopes.length);
+    }
+  }, [redEnvelopes.length, prevEnvelopeCount]);
 
   // Scroll to bottom on initial load
   useEffect(() => {
