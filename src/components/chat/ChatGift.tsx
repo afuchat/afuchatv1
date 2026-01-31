@@ -1,5 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { motion } from 'framer-motion';
 import { Gift, Sparkles } from 'lucide-react';
 import { GiftImage } from '@/components/gifts/GiftImage';
 
@@ -35,96 +34,112 @@ export const ChatGift = ({ gift, isOwn }: ChatGiftProps) => {
   const senderName = gift.is_anonymous ? 'Anonymous' : (gift.sender?.display_name || 'Someone');
   const receiverName = gift.receiver?.display_name || 'Someone';
   const giftInfo = gift.gift;
+  const time = new Date(gift.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-  const getRarityGradient = (rarity: string) => {
+  const getRarityGlow = (rarity: string) => {
     switch (rarity?.toLowerCase()) {
       case 'legendary':
-        return 'from-yellow-500/20 to-amber-600/20';
+        return 'shadow-[0_0_20px_rgba(234,179,8,0.4)]';
       case 'epic':
-        return 'from-purple-500/20 to-violet-600/20';
+        return 'shadow-[0_0_20px_rgba(168,85,247,0.4)]';
       case 'rare':
-        return 'from-blue-500/20 to-cyan-600/20';
+        return 'shadow-[0_0_20px_rgba(59,130,246,0.4)]';
       case 'uncommon':
-        return 'from-green-500/20 to-emerald-600/20';
+        return 'shadow-[0_0_20px_rgba(34,197,94,0.4)]';
       default:
-        return 'from-muted/50 to-muted/30';
+        return '';
     }
   };
 
-  const getRarityBorder = (rarity: string) => {
+  const getRarityAccent = (rarity: string) => {
     switch (rarity?.toLowerCase()) {
       case 'legendary':
-        return 'border-yellow-500/30';
+        return 'text-yellow-500';
       case 'epic':
-        return 'border-purple-500/30';
+        return 'text-purple-500';
       case 'rare':
-        return 'border-blue-500/30';
+        return 'text-blue-500';
       case 'uncommon':
-        return 'border-green-500/30';
+        return 'text-green-500';
       default:
-        return 'border-border/30';
+        return 'text-primary';
     }
   };
 
   return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-2`}>
-      <Card className={`max-w-xs ${getRarityBorder(giftInfo?.rarity || '')} bg-gradient-to-br ${getRarityGradient(giftInfo?.rarity || '')} overflow-hidden`}>
-        <CardContent className="p-3">
-          <div className="flex items-start gap-3">
-            {/* Gift Image */}
-            <div className="flex-shrink-0">
-              {giftInfo ? (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className={`flex w-full ${isOwn ? 'justify-end' : 'justify-start'} mb-2`}
+    >
+      <div
+        className={`${
+          isOwn ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
+        } rounded-2xl ${isOwn ? 'rounded-br-md' : 'rounded-bl-md'} max-w-[85%] overflow-hidden`}
+      >
+        {/* Gift Image Display - like how GIFs show */}
+        <div className="p-2">
+          <div className={`relative rounded-xl overflow-hidden bg-black/20 ${getRarityGlow(giftInfo?.rarity || '')}`}>
+            {giftInfo ? (
+              <div className="p-4 flex items-center justify-center min-h-[120px]">
                 <GiftImage
                   giftId={gift.gift_id}
                   giftName={giftInfo.name}
                   emoji={giftInfo.emoji}
                   rarity={giftInfo.rarity}
-                  size="sm"
-                  className="drop-shadow-md"
+                  size="lg"
+                  className="drop-shadow-lg"
                 />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Gift className="h-6 w-6 text-primary" />
+              </div>
+            ) : (
+              <div className="p-6 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Gift className="h-8 w-8 text-primary" />
                 </div>
-              )}
-            </div>
-
-            {/* Gift Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Sparkles className="h-3 w-3 text-primary" />
-                <span className="text-xs font-medium text-primary">Gift</span>
               </div>
-
-              <p className="text-sm font-medium">
-                {isOwn ? (
-                  <>You sent a <span className="text-primary">{giftInfo?.name || 'gift'}</span> to {receiverName}</>
-                ) : (
-                  <>{senderName} sent a <span className="text-primary">{giftInfo?.name || 'gift'}</span></>
-                )}
-              </p>
-
-              {gift.message && (
-                <p className="text-xs italic mt-1 text-muted-foreground">
-                  "{gift.message}"
-                </p>
-              )}
-
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-[10px] text-muted-foreground">
-                  {new Date(gift.created_at).toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </span>
-                <span className="text-[10px] font-medium text-primary/80">
-                  {gift.xp_cost.toLocaleString()} Nexa
-                </span>
+            )}
+            
+            {/* Rarity sparkle overlay */}
+            {giftInfo?.rarity && ['legendary', 'epic'].includes(giftInfo.rarity.toLowerCase()) && (
+              <div className="absolute top-2 right-2">
+                <Sparkles className={`h-4 w-4 ${getRarityAccent(giftInfo.rarity)} animate-pulse`} />
               </div>
-            </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+
+        {/* Gift info caption */}
+        <div className="px-3 pb-2">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Gift className={`h-3.5 w-3.5 ${getRarityAccent(giftInfo?.rarity || '')}`} />
+            <span className={`text-xs font-semibold ${getRarityAccent(giftInfo?.rarity || '')}`}>
+              {giftInfo?.name || 'Gift'}
+            </span>
+          </div>
+          
+          <p className="text-xs opacity-80">
+            {isOwn ? (
+              <>Sent to {receiverName}</>
+            ) : (
+              <>{senderName} sent you a gift!</>
+            )}
+          </p>
+          
+          {gift.message && (
+            <p className="text-xs italic opacity-70 mt-1">
+              "{gift.message}"
+            </p>
+          )}
+
+          {/* Timestamp and cost */}
+          <div className="flex items-center justify-between mt-1.5">
+            <span className={`text-[10px] font-medium ${getRarityAccent(giftInfo?.rarity || '')} opacity-80`}>
+              {gift.xp_cost.toLocaleString()} Nexa
+            </span>
+            <span className="text-[10px] opacity-70">{time}</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 };
