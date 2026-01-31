@@ -246,14 +246,23 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
           
           // Update transactions with chat_id if provided
           if (chatId) {
-            await supabase
+            // First get the most recent gift transaction IDs
+            const { data: recentGifts } = await supabase
               .from('gift_transactions')
-              .update({ chat_id: chatId })
+              .select('id')
               .eq('sender_id', user.id)
               .eq('receiver_id', receiverId)
               .is('chat_id', null)
               .order('created_at', { ascending: false })
               .limit(selectedGift.count);
+            
+            if (recentGifts && recentGifts.length > 0) {
+              const giftIds = recentGifts.map(g => g.id);
+              await supabase
+                .from('gift_transactions')
+                .update({ chat_id: chatId })
+                .in('id', giftIds);
+            }
           }
           
           toast.success(
@@ -292,14 +301,23 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
         if (result.success) {
           // Update transaction with chat_id if provided
           if (chatId) {
-            await supabase
+            // First get the most recent gift transaction ID
+            const { data: recentGift } = await supabase
               .from('gift_transactions')
-              .update({ chat_id: chatId })
+              .select('id')
               .eq('sender_id', user.id)
               .eq('receiver_id', receiverId)
               .is('chat_id', null)
               .order('created_at', { ascending: false })
-              .limit(1);
+              .limit(1)
+              .single();
+            
+            if (recentGift) {
+              await supabase
+                .from('gift_transactions')
+                .update({ chat_id: chatId })
+                .eq('id', recentGift.id);
+            }
           }
           
           toast.success(
