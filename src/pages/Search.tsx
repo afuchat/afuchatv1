@@ -29,6 +29,7 @@ import { GlobalNewsSection } from '@/components/search/GlobalNewsSection';
 import { FinanceSection } from '@/components/search/FinanceSection';
 import { BlogSection } from '@/components/search/BlogSection';
 import { ForYouFeed } from '@/components/search/ForYouFeed';
+import { WebSearchSection } from '@/components/search/WebSearchSection';
 
 const SEARCH_HISTORY_KEY = 'afuchat_search_history';
 const MAX_SEARCH_HISTORY = 10;
@@ -133,7 +134,7 @@ const GoldVerifiedBadge = ({ size = 'w-4 h-4' }: { size?: string }) => (
   </svg>
 );
 
-const TABS = ['For You', 'Trending', 'Blogs', 'News', 'Finance', 'Sports', 'Entertainment'] as const;
+const TABS = ['For You', 'Web', 'Trending', 'Blogs', 'News', 'Finance', 'Sports', 'Entertainment'] as const;
 const SEARCH_RESULT_TABS = ['All', 'People', 'Communities', 'Posts', 'Messages'] as const;
 type TabType = typeof TABS[number];
 type SearchResultTabType = typeof SEARCH_RESULT_TABS[number];
@@ -275,11 +276,13 @@ const CategoryPostItem = ({
 const TrendingSection = ({ 
   activeTab,
   onTrendClick,
-  onPostClick
+  onPostClick,
+  searchQuery
 }: { 
   activeTab: TabType;
   onTrendClick: (topic: string) => void;
   onPostClick: (postId: string) => void;
+  searchQuery?: string;
 }) => {
   const { t } = useTranslation();
   const [trends, setTrends] = useState<ExtendedTrend[]>([]);
@@ -290,7 +293,7 @@ const TrendingSection = ({
   useEffect(() => {
     const fetchContent = async () => {
       // Only fetch trending for For You and Trending tabs
-      // News, Sports, Entertainment are handled by GlobalNewsSection
+      // News, Sports, Entertainment, Web are handled by other components
       if (activeTab !== 'For You' && activeTab !== 'Trending') {
         setLoading(false);
         return;
@@ -380,6 +383,11 @@ const TrendingSection = ({
         ))}
       </div>
     );
+  }
+
+  // Show web search tab
+  if (activeTab === 'Web') {
+    return <WebSearchSection query={searchQuery || ''} />;
   }
 
   // Show blogs tab
@@ -1108,6 +1116,7 @@ const Search = () => {
               activeTab={activeTab} 
               onTrendClick={handleTrendClick} 
               onPostClick={handleViewPost}
+              searchQuery={query}
             />
           </>
         ) : !hasAnyResults ? (
