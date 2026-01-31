@@ -199,7 +199,6 @@ interface MessageBubbleProps {
   onEdit?: (messageId: string, newContent: string) => void;
   onDelete?: (messageId: string) => void;
   bubbleStyle?: 'rounded' | 'square' | 'minimal';
-  themeColors?: { primary: string; secondary: string; accent: string };
   showReadReceipts?: boolean;
   fontSize?: number;
   isChannel?: boolean; // Channel messages don't show sender identity or read receipts
@@ -219,7 +218,6 @@ export const MessageBubble = ({
   onEdit,
   onDelete,
   bubbleStyle = 'rounded',
-  themeColors,
   showReadReceipts = true,
   fontSize = 16,
   isChannel = false,
@@ -292,14 +290,6 @@ export const MessageBubble = ({
       return isOwn ? 'rounded-2xl rounded-br-md' : 'rounded-2xl rounded-bl-md';
     }
     return 'rounded-2xl';
-  };
-
-  // Get theme color from database or fallback to default
-  const getThemeColor = () => {
-    if (themeColors?.primary) {
-      return themeColors.primary;
-    }
-    return 'hsl(var(--primary))';
   };
 
   // Swipe-to-reply gesture
