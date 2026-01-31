@@ -40,6 +40,8 @@ interface SendGiftDialogProps {
   receiverId: string;
   receiverName: string;
   trigger?: React.ReactNode;
+  chatId?: string;
+  onGiftSent?: () => void;
 }
 
 interface SelectedGift {
@@ -55,7 +57,7 @@ interface PreviewGift extends GiftItem {
   price_multiplier: number;
 }
 
-export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDialogProps) => {
+export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGiftSent }: SendGiftDialogProps) => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -241,6 +243,19 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
 
         if (result.success) {
           const savedNexa = (result.original_cost || 0) - (result.discounted_cost || 0);
+          
+          // Update transactions with chat_id if provided
+          if (chatId) {
+            await supabase
+              .from('gift_transactions')
+              .update({ chat_id: chatId })
+              .eq('sender_id', user.id)
+              .eq('receiver_id', receiverId)
+              .is('chat_id', null)
+              .order('created_at', { ascending: false })
+              .limit(selectedGift.count);
+          }
+          
           toast.success(
             t('gifts.comboSent', { saved: savedNexa }),
             { description: result.new_grade ? `${t('gamification.grade')}: ${result.new_grade}` : undefined }
@@ -248,6 +263,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
           setOpen(false);
           setSelectedGift(null);
           fetchUserNexa();
+          onGiftSent?.();
           
           window.dispatchEvent(new CustomEvent('nexa-updated', { 
             detail: { nexa: result.new_xp, grade: result.new_grade } 
@@ -274,6 +290,18 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
         };
 
         if (result.success) {
+          // Update transaction with chat_id if provided
+          if (chatId) {
+            await supabase
+              .from('gift_transactions')
+              .update({ chat_id: chatId })
+              .eq('sender_id', user.id)
+              .eq('receiver_id', receiverId)
+              .is('chat_id', null)
+              .order('created_at', { ascending: false })
+              .limit(1);
+          }
+          
           toast.success(
             t('gifts.giftSent'),
             { description: result.new_grade ? `${t('gamification.grade')}: ${result.new_grade}` : undefined }
@@ -281,6 +309,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
           setOpen(false);
           setSelectedGift(null);
           fetchUserNexa();
+          onGiftSent?.();
           
           window.dispatchEvent(new CustomEvent('nexa-updated', { 
             detail: { nexa: result.new_xp, grade: result.new_grade } 

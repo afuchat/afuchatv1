@@ -1706,6 +1706,7 @@ export type Database = {
       }
       gift_transactions: {
         Row: {
+          chat_id: string | null
           created_at: string | null
           gift_id: string
           id: string
@@ -1716,6 +1717,7 @@ export type Database = {
           xp_cost: number
         }
         Insert: {
+          chat_id?: string | null
           created_at?: string | null
           gift_id: string
           id?: string
@@ -1726,6 +1728,7 @@ export type Database = {
           xp_cost: number
         }
         Update: {
+          chat_id?: string | null
           created_at?: string | null
           gift_id?: string
           id?: string
@@ -1736,6 +1739,13 @@ export type Database = {
           xp_cost?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "gift_transactions_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gift_transactions_gift_id_fkey"
             columns: ["gift_id"]
