@@ -11,6 +11,7 @@ import { ArrowLeft, Send, MoreVertical, MessageSquare, Mic, MicOff, Play, Pause,
 import { toast } from 'sonner';
 import { messageSchema } from '@/lib/validation';
 import { ChatRedEnvelope } from '@/components/chat/ChatRedEnvelope';
+import { ChatGift } from '@/components/chat/ChatGift';
 import { SendRedEnvelopeDialog } from '@/components/chat/SendRedEnvelopeDialog';
 import { MessageBubble } from '@/components/chat/MessageBubble';
 import { GroupSettingsSheet } from '@/components/chat/GroupSettingsSheet';
@@ -150,6 +151,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   const { preferences: chatPreferences, loading: prefsLoading } = useChatPreferences();
   const [messages, setMessages] = useState<Message[]>([]);
   const [redEnvelopes, setRedEnvelopes] = useState<RedEnvelope[]>([]);
+  const [chatGifts, setChatGifts] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
@@ -335,7 +337,8 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
     Promise.all([
       fetchChatInfo(),
       fetchMessages(),
-      fetchRedEnvelopes()
+      fetchRedEnvelopes(),
+      fetchChatGifts()
     ]);
 
     const channel = supabase
@@ -456,6 +459,34 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       )
       .subscribe();
 
+    // Real-time chat gifts subscription
+    const giftChannel = supabase
+      .channel(`chat-gifts-${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'gift_transactions',
+          filter: `chat_id=eq.${chatId}`,
+        },
+        () => {
+          fetchChatGifts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'gift_transactions',
+          filter: `chat_id=eq.${chatId}`,
+        },
+        () => {
+          fetchChatGifts();
+        }
+      )
+      .subscribe();
 
 
     // Subscribe to message status changes (read receipts) - real-time updates
@@ -555,6 +586,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(envelopeChannel);
+      supabase.removeChannel(giftChannel);
       supabase.removeChannel(statusChannel);
       supabase.removeChannel(reactionsChannel);
       stopRecording();
@@ -747,6 +779,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   };
 
   const fetchRedEnvelopes = async () => {
+    // Fetch all red envelopes (including fully claimed ones) so they remain visible
     const { data } = await supabase
       .from('red_envelopes')
       .select(`
@@ -754,11 +787,27 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         sender:profiles!red_envelopes_sender_id_fkey(display_name, avatar_url)
       `)
       .eq('chat_id', chatId)
-      .eq('is_expired', false)
       .order('created_at', { ascending: true });
 
     if (data) {
       setRedEnvelopes(data);
+    }
+  };
+
+  const fetchChatGifts = async () => {
+    const { data } = await supabase
+      .from('gift_transactions')
+      .select(`
+        *,
+        sender:profiles!gift_transactions_sender_id_fkey(display_name, avatar_url),
+        receiver:profiles!gift_transactions_receiver_id_fkey(display_name, avatar_url),
+        gift:gifts!gift_transactions_gift_id_fkey(name, emoji, rarity, description)
+      `)
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: true });
+
+    if (data) {
+      setChatGifts(data);
     }
   };
 
@@ -1777,7 +1826,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-4 bg-background" 
           style={{ fontSize: `${chatPreferences.fontSize}px` }}
         >
-          {messages.length === 0 && redEnvelopes.length === 0 ? (
+          {messages.length === 0 && redEnvelopes.length === 0 && chatGifts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-3 px-4">
               <MessageSquare className="h-14 w-14 text-muted-foreground/40" />
               <div>
@@ -1787,19 +1836,22 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
             </div>
           ) : (
             <>
-              {/* Display messages and red envelopes chronologically */}
+              {/* Display messages, red envelopes, and gifts chronologically */}
               {(() => {
-                const sortedItems = [...messages, ...redEnvelopes.map(e => ({ ...e, type: 'red_envelope' as const }))]
-                  .sort((a, b) => {
-                    const timeA = 'sent_at' in a ? new Date(a.sent_at).getTime() : new Date(a.created_at).getTime();
-                    const timeB = 'sent_at' in b ? new Date(b.sent_at).getTime() : new Date(b.created_at).getTime();
-                    return timeA - timeB;
-                  });
+                const sortedItems = [
+                  ...messages,
+                  ...redEnvelopes.map(e => ({ ...e, type: 'red_envelope' as const })),
+                  ...chatGifts.map(g => ({ ...g, type: 'chat_gift' as const }))
+                ].sort((a, b) => {
+                  const timeA = 'sent_at' in a ? new Date(a.sent_at).getTime() : new Date(a.created_at).getTime();
+                  const timeB = 'sent_at' in b ? new Date(b.sent_at).getTime() : new Date(b.created_at).getTime();
+                  return timeA - timeB;
+                });
 
                 const itemsWithDividers = sortedItems.reduce((acc: any[], item, index) => {
-                  const currentDate = 'sent_at' in item ? new Date(item.sent_at) : new Date((item as RedEnvelope).created_at);
+                  const currentDate = 'sent_at' in item ? new Date(item.sent_at) : new Date(item.created_at);
                   const prevDate = index > 0 
-                    ? ('sent_at' in sortedItems[index - 1] ? new Date((sortedItems[index - 1] as Message).sent_at) : new Date((sortedItems[index - 1] as RedEnvelope).created_at))
+                    ? ('sent_at' in sortedItems[index - 1] ? new Date((sortedItems[index - 1] as Message).sent_at) : new Date((sortedItems[index - 1] as any).created_at))
                     : null;
 
                   if (!prevDate || !isSameDay(currentDate, prevDate)) {
@@ -1823,6 +1875,16 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                           toast.success('Red envelope claimed!');
                           fetchRedEnvelopes();
                         }}
+                      />
+                    );
+                  }
+
+                  if (item.type === 'chat_gift') {
+                    return (
+                      <ChatGift
+                        key={item.id}
+                        gift={item}
+                        isOwn={item.sender_id === user?.id}
                       />
                     );
                   }
@@ -2033,6 +2095,8 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                     <SendGiftDialog
                       receiverId={otherUser.id}
                       receiverName={otherUser.display_name}
+                      chatId={chatId}
+                      onGiftSent={fetchChatGifts}
                       trigger={
                         <Button
                           type="button"
