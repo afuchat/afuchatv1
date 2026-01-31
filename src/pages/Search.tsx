@@ -599,6 +599,10 @@ const Search = () => {
     
     if (suggestion.type === 'user') {
       navigate(`/profile/${suggestion.id}`);
+    } else if (suggestion.type === 'web') {
+      // Switch to Web tab and set query for web search
+      setQuery(suggestion.text);
+      setActiveTab('Web');
     } else if (suggestion.type === 'hashtag') {
       setQuery(suggestion.text);
     } else {

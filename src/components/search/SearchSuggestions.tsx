@@ -2,11 +2,11 @@ import { useState, useEffect, memo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Hash, TrendingUp, Clock, Search } from 'lucide-react';
+import { User, Hash, TrendingUp, Clock, Search, Globe } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Suggestion {
-  type: 'user' | 'hashtag' | 'trending' | 'recent' | 'query';
+  type: 'user' | 'hashtag' | 'trending' | 'recent' | 'query' | 'web';
   id: string;
   text: string;
   subtext?: string;
@@ -35,6 +35,8 @@ const SuggestionIcon = ({ type }: { type: Suggestion['type'] }) => {
       return <Clock className="h-4 w-4 text-muted-foreground" />;
     case 'query':
       return <Search className="h-4 w-4 text-muted-foreground" />;
+    case 'web':
+      return <Globe className="h-4 w-4 text-blue-500" />;
     default:
       return null;
   }
@@ -194,6 +196,14 @@ export const SearchSuggestions = memo(function SearchSuggestions({
             text: trimmedQuery,
             subtext: 'Search for this',
           });
+
+          // Add web search option
+          allSuggestions.push({
+            type: 'web',
+            id: 'web-search',
+            text: trimmedQuery,
+            subtext: 'Search the web',
+          });
         }
 
         setSuggestions(allSuggestions);
@@ -278,6 +288,9 @@ export const SearchSuggestions = memo(function SearchSuggestions({
           </div>
           {suggestion.type === 'trending' && (
             <span className="text-xs text-orange-500 font-medium">Trending</span>
+          )}
+          {suggestion.type === 'web' && (
+            <span className="text-xs text-blue-500 font-medium">Web</span>
           )}
         </button>
       ))}
