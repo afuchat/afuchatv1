@@ -5,6 +5,7 @@ import { Home, Search, Bell, MessageCircle } from 'lucide-react';
 import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Lazy load tab content
 import { lazy, Suspense } from 'react';
@@ -50,6 +51,8 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const isDesktop = !isMobile;
   
   const currentTabIndex = getTabIndexFromPath(location.pathname);
   const isOnMainTab = currentTabIndex !== -1;
@@ -153,7 +156,7 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Tab Content Area - No sliding, instant switch */}
-      <div className="flex-1 overflow-y-auto pb-20">
+      <div className={cn("flex-1 overflow-y-auto pb-20", isDesktop && "desktop-scrollbar")}>
         <Suspense fallback={
           <div className="flex items-center justify-center min-h-[50vh]">
             <CustomLoader size="lg" />

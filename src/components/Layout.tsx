@@ -236,10 +236,8 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     };
   }, [lastScrollY, isMobile]);
 
-  // Block desktop users - mobile only app
-  if (!isMobile) {
-    return <DesktopBlocker />;
-  }
+  // Show desktop-friendly layout instead of blocking
+  const isDesktop = !isMobile;
 
   const navItems = [
     { path: '/', icon: Home, label: t('common.home') },
@@ -295,7 +293,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   
   if (onMainTab && !shouldHideNav) {
     return (
-      <div className="min-h-screen bg-background select-none">
+      <div className={cn("min-h-screen bg-background select-none", isDesktop && "desktop-scrollbar")}>
         <MainTabsNavigation isScrollingDown={isScrollingDown} chatScrollHide={chatScrollHide}>
           {children}
         </MainTabsNavigation>
@@ -304,7 +302,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-background select-none overflow-y-auto">
+    <div className={cn("min-h-screen bg-background select-none overflow-y-auto", isDesktop && "desktop-scrollbar")}>
 
       {/* Main Content */}
       <main className={shouldHideUI ? "min-h-screen" : "pb-20 min-h-screen"}>
