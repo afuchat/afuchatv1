@@ -276,6 +276,14 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
           // Call onGiftSent after a small delay to ensure DB update is complete
           setTimeout(() => {
             onGiftSent?.();
+            // Also broadcast so ChatRoom can refetch even if props/callback wiring changes
+            if (chatId) {
+              window.dispatchEvent(
+                new CustomEvent('chat-gift-sent', {
+                  detail: { chatId },
+                })
+              );
+            }
           }, 100);
           
           window.dispatchEvent(new CustomEvent('nexa-updated', { 
@@ -335,6 +343,14 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
           // Call onGiftSent after a small delay to ensure DB update is complete
           setTimeout(() => {
             onGiftSent?.();
+            // Also broadcast so ChatRoom can refetch even if props/callback wiring changes
+            if (chatId) {
+              window.dispatchEvent(
+                new CustomEvent('chat-gift-sent', {
+                  detail: { chatId },
+                })
+              );
+            }
           }, 100);
           
           window.dispatchEvent(new CustomEvent('nexa-updated', { 
