@@ -20,7 +20,6 @@ import {
   Palette,
   Image,
   Type,
-  Wallpaper,
   Download,
   Volume2,
   Video,
@@ -134,8 +133,6 @@ export const ChatMenuDrawer = ({ isOpen, onClose }: ChatMenuDrawerProps) => {
     {
       title: 'Chat Appearance',
       items: [
-        { icon: Palette, label: 'Chat Themes', action: () => handleSettingsOpen('appearance'), color: 'text-indigo-500' },
-        { icon: Wallpaper, label: 'Wallpapers', action: () => handleSettingsOpen('appearance'), color: 'text-cyan-500' },
         { icon: Image, label: 'Bubble Style', action: () => handleSettingsOpen('appearance'), color: 'text-teal-500' },
         { icon: Type, label: 'Font Size', action: () => handleSettingsOpen('appearance'), color: 'text-amber-500' },
       ]

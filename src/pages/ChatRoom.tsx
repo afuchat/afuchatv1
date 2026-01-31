@@ -28,21 +28,6 @@ import { ClearHistoryDialog } from '@/components/chat/ClearHistoryDialog';
 import { GifPicker } from '@/components/chat/GifPicker';
 import { checkContentAllowed } from '@/lib/contentModeration';
 
-interface ChatTheme {
-  id: string;
-  name: string;
-  colors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-  };
-}
-
-interface ChatWallpaper {
-  id: string;
-  name: string;
-  image_url: string;
-}
 
 interface Message {
   id: string;
@@ -194,8 +179,6 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   const streamRef = useRef<MediaStream | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentUserDisplayNameRef = useRef<string | null>(null);
-  const [currentTheme, setCurrentTheme] = useState<ChatTheme | null>(null);
-  const [currentWallpaper, setCurrentWallpaper] = useState<ChatWallpaper | null>(null);
   const [isGroupSettingsOpen, setIsGroupSettingsOpen] = useState(false);
   const [isGroupAdmin, setIsGroupAdmin] = useState(false);
   const [isMember, setIsMember] = useState(true);
@@ -252,57 +235,6 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       }, 100);
     }
   }, [location.state]);
-
-  // Load theme and wallpaper data
-  useEffect(() => {
-    const loadThemeAndWallpaper = async () => {
-      if (!chatPreferences.chatTheme) return;
-      
-      try {
-        const { data: themeData } = await supabase
-          .from('chat_themes')
-          .select('*')
-          .eq('id', chatPreferences.chatTheme)
-          .single();
-        
-        if (themeData) {
-          setCurrentTheme({
-            id: themeData.id,
-            name: themeData.name,
-            colors: typeof themeData.colors === 'string' 
-              ? JSON.parse(themeData.colors) 
-              : themeData.colors
-          });
-        }
-      } catch (error) {
-        // Silent fail - theme loading is not critical
-      }
-
-      if (!chatPreferences.wallpaper) return;
-      
-      try {
-        const { data: wallpaperData } = await supabase
-          .from('chat_wallpapers')
-          .select('*')
-          .eq('id', chatPreferences.wallpaper)
-          .single();
-        
-        if (wallpaperData) {
-          setCurrentWallpaper({
-            id: wallpaperData.id,
-            name: wallpaperData.name,
-            image_url: wallpaperData.image_url
-          });
-        }
-      } catch (error) {
-        // Silent fail - wallpaper loading is not critical
-      }
-    };
-
-    if (!prefsLoading) {
-      loadThemeAndWallpaper();
-    }
-  }, [chatPreferences.chatTheme, chatPreferences.wallpaper, prefsLoading]);
 
   // Update user's last_seen on mount and fetch display name for typing
   useEffect(() => {
@@ -1804,16 +1736,6 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   <span>Search</span>
                 </DropdownMenuItem>
                 
-                <DropdownMenuItem 
-                  className="gap-3 py-3 cursor-pointer"
-                  onClick={() => navigate('/settings?tab=appearance')}
-                >
-                  <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <path d="M3 9h18M9 3v6"/>
-                  </svg>
-                  <span>Change Wallpaper</span>
-                </DropdownMenuItem>
                 
                 {canClearHistory && (
                   <DropdownMenuItem 
@@ -1852,26 +1774,8 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
         {/* Messages container - only this scrolls */}
         <div 
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-4" 
-          style={{ 
-            fontSize: `${chatPreferences.fontSize}px`,
-            ...(currentWallpaper?.image_url 
-              ? currentWallpaper.image_url.startsWith('http')
-                ? {
-                    backgroundImage: `url(${currentWallpaper.image_url})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat'
-                  }
-                : {
-                    background: currentWallpaper.image_url
-                  }
-              : {
-                  background: 'linear-gradient(to bottom, hsl(var(--background)) 0%, hsl(var(--muted)/0.3) 100%)',
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.03'/%3E%3C/svg%3E")`
-                }
-            )
-          }}
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-4 bg-background" 
+          style={{ fontSize: `${chatPreferences.fontSize}px` }}
         >
           {messages.length === 0 && redEnvelopes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-3 px-4">
@@ -1961,7 +1865,6 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                         onEdit={handleEditMessage}
                         onDelete={handleDeleteMessage}
                         bubbleStyle={chatPreferences.bubbleStyle as 'rounded' | 'square' | 'minimal'}
-                        themeColors={currentTheme?.colors}
                         showReadReceipts={chatPreferences.readReceipts}
                         fontSize={chatPreferences.fontSize}
                         isChannel={chatInfo?.is_channel || false}

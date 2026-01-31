@@ -3,8 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface ChatPreferences {
-  chatTheme: string;
-  wallpaper: string;
   bubbleStyle: string;
   fontSize: number;
   soundsEnabled: boolean;
@@ -15,8 +13,6 @@ export interface ChatPreferences {
 }
 
 const DEFAULT_PREFERENCES: ChatPreferences = {
-  chatTheme: 'teal',
-  wallpaper: 'default',
   bubbleStyle: 'rounded',
   fontSize: 16,
   soundsEnabled: true,
@@ -61,15 +57,13 @@ export const useChatPreferences = () => {
 
       if (data) {
         const prefs: ChatPreferences = {
-          chatTheme: data.chat_theme,
-          wallpaper: data.wallpaper,
-          bubbleStyle: data.bubble_style,
-          fontSize: data.font_size,
-          soundsEnabled: data.sounds_enabled,
-          autoDownload: data.auto_download,
-          mediaQuality: data.media_quality,
-          chatLock: data.chat_lock,
-          readReceipts: data.read_receipts,
+          bubbleStyle: data.bubble_style || 'rounded',
+          fontSize: data.font_size || 16,
+          soundsEnabled: data.sounds_enabled ?? true,
+          autoDownload: data.auto_download ?? true,
+          mediaQuality: data.media_quality || 'high',
+          chatLock: data.chat_lock ?? false,
+          readReceipts: data.read_receipts ?? true,
         };
         setPreferences(prefs);
         sessionStorage.setItem(`chatPrefs_${user.id}`, JSON.stringify(prefs));
