@@ -444,31 +444,31 @@ html.telegram-mini-app .sticky.top-0 {
     --accent: 183 100% 40%;
     --accent-foreground: 0 0% 100%;
     
-    /* Strong Charcoal Black Background */
-    --background: 0 0% 7%;
+    /* Pure Black Background - ChatGPT style */
+    --background: 0 0% 0%;
     
     /* Primary Text #FFFFFF */
     --foreground: 0 0% 100%;
     
-    /* Card/Surface - Elevated charcoal */
-    --card: 0 0% 10%;
+    /* Card/Surface - Very dark gray for subtle elevation */
+    --card: 0 0% 7%;
     --card-foreground: 0 0% 100%;
     
     /* Popover - Same as card */
-    --popover: 0 0% 10%;
+    --popover: 0 0% 7%;
     --popover-foreground: 0 0% 100%;
     
     /* Muted - Slightly elevated surface */
-    --muted: 0 0% 14%;
+    --muted: 0 0% 10%;
     --muted-foreground: 0 0% 55%;
     
     /* Secondary */
-    --secondary: 0 0% 14%;
+    --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 75%;
     
-    /* Borders - Subtle charcoal */
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
+    /* Borders - Subtle dark gray */
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
     --ring: 183 100% 40%;
     
     /* Destructive */
@@ -483,14 +483,14 @@ html.telegram-mini-app .sticky.top-0 {
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
     
-    /* Sidebar - Charcoal */
-    --sidebar-background: 0 0% 10%;
+    /* Sidebar - Pure black */
+    --sidebar-background: 0 0% 0%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 183 100% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 183 100% 40%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 18%;
+    --sidebar-border: 0 0% 14%;
     --sidebar-ring: 183 100% 40%;
     
     /* Soft accent background for subtle highlights */
