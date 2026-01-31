@@ -246,8 +246,9 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
           
           // Update transactions with chat_id if provided
           if (chatId) {
+            console.log('Attempting to update combo gifts with chat_id:', chatId);
             // First get the most recent gift transaction IDs
-            const { data: recentGifts } = await supabase
+            const { data: recentGifts, error: selectError } = await supabase
               .from('gift_transactions')
               .select('id')
               .eq('sender_id', user.id)
@@ -256,12 +257,16 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
               .order('created_at', { ascending: false })
               .limit(selectedGift.count);
             
+            console.log('Recent gifts found:', recentGifts, 'Error:', selectError);
+            
             if (recentGifts && recentGifts.length > 0) {
               const giftIds = recentGifts.map(g => g.id);
-              await supabase
+              const { error: updateError } = await supabase
                 .from('gift_transactions')
                 .update({ chat_id: chatId })
                 .in('id', giftIds);
+              
+              console.log('Update result - Error:', updateError);
             }
           }
           
@@ -301,8 +306,9 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
         if (result.success) {
           // Update transaction with chat_id if provided
           if (chatId) {
+            console.log('Attempting to update gift with chat_id:', chatId);
             // First get the most recent gift transaction ID
-            const { data: recentGift } = await supabase
+            const { data: recentGift, error: selectError } = await supabase
               .from('gift_transactions')
               .select('id')
               .eq('sender_id', user.id)
@@ -312,11 +318,15 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
               .limit(1)
               .single();
             
+            console.log('Recent gift found:', recentGift, 'Error:', selectError);
+            
             if (recentGift) {
-              await supabase
+              const { error: updateError } = await supabase
                 .from('gift_transactions')
                 .update({ chat_id: chatId })
                 .eq('id', recentGift.id);
+              
+              console.log('Update result - Error:', updateError);
             }
           }
           
