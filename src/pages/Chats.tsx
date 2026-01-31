@@ -93,24 +93,27 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
     display_name: string;
   } | null>(null);
 
-  const filteredChats = chats.filter((chat) => {
-    // First apply tab filter
-    if (activeTab === 'unread' && (!chat.unread_count || chat.unread_count === 0)) return false;
-    if (activeTab === 'groups' && !chat.is_group) return false;
-    // 'requests' tab would show message requests - for now show nothing
-    if (activeTab === 'requests') return false;
-    
-    // Then apply search filter
-    if (!searchQuery.trim()) return true;
-    const chatName = chat.is_group 
-      ? (chat.name || 'Group Chat')
-      : (chat.other_user?.display_name || 'User');
-    const lastMessage = chat.last_message_content || '';
-    return (
-      chatName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  const filteredChats = chats
+    .filter((chat) => {
+      // First apply tab filter
+      if (activeTab === 'unread' && (!chat.unread_count || chat.unread_count === 0)) return false;
+      if (activeTab === 'groups' && !chat.is_group) return false;
+      // 'requests' tab would show message requests - for now show nothing
+      if (activeTab === 'requests') return false;
+      
+      // Then apply search filter
+      if (!searchQuery.trim()) return true;
+      const chatName = chat.is_group 
+        ? (chat.name || 'Group Chat')
+        : (chat.other_user?.display_name || 'User');
+      const lastMessage = chat.last_message_content || '';
+      return (
+        chatName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    })
+    // Always sort by most recent first
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
   useEffect(() => {
     if (!user) return;
