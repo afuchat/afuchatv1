@@ -246,7 +246,6 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
           
           // Update transactions with chat_id if provided
           if (chatId) {
-            console.log('Attempting to update combo gifts with chat_id:', chatId);
             // First get the most recent gift transaction IDs
             const { data: recentGifts, error: selectError } = await supabase
               .from('gift_transactions')
@@ -257,16 +256,12 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
               .order('created_at', { ascending: false })
               .limit(selectedGift.count);
             
-            console.log('Recent gifts found:', recentGifts, 'Error:', selectError);
-            
-            if (recentGifts && recentGifts.length > 0) {
+            if (recentGifts && recentGifts.length > 0 && !selectError) {
               const giftIds = recentGifts.map(g => g.id);
-              const { error: updateError } = await supabase
+              await supabase
                 .from('gift_transactions')
                 .update({ chat_id: chatId })
                 .in('id', giftIds);
-              
-              console.log('Update result - Error:', updateError);
             }
           }
           
@@ -277,7 +272,11 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
           setOpen(false);
           setSelectedGift(null);
           fetchUserNexa();
-          onGiftSent?.();
+          
+          // Call onGiftSent after a small delay to ensure DB update is complete
+          setTimeout(() => {
+            onGiftSent?.();
+          }, 100);
           
           window.dispatchEvent(new CustomEvent('nexa-updated', { 
             detail: { nexa: result.new_xp, grade: result.new_grade } 
@@ -306,7 +305,6 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
         if (result.success) {
           // Update transaction with chat_id if provided
           if (chatId) {
-            console.log('Attempting to update gift with chat_id:', chatId);
             // First get the most recent gift transaction ID
             const { data: recentGift, error: selectError } = await supabase
               .from('gift_transactions')
@@ -318,15 +316,11 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
               .limit(1)
               .single();
             
-            console.log('Recent gift found:', recentGift, 'Error:', selectError);
-            
-            if (recentGift) {
-              const { error: updateError } = await supabase
+            if (recentGift && !selectError) {
+              await supabase
                 .from('gift_transactions')
                 .update({ chat_id: chatId })
                 .eq('id', recentGift.id);
-              
-              console.log('Update result - Error:', updateError);
             }
           }
           
@@ -337,7 +331,11 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
           setOpen(false);
           setSelectedGift(null);
           fetchUserNexa();
-          onGiftSent?.();
+          
+          // Call onGiftSent after a small delay to ensure DB update is complete
+          setTimeout(() => {
+            onGiftSent?.();
+          }, 100);
           
           window.dispatchEvent(new CustomEvent('nexa-updated', { 
             detail: { nexa: result.new_xp, grade: result.new_grade } 
