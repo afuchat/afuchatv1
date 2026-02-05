@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Home, Search, Bell, MessageCircle, Film } from 'lucide-react';
-import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -14,7 +13,6 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 const HomePage = lazy(() => import('@/pages/Home'));
 const SearchPage = lazy(() => import('@/pages/Search'));
 const Shorts = lazy(() => import('@/pages/Shorts'));
-const AfuAI = lazy(() => import('@/pages/AfuAI'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const DesktopChats = lazy(() => import('@/pages/DesktopChats'));
 
@@ -24,22 +22,23 @@ interface MainTabsNavigationProps {
   chatScrollHide?: boolean;
 }
 
-type TabId = 'home' | 'search' | 'shorts' | 'afuai' | 'notifications' | 'chats';
+type TabId = 'home' | 'search' | 'shorts' | 'notifications' | 'chats';
 
-const TABS: { id: TabId; path: string; icon: any; customIcon?: string; label: string; requiresAuth: boolean }[] = [
+// Removed AI tab - it now opens as a full page with its own back button
+const TABS: { id: TabId; path: string; icon: any; label: string; requiresAuth: boolean }[] = [
   { id: 'home', path: '/home', icon: Home, label: 'Home', requiresAuth: false },
   { id: 'search', path: '/search', icon: Search, label: 'Search', requiresAuth: false },
   { id: 'shorts', path: '/shorts', icon: Film, label: 'Shorts', requiresAuth: false },
-  { id: 'afuai', path: '/afuai', icon: null, customIcon: aiChatIcon, label: 'AI', requiresAuth: true },
+  { id: 'notifications', path: '/notifications', icon: Bell, label: 'Alerts', requiresAuth: true },
   { id: 'chats', path: '/chats', icon: MessageCircle, label: 'Chats', requiresAuth: true },
 ];
 
-// Map routes to tab indices
+// Map routes to tab indices - AI is removed from tabs (opens as full page)
 const getTabIndexFromPath = (pathname: string): number => {
   if (pathname === '/' || pathname === '/home' || pathname === '/feed') return 0;
   if (pathname === '/search') return 1;
   if (pathname === '/shorts') return 2;
-  if (pathname === '/afuai') return 3;
+  if (pathname === '/notifications') return 3;
   if (pathname === '/chats') return 4;
   return -1; // Not a main tab route
 };
@@ -146,7 +145,7 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
       case 2:
         return <Shorts />;
       case 3:
-        return user ? <AfuAI /> : null;
+        return user ? <Notifications /> : null;
       case 4:
         return user ? <DesktopChats /> : null;
       default:
@@ -202,29 +201,16 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
                   )}
                 >
                   <div className="relative">
-                    {tab.customIcon ? (
-                      <img 
-                        src={tab.customIcon} 
-                        alt={tab.label}
-                        className={cn(
-                          "h-7 w-7 object-contain select-none transition-opacity duration-200",
-                          isActive ? "opacity-100" : "opacity-70 group-hover:opacity-90"
-                        )}
-                        draggable={false}
-                        onContextMenu={(e) => e.preventDefault()}
-                      />
-                    ) : (
-                      <IconComponent 
-                        className={cn(
-                          "h-6 w-6 transition-colors duration-200",
-                          isActive 
-                            ? "text-primary" 
-                            : "text-muted-foreground group-hover:text-primary/80"
-                        )} 
-                        strokeWidth={isActive ? 2.5 : 2}
-                        fill={isActive ? 'currentColor' : 'none'}
-                      />
-                    )}
+                    <IconComponent 
+                      className={cn(
+                        "h-6 w-6 transition-colors duration-200",
+                        isActive 
+                          ? "text-primary" 
+                          : "text-muted-foreground group-hover:text-primary/80"
+                      )} 
+                      strokeWidth={isActive ? 2.5 : 2}
+                      fill={isActive ? 'currentColor' : 'none'}
+                    />
                     {showBadge && (
                       <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full shadow-lg">
                         {badgeCount > 99 ? '99+' : badgeCount}
