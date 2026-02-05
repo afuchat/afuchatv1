@@ -14,7 +14,7 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 const HomePage = lazy(() => import('@/pages/Home'));
 const SearchPage = lazy(() => import('@/pages/Search'));
 const Shorts = lazy(() => import('@/pages/Shorts'));
-const AIChat = lazy(() => import('@/pages/AIChat'));
+const AfuAI = lazy(() => import('@/pages/AfuAI'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const DesktopChats = lazy(() => import('@/pages/DesktopChats'));
 
@@ -24,13 +24,13 @@ interface MainTabsNavigationProps {
   chatScrollHide?: boolean;
 }
 
-type TabId = 'home' | 'search' | 'shorts' | 'ai-chat' | 'notifications' | 'chats';
+type TabId = 'home' | 'search' | 'shorts' | 'afuai' | 'notifications' | 'chats';
 
 const TABS: { id: TabId; path: string; icon: any; customIcon?: string; label: string; requiresAuth: boolean }[] = [
   { id: 'home', path: '/home', icon: Home, label: 'Home', requiresAuth: false },
   { id: 'search', path: '/search', icon: Search, label: 'Search', requiresAuth: false },
   { id: 'shorts', path: '/shorts', icon: Film, label: 'Shorts', requiresAuth: false },
-  { id: 'ai-chat', path: '/ai-chat', icon: null, customIcon: aiChatIcon, label: 'AI', requiresAuth: true },
+  { id: 'afuai', path: '/afuai', icon: null, customIcon: aiChatIcon, label: 'AI', requiresAuth: true },
   { id: 'chats', path: '/chats', icon: MessageCircle, label: 'Chats', requiresAuth: true },
 ];
 
@@ -39,7 +39,7 @@ const getTabIndexFromPath = (pathname: string): number => {
   if (pathname === '/' || pathname === '/home' || pathname === '/feed') return 0;
   if (pathname === '/search') return 1;
   if (pathname === '/shorts') return 2;
-  if (pathname === '/ai-chat') return 3;
+  if (pathname === '/afuai') return 3;
   if (pathname === '/chats') return 4;
   return -1; // Not a main tab route
 };
@@ -146,7 +146,7 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
       case 2:
         return <Shorts />;
       case 3:
-        return user ? <AIChat /> : null;
+        return user ? <AfuAI /> : null;
       case 4:
         return user ? <DesktopChats /> : null;
       default:

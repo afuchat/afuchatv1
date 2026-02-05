@@ -53,7 +53,7 @@ const EditProfile = lazy(() => import("./pages/EditProfile"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const PostDetail = lazy(() => import("./pages/PostDetail"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AIChat = lazy(() => import("./pages/AIChat"));
+const AfuAI = lazy(() => import("./pages/AfuAI"));
 const Support = lazy(() => import("./pages/Support"));
 
 const UnifiedLeaderboard = lazy(() => import("./pages/UnifiedLeaderboard"));
@@ -183,7 +183,7 @@ const AppRoutes = () => {
       <Route path="/notifications" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Notifications /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/post/:postId" element={<Layout><PostDetail /></Layout>} />
       <Route path="/admin" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/ai-chat" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AIChat /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/afuai" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AfuAI /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       
       <Route path="/onboarding" element={<Onboarding />} />
       

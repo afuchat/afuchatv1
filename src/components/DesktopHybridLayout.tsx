@@ -42,7 +42,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const { isDeveloper } = useDeveloperStatus();
 
   // Hide right sidebar on certain pages
-  const hideRightSidebar = ['/chats', '/chat/', '/settings', '/admin', '/wallet', '/ai-chat'].some(
+  const hideRightSidebar = ['/chats', '/chat/', '/settings', '/admin', '/wallet', '/afuai'].some(
     path => location.pathname.startsWith(path)
   );
 
@@ -117,7 +117,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   ];
 
   const featureItems = [
-    { path: '/ai-chat', icon: null, customIcon: aiChatIcon, label: 'AI Chat', requiresAuth: true },
+    { path: '/afuai', icon: null, customIcon: aiChatIcon, label: 'AfuAI', requiresAuth: true },
     { path: '/creator-earnings', icon: DollarSign, label: 'Creator Earnings', requiresAuth: true },
     { path: '/shop', icon: ShoppingBag, label: 'Shop' },
     { path: '/wallet', icon: Wallet, label: 'Wallet', requiresAuth: true },

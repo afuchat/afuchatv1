@@ -267,7 +267,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
   const mainMenuItems: MenuItem[] = [
     { icon: User, label: 'Profile', path: user ? `/${profile?.handle || user.id}` : '/auth', requiresAuth: true },
     { icon: Crown, label: 'Premium', path: '/premium' },
-    { icon: Bot, label: 'AI Chat', path: '/ai-chat', badge: 'Beta', requiresAuth: true },
+    { icon: Bot, label: 'AfuAI', path: '/afuai', badge: 'Beta', requiresAuth: true },
     { icon: MessageSquare, label: 'Chats', path: '/chats', requiresAuth: true },
     { icon: BookOpen, label: 'Blog', path: '/blog' },
     { icon: Gift, label: 'Gifts', path: '/gifts' },
