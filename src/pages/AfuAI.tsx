@@ -3,18 +3,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { PenSquare, ArrowUp, History, Globe, X, Paperclip, Sparkles, FileText, ChevronDown, ChevronUp, BrainCircuit } from 'lucide-react';
+import { ArrowUp, History, Globe, ChevronDown, BrainCircuit, ChevronUp, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { PremiumGate } from '@/components/PremiumGate';
-import { parseRichText } from '@/lib/richTextUtils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
 
-// --- Types ---
 interface Message {
   id?: string;
   role: 'user' | 'assistant';
@@ -33,7 +32,7 @@ const AI_MODELS: AIModel[] = [
   { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨' },
 ];
 
-const AIChat: React.FC = () => {
+const AfuAI: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
@@ -47,7 +46,6 @@ const AIChat: React.FC = () => {
   const [showThought, setShowThought] = useState<Record<number, boolean>>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) navigate('/auth');
@@ -85,10 +83,9 @@ const AIChat: React.FC = () => {
 
   return (
     <PremiumGate feature="AI Chat Assistant" showUpgrade={true} requiredTier="platinum">
-      {/* Container is h-screen and overflow-hidden to prevent page scroll */}
-      <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
+      <div className="flex flex-col h-[100dvh] bg-background text-foreground">
         
-        {/* FIXED HEADER */}
+        {/* HEADER */}
         <header className="shrink-0 flex items-center justify-between px-4 h-14 border-b border-border/40 bg-background/80 backdrop-blur-md z-50">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => setIsHistoryOpen(true)} className="rounded-full">
@@ -105,11 +102,11 @@ const AIChat: React.FC = () => {
           </Avatar>
         </header>
 
-        {/* ONLY THIS AREA SCROLLS */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent">
+        {/* SCROLLABLE MESSAGES AREA */}
+        <div className="flex-1 min-h-0 overflow-y-auto bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent">
           <div className="max-w-3xl mx-auto p-4 space-y-6">
             {messages.length === 0 && (
-               <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
+              <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                   <Sparkles className="h-8 w-8 text-primary" />
                 </div>
@@ -148,65 +145,76 @@ const AIChat: React.FC = () => {
                 <span className="text-[9px] text-muted-foreground mt-1 px-1 uppercase tracking-widest">{format(msg.timestamp, 'HH:mm')}</span>
               </div>
             ))}
-            <div ref={messagesEndRef} className="h-20" />
+            <div ref={messagesEndRef} className="h-24" />
           </div>
         </div>
 
-        {/* FIXED INPUT AREA */}
-        <div className="shrink-0 p-3 pb-8 bg-background border-t border-border/40 z-50">
-          <div className="max-w-3xl mx-auto space-y-3">
-            
-            {/* Model Pill Switcher (Horizontal Scroll) */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-              <button
-                onClick={() => setWebSearchMode(!webSearchMode)}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all shrink-0 border",
-                  webSearchMode ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-card border-border text-muted-foreground"
-                )}
-              >
-                <Globe className="h-3 w-3" /> Web Search
-              </button>
-              <div className="w-[1px] h-4 bg-border shrink-0" />
-              {AI_MODELS.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => setSelectedModel(m)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all shrink-0 border",
-                    selectedModel.id === m.id ? "bg-foreground text-background border-foreground shadow-md" : "bg-card border-border text-muted-foreground"
-                  )}
-                >
-                  <span>{m.icon}</span> {m.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Input Box */}
-            <div className="relative bg-card border border-border rounded-[22px] p-1.5 focus-within:ring-2 ring-primary/20 transition-all shadow-xl shadow-black/5">
-              <div className="flex items-end gap-1">
-                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground rounded-full" onClick={() => fileInputRef.current?.click()}>
-                  <Paperclip className="h-5 w-5" />
-                </Button>
-                <input type="file" ref={fileInputRef} className="hidden" />
-                
+        {/* FIXED INPUT AREA WITH MODEL DROPDOWN */}
+        <div className="shrink-0 p-3 pb-6 bg-background border-t border-border/40 z-50">
+          <div className="max-w-3xl mx-auto">
+            <div className="relative bg-card border border-border rounded-2xl p-2 focus-within:ring-2 ring-primary/20 transition-all shadow-xl shadow-black/5">
+              
+              {/* Input Row */}
+              <div className="flex items-end gap-2">
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
                   placeholder={`Ask ${selectedModel.name}...`}
-                  className="min-h-[40px] max-h-[120px] bg-transparent border-0 focus-visible:ring-0 py-2 px-1 text-[15px] resize-none"
+                  className="min-h-[40px] max-h-[120px] flex-1 bg-transparent border-0 focus-visible:ring-0 py-2 px-2 text-[15px] resize-none"
                   rows={1}
                 />
-
                 <Button
                   onClick={handleSend}
                   disabled={!input.trim() || loading}
                   className="h-9 w-9 shrink-0 bg-primary hover:bg-primary/90 rounded-full shadow-lg transition-transform active:scale-95"
                   size="icon"
                 >
-                  <ArrowUp className="h-5 w-5 text-white" />
+                  <ArrowUp className="h-5 w-5" />
                 </Button>
+              </div>
+
+              {/* Bottom Controls Row */}
+              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/30">
+                {/* Model Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-muted hover:bg-muted/80 transition-colors">
+                      <span>{selectedModel.icon}</span>
+                      <span>{selectedModel.name}</span>
+                      <ChevronDown className="h-3 w-3 opacity-60" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48 bg-popover border border-border shadow-xl z-[100]">
+                    {AI_MODELS.map((model) => (
+                      <DropdownMenuItem
+                        key={model.id}
+                        onClick={() => setSelectedModel(model)}
+                        className={cn(
+                          "flex items-center gap-2 cursor-pointer",
+                          selectedModel.id === model.id && "bg-primary/10 text-primary"
+                        )}
+                      >
+                        <span className="text-base">{model.icon}</span>
+                        <span className="font-medium">{model.name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Web Search Toggle */}
+                <button
+                  onClick={() => setWebSearchMode(!webSearchMode)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all",
+                    webSearchMode 
+                      ? "bg-primary text-primary-foreground shadow-md" 
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  )}
+                >
+                  <Globe className="h-3 w-3" />
+                  <span>Web</span>
+                </button>
               </div>
             </div>
           </div>
@@ -235,4 +243,4 @@ const AIChat: React.FC = () => {
   );
 };
 
-export default AIChat;
+export default AfuAI;

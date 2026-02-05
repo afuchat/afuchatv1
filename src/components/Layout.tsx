@@ -20,7 +20,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 
 // Check if current path is a main tab route
-const MAIN_TAB_ROUTES = ['/', '/home', '/feed', '/search', '/shorts', '/ai-chat', '/notifications', '/chats'];
+const MAIN_TAB_ROUTES = ['/', '/home', '/feed', '/search', '/shorts', '/afuai', '/notifications', '/chats'];
 const isMainTabRoute = (pathname: string): boolean => {
   return MAIN_TAB_ROUTES.includes(pathname);
 };
@@ -248,7 +248,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
 
   // Additional features section
   const featureItems = [
-    { path: '/ai-chat', icon: null, customIcon: aiChatIcon, label: 'AI Chat', requiresAuth: true },
+    { path: '/afuai', icon: null, customIcon: aiChatIcon, label: 'AfuAI', requiresAuth: true },
     { path: '/shop', icon: ShoppingBag, label: 'Shop' },
     { path: '/wallet', icon: Wallet, label: 'Wallet', requiresAuth: true },
     { path: '/transfer', icon: Send, label: 'Transfer', requiresAuth: true },
@@ -382,18 +382,18 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
               {/* AfuAI Center Button - Auth required */}
               {user ? (
                 <Link
-                  to="/ai-chat"
+                  to="/afuai"
                   className={cn(
                     "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group",
-                    isActive('/ai-chat') && "nav-glass-active"
+                    isActive('/afuai') && "nav-glass-active"
                   )}
                 >
                   <img 
                     src={aiChatIcon} 
-                    alt="AI Chat" 
+                    alt="AfuAI" 
                     className={cn(
                       "h-7 w-7 object-contain select-none transition-opacity duration-200",
-                      isActive('/ai-chat') ? "opacity-100" : "opacity-70 group-hover:opacity-90"
+                      isActive('/afuai') ? "opacity-100" : "opacity-70 group-hover:opacity-90"
                     )}
                     draggable={false}
                     onContextMenu={(e) => e.preventDefault()}
@@ -406,8 +406,8 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                 >
                   <img 
                     src={aiChatIcon} 
-                    alt="AI Chat" 
-                    className="h-7 w-7 object-contain opacity-40 select-none group-hover:opacity-60 transition-opacity duration-200" 
+                    alt="AfuAI" 
+                    className="h-7 w-7 object-contain opacity-40 select-none group-hover:opacity-60 transition-opacity duration-200"
                     draggable={false} 
                     onContextMenu={(e) => e.preventDefault()} 
                   />

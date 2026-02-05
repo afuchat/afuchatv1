@@ -113,7 +113,7 @@ export function MobileMenuSheet({ trigger }: MobileMenuSheetProps) {
   };
 
   const menuItems: MenuItem[] = [
-    { icon: Bot, label: 'AI Chat', path: '/ai-chat', requiresAuth: true },
+    { icon: Bot, label: 'AfuAI', path: '/afuai', requiresAuth: true },
     { icon: ShoppingBag, label: 'Shop', path: '/shop' },
     { icon: Wallet, label: 'Wallet', path: '/wallet', requiresAuth: true },
     { icon: Send, label: 'Transfer', path: '/transfer', requiresAuth: true },
