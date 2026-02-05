@@ -25,17 +25,20 @@ const VideoCard = ({
   video, 
   isActive, 
   isMuted, 
-  onToggleMute 
+  onToggleMute,
+  onFirstInteraction
 }: { 
   video: ShortVideo; 
   isActive: boolean; 
   isMuted: boolean;
   onToggleMute: () => void;
+  onFirstInteraction: () => void;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showPlayPause, setShowPlayPause] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
     if (!videoRef.current) return;
@@ -59,7 +62,15 @@ const VideoCard = ({
     }
   }, [isMuted]);
 
+  const handleInteraction = () => {
+    if (!hasInteracted) {
+      setHasInteracted(true);
+      onFirstInteraction();
+    }
+  };
+
   const togglePlayPause = () => {
+    handleInteraction();
     if (!videoRef.current) return;
 
     if (isPlaying) {
@@ -75,10 +86,12 @@ const VideoCard = ({
   };
 
   const handleLike = () => {
+    handleInteraction();
     setIsLiked(!isLiked);
   };
 
   const handleShare = async () => {
+    handleInteraction();
     try {
       if (navigator.share) {
         await navigator.share({
@@ -94,6 +107,11 @@ const VideoCard = ({
     }
   };
 
+  const handleMuteToggle = () => {
+    handleInteraction();
+    onToggleMute();
+  };
+
   return (
     <div className="relative h-full w-full bg-black snap-start snap-always">
       {/* Video */}
@@ -104,9 +122,31 @@ const VideoCard = ({
         loop
         playsInline
         muted={isMuted}
+        preload="auto"
         onClick={togglePlayPause}
         className="absolute inset-0 w-full h-full object-cover cursor-pointer"
       />
+
+      {/* Tap to unmute overlay - shows when muted and active */}
+      <AnimatePresence>
+        {isMuted && isActive && !hasInteracted && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+          >
+            <motion.div 
+              className="bg-black/60 backdrop-blur-sm rounded-full px-6 py-3 flex items-center gap-2"
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            >
+              <VolumeX className="h-5 w-5 text-white" />
+              <span className="text-white text-sm font-medium">Tap for sound</span>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Play/Pause Overlay */}
       <AnimatePresence>
@@ -115,7 +155,7 @@ const VideoCard = ({
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
           >
             <div className="w-20 h-20 rounded-full bg-black/50 flex items-center justify-center">
               {isPlaying ? (
@@ -132,7 +172,7 @@ const VideoCard = ({
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60 pointer-events-none" />
 
       {/* Right Side Actions */}
-      <div className="absolute right-3 bottom-32 flex flex-col items-center gap-5">
+      <div className="absolute right-3 bottom-32 flex flex-col items-center gap-5 z-30">
         <button
           onClick={handleLike}
           className="flex flex-col items-center gap-1"
@@ -165,24 +205,29 @@ const VideoCard = ({
           <span className="text-white text-xs font-medium">Share</span>
         </button>
 
-        <button onClick={onToggleMute} className="flex flex-col items-center gap-1">
-          <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+        <button onClick={handleMuteToggle} className="flex flex-col items-center gap-1">
+          <div className={cn(
+            "w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center transition-all",
+            isMuted ? "bg-background/10" : "bg-primary/30"
+          )}>
             {isMuted ? (
-              <VolumeX className="h-6 w-6 text-white" />
+              <VolumeX className="h-6 w-6 text-primary-foreground" />
             ) : (
-              <Volume2 className="h-6 w-6 text-white" />
+              <Volume2 className="h-6 w-6 text-primary-foreground" />
             )}
           </div>
+          <span className="text-primary-foreground text-xs font-medium">{isMuted ? 'Muted' : 'Sound'}</span>
         </button>
       </div>
 
       {/* Bottom Info */}
-      <div className="absolute bottom-20 left-4 right-20">
+      <div className="absolute bottom-20 left-4 right-20 z-30">
         <a 
           href={video.author.profileUrl} 
           target="_blank" 
           rel="noopener noreferrer"
           className="flex items-center gap-2 mb-2"
+          onClick={handleInteraction}
         >
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
             <span className="text-white font-bold text-sm">
@@ -211,9 +256,18 @@ const Shorts = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(true); // Start muted for autoplay
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Handle first user interaction to enable sound
+  const handleFirstInteraction = useCallback(() => {
+    if (!hasUserInteracted) {
+      setHasUserInteracted(true);
+      setIsMuted(false); // Enable sound after first interaction
+    }
+  }, [hasUserInteracted]);
 
   const fetchVideos = useCallback(async (pageNum: number, append = false) => {
     try {
@@ -310,7 +364,8 @@ const Shorts = () => {
   return (
     <div 
       ref={containerRef}
-      className="h-screen bg-black overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
+      className="h-screen bg-black overflow-y-scroll snap-y snap-mandatory scrollbar-hide overscroll-none"
+      style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {videos.map((video, index) => (
         <div 
@@ -323,6 +378,7 @@ const Shorts = () => {
             isActive={index === activeIndex}
             isMuted={isMuted}
             onToggleMute={() => setIsMuted(!isMuted)}
+            onFirstInteraction={handleFirstInteraction}
           />
         </div>
       ))}
