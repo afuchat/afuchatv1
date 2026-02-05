@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowUp, History, Globe, ChevronDown, BrainCircuit, ChevronUp, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { ArrowUp, History, Globe, ChevronDown, BrainCircuit, ChevronUp, Sparkles, Plus, Trash2, ImageIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate, Link } from 'react-router-dom';
 import { PremiumGate } from '@/components/PremiumGate';
@@ -14,6 +14,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from '@/hooks/use-mobile';
+import AIMessageContent from '@/components/afuai/AIMessageContent';
+import GeneratedImageDisplay from '@/components/afuai/GeneratedImageDisplay';
 
 interface Message {
   id?: string;
@@ -22,6 +24,7 @@ interface Message {
   thought?: string;
   timestamp: Date;
   attachments?: any[];
+  imageUrl?: string;
 }
 
 interface Session {
@@ -31,11 +34,11 @@ interface Session {
   updated_at: string;
 }
 
-interface AIModel { id: string; name: string; icon: string; }
+interface AIModel { id: string; name: string; icon: string; isImageModel?: boolean; }
 
 const AI_MODELS: AIModel[] = [
   { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', icon: '⚡' },
-  { id: 'google/gemini-2.5-flash-image', name: 'Image Gen', icon: '🎨' },
+  { id: 'google/gemini-2.5-flash-image', name: 'Image Gen', icon: '🎨', isImageModel: true },
   { id: 'google/gemini-2.5-pro', name: 'Gemini Pro', icon: '🧠' },
   { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨' },
 ];
@@ -215,37 +218,66 @@ const AfuAI: React.FC = () => {
     setInput('');
     setLoading(true);
     
+    // Check if using image generation model
+    const isImageGeneration = selectedModel.isImageModel;
+    
     // Start showing thinking immediately with user's request
-    setCurrentThinking(`User requested: "${userMessage.length > 80 ? userMessage.substring(0, 80) + '...' : userMessage}"\nAnalyzing context and preparing response...`);
+    setCurrentThinking(`User requested: "${userMessage.length > 80 ? userMessage.substring(0, 80) + '...' : userMessage}"\n${isImageGeneration ? 'Generating image based on your description...' : 'Analyzing context and preparing response...'}`);
     setThinkingComplete(false);
 
     // Save user message
     await saveMessage(sessionId, 'user', userMessage);
 
     try {
-      const { data } = await supabase.functions.invoke('chat-with-afuai', {
-        body: { message: userMessage, model: selectedModel.id, webSearchMode }
-      });
-      
-      if (data) {
-        // Update thinking with full thought from AI
-        if (data.thought) {
-          setCurrentThinking(data.thought);
-        }
-        setThinkingComplete(true);
+      if (isImageGeneration) {
+        // Handle image generation
+        const { data, error } = await supabase.functions.invoke('generate-ai-image', {
+          body: { prompt: userMessage }
+        });
         
-        // Small delay to let thinking animation complete
-        await new Promise(resolve => setTimeout(resolve, 500));
+        if (error) throw error;
+        
+        setThinkingComplete(true);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Get the first image URL from the response
+        const imageUrl = data?.images?.[0] || null;
         
         const assistantMsg: Message = {
           role: 'assistant',
-          content: data.reply,
-          thought: data.thought,
+          content: data?.reply || `Here's the image I generated based on your request!`,
+          imageUrl: imageUrl,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, assistantMsg]);
         setCurrentThinking(null);
-        await saveMessage(sessionId, 'assistant', data.reply);
+        await saveMessage(sessionId, 'assistant', assistantMsg.content);
+      } else {
+        // Regular chat
+        const { data } = await supabase.functions.invoke('chat-with-afuai', {
+          body: { message: userMessage, model: selectedModel.id, webSearchMode }
+        });
+        
+        if (data) {
+          // Update thinking with full thought from AI
+          if (data.thought) {
+            setCurrentThinking(data.thought);
+          }
+          setThinkingComplete(true);
+          
+          // Small delay to let thinking animation complete
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const assistantMsg: Message = {
+            role: 'assistant',
+            content: data.reply,
+            thought: data.thought,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, assistantMsg]);
+          setCurrentThinking(null);
+          await saveMessage(sessionId, 'assistant', data.reply);
+        }
       }
     } catch (e) { 
       toast.error('Response failed'); 
@@ -344,11 +376,14 @@ const AfuAI: React.FC = () => {
                   </div>
                 )}
                 <div className={cn(
-                  "px-4 py-3 rounded-2xl shadow-sm text-[15px] leading-relaxed",
+                  "px-4 py-3 rounded-2xl shadow-sm",
                   isMobile ? "max-w-[90%]" : "max-w-[85%]",
                   msg.role === 'user' ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-card border border-border/60 rounded-tl-none"
                 )}>
-                  {msg.content}
+                  <AIMessageContent content={msg.content} isUser={msg.role === 'user'} />
+                  {msg.imageUrl && (
+                    <GeneratedImageDisplay imageUrl={msg.imageUrl} prompt={msg.content} />
+                  )}
                 </div>
                 <span className="text-[9px] text-muted-foreground mt-1 px-1 uppercase tracking-widest">{format(msg.timestamp, 'HH:mm')}</span>
               </div>
@@ -386,10 +421,10 @@ const AfuAI: React.FC = () => {
           </div>
         </div>
 
-        {/* FIXED INPUT AREA */}
+        {/* FIXED INPUT AREA - with bottom padding for navigation */}
         <div className={cn(
           "shrink-0 bg-background border-t border-border/40 z-50",
-          isMobile ? "p-3 pb-[max(env(safe-area-inset-bottom),16px)]" : "p-4"
+          isMobile ? "p-3 pb-20" : "p-4"
         )}>
           <div className={cn("mx-auto", isMobile ? "max-w-full" : "max-w-3xl")}>
             <div className="relative bg-card border border-border rounded-2xl p-2 focus-within:ring-2 ring-primary/20 transition-all shadow-xl shadow-black/5">
