@@ -243,17 +243,33 @@ export const MessageBubble = ({
 
   const handleVoiceDownload = async (url: string) => {
     try {
-      const response = await fetch(url);
-      const blob = await response.blob();
+      let blob: Blob;
+      try {
+        const response = await fetch(url, { mode: 'cors' });
+        blob = await response.blob();
+      } catch {
+        // Fallback for CORS issues
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `afuchat-voice-${Date.now()}.webm`;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        toast.success('Opening audio for download...');
+        return;
+      }
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = `voice-message-${Date.now()}.webm`;
+      a.download = `afuchat-voice-${Date.now()}.webm`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
+      toast.success('Voice message downloaded!');
     } catch (error) {
+      console.error('Voice download error:', error);
       toast.error('Download failed');
     }
   };
@@ -305,17 +321,46 @@ export const MessageBubble = ({
     if (!message.attachment_url) return;
     
     try {
-      const response = await fetch(message.attachment_url);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      let blob: Blob;
+      const url = message.attachment_url;
+      
+      // Handle different URL types
+      if (url.startsWith('data:')) {
+        const response = await fetch(url);
+        blob = await response.blob();
+      } else if (url.startsWith('blob:')) {
+        const response = await fetch(url);
+        blob = await response.blob();
+      } else {
+        try {
+          const response = await fetch(url, { mode: 'cors' });
+          if (!response.ok) throw new Error('Fetch failed');
+          blob = await response.blob();
+        } catch {
+          // Fallback for CORS issues
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = message.attachment_name || 'afuchat-download';
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          toast.success('Opening file for download...');
+          return;
+        }
+      }
+      
+      const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = message.attachment_name || 'download';
+      a.href = downloadUrl;
+      a.download = message.attachment_name || `afuchat-download-${Date.now()}`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
+      toast.success('Downloaded!');
     } catch (error) {
+      console.error('Download error:', error);
       toast.error('Download failed');
     }
   };

@@ -233,18 +233,47 @@ export const ImageLightbox = ({
     e.preventDefault();
     try {
       const currentImage = images[currentIndex];
-      const response = await fetch(currentImage.url);
-      const blob = await response.blob();
+      let blob: Blob;
+      
+      // Handle different URL types
+      if (currentImage.url.startsWith('data:')) {
+        // Base64 data URL
+        const response = await fetch(currentImage.url);
+        blob = await response.blob();
+      } else if (currentImage.url.startsWith('blob:')) {
+        // Blob URL
+        const response = await fetch(currentImage.url);
+        blob = await response.blob();
+      } else {
+        // Regular URL - use no-cors if CORS fails
+        try {
+          const response = await fetch(currentImage.url, { mode: 'cors' });
+          blob = await response.blob();
+        } catch {
+          // Fallback: create a link directly
+          const a = document.createElement('a');
+          a.href = currentImage.url;
+          a.download = `afuchat-image-${Date.now()}.jpg`;
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          toast.success('Opening image for download...');
+          return;
+        }
+      }
+      
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `image-${Date.now()}.jpg`;
+      a.download = `afuchat-image-${Date.now()}.jpg`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       toast.success('Image downloaded!');
     } catch (err) {
+      console.error('Download error:', err);
       toast.error('Failed to download image');
     }
   };
