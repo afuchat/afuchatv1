@@ -29,7 +29,6 @@ const PLATFORM_ROUTES: Record<string, string> = {
   '/edit-profile': 'Edit Profile',
   '/profile': 'Profile',
   '/moments': 'Moments',
-  '/mini-programs': 'Mini Programs',
   '/marketplace': 'Marketplace',
   '/travel': 'Travel',
   '/events': 'Events',

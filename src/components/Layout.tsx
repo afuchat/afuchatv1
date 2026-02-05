@@ -255,7 +255,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     { path: '/gifts', icon: Gift, label: 'Gifts' },
     { path: '/moments', icon: ImageIcon, label: 'Moments' },
     { path: '/trending', icon: Hash, label: 'Trending' },
-    { path: '/mini-programs', icon: Grid3x3, label: 'Mini Programs' },
+    // Mini Programs hidden - admin only access via direct URL
   ];
 
   if (user) {
