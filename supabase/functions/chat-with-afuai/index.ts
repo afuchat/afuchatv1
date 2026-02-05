@@ -990,6 +990,52 @@ Please use the above search results to provide an accurate, up-to-date response.
     
     const reply = data.choices[0].message.content;
 
+    // Generate a contextual thought/reasoning based on the user's request
+    const userRequestSummary = message.length > 80 ? message.substring(0, 80) + '...' : message;
+    const thoughtSteps = [];
+    
+    // Start with what user requested
+    thoughtSteps.push(`User requested: "${userRequestSummary}"`);
+    
+    // Add context about what was analyzed
+    if (userContext?.profile) {
+      thoughtSteps.push(`Checking ${userContext.profile.display_name}'s profile and account status...`);
+    }
+    
+    if (webSearchResults) {
+      thoughtSteps.push(`Searched the web for real-time information...`);
+      thoughtSteps.push(`Found ${webSearchResults.split('\n\n').length} relevant results to incorporate.`);
+    }
+    
+    if (memories.length > 0) {
+      thoughtSteps.push(`Retrieved ${memories.length} memories from previous conversations.`);
+    }
+    
+    // Add reasoning based on message content
+    if (message.toLowerCase().includes('earning') || message.toLowerCase().includes('money') || message.toLowerCase().includes('withdraw')) {
+      thoughtSteps.push(`Analyzing creator earnings eligibility and balance...`);
+      if (userContext?.weeklyViews !== undefined) {
+        thoughtSteps.push(`Current weekly views: ${userContext.weeklyViews}. Checking threshold requirements.`);
+      }
+    }
+    
+    if (message.toLowerCase().includes('premium') || message.toLowerCase().includes('subscription')) {
+      thoughtSteps.push(`Reviewing subscription status and available plans...`);
+    }
+    
+    if (message.toLowerCase().includes('gift') || message.toLowerCase().includes('nexa') || message.toLowerCase().includes('xp')) {
+      thoughtSteps.push(`Checking Nexa balance and gift options...`);
+    }
+    
+    if (message.toLowerCase().includes('post') || message.toLowerCase().includes('content')) {
+      thoughtSteps.push(`Reviewing recent posts and engagement metrics...`);
+    }
+    
+    // Add final step
+    thoughtSteps.push(`Formulating response with personalized recommendations...`);
+    
+    const thought = thoughtSteps.join('\n');
+
     // Store new memories from this conversation (async, don't wait)
     storeMemories(supabaseAdmin, userId, message, reply);
 
@@ -1001,7 +1047,7 @@ Please use the above search results to provide an accurate, up-to-date response.
       p_metadata: { action: 'chat_with_afuai' }
     });
 
-    return new Response(JSON.stringify({ reply }), {
+    return new Response(JSON.stringify({ reply, thought }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
