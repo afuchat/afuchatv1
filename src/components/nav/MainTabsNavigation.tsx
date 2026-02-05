@@ -155,22 +155,25 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
   };
 
   return (
-    <div className="flex flex-col min-h-screen min-h-[100dvh]">
+    <div className="flex flex-col h-[100dvh] overflow-hidden touch-pan-y">
       {/* Tab Content Area - Scrollable */}
-      <div className={cn(
-        "flex-1 overflow-y-auto overflow-x-hidden pb-20",
-        isDesktop && "desktop-scrollbar"
-      )}
-      style={{ 
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'contain'
-      }}
+      <div
+        className={cn(
+          "flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-20",
+          isDesktop && "desktop-scrollbar"
+        )}
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+        }}
       >
-        <Suspense fallback={
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <CustomLoader size="lg" />
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center min-h-[50vh]">
+              <CustomLoader size="lg" />
+            </div>
+          }
+        >
           {renderTabContent(activeTab)}
         </Suspense>
       </div>
