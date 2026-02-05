@@ -76,6 +76,7 @@ interface Message {
   content: string;
   timestamp: Date;
   attachments?: Attachment[];
+  generatedImages?: GeneratedImage[];
 }
 
 interface Attachment {
@@ -83,6 +84,10 @@ interface Attachment {
   url: string;
   name: string;
   size?: number;
+}
+
+interface GeneratedImage {
+  url: string;
 }
 
 interface ChatSession {
@@ -120,6 +125,20 @@ const AI_MODELS: AIModel[] = [
     tier: 'fast',
   },
   {
+    id: 'google/gemini-2.5-flash-image',
+    name: 'Image Generator',
+    description: 'Create images from text',
+    icon: '🎨',
+    tier: 'balanced',
+  },
+  {
+    id: 'google/gemini-3-pro-image-preview',
+    name: 'Image Pro',
+    description: 'High quality images',
+    icon: '🖼️',
+    tier: 'powerful',
+  },
+  {
     id: 'google/gemini-2.5-flash',
     name: 'Gemini 2.5 Flash',
     description: 'Balanced performance',
@@ -148,6 +167,11 @@ const AI_MODELS: AIModel[] = [
     tier: 'powerful',
   },
 ];
+
+// Check if model is an image generation model
+const isImageModel = (modelId: string) => {
+  return modelId.includes('image');
+};
 
 const AIChat: React.FC = () => {
   const { user } = useAuth();
@@ -455,15 +479,36 @@ const AIChat: React.FC = () => {
         ).join(', ') + ']';
       }
 
-      const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
-        body: {
-          message: messageText + attachmentContext,
-          history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
-          webSearchMode: webSearchMode,
-          attachments: uploadedAttachments,
-          model: selectedModel.id,
-        }
-      });
+      let data: any;
+      let error: any;
+
+      // Check if using an image generation model
+      if (isImageModel(selectedModel.id)) {
+        // Use image generation endpoint
+        const editImage = uploadedAttachments.find(a => a.type === 'image')?.url;
+        const result = await supabase.functions.invoke('generate-ai-image', {
+          body: {
+            prompt: messageText,
+            model: selectedModel.id,
+            editImage: editImage,
+          }
+        });
+        data = result.data;
+        error = result.error;
+      } else {
+        // Use regular chat endpoint
+        const result = await supabase.functions.invoke('chat-with-afuai', {
+          body: {
+            message: messageText + attachmentContext,
+            history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+            webSearchMode: webSearchMode,
+            attachments: uploadedAttachments,
+            model: selectedModel.id,
+          }
+        });
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         const errorMsg = error.message || JSON.stringify(error);
@@ -481,10 +526,14 @@ const AIChat: React.FC = () => {
         throw error;
       }
 
+      // Parse generated images if present
+      const generatedImages: GeneratedImage[] = (data.images || []).map((url: string) => ({ url }));
+
       const assistantMessage: Message = {
         role: 'assistant',
         content: data.reply,
         timestamp: new Date(),
+        generatedImages: generatedImages.length > 0 ? generatedImages : undefined,
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -634,10 +683,10 @@ const AIChat: React.FC = () => {
                 Ask me anything about AfuChat, upload images for analysis, or search the web for information.
               </p>
               
-              <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+              <div className="grid grid-cols-2 xs:grid-cols-3 gap-2 w-full max-w-md">
                 <button 
                   onClick={() => setInput("What can you help me with?")}
-                  className="p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
+                  className="p-2.5 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
                 >
                   <Bot className="h-5 w-5 text-primary mb-2" />
                   <p className="text-sm font-medium">Get started</p>
@@ -645,38 +694,56 @@ const AIChat: React.FC = () => {
                 </button>
                 <button 
                   onClick={() => setInput("How do I earn on AfuChat?")}
-                  className="p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
+                  className="p-2.5 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
                 >
-                  <Sparkles className="h-5 w-5 text-yellow-500 mb-2" />
+                  <Sparkles className="h-5 w-5 text-amber-500 mb-2" />
                   <p className="text-sm font-medium">Earn money</p>
                   <p className="text-xs text-muted-foreground">Creator program tips</p>
                 </button>
                 <button 
                   onClick={() => { setWebSearchMode(true); setInput("Latest tech news today"); }}
-                  className="p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
+                  className="p-2.5 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
                 >
-                  <Globe className="h-5 w-5 text-blue-500 mb-2" />
+                  <Globe className="h-5 w-5 text-sky-500 mb-2" />
                   <p className="text-sm font-medium">Web search</p>
                   <p className="text-xs text-muted-foreground">Search the internet</p>
                 </button>
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
+                  className="p-2.5 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
                 >
-                  <ImageIcon className="h-5 w-5 text-green-500 mb-2" />
+                  <ImageIcon className="h-5 w-5 text-emerald-500 mb-2" />
                   <p className="text-sm font-medium">Upload image</p>
                   <p className="text-xs text-muted-foreground">Analyze or discuss</p>
                 </button>
+                <button 
+                  onClick={() => { 
+                    setSelectedModel(AI_MODELS.find(m => m.id === 'google/gemini-2.5-flash-image') || AI_MODELS[0]); 
+                    setInput("Generate an image of "); 
+                  }}
+                  className="p-2.5 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left col-span-2 xs:col-span-1"
+                >
+                  <Sparkles className="h-5 w-5 text-violet-500 mb-2" />
+                  <p className="text-sm font-medium">Generate image</p>
+                  <p className="text-xs text-muted-foreground">Create with AI</p>
+                </button>
               </div>
               
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs mt-6 ${webSearchMode ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                <Globe className="h-4 w-4" />
-                <span>
-                  {webSearchMode 
-                    ? '🔍 Web Search Mode ON - I can search the internet!' 
-                    : 'Toggle 🌐 for web search mode'}
-                </span>
-              </div>
+              {isImageModel(selectedModel.id) ? (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs mt-6 bg-purple-500/10 text-purple-500">
+                  <Sparkles className="h-4 w-4" />
+                  <span>🎨 Image Mode ON - Describe what you want to create!</span>
+                </div>
+              ) : (
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs mt-6 ${webSearchMode ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                  <Globe className="h-4 w-4" />
+                  <span>
+                    {webSearchMode 
+                      ? '🔍 Web Search Mode ON - I can search the internet!' 
+                      : 'Toggle 🌐 for web search mode'}
+                  </span>
+                </div>
+              )}
             </div>
           ) : (
             <div className="p-4 space-y-4">
@@ -709,6 +776,39 @@ const AIChat: React.FC = () => {
                                 <span className="text-xs truncate max-w-[100px]">{att.name}</span>
                               </div>
                             )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Generated Images */}
+                    {msg.generatedImages && msg.generatedImages.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {msg.generatedImages.map((img, imgIdx) => (
+                          <div key={imgIdx} className="relative group/img">
+                            <img 
+                              src={img.url} 
+                              alt={`Generated image ${imgIdx + 1}`}
+                              className="max-w-full rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              style={{ maxHeight: '300px' }}
+                              onClick={() => window.open(img.url, '_blank')}
+                            />
+                            <div className="absolute top-2 right-2 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                              <Button
+                                variant="secondary"
+                                size="icon"
+                                className="h-8 w-8 bg-background/80 backdrop-blur-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const link = document.createElement('a');
+                                  link.href = img.url;
+                                  link.download = `afuai-generated-${Date.now()}.png`;
+                                  link.click();
+                                }}
+                              >
+                                <ArrowUp className="h-4 w-4 rotate-180" />
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -748,7 +848,9 @@ const AIChat: React.FC = () => {
                         <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
                         <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
-                      <span className="text-sm text-muted-foreground">AfuAI is thinking...</span>
+                      <span className="text-sm text-muted-foreground">
+                        {isImageModel(selectedModel.id) ? 'AfuAI is creating your image...' : 'AfuAI is thinking...'}
+                      </span>
                     </div>
                   </Card>
                 </div>
