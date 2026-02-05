@@ -293,7 +293,11 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   
   if (onMainTab && !shouldHideNav) {
     return (
-      <div className={cn("min-h-screen bg-background select-none", isDesktop && "desktop-scrollbar")}>
+      <div className={cn(
+        "min-h-screen bg-background select-none",
+        isDesktop && "desktop-scrollbar",
+        !isDesktop && "scroll-container"
+      )}>
         <MainTabsNavigation isScrollingDown={isScrollingDown} chatScrollHide={chatScrollHide}>
           {children}
         </MainTabsNavigation>
@@ -302,8 +306,11 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   }
 
   return (
-    <div className={cn("min-h-screen bg-background select-none overflow-y-auto", isDesktop && "desktop-scrollbar")}>
-
+    <div className={cn(
+      "min-h-screen bg-background select-none overflow-y-auto",
+      isDesktop && "desktop-scrollbar",
+      !isDesktop && "scroll-container"
+    )}>
       {/* Main Content */}
       <main className={shouldHideUI ? "min-h-screen" : "pb-20 min-h-screen"}>
         <motion.div 

@@ -168,62 +168,230 @@ html.telegram-mini-app .sticky.top-0 {
     display: none;
   }
 
-  /* Desktop scrollbar styles - visible and styled */
-  @media (min-width: 768px) {
-    .desktop-scrollbar {
-      scrollbar-width: thin;
-      scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
-    }
+  /* ========================================
+     Professional Adaptive Scrollbar System
+     - Mobile: Hidden scrollbars (native touch scroll)
+     - Tablet: Thin subtle scrollbars
+     - Desktop: Elegant visible scrollbars
+     ======================================== */
 
-    .desktop-scrollbar::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+  /* Mobile (< 768px): Hidden scrollbars for clean touch experience */
+  @media (max-width: 767px) {
+    html, body, .scroll-container {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
     }
-
-    .desktop-scrollbar::-webkit-scrollbar-track {
-      background: transparent;
-      border-radius: 4px;
+    
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    .scroll-container::-webkit-scrollbar {
+      display: none;
     }
+  }
 
-    .desktop-scrollbar::-webkit-scrollbar-thumb {
-      background: hsl(var(--muted-foreground) / 0.3);
-      border-radius: 4px;
-      border: 2px solid transparent;
-      background-clip: content-box;
-    }
-
-    .desktop-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: hsl(var(--muted-foreground) / 0.5);
-      background-clip: content-box;
-    }
-
-    /* Make main content scrollable on desktop */
+  /* Tablet (768px - 1023px): Thin subtle scrollbars */
+  @media (min-width: 768px) and (max-width: 1023px) {
     html, body {
       overflow: auto !important;
       scrollbar-width: thin;
-      scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+      scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    html::-webkit-scrollbar-track,
+    body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    html::-webkit-scrollbar-thumb,
+    body::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted-foreground) / 0.2);
+      border-radius: 3px;
+    }
+
+    html::-webkit-scrollbar-thumb:hover,
+    body::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--muted-foreground) / 0.35);
+    }
+
+    .tablet-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+    }
+
+    .tablet-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .tablet-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .tablet-scrollbar::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted-foreground) / 0.2);
+      border-radius: 3px;
+    }
+  }
+
+  /* Desktop (≥ 1024px): Elegant visible scrollbars */
+  @media (min-width: 1024px) {
+    html, body {
+      overflow: auto !important;
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--muted-foreground) / 0.25) hsl(var(--muted) / 0.3);
     }
 
     html::-webkit-scrollbar,
     body::-webkit-scrollbar {
       width: 10px;
+      height: 10px;
     }
 
     html::-webkit-scrollbar-track,
     body::-webkit-scrollbar-track {
-      background: hsl(var(--background));
+      background: hsl(var(--muted) / 0.3);
+      border-radius: 5px;
     }
 
     html::-webkit-scrollbar-thumb,
     body::-webkit-scrollbar-thumb {
-      background: hsl(var(--muted-foreground) / 0.3);
+      background: linear-gradient(
+        180deg,
+        hsl(var(--muted-foreground) / 0.3) 0%,
+        hsl(var(--muted-foreground) / 0.25) 100%
+      );
       border-radius: 5px;
       border: 2px solid hsl(var(--background));
+      transition: background 0.2s ease;
     }
 
     html::-webkit-scrollbar-thumb:hover,
     body::-webkit-scrollbar-thumb:hover {
-      background: hsl(var(--muted-foreground) / 0.5);
+      background: linear-gradient(
+        180deg,
+        hsl(var(--primary) / 0.5) 0%,
+        hsl(var(--primary) / 0.4) 100%
+      );
+    }
+
+    html::-webkit-scrollbar-thumb:active,
+    body::-webkit-scrollbar-thumb:active {
+      background: hsl(var(--primary) / 0.6);
+    }
+
+    html::-webkit-scrollbar-corner,
+    body::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+  }
+
+  /* Desktop scrollbar utility class */
+  .desktop-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.25) transparent;
+  }
+
+  .desktop-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .desktop-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  .desktop-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.25);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background 0.2s ease;
+  }
+
+  .desktop-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.4);
+    background-clip: content-box;
+  }
+
+  /* Premium scrollbar with glow effect */
+  .premium-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.3) transparent;
+  }
+
+  .premium-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .premium-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.2);
+    border-radius: 4px;
+  }
+
+  .premium-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 0.4) 0%,
+      hsl(var(--primary) / 0.3) 100%
+    );
+    border-radius: 4px;
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.2);
+    transition: all 0.2s ease;
+  }
+
+  .premium-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 0.6) 0%,
+      hsl(var(--primary) / 0.5) 100%
+    );
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.3);
+  }
+
+  /* Auto-hide scrollbar (shows on hover) */
+  .scrollbar-auto-hide {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-auto-hide::-webkit-scrollbar {
+    width: 0;
+    transition: width 0.2s ease;
+  }
+
+  .scrollbar-auto-hide:hover {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-auto-hide:hover::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .scrollbar-auto-hide:hover::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+
+  /* Scroll container base styles */
+  .scroll-container {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Smooth scrolling for all scroll containers */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
     }
   }
 

@@ -41,7 +41,7 @@ const DesktopChatLayout = ({ chatList, chatRoom }: DesktopChatLayoutProps) => {
 
   // Desktop: Split pane layout
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden desktop-scrollbar">
       <ResizablePanelGroup
         direction="horizontal"
         onLayout={handlePanelResize}
