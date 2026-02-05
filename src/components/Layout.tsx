@@ -20,7 +20,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 
 // Check if current path is a main tab route
-const MAIN_TAB_ROUTES = ['/', '/home', '/feed', '/search', '/ai-chat', '/notifications', '/chats'];
+const MAIN_TAB_ROUTES = ['/', '/home', '/feed', '/search', '/shorts', '/ai-chat', '/notifications', '/chats'];
 const isMainTabRoute = (pathname: string): boolean => {
   return MAIN_TAB_ROUTES.includes(pathname);
 };

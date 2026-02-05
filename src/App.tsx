@@ -44,6 +44,7 @@ import Banned from "./pages/Banned";
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const DesktopChats = lazy(() => import("./pages/DesktopChats"));
+const Shorts = lazy(() => import("./pages/Shorts"));
 const SearchPage = lazy(() => import("./pages/Search"));
 const ShopPage = lazy(() => import("./pages/Shop"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
@@ -176,6 +177,7 @@ const AppRoutes = () => {
       <Route path="/chats" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/chat/:chatId" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/search" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SearchPage /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/shorts" element={<Layout><Shorts /></Layout>} />
       <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
       <Route path="/marketplace" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Marketplace /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/notifications" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Notifications /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />

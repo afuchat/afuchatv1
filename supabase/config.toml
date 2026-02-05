@@ -89,3 +89,6 @@ verify_jwt = true
 
 [functions.you-search]
 verify_jwt = false
+
+[functions.fetch-shorts-videos]
+verify_jwt = false

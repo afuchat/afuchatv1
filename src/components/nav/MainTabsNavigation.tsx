@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Search, Bell, MessageCircle } from 'lucide-react';
+import { Home, Search, Bell, MessageCircle, Film } from 'lucide-react';
 import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +13,7 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 
 const HomePage = lazy(() => import('@/pages/Home'));
 const SearchPage = lazy(() => import('@/pages/Search'));
+const Shorts = lazy(() => import('@/pages/Shorts'));
 const AIChat = lazy(() => import('@/pages/AIChat'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const DesktopChats = lazy(() => import('@/pages/DesktopChats'));
@@ -23,13 +24,13 @@ interface MainTabsNavigationProps {
   chatScrollHide?: boolean;
 }
 
-type TabId = 'home' | 'search' | 'ai-chat' | 'notifications' | 'chats';
+type TabId = 'home' | 'search' | 'shorts' | 'ai-chat' | 'notifications' | 'chats';
 
 const TABS: { id: TabId; path: string; icon: any; customIcon?: string; label: string; requiresAuth: boolean }[] = [
   { id: 'home', path: '/home', icon: Home, label: 'Home', requiresAuth: false },
   { id: 'search', path: '/search', icon: Search, label: 'Search', requiresAuth: false },
+  { id: 'shorts', path: '/shorts', icon: Film, label: 'Shorts', requiresAuth: false },
   { id: 'ai-chat', path: '/ai-chat', icon: null, customIcon: aiChatIcon, label: 'AI', requiresAuth: true },
-  { id: 'notifications', path: '/notifications', icon: Bell, label: 'Alerts', requiresAuth: true },
   { id: 'chats', path: '/chats', icon: MessageCircle, label: 'Chats', requiresAuth: true },
 ];
 
@@ -37,8 +38,8 @@ const TABS: { id: TabId; path: string; icon: any; customIcon?: string; label: st
 const getTabIndexFromPath = (pathname: string): number => {
   if (pathname === '/' || pathname === '/home' || pathname === '/feed') return 0;
   if (pathname === '/search') return 1;
-  if (pathname === '/ai-chat') return 2;
-  if (pathname === '/notifications') return 3;
+  if (pathname === '/shorts') return 2;
+  if (pathname === '/ai-chat') return 3;
   if (pathname === '/chats') return 4;
   return -1; // Not a main tab route
 };
@@ -143,9 +144,9 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
       case 1:
         return <SearchPage />;
       case 2:
-        return user ? <AIChat /> : null;
+        return <Shorts />;
       case 3:
-        return user ? <Notifications /> : null;
+        return user ? <AIChat /> : null;
       case 4:
         return user ? <DesktopChats /> : null;
       default:
