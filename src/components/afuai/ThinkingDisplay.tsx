@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { BrainCircuit, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,9 +25,20 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const previousThoughtRef = useRef(thought);
   
-  // Parse thought into steps
-  const steps = thought.split('\n').filter(line => line.trim());
+  // Memoize steps to prevent recalculation on every render
+  const steps = useMemo(() => thought.split('\n').filter(line => line.trim()), [thought]);
+  
+  // Reset when thought changes
+  useEffect(() => {
+    if (previousThoughtRef.current !== thought) {
+      setDisplayedSteps([]);
+      setCurrentStepIndex(0);
+      setCurrentCharIndex(0);
+      previousThoughtRef.current = thought;
+    }
+  }, [thought]);
   
   useEffect(() => {
     if (isComplete) {
@@ -80,13 +91,6 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
       }
     }
   }, [isStreaming, isComplete, currentStepIndex, currentCharIndex, steps]);
-  
-  // Reset when thought changes
-  useEffect(() => {
-    setDisplayedSteps([]);
-    setCurrentStepIndex(0);
-    setCurrentCharIndex(0);
-  }, [thought]);
   
   // Auto-scroll to bottom
   useEffect(() => {
@@ -183,7 +187,7 @@ export const CollapsibleThinking: React.FC<{
   className?: string;
 }> = ({ thought, defaultExpanded = false, className }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const steps = thought.split('\n').filter(line => line.trim());
+  const steps = useMemo(() => thought.split('\n').filter(line => line.trim()), [thought]);
   
   return (
     <div className={cn(
