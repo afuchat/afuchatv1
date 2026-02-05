@@ -83,3 +83,9 @@ verify_jwt = false
 
 [functions.fetch-news]
 verify_jwt = false
+
+[functions.generate-ai-image]
+verify_jwt = true
+
+[functions.you-search]
+verify_jwt = false
