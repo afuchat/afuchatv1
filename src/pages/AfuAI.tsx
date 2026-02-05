@@ -40,6 +40,49 @@ const AI_MODELS: AIModel[] = [
   { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨' },
 ];
 
+// Typing animation component for thinking
+const ThinkingAnimation = ({ thought, isComplete }: { thought: string; isComplete: boolean }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  useEffect(() => {
+    if (isComplete) {
+      setDisplayedText(thought);
+      return;
+    }
+    
+    if (currentIndex < thought.length) {
+      const timer = setTimeout(() => {
+        setDisplayedText(prev => prev + thought[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, 15); // Speed of typing
+      return () => clearTimeout(timer);
+    }
+  }, [currentIndex, thought, isComplete]);
+  
+  useEffect(() => {
+    setDisplayedText('');
+    setCurrentIndex(0);
+  }, [thought]);
+  
+  return (
+    <div className="text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
+      {displayedText.split('\n').map((line, i) => (
+        <div key={i} className="flex items-start gap-2 mb-1">
+          {line.startsWith('User requested:') ? (
+            <span className="text-primary font-medium">{line}</span>
+          ) : (
+            <span className="opacity-80">{line}</span>
+          )}
+        </div>
+      ))}
+      {!isComplete && currentIndex < thought.length && (
+        <span className="inline-block w-1.5 h-4 bg-primary/60 animate-pulse ml-0.5" />
+      )}
+    </div>
+  );
+};
+
 const AfuAI: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -53,7 +96,9 @@ const AfuAI: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showThought, setShowThought] = useState<Record<number, boolean>>({});
+  const [currentThinking, setCurrentThinking] = useState<string | null>(null);
+  const [thinkingComplete, setThinkingComplete] = useState(false);
+  const [expandedThoughts, setExpandedThoughts] = useState<Record<number, boolean>>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -164,32 +209,50 @@ const AfuAI: React.FC = () => {
       }
     }
 
-    const userMsg: Message = { role: 'user', content: input.trim(), timestamp: new Date() };
+    const userMessage = input.trim();
+    const userMsg: Message = { role: 'user', content: userMessage, timestamp: new Date() };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+    
+    // Start showing thinking immediately with user's request
+    setCurrentThinking(`User requested: "${userMessage.length > 80 ? userMessage.substring(0, 80) + '...' : userMessage}"\nAnalyzing context and preparing response...`);
+    setThinkingComplete(false);
 
     // Save user message
-    await saveMessage(sessionId, 'user', userMsg.content);
+    await saveMessage(sessionId, 'user', userMessage);
 
     try {
       const { data } = await supabase.functions.invoke('chat-with-afuai', {
-        body: { message: userMsg.content, model: selectedModel.id, webSearchMode }
+        body: { message: userMessage, model: selectedModel.id, webSearchMode }
       });
+      
       if (data) {
+        // Update thinking with full thought from AI
+        if (data.thought) {
+          setCurrentThinking(data.thought);
+        }
+        setThinkingComplete(true);
+        
+        // Small delay to let thinking animation complete
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         const assistantMsg: Message = {
           role: 'assistant',
           content: data.reply,
-          thought: data.thought || "Analyzing your request based on current context...",
+          thought: data.thought,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, assistantMsg]);
+        setCurrentThinking(null);
         await saveMessage(sessionId, 'assistant', data.reply);
       }
     } catch (e) { 
       toast.error('Response failed'); 
+      setCurrentThinking(null);
     } finally { 
-      setLoading(false); 
+      setLoading(false);
+      setThinkingComplete(false);
     }
   };
 
@@ -208,7 +271,7 @@ const AfuAI: React.FC = () => {
 
   useEffect(() => { 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); 
-  }, [messages, loading]);
+  }, [messages, loading, currentThinking]);
 
   const profileLink = user ? `/${profile?.handle || user.id}` : '/auth';
 
@@ -235,7 +298,7 @@ const AfuAI: React.FC = () => {
           </Link>
         </header>
 
-        {/* SCROLLABLE MESSAGES AREA - Only this scrolls */}
+        {/* SCROLLABLE MESSAGES AREA */}
         <div 
           className={cn(
             "flex-1 overflow-y-auto",
@@ -248,7 +311,7 @@ const AfuAI: React.FC = () => {
           }}
         >
           <div className={cn("mx-auto p-4 space-y-6", isMobile ? "max-w-full" : "max-w-3xl")}>
-            {messages.length === 0 && (
+            {messages.length === 0 && !loading && (
               <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                   <Sparkles className="h-8 w-8 text-primary" />
@@ -260,21 +323,22 @@ const AfuAI: React.FC = () => {
 
             {messages.map((msg, idx) => (
               <div key={idx} className={cn("flex flex-col w-full animate-in slide-in-from-bottom-2 duration-300", msg.role === 'user' ? "items-end" : "items-start")}>
+                {/* Collapsible thought for past messages */}
                 {msg.role === 'assistant' && msg.thought && (
                   <div className={cn("mb-2 overflow-hidden border border-border/40 rounded-xl bg-muted/20", isMobile ? "w-[90%]" : "w-[85%]")}>
                     <button 
-                      onClick={() => setShowThought(p => ({...p, [idx]: !p[idx]}))}
+                      onClick={() => setExpandedThoughts(p => ({...p, [idx]: !p[idx]}))}
                       className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <BrainCircuit className={cn("h-3.5 w-3.5", loading ? "animate-pulse text-primary" : "text-primary")} />
+                        <BrainCircuit className="h-3.5 w-3.5 text-primary" />
                         Reasoning
                       </div>
-                      {showThought[idx] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      {expandedThoughts[idx] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     </button>
-                    {showThought[idx] && (
-                      <div className="px-3 pb-3 text-xs leading-relaxed text-muted-foreground border-t border-border/10 pt-2 bg-background/40 italic">
-                        {msg.thought}
+                    {expandedThoughts[idx] && (
+                      <div className="px-3 pb-3 border-t border-border/10 pt-2 bg-background/40">
+                        <ThinkingAnimation thought={msg.thought} isComplete={true} />
                       </div>
                     )}
                   </div>
@@ -290,7 +354,23 @@ const AfuAI: React.FC = () => {
               </div>
             ))}
             
-            {loading && (
+            {/* Real-time thinking display while loading */}
+            {loading && currentThinking && (
+              <div className="flex flex-col items-start animate-in slide-in-from-bottom-2 duration-300">
+                <div className={cn("mb-2 overflow-hidden border border-primary/30 rounded-xl bg-primary/5", isMobile ? "w-[90%]" : "w-[85%]")}>
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-primary/20">
+                    <BrainCircuit className="h-4 w-4 text-primary animate-pulse" />
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-tight">Thinking...</span>
+                  </div>
+                  <div className="px-3 py-3 bg-background/60">
+                    <ThinkingAnimation thought={currentThinking} isComplete={thinkingComplete} />
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Loading dots when waiting for response after thinking */}
+            {loading && thinkingComplete && (
               <div className="flex items-start">
                 <div className="bg-card border border-border/60 rounded-2xl rounded-tl-none px-4 py-3">
                   <div className="flex gap-1">
@@ -323,6 +403,7 @@ const AfuAI: React.FC = () => {
                   placeholder={`Ask ${selectedModel.name}...`}
                   className="min-h-[40px] max-h-[120px] flex-1 bg-transparent border-0 focus-visible:ring-0 py-2 px-2 text-[15px] resize-none"
                   rows={1}
+                  disabled={loading}
                 />
                 <Button
                   onClick={handleSend}
@@ -339,7 +420,7 @@ const AfuAI: React.FC = () => {
                 {/* Model Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-muted hover:bg-muted/80 transition-colors">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-muted hover:bg-muted/80 transition-colors" disabled={loading}>
                       <span>{selectedModel.icon}</span>
                       <span className={isMobile ? "hidden" : "inline"}>{selectedModel.name}</span>
                       <span className={isMobile ? "inline" : "hidden"}>{selectedModel.name.split(' ')[0]}</span>
@@ -366,6 +447,7 @@ const AfuAI: React.FC = () => {
                 {/* Web Search Toggle */}
                 <button
                   onClick={() => setWebSearchMode(!webSearchMode)}
+                  disabled={loading}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all",
                     webSearchMode 
