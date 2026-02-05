@@ -402,12 +402,24 @@ function buildSystemPrompt(userContext: any, platformContext: any, memories: any
 - Note: Earnings are calculated from 08:00-20:00 EAT daily, auto-credited at 20:00 EAT
 `;
 
+  // Calculate account age
+  const accountCreatedAt = userContext?.profile?.created_at ? new Date(userContext.profile.created_at) : null;
+  const accountAgeDays = accountCreatedAt ? Math.floor((Date.now() - accountCreatedAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+  const accountAgeText = accountAgeDays === 0 ? 'Today' : 
+                         accountAgeDays === 1 ? '1 day ago' : 
+                         accountAgeDays < 30 ? `${accountAgeDays} days ago` :
+                         accountAgeDays < 365 ? `${Math.floor(accountAgeDays / 30)} months ago` :
+                         `${Math.floor(accountAgeDays / 365)} years ago`;
+
   const userInfo = userContext?.profile ? `
 CURRENT USER INFORMATION:
 - Display Name: ${userContext.profile.display_name}
 - Username: @${userContext.profile.handle}
+- Profile Link: https://afuchat.lovable.app/${userContext.profile.handle} (use this when referring to their profile, NOT /profile)
+- User ID: ${userContext.profile.id}
 - Bio: ${userContext.profile.bio || 'Not set'}
 - Country: ${userContext.profile.country || 'Unknown'}
+- Account Created: ${accountAgeText} (${accountCreatedAt?.toLocaleDateString() || 'Unknown'})
 - Nexa (XP) Balance: ${userContext.profile.xp}
 - ACoin Balance: ${userContext.profile.acoin || 0}
 - Available Balance (UGX): ${userContext.profile.available_balance_ugx || 0} UGX
@@ -422,6 +434,12 @@ CURRENT USER INFORMATION:
 - Is Business Account: ${userContext.profile.is_business_mode ? 'Yes' : 'No'}
 - Is Affiliate: ${userContext.profile.is_affiliate ? 'Yes' : 'No'}
 - Missed Earnings Total: ${userContext.profile.missed_earnings_total || 0} UGX
+
+IMPORTANT RESPONSE RULES:
+- NEVER use raw route paths like /profile in responses. Use the user's actual profile link or @username instead.
+- When referring to the user's profile, say "your profile (@${userContext.profile.handle})" or use their display name
+- You ALREADY KNOW who they are - greet them by name, reference their stats, make it personal
+- Reference their account age, activity, and preferences naturally in conversation
 ` : '';
 
   // Creator earnings eligibility check
