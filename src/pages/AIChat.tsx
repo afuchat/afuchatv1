@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Bot, Copy, Check, PenSquare, ArrowUp, History, Globe, X, Image as ImageIcon, Paperclip, Trash2, ChevronLeft, Sparkles, FileText } from 'lucide-react';
+import { Bot, Copy, Check, PenSquare, ArrowUp, History, Globe, X, Image as ImageIcon, Paperclip, Trash2, ChevronLeft, Sparkles, FileText, ChevronDown } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -18,6 +18,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format, isToday, isYesterday } from 'date-fns';
 import { compressImageFile } from '@/lib/imageCompression';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 
 // Parse AI responses to convert page paths into clickable links
 const parseAIResponse = (content: string): React.ReactNode => {
@@ -95,12 +103,59 @@ interface LocationState {
   postDetails?: PostDetails;
 }
 
+interface AIModel {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  tier: 'fast' | 'balanced' | 'powerful';
+}
+
+const AI_MODELS: AIModel[] = [
+  {
+    id: 'google/gemini-3-flash-preview',
+    name: 'Gemini 3 Flash',
+    description: 'Fast & efficient',
+    icon: '⚡',
+    tier: 'fast',
+  },
+  {
+    id: 'google/gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    description: 'Balanced performance',
+    icon: '🚀',
+    tier: 'balanced',
+  },
+  {
+    id: 'google/gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    description: 'Complex reasoning',
+    icon: '🧠',
+    tier: 'powerful',
+  },
+  {
+    id: 'openai/gpt-5-mini',
+    name: 'GPT-5 Mini',
+    description: 'Fast & capable',
+    icon: '💨',
+    tier: 'fast',
+  },
+  {
+    id: 'openai/gpt-5',
+    name: 'GPT-5',
+    description: 'Most powerful',
+    icon: '🔥',
+    tier: 'powerful',
+  },
+];
+
 const AIChat: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [profile, setProfile] = useState<{ avatar_url: string | null; display_name: string } | null>(null);
   const [webSearchMode, setWebSearchMode] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<AIModel>(AI_MODELS[0]);
   
   // Session management
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -406,6 +461,7 @@ const AIChat: React.FC = () => {
           history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
           webSearchMode: webSearchMode,
           attachments: uploadedAttachments,
+          model: selectedModel.id,
         }
       });
 
@@ -506,10 +562,44 @@ const AIChat: React.FC = () => {
           />
           
           <div className="flex items-center gap-1">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
-              <Sparkles className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AfuAI</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
+                    <span className="text-sm">{selectedModel.icon}</span>
+                  </div>
+                  <div className="text-left hidden xs:block">
+                    <span className="text-sm font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent block leading-tight">
+                      AfuAI
+                    </span>
+                    <span className="text-[10px] text-muted-foreground leading-tight block">
+                      {selectedModel.name}
+                    </span>
+                  </div>
+                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-56">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Select AI Model</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {AI_MODELS.map((model) => (
+                  <DropdownMenuItem
+                    key={model.id}
+                    onClick={() => setSelectedModel(model)}
+                    className={`flex items-center gap-3 cursor-pointer ${selectedModel.id === model.id ? 'bg-primary/10' : ''}`}
+                  >
+                    <span className="text-lg">{model.icon}</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{model.name}</p>
+                      <p className="text-xs text-muted-foreground">{model.description}</p>
+                    </div>
+                    {selectedModel.id === model.id && (
+                      <Check className="h-4 w-4 text-primary" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           <div className="flex items-center gap-1">

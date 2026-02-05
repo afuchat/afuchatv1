@@ -831,7 +831,7 @@ serve(async (req) => {
       );
     }
 
-    const { message, history, webSearchMode } = await req.json();
+    const { message, history, webSearchMode, model } = await req.json();
     
     // Input validation
     if (!message || typeof message !== 'string') {
@@ -900,6 +900,21 @@ serve(async (req) => {
     // Build comprehensive system prompt with memories
     const systemPrompt = buildSystemPrompt(userContext, platformContext, memories);
 
+    // Get model from request body, default to gemini-3-flash-preview
+    const selectedModel = model || 'google/gemini-3-flash-preview';
+    
+    // Validate model is allowed
+    const allowedModels = [
+      'google/gemini-3-flash-preview',
+      'google/gemini-2.5-flash',
+      'google/gemini-2.5-pro',
+      'openai/gpt-5-mini',
+      'openai/gpt-5',
+    ];
+    
+    const modelToUse = allowedModels.includes(selectedModel) ? selectedModel : 'google/gemini-3-flash-preview';
+    console.log('Using AI model:', modelToUse);
+
     // Build messages for Lovable AI
     const messages: any[] = [
       { role: 'system', content: systemPrompt }
@@ -933,7 +948,7 @@ Please use the above search results to provide an accurate, up-to-date response.
       content: enhancedMessage
     });
 
-    console.log('Calling Lovable AI with full platform context');
+    console.log('Calling Lovable AI with full platform context, model:', modelToUse);
     
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -942,7 +957,7 @@ Please use the above search results to provide an accurate, up-to-date response.
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: modelToUse,
         messages: messages,
         max_tokens: 4096,
       }),
