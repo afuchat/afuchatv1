@@ -915,18 +915,19 @@ serve(async (req) => {
     const modelToUse = allowedModels.includes(selectedModel) ? selectedModel : 'google/gemini-3-flash-preview';
     console.log('Using AI model:', modelToUse);
 
-    // Build messages for Lovable AI
+    // Build messages for Lovable AI with full conversation context
     const messages: any[] = [
       { role: 'system', content: systemPrompt }
     ];
 
-    // Add conversation history
-    if (history && Array.isArray(history)) {
+    // Add FULL conversation history for context-aware responses
+    if (history && Array.isArray(history) && history.length > 0) {
+      console.log(`Including ${history.length} messages from conversation history`);
       for (const msg of history) {
         if (msg.role && msg.content && ['user', 'assistant'].includes(msg.role)) {
           messages.push({
             role: msg.role,
-            content: msg.content.substring(0, 2000)
+            content: msg.content.substring(0, 4000) // Allow longer content for context
           });
         }
       }

@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowUp, History, Globe, ChevronDown, BrainCircuit, ChevronUp, Sparkles, Plus, Trash2, ImageIcon, Loader2 } from 'lucide-react';
+import { ArrowUp, History, Globe, ChevronDown, Sparkles, Plus, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate, Link } from 'react-router-dom';
 import { PremiumGate } from '@/components/PremiumGate';
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from '@/hooks/use-mobile';
 import AIMessageContent from '@/components/afuai/AIMessageContent';
 import GeneratedImageDisplay from '@/components/afuai/GeneratedImageDisplay';
+import { ThinkingDisplay, CollapsibleThinking } from '@/components/afuai/ThinkingDisplay';
 
 interface Message {
   id?: string;
@@ -43,49 +44,6 @@ const AI_MODELS: AIModel[] = [
   { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨' },
 ];
 
-// Typing animation component for thinking
-const ThinkingAnimation = ({ thought, isComplete }: { thought: string; isComplete: boolean }) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  
-  useEffect(() => {
-    if (isComplete) {
-      setDisplayedText(thought);
-      return;
-    }
-    
-    if (currentIndex < thought.length) {
-      const timer = setTimeout(() => {
-        setDisplayedText(prev => prev + thought[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, 15); // Speed of typing
-      return () => clearTimeout(timer);
-    }
-  }, [currentIndex, thought, isComplete]);
-  
-  useEffect(() => {
-    setDisplayedText('');
-    setCurrentIndex(0);
-  }, [thought]);
-  
-  return (
-    <div className="text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
-      {displayedText.split('\n').map((line, i) => (
-        <div key={i} className="flex items-start gap-2 mb-1">
-          {line.startsWith('User requested:') ? (
-            <span className="text-primary font-medium">{line}</span>
-          ) : (
-            <span className="opacity-80">{line}</span>
-          )}
-        </div>
-      ))}
-      {!isComplete && currentIndex < thought.length && (
-        <span className="inline-block w-1.5 h-4 bg-primary/60 animate-pulse ml-0.5" />
-      )}
-    </div>
-  );
-};
-
 const AfuAI: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -100,8 +58,8 @@ const AfuAI: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [currentThinking, setCurrentThinking] = useState<string | null>(null);
+  const [isThinkingStreaming, setIsThinkingStreaming] = useState(false);
   const [thinkingComplete, setThinkingComplete] = useState(false);
-  const [expandedThoughts, setExpandedThoughts] = useState<Record<number, boolean>>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -200,6 +158,14 @@ const AfuAI: React.FC = () => {
     }
   };
 
+  // Build conversation history for context
+  const buildConversationHistory = () => {
+    return messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+  };
+
   const handleSend = async () => {
     if (!input.trim() || !user) return;
     
@@ -221,8 +187,10 @@ const AfuAI: React.FC = () => {
     // Check if using image generation model
     const isImageGeneration = selectedModel.isImageModel;
     
-    // Start showing thinking immediately with user's request
-    setCurrentThinking(`User requested: "${userMessage.length > 80 ? userMessage.substring(0, 80) + '...' : userMessage}"\n${isImageGeneration ? 'Generating image based on your description...' : 'Analyzing context and preparing response...'}`);
+    // Start showing thinking immediately with user's request - streaming mode
+    const initialThinking = `User requested: "${userMessage.length > 100 ? userMessage.substring(0, 100) + '...' : userMessage}"`;
+    setCurrentThinking(initialThinking);
+    setIsThinkingStreaming(true);
     setThinkingComplete(false);
 
     // Save user message
@@ -230,7 +198,11 @@ const AfuAI: React.FC = () => {
 
     try {
       if (isImageGeneration) {
-        // Handle image generation
+        // Update thinking for image generation
+        setCurrentThinking(
+          `${initialThinking}\nAnalyzing your description for image generation...\nPreparing visual elements and composition...\nGenerating image with AI...`
+        );
+        
         const { data, error } = await supabase.functions.invoke('generate-ai-image', {
           body: { prompt: userMessage }
         });
@@ -238,25 +210,35 @@ const AfuAI: React.FC = () => {
         if (error) throw error;
         
         setThinkingComplete(true);
-        await new Promise(resolve => setTimeout(resolve, 300));
+        setIsThinkingStreaming(false);
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Get the first image URL from the response
         const imageUrl = data?.images?.[0] || null;
         
         const assistantMsg: Message = {
           role: 'assistant',
           content: data?.reply || `Here's the image I generated based on your request!`,
           imageUrl: imageUrl,
+          thought: currentThinking || undefined,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, assistantMsg]);
         setCurrentThinking(null);
         await saveMessage(sessionId, 'assistant', assistantMsg.content);
       } else {
-        // Regular chat
-        const { data } = await supabase.functions.invoke('chat-with-afuai', {
-          body: { message: userMessage, model: selectedModel.id, webSearchMode }
+        // Regular chat - pass full conversation history
+        const conversationHistory = buildConversationHistory();
+        
+        const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
+          body: { 
+            message: userMessage, 
+            model: selectedModel.id, 
+            webSearchMode,
+            history: conversationHistory // Send full history for context
+          }
         });
+        
+        if (error) throw error;
         
         if (data) {
           // Update thinking with full thought from AI
@@ -264,9 +246,10 @@ const AfuAI: React.FC = () => {
             setCurrentThinking(data.thought);
           }
           setThinkingComplete(true);
+          setIsThinkingStreaming(false);
           
-          // Small delay to let thinking animation complete
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Delay to show complete thinking before response
+          await new Promise(resolve => setTimeout(resolve, 800));
           
           const assistantMsg: Message = {
             role: 'assistant',
@@ -280,8 +263,10 @@ const AfuAI: React.FC = () => {
         }
       }
     } catch (e) { 
-      toast.error('Response failed'); 
+      console.error('AI response error:', e);
+      toast.error('Failed to get response'); 
       setCurrentThinking(null);
+      setIsThinkingStreaming(false);
     } finally { 
       setLoading(false);
       setThinkingComplete(false);
@@ -311,9 +296,17 @@ const AfuAI: React.FC = () => {
     <PremiumGate feature="AI Chat Assistant" showUpgrade={true} requiredTier="platinum">
       <div className="fixed inset-0 flex flex-col bg-background text-foreground">
         
-        {/* FIXED HEADER */}
+        {/* FIXED HEADER - with back button */}
         <header className="shrink-0 flex items-center justify-between px-4 h-14 border-b border-border/40 bg-background/95 backdrop-blur-md z-50">
           <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate(-1)} 
+              className="rounded-full"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => setIsHistoryOpen(true)} className="rounded-full">
               <History className="h-5 w-5" />
             </Button>
@@ -342,7 +335,7 @@ const AfuAI: React.FC = () => {
             overscrollBehavior: 'contain'
           }}
         >
-          <div className={cn("mx-auto p-4 space-y-6", isMobile ? "max-w-full" : "max-w-3xl")}>
+          <div className={cn("mx-auto px-4 py-6", isMobile ? "max-w-full" : "max-w-3xl")}>
             {messages.length === 0 && !loading && (
               <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
@@ -353,62 +346,65 @@ const AfuAI: React.FC = () => {
               </div>
             )}
 
-            {messages.map((msg, idx) => (
-              <div key={idx} className={cn("flex flex-col w-full animate-in slide-in-from-bottom-2 duration-300", msg.role === 'user' ? "items-end" : "items-start")}>
-                {/* Collapsible thought for past messages */}
-                {msg.role === 'assistant' && msg.thought && (
-                  <div className={cn("mb-2 overflow-hidden border border-border/40 rounded-xl bg-muted/20", isMobile ? "w-[90%]" : "w-[85%]")}>
-                    <button 
-                      onClick={() => setExpandedThoughts(p => ({...p, [idx]: !p[idx]}))}
-                      className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <BrainCircuit className="h-3.5 w-3.5 text-primary" />
-                        Reasoning
-                      </div>
-                      {expandedThoughts[idx] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-                    {expandedThoughts[idx] && (
-                      <div className="px-3 pb-3 border-t border-border/10 pt-2 bg-background/40">
-                        <ThinkingAnimation thought={msg.thought} isComplete={true} />
+            {/* Messages with improved spacing */}
+            <div className="space-y-6">
+              {messages.map((msg, idx) => (
+                <div 
+                  key={idx} 
+                  className={cn(
+                    "flex flex-col w-full animate-in slide-in-from-bottom-2 duration-300",
+                    msg.role === 'user' ? "items-end" : "items-start"
+                  )}
+                >
+                  {/* Collapsible thought for past assistant messages */}
+                  {msg.role === 'assistant' && msg.thought && (
+                    <CollapsibleThinking 
+                      thought={msg.thought} 
+                      className={cn("mb-3", isMobile ? "w-[92%]" : "w-[85%]")}
+                    />
+                  )}
+                  
+                  {/* Message bubble with better spacing */}
+                  <div className={cn(
+                    "px-4 py-3 rounded-2xl shadow-sm",
+                    isMobile ? "max-w-[92%]" : "max-w-[85%]",
+                    msg.role === 'user' 
+                      ? "bg-primary text-primary-foreground rounded-tr-sm" 
+                      : "bg-card border border-border/60 rounded-tl-sm"
+                  )}>
+                    <AIMessageContent content={msg.content} isUser={msg.role === 'user'} />
+                    {msg.imageUrl && (
+                      <div className="mt-3">
+                        <GeneratedImageDisplay imageUrl={msg.imageUrl} prompt={msg.content} />
                       </div>
                     )}
                   </div>
-                )}
-                <div className={cn(
-                  "px-4 py-3 rounded-2xl shadow-sm",
-                  isMobile ? "max-w-[90%]" : "max-w-[85%]",
-                  msg.role === 'user' ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-card border border-border/60 rounded-tl-none"
-                )}>
-                  <AIMessageContent content={msg.content} isUser={msg.role === 'user'} />
-                  {msg.imageUrl && (
-                    <GeneratedImageDisplay imageUrl={msg.imageUrl} prompt={msg.content} />
-                  )}
+                  
+                  {/* Timestamp */}
+                  <span className="text-[9px] text-muted-foreground mt-1.5 px-1 uppercase tracking-widest">
+                    {format(msg.timestamp, 'HH:mm')}
+                  </span>
                 </div>
-                <span className="text-[9px] text-muted-foreground mt-1 px-1 uppercase tracking-widest">{format(msg.timestamp, 'HH:mm')}</span>
-              </div>
-            ))}
+              ))}
+            </div>
             
-            {/* Real-time thinking display while loading */}
+            {/* Real-time thinking display while loading - DeepSeek style */}
             {loading && currentThinking && (
-              <div className="flex flex-col items-start animate-in slide-in-from-bottom-2 duration-300">
-                <div className={cn("mb-2 overflow-hidden border border-primary/30 rounded-xl bg-primary/5", isMobile ? "w-[90%]" : "w-[85%]")}>
-                  <div className="flex items-center gap-2 px-3 py-2 border-b border-primary/20">
-                    <BrainCircuit className="h-4 w-4 text-primary animate-pulse" />
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-tight">Thinking...</span>
-                  </div>
-                  <div className="px-3 py-3 bg-background/60">
-                    <ThinkingAnimation thought={currentThinking} isComplete={thinkingComplete} />
-                  </div>
-                </div>
+              <div className="mt-6 animate-in slide-in-from-bottom-3 duration-300">
+                <ThinkingDisplay 
+                  thought={currentThinking}
+                  isStreaming={isThinkingStreaming}
+                  isComplete={thinkingComplete}
+                  className={cn(isMobile ? "w-full" : "w-[85%]")}
+                />
               </div>
             )}
             
-            {/* Loading dots when waiting for response after thinking */}
-            {loading && thinkingComplete && (
-              <div className="flex items-start">
-                <div className="bg-card border border-border/60 rounded-2xl rounded-tl-none px-4 py-3">
-                  <div className="flex gap-1">
+            {/* Loading dots when preparing final response */}
+            {loading && thinkingComplete && !currentThinking && (
+              <div className="flex items-start mt-6">
+                <div className="bg-card border border-border/60 rounded-2xl rounded-tl-sm px-4 py-3">
+                  <div className="flex gap-1.5">
                     <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -417,14 +413,14 @@ const AfuAI: React.FC = () => {
               </div>
             )}
             
-            <div ref={messagesEndRef} className="h-32" />
+            <div ref={messagesEndRef} className="h-8" />
           </div>
         </div>
 
-        {/* FIXED INPUT AREA - with bottom padding for navigation */}
+        {/* FIXED INPUT AREA - no extra bottom padding since no nav */}
         <div className={cn(
           "shrink-0 bg-background border-t border-border/40 z-50",
-          isMobile ? "p-3 pb-20" : "p-4"
+          "p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
         )}>
           <div className={cn("mx-auto", isMobile ? "max-w-full" : "max-w-3xl")}>
             <div className="relative bg-card border border-border rounded-2xl p-2 focus-within:ring-2 ring-primary/20 transition-all shadow-xl shadow-black/5">
@@ -446,7 +442,11 @@ const AfuAI: React.FC = () => {
                   className="h-9 w-9 shrink-0 bg-primary hover:bg-primary/90 rounded-full shadow-lg transition-transform active:scale-95"
                   size="icon"
                 >
-                  <ArrowUp className="h-5 w-5" />
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ArrowUp className="h-5 w-5" />
+                  )}
                 </Button>
               </div>
 
