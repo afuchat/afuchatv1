@@ -156,7 +156,10 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Tab Content Area - No sliding, instant switch */}
-      <div className={cn("flex-1 overflow-y-auto pb-20", isDesktop && "desktop-scrollbar")}>
+      <div className={cn(
+        "flex-1 overflow-y-auto pb-20 scroll-container",
+        isDesktop && "desktop-scrollbar"
+      )}>
         <Suspense fallback={
           <div className="flex items-center justify-center min-h-[50vh]">
             <CustomLoader size="lg" />

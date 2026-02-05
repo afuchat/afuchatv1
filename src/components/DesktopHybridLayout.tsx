@@ -305,8 +305,8 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
           )}
         </AnimatePresence>
 
-        {/* Main Content */}
-        <main className="flex-1 min-w-0">
+        {/* Main Content - scrollable with desktop scrollbar */}
+        <main className="flex-1 min-w-0 overflow-y-auto desktop-scrollbar">
           <div className={cn(
             "min-h-[calc(100vh-4rem)]",
             !hideRightSidebar && "max-w-3xl"
