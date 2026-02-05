@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Lightbulb } from 'lucide-react';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { supabase } from '@/integrations/supabase/client';
 import { useSubscription } from '@/hooks/useSubscription';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { categorizeContent, ContentCategory } from '@/lib/contentCategorization';
 
 interface AIPostSummaryProps {
@@ -44,10 +44,10 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
   const { canUseAIPostAnalysis } = useSubscription();
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState(false);
   const [shouldShow, setShouldShow] = useState(false);
   const checkedRef = useRef(false);
   const mountedRef = useRef(true);
+  const generatingRef = useRef(false);
 
   const hasAccess = canUseAIPostAnalysis();
 
@@ -63,13 +63,14 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
     const worthSummarizing = isWorthSummarizing(postContent);
     setShouldShow(worthSummarizing);
     
-    // Check for cached summary only (don't auto-generate)
+    // Auto-generate summary if worth summarizing
     if (worthSummarizing) {
-      checkCachedSummary();
+      checkAndGenerateSummary();
     }
   }, [hasAccess, postId]);
 
-  const checkCachedSummary = async () => {
+  const checkAndGenerateSummary = async () => {
+    // Check for cached summary first
     const { data: existingSummary } = await supabase
       .from('post_ai_summaries')
       .select('summary')
@@ -78,30 +79,52 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
     
     if (existingSummary?.summary && mountedRef.current) {
       setSummary(existingSummary.summary);
+      return;
+    }
+
+    // Auto-generate if no cached summary exists
+    if (!generatingRef.current) {
+      generateSummary();
     }
   };
 
-  const handleGenerateSummary = async () => {
-    if (loading || summary) return;
+  const generateSummary = async () => {
+    if (loading || summary || generatingRef.current) return;
     
+    generatingRef.current = true;
     setLoading(true);
     
     try {
+      // Prepare clean content (strip HTML, limit length)
+      const cleanContent = postContent
+        .replace(/<[^>]*>/g, '')
+        .substring(0, 1200)
+        .trim();
+
       const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
         body: {
-          message: `Summarize this social media post in 1-2 concise sentences. Focus on the main point or message:\n\n"${postContent}"`,
+          message: `Analyze this social media post and provide a single-sentence professional insight or key takeaway. Format it as a brief, actionable tip starting with a verb (e.g., "Consider...", "Note that...", "Key point:"). Be concise and factual, not explanatory:\n\n"${cleanContent}"`,
           context: 'post_summary'
         }
       });
 
       if (error) {
         if (error.message?.includes('429') || error.message?.includes('rate')) {
-          console.warn('Rate limited, please try again later');
+          console.warn('Rate limited for AI summary');
         }
         throw error;
       }
       
-      const generatedSummary = data?.reply || null;
+      let generatedSummary = data?.reply || null;
+      
+      // Clean up the summary - remove quotes if present
+      if (generatedSummary) {
+        generatedSummary = generatedSummary
+          .replace(/^["']|["']$/g, '')
+          .replace(/^Summary:\s*/i, '')
+          .replace(/^Key takeaway:\s*/i, '')
+          .trim();
+      }
       
       if (generatedSummary && mountedRef.current) {
         setSummary(generatedSummary);
@@ -115,70 +138,40 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
       console.error('AI Summary error:', error);
     } finally {
       if (mountedRef.current) setLoading(false);
+      generatingRef.current = false;
     }
   };
 
   if (!hasAccess || !shouldShow) return null;
 
+  // Show loading state or summary inline - no user interaction needed
+  if (loading) {
+    return (
+      <div className="mt-2 mx-0">
+        <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-primary/5 to-transparent rounded-lg">
+          <CustomLoader size="sm" />
+          <span className="text-xs text-muted-foreground">Generating insight...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!summary) return null;
+
   return (
-    <div 
+    <motion.div 
       className="mt-2 mx-0"
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-lg border border-primary/20 overflow-hidden">
-        <div 
-          className="flex items-center justify-between px-3 py-2 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (summary) setExpanded(!expanded);
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-medium text-foreground">AfuAI Summary</span>
-          </div>
-          
-          {summary && (
-            expanded ? 
-              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : 
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          )}
-        </div>
-
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="px-3 pb-2">
-                {loading ? (
-                  <div className="flex items-center justify-center py-2">
-                    <CustomLoader size="sm" />
-                  </div>
-                ) : summary ? (
-                  <p className="text-xs text-foreground/90 leading-relaxed bg-background/50 rounded p-2">
-                    {summary}
-                  </p>
-                ) : (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleGenerateSummary();
-                    }}
-                    className="w-full py-2 text-xs text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Tap to generate summary
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div className="flex items-start gap-2 px-3 py-2.5 bg-gradient-to-r from-amber-500/10 via-primary/5 to-transparent rounded-lg border border-amber-500/20">
+        <Lightbulb className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-foreground/90 leading-relaxed font-medium">
+          {summary}
+        </p>
       </div>
-    </div>
+    </motion.div>
   );
 };

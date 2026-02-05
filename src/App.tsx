@@ -279,25 +279,7 @@ const AppRoutes = () => {
 };
 
 const AppWithDesktopCheck = () => {
-  const isMobile = useIsMobile();
-
-  // Lovable preview is often rendered in a desktop-sized iframe;
-  // allow it so you can see the bottom navigation in Preview.
-  const isLovablePreview =
-    typeof window !== 'undefined' && /lovable(app|project)\.com$/i.test(window.location.hostname);
-
-  // Check if running in Telegram Mini App
-  const isTelegramMiniApp =
-    typeof window !== 'undefined' && 
-    window.Telegram && 
-    window.Telegram.WebApp && 
-    window.Telegram.WebApp.initData;
-
-  // Block desktop users (except Lovable preview and Telegram Mini App)
-  if (!isMobile && !isLovablePreview && !isTelegramMiniApp) {
-    return <DesktopBlocker />;
-  }
-
+  // Desktop is now fully supported - no blocking
   return <AppRoutes />;
 };
 
