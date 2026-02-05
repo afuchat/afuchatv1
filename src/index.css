@@ -17,62 +17,11 @@ body {
   letter-spacing: 0.01em;
 }
 
-/* PWA Fullscreen Display Optimizations */
+/* Touch + scroll behavior optimizations */
 html, body {
-  overscroll-behavior: none;
+  overscroll-behavior: auto;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-}
-
-/* Enhanced typography for all text elements */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-p, span, div, label, a {
-  font-weight: 500;
-}
-
-/* Timestamps and meta text - bolder */
-time, .timestamp, [class*="text-muted"] {
-  font-weight: 500;
-  font-size: 0.875rem; /* 14px */
-}
-
-/* Small text sizes boosted */
-small, .text-xs, .text-sm {
-  font-weight: 500;
-}
-
-/* Standalone/PWA mode optimizations */
-@media all and (display-mode: standalone) {
-  html, body {
-    overscroll-behavior-y: none;
-  }
-  
-  /* Better scroll handling for PWA - removed fixed positioning that blocks scroll */
-  body {
-    width: 100%;
-    min-height: 100%;
-    min-height: 100dvh;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  
-  #root {
-    min-height: 100%;
-    min-height: 100dvh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Fullscreen mode */
-@media all and (display-mode: fullscreen) {
-  html, body {
-    overscroll-behavior-y: none;
-  }
 }
 
 /* Safe area insets for notched devices */
