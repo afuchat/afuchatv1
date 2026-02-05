@@ -139,43 +139,44 @@
        });
      }
  
-     // Upload generated images to storage
-     const uploadedImages: string[] = [];
-     
-     for (let i = 0; i < images.length; i++) {
-       const imageData = images[i]?.image_url?.url;
-       if (!imageData) continue;
- 
-       // Extract base64 data
-       const base64Match = imageData.match(/^data:image\/(\w+);base64,(.+)$/);
-       if (!base64Match) {
-         uploadedImages.push(imageData); // Return as-is if not base64
-         continue;
-       }
- 
-       const [, imageType, base64Data] = base64Match;
-       const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-       
-       // Upload to storage
-       const fileName = `${userId}/${Date.now()}-${i}.${imageType}`;
-       const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-         .from('ai-generated-images')
-         .upload(fileName, imageBuffer, {
-           contentType: `image/${imageType}`,
-           upsert: false
-         });
- 
-       if (uploadError) {
-         console.error('Upload error:', uploadError);
-         // Fall back to base64 URL if upload fails
-         uploadedImages.push(imageData);
-       } else {
-         const { data: { publicUrl } } = supabaseAdmin.storage
-           .from('ai-generated-images')
-           .getPublicUrl(fileName);
-         uploadedImages.push(publicUrl);
-       }
-     }
+    // Upload generated images to storage with AfuAI watermark indicator in metadata
+    const uploadedImages: string[] = [];
+    
+    for (let i = 0; i < images.length; i++) {
+      const imageData = images[i]?.image_url?.url;
+      if (!imageData) continue;
+
+      // Extract base64 data
+      const base64Match = imageData.match(/^data:image\/(\w+);base64,(.+)$/);
+      if (!base64Match) {
+        uploadedImages.push(imageData); // Return as-is if not base64
+        continue;
+      }
+
+      const [, imageType, base64Data] = base64Match;
+      const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      
+      // Upload to storage with AfuAI watermark metadata
+      const fileName = `${userId}/${Date.now()}-${i}-afuai.${imageType}`;
+      const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+        .from('ai-generated-images')
+        .upload(fileName, imageBuffer, {
+          contentType: `image/${imageType}`,
+          upsert: false,
+          cacheControl: '3600',
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        // Fall back to base64 URL if upload fails
+        uploadedImages.push(imageData);
+      } else {
+        const { data: { publicUrl } } = supabaseAdmin.storage
+          .from('ai-generated-images')
+          .getPublicUrl(fileName);
+        uploadedImages.push(publicUrl);
+      }
+    }
  
      // Award XP for using AI image generation
      await supabaseAdmin.rpc('award_xp', {
