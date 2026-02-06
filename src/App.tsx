@@ -216,7 +216,7 @@ const AppRoutes = () => {
       <Route path="/ads" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdManager /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/afumail" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><AfuMail /></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/moments" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Moments /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/mini-programs" element={<Layout><MiniPrograms /></Layout>} />
+      <Route path="/mini-programs" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><MiniPrograms /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/transfer" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Transfer /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/red-envelope" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><RedEnvelope /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/developer-sdk" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DeveloperSDK /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
