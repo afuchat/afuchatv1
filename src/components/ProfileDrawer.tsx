@@ -274,7 +274,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
     { icon: Wallet, label: 'Wallet', path: '/wallet', requiresAuth: true },
     { icon: Banknote, label: 'Creator Earnings', path: '/creator-earnings', badge: '🇺🇬', requiresAuth: true },
     { icon: Store, label: 'Shop', path: '/shop' },
-    { icon: Grid3x3, label: 'Mini Programs', path: '/mini-programs' },
+    ...(isAdmin ? [{ icon: Grid3x3, label: 'Mini Programs', path: '/mini-programs' }] : []),
   ];
 
   // Build dynamic items
