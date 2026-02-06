@@ -1639,7 +1639,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh' }}>
+      <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden' }}>
         {/* Search Overlay */}
         {isSearchOpen && (
           <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3 pt-[env(safe-area-inset-top)]">
@@ -2021,7 +2021,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         {/* Input: X-style - Fixed at bottom */}
         {/* For channels, only admins can send messages */}
         {isMember && (!chatInfo?.is_channel || isGroupAdmin) && (
-          <div className="flex-shrink-0 bg-background border-t border-border px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]" style={{ position: 'sticky', bottom: 0, zIndex: 10 }}>
+          <div className="flex-shrink-0 bg-background border-t border-border px-3 py-3 pb-[env(safe-area-inset-bottom)]">
             <input
               ref={fileInputRef}
               type="file"
@@ -2029,7 +2029,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
               accept="image/*,image/gif,.pdf,.doc,.docx,.txt"
               onChange={handleFileSelect}
             />
-            <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-1.5 w-full">
+            <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-2">
               {recording ? (
                 <div className="flex-1 flex items-center gap-2 px-4 py-2.5 bg-destructive/10 rounded-full border border-destructive/20">
                   <div className="w-2.5 h-2.5 bg-destructive rounded-full animate-pulse" />
@@ -2145,7 +2145,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   )}
                   
                   {/* Message input */}
-                  <div className="flex-1 min-w-0 bg-muted/50 rounded-2xl flex items-end px-3 py-2 min-h-[44px]">
+                  <div className="flex-1 bg-muted/50 rounded-2xl flex items-end px-4 py-2 min-h-[44px]">
                     <textarea
                       ref={textareaRef}
                       value={newMessage}
@@ -2166,7 +2166,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                         }
                       }}
                       placeholder={selectedFile ? 'Add a caption...' : 'Message'}
-                      className="flex-1 min-w-0 bg-transparent border-none text-[15px] placeholder:text-muted-foreground focus:outline-none focus:ring-0 resize-none min-h-[28px] max-h-[120px] py-1 leading-relaxed"
+                      className="flex-1 bg-transparent border-none text-[15px] placeholder:text-muted-foreground focus:outline-none focus:ring-0 resize-none min-h-[28px] max-h-[120px] py-1 leading-relaxed"
                       disabled={sending}
                       rows={1}
                     />
