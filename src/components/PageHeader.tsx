@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PageHeaderProps {
   title: string;
@@ -13,6 +14,7 @@ interface PageHeaderProps {
 
 export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   const { data: userProfile } = useQuery({
     queryKey: ['user-profile-header', user?.id],
@@ -25,7 +27,7 @@ export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderPr
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && isMobile,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -34,7 +36,7 @@ export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderPr
       <div className="max-w-6xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {user ? (
+            {isMobile && user ? (
               <ProfileDrawer
                 trigger={
                   <button className="flex-shrink-0">
@@ -47,7 +49,7 @@ export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderPr
                   </button>
                 }
               />
-            ) : icon ? (
+            ) : !isMobile ? null : icon ? (
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 {icon}
               </div>

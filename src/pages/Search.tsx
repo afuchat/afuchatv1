@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
@@ -532,6 +533,7 @@ const SearchHistorySection = ({
 
 const Search = () => {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const { isPremium } = usePremiumStatus();
   const location = useLocation();
@@ -962,18 +964,20 @@ const Search = () => {
       {/* Search Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex items-center gap-3 px-4 py-2">
-          <ProfileDrawer
-            trigger={
-              <button className="flex-shrink-0">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={userProfile?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-            }
-          />
+          {isMobile && (
+            <ProfileDrawer
+              trigger={
+                <button className="flex-shrink-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={userProfile?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              }
+            />
+          )}
           <div className="flex-1 relative" ref={searchContainerRef}>
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
             <Input
