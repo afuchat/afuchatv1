@@ -12,7 +12,7 @@ import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import { ContextualRightSidebar } from '@/components/desktop/ContextualRightSidebar';
 import { DesktopAccountSwitcher } from '@/components/desktop/DesktopAccountSwitcher';
-import { AfuAISidebarPanel } from '@/components/desktop/AfuAISidebarPanel';
+import { useAfuAI } from '@/contexts/AfuAIContext';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -45,12 +45,12 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [showAfuAI, setShowAfuAI] = useState(false);
   const { isDeveloper } = useDeveloperStatus();
+  const { openAfuAI } = useAfuAI();
   const { theme, setTheme } = useTheme();
 
   // Hide right sidebar on certain pages (active chat rooms, settings, admin, etc.)
-  const hideRightSidebar = ['/chat/', '/settings', '/admin', '/wallet', '/afuai', '/post/', '/edit-profile', '/security', '/change-password'].some(
+  const hideRightSidebar = ['/chat/', '/settings', '/admin', '/wallet', '/post/', '/edit-profile', '/security', '/change-password'].some(
     path => location.pathname.startsWith(path)
   );
 
@@ -225,13 +225,13 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
             {/* AfuAI Toggle */}
             {user && (
               <Button
-                variant={showAfuAI ? 'default' : 'ghost'}
+                variant="ghost"
                 size="icon"
                 className="h-10 w-10 rounded-full"
-                onClick={() => setShowAfuAI(!showAfuAI)}
-                title="Toggle AfuAI"
+                onClick={openAfuAI}
+                title="Open AfuAI"
               >
-                <img src={aiChatIcon} alt="AfuAI" className={cn("h-5 w-5 object-contain select-none", showAfuAI ? "brightness-200" : "")} draggable={false} />
+                <img src={aiChatIcon} alt="AfuAI" className="h-5 w-5 object-contain select-none" draggable={false} />
               </Button>
             )}
 
@@ -334,29 +334,14 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
         <main className="flex-1 min-w-0 overflow-y-auto desktop-scroll-panel">
           <div className={cn(
             "min-h-full",
-            !hideRightSidebar && !showAfuAI && "max-w-3xl"
+            !hideRightSidebar && "max-w-3xl"
           )}>
             {children}
           </div>
         </main>
 
-        {/* AfuAI Sidebar Panel - takes priority over right sidebar */}
-        <AnimatePresence>
-          {showAfuAI && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="flex-shrink-0 overflow-hidden"
-            >
-              <AfuAISidebarPanel onClose={() => setShowAfuAI(false)} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Right Sidebar - independent scroll, hidden when AfuAI is open */}
-        {!hideRightSidebar && !showAfuAI && (
+        {/* Right Sidebar */}
+        {!hideRightSidebar && (
           <div className="hidden xl:block flex-shrink-0 border-l border-border overflow-y-auto desktop-scroll-panel">
             <ContextualRightSidebar className="h-full" />
           </div>

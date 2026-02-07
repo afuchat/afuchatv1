@@ -10,6 +10,8 @@ import { AccountModeProvider } from "./contexts/AccountModeContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { TelegramProvider } from "./contexts/TelegramContext";
+import { AfuAIProvider } from "./contexts/AfuAIContext";
+import AfuAIModal from "./components/afuai/AfuAIModal";
 import { SettingsSheet } from "./components/SettingsSheet";
 import { RequireCountry } from "./components/RequireCountry";
 import { RequireDateOfBirth } from "./components/RequireDateOfBirth";
@@ -296,10 +298,13 @@ const App = () => (
                   <Sonner />
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <TelegramProvider>
-                      <AnimatePresence mode="wait">
-                        <AppWithDesktopCheck />
-                      </AnimatePresence>
-                      <SettingsSheet />
+                      <AfuAIProvider>
+                        <AnimatePresence mode="wait">
+                          <AppWithDesktopCheck />
+                        </AnimatePresence>
+                        <AfuAIModal />
+                        <SettingsSheet />
+                      </AfuAIProvider>
                     </TelegramProvider>
                   </BrowserRouter>
                 </TooltipProvider>
