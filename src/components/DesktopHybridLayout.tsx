@@ -11,6 +11,7 @@ import {
 import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import { ContextualRightSidebar } from '@/components/desktop/ContextualRightSidebar';
+import { DesktopAccountSwitcher } from '@/components/desktop/DesktopAccountSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -233,13 +234,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
               </Button>
             </Link>
             
-            {user && (
-              <Link to={`/${user.id}`}>
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
-            )}
+            {user && <DesktopAccountSwitcher />}
           </div>
         </div>
       </header>
