@@ -173,7 +173,7 @@ export const DesktopRightSidebar = ({ className }: DesktopRightSidebarProps) => 
   };
 
   return (
-    <aside className={cn('w-80 flex-shrink-0 space-y-4 p-4 overflow-y-auto', className)}>
+    <aside className={cn('w-80 flex-shrink-0 space-y-4 p-4', className)}>
 
       {/* Trending Topics */}
       <Card className="bg-card border-border/50 overflow-hidden">

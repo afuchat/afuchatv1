@@ -302,7 +302,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
 
         {/* Right Sidebar - independent scroll */}
         {!hideRightSidebar && (
-          <div className="hidden xl:block flex-shrink-0 border-l border-border overflow-hidden">
+          <div className="hidden xl:block flex-shrink-0 border-l border-border overflow-y-auto desktop-scroll-panel">
             <DesktopRightSidebar className="h-full" />
           </div>
         )}
