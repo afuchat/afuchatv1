@@ -6,7 +6,7 @@ import {
   Home, MessageSquare, Search, Bell, User, Settings, Shield, 
   BarChart3, ShoppingBag, Wallet, Send, Gift, 
   Image as ImageIcon, Hash, TrendingUp, Menu, DollarSign,
-  ChevronLeft, Grid3x3, Sun, Moon, Monitor
+  ChevronLeft, Grid3x3, Sun, Moon, Monitor, PenSquare, BookOpen
 } from 'lucide-react';
 import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
@@ -14,6 +14,7 @@ import { ContextualRightSidebar } from '@/components/desktop/ContextualRightSide
 import { DesktopAccountSwitcher } from '@/components/desktop/DesktopAccountSwitcher';
 import { useAfuAI } from '@/contexts/AfuAIContext';
 import { supabase } from '@/integrations/supabase/client';
+import NewPostModal from '@/components/ui/NewPostModal';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,6 +46,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [isNewPostOpen, setIsNewPostOpen] = useState(false);
   const { isDeveloper } = useDeveloperStatus();
   const { openAfuAI } = useAfuAI();
   const { theme, setTheme } = useTheme();
@@ -120,6 +122,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const navItems = [
     { path: '/', icon: Home, label: t('common.home') },
     { path: '/chats', icon: MessageSquare, label: t('common.messages') },
+    { path: '/blog', icon: BookOpen, label: 'Blog' },
   ];
 
   const featureItems = [
@@ -201,6 +204,19 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Create Post */}
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                onClick={() => setIsNewPostOpen(true)}
+                title="Create Post"
+              >
+                <PenSquare className="h-5 w-5" />
+              </Button>
+            )}
+
             {/* Theme Toggle */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -344,6 +360,9 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
           </div>
         )}
       </div>
+
+      {/* New Post Modal */}
+      <NewPostModal isOpen={isNewPostOpen} onClose={() => setIsNewPostOpen(false)} />
     </div>
   );
 };

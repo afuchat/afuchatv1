@@ -342,33 +342,39 @@ const AfuAIModal = () => {
               exit={isMobile ? { y: '100%' } : { x: '100%' }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
               className={cn(
-                "fixed z-[200] flex flex-col bg-card shadow-2xl overflow-hidden",
+                "fixed z-[200] flex flex-col overflow-hidden",
                 isMobile
-                  ? "inset-0"
-                  : "top-0 right-0 h-full w-[380px] border-l border-border"
+                  ? "inset-0 bg-background"
+                  : "top-0 right-0 h-full w-[400px] bg-background border-l border-border shadow-2xl"
               )}
             >
               {/* Header */}
-              <header className="shrink-0 flex items-center justify-between px-4 h-14 border-b border-border/40 bg-card/95 backdrop-blur-md">
+              <header className="shrink-0 flex items-center justify-between px-4 h-14 border-b border-border bg-background">
                 <div className="flex items-center gap-3">
-                  <img src={aiChatIcon} alt="AfuAI" className="h-6 w-6 object-contain" />
+                  <div className="relative">
+                    <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-purple-600 flex items-center justify-center shadow-lg shadow-primary/20">
+                      <img src={aiChatIcon} alt="AfuAI" className="h-4.5 w-4.5 object-contain brightness-0 invert" />
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+                  </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-black bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                    <span className="text-sm font-black tracking-tight text-foreground">
                       AfuAI
                     </span>
-                    <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">
+                    <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
                       {selectedModel.name}
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => setIsHistoryOpen(true)} className="h-8 w-8 rounded-full">
+                <div className="flex items-center gap-0.5">
+                  <Button variant="ghost" size="icon" onClick={() => setIsHistoryOpen(true)} className="h-8 w-8 rounded-full hover:bg-muted">
                     <History className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={handleNewChat} className="h-8 w-8 rounded-full">
+                  <Button variant="ghost" size="icon" onClick={handleNewChat} className="h-8 w-8 rounded-full hover:bg-muted">
                     <Plus className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={closeAfuAI} className="h-8 w-8 rounded-full">
+                  <Button variant="ghost" size="icon" onClick={closeAfuAI} className="h-8 w-8 rounded-full hover:bg-muted">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -376,23 +382,34 @@ const AfuAIModal = () => {
 
               {/* Messages */}
               <div
-                className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"
+                className="flex-1 overflow-y-auto"
                 style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
               >
-                <div className="mx-auto px-3 py-6 max-w-full">
+                <div className="mx-auto px-4 py-6 max-w-full">
                   {messages.length === 0 && !loading && (
-                    <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
-                      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                        <Sparkles className="h-8 w-8 text-primary" />
+                    <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in zoom-in duration-500">
+                      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/15 via-primary/10 to-purple-500/10 flex items-center justify-center mb-5 shadow-inner">
+                        <Sparkles className="h-9 w-9 text-primary" />
                       </div>
-                      <h2 className="text-xl font-bold">What can I help with?</h2>
-                      <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-                        Ask anything, post to your feed, get context on your messages — all from here.
+                      <h2 className="text-lg font-bold text-foreground">What can I help with?</h2>
+                      <p className="text-sm text-muted-foreground mt-2 max-w-[280px] leading-relaxed">
+                        Ask anything, create posts for your feed, or get insights about your account.
                       </p>
+                      <div className="flex flex-wrap gap-2 mt-6 max-w-[320px] justify-center">
+                        {['Create a post', 'My stats', 'What\'s trending?'].map((suggestion) => (
+                          <button
+                            key={suggestion}
+                            onClick={() => { setInput(suggestion); }}
+                            className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-muted/80 text-foreground border border-border/50 transition-colors"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     {messages.map((msg, idx) => (
                       <div
                         key={idx}
@@ -405,10 +422,10 @@ const AfuAIModal = () => {
                           <CollapsibleThinking thought={msg.thought} className="mb-3 w-full" />
                         )}
                         <div className={cn(
-                          "px-3.5 py-2.5 rounded-2xl shadow-sm max-w-[90%]",
+                          "px-4 py-3 rounded-2xl max-w-[88%]",
                           msg.role === 'user'
-                            ? "bg-primary text-primary-foreground rounded-tr-sm"
-                            : "bg-muted/60 border border-border/40 rounded-tl-sm"
+                            ? "bg-primary text-primary-foreground rounded-br-md"
+                            : "bg-muted/50 border border-border/50 rounded-bl-md"
                         )}>
                           <AIMessageContent content={msg.content} isUser={msg.role === 'user'} />
                           {msg.imageUrl && (
@@ -417,7 +434,7 @@ const AfuAIModal = () => {
                             </div>
                           )}
                         </div>
-                        <span className="text-[9px] text-muted-foreground mt-1.5 px-1 uppercase tracking-widest">
+                        <span className="text-[9px] text-muted-foreground mt-1.5 px-1 tabular-nums">
                           {format(msg.timestamp, 'HH:mm')}
                         </span>
                       </div>
@@ -425,7 +442,7 @@ const AfuAIModal = () => {
                   </div>
 
                   {loading && currentThinking && (
-                    <div className="mt-6 animate-in slide-in-from-bottom-3 duration-300">
+                    <div className="mt-5 animate-in slide-in-from-bottom-3 duration-300">
                       <ThinkingDisplay
                         thought={currentThinking}
                         isStreaming={isThinkingStreaming}
@@ -436,8 +453,8 @@ const AfuAIModal = () => {
                   )}
 
                   {loading && thinkingComplete && !currentThinking && (
-                    <div className="flex items-start mt-6">
-                      <div className="bg-muted/60 border border-border/40 rounded-2xl rounded-tl-sm px-4 py-3">
+                    <div className="flex items-start mt-5">
+                      <div className="bg-muted/50 border border-border/50 rounded-2xl rounded-bl-md px-4 py-3">
                         <div className="flex gap-1.5">
                           <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                           <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -453,26 +470,31 @@ const AfuAIModal = () => {
 
               {/* Input Area */}
               <div className={cn(
-                "shrink-0 bg-card border-t border-border/40",
+                "shrink-0 bg-background border-t border-border",
                 isMobile ? "p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]" : "p-3"
               )}>
                 <div className="mx-auto max-w-full">
-                  <div className="relative bg-muted/30 border border-border rounded-2xl p-2 focus-within:ring-2 ring-primary/20 transition-all">
+                  <div className="relative bg-muted/40 border border-border/60 rounded-2xl p-2.5 focus-within:border-primary/40 focus-within:shadow-sm transition-all">
                     <div className="flex items-end gap-2">
                       <Textarea
                         ref={textareaRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={`Ask ${selectedModel.name}...`}
-                        className="min-h-[40px] max-h-[120px] flex-1 bg-transparent border-0 focus-visible:ring-0 py-2 px-2 text-[15px] resize-none"
+                        placeholder={`Message ${selectedModel.name}...`}
+                        className="min-h-[40px] max-h-[120px] flex-1 bg-transparent border-0 focus-visible:ring-0 py-2 px-1 text-[15px] resize-none placeholder:text-muted-foreground/60"
                         rows={1}
                         disabled={loading}
                       />
                       <Button
                         onClick={handleSend}
                         disabled={!input.trim() || loading}
-                        className="h-9 w-9 shrink-0 bg-primary hover:bg-primary/90 rounded-full shadow-lg transition-transform active:scale-95"
+                        className={cn(
+                          "h-9 w-9 shrink-0 rounded-full transition-all active:scale-95",
+                          input.trim() && !loading
+                            ? "bg-primary hover:bg-primary/90 shadow-md shadow-primary/20"
+                            : "bg-muted text-muted-foreground"
+                        )}
                         size="icon"
                       >
                         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
@@ -480,14 +502,14 @@ const AfuAIModal = () => {
                     </div>
 
                     {/* Controls Row */}
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/30">
+                    <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border/30">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-background hover:bg-muted transition-colors" disabled={loading}>
+                          <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-background/80 hover:bg-muted border border-border/40 transition-colors" disabled={loading}>
                             <span>{selectedModel.icon}</span>
                             <span className={isMobile ? "hidden" : "inline"}>{selectedModel.name}</span>
                             <span className={isMobile ? "inline" : "hidden"}>{selectedModel.name.split(' ')[0]}</span>
-                            <ChevronDown className="h-3 w-3 opacity-60" />
+                            <ChevronDown className="h-3 w-3 opacity-50" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-48 z-[300]">
@@ -516,10 +538,10 @@ const AfuAIModal = () => {
                         onClick={() => setWebSearchMode(!webSearchMode)}
                         disabled={loading}
                         className={cn(
-                          "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all",
+                          "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all",
                           webSearchMode
-                            ? "bg-primary text-primary-foreground shadow-md"
-                            : "bg-background text-muted-foreground hover:bg-muted"
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-background/80 text-muted-foreground border-border/40 hover:bg-muted"
                         )}
                       >
                         <Globe className="h-3 w-3" />
