@@ -4,12 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAccountMode } from '@/contexts/AccountModeContext';
 import { 
   Home, MessageSquare, Search, Bell, User, Settings, Shield, 
-  BarChart3, Grid3x3, ShoppingBag, Wallet, Send, Gift, 
+  BarChart3, ShoppingBag, Wallet, Send, Gift, 
   Image as ImageIcon, Hash, TrendingUp, Menu, DollarSign,
   ChevronLeft
 } from 'lucide-react';
 import aiChatIcon from '@/assets/ai-chat-icon.ico';
-import Logo from '@/components/Logo';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import { DesktopRightSidebar } from '@/components/desktop/DesktopRightSidebar';
 import { supabase } from '@/integrations/supabase/client';
@@ -123,7 +122,6 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
     { path: '/gifts', icon: Gift, label: 'Gifts' },
     { path: '/moments', icon: ImageIcon, label: 'Moments' },
     { path: '/trending', icon: Hash, label: 'Trending' },
-    // Mini Programs hidden - admin only access via direct URL
   ];
 
   if (isAffiliate && !isDeveloper) {
@@ -156,9 +154,9 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background select-none">
+    <div className="h-screen bg-background select-none flex flex-col overflow-hidden">
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-background/95 backdrop-blur-xl border-b border-border z-50">
+      <header className="h-16 bg-background/95 backdrop-blur-xl border-b border-border z-50 flex-shrink-0">
         <div className="h-full max-w-screen-2xl mx-auto px-4 flex items-center gap-4">
           {/* Sidebar Toggle */}
           <Button
@@ -213,9 +211,9 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
         </div>
       </header>
 
-      {/* Main Layout with Sidebar */}
-      <div className="pt-16 flex max-w-screen-2xl mx-auto min-h-screen">
-        {/* Left Sidebar - Fixed position with independent scroll */}
+      {/* Main Layout - fills remaining height, no page-level scroll */}
+      <div className="flex flex-1 max-w-screen-2xl mx-auto w-full overflow-hidden">
+        {/* Left Sidebar - independent scroll */}
         <AnimatePresence mode="wait">
           {!sidebarCollapsed && (
             <motion.aside
@@ -223,7 +221,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
               animate={{ width: 280, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="flex-shrink-0 border-r border-border overflow-hidden sticky top-16 h-[calc(100vh-4rem)] self-start"
+              className="flex-shrink-0 border-r border-border overflow-hidden"
             >
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-6">
@@ -292,10 +290,10 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
           )}
         </AnimatePresence>
 
-        {/* Main Content - scrolls naturally with page */}
-        <main className="flex-1 min-w-0">
+        {/* Main Content - independent scroll */}
+        <main className="flex-1 min-w-0 overflow-y-auto">
           <div className={cn(
-            "min-h-[calc(100vh-4rem)]",
+            "min-h-full",
             !hideRightSidebar && "max-w-3xl"
           )}>
             <motion.div
@@ -309,9 +307,9 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
           </div>
         </main>
 
-        {/* Right Sidebar - Fixed position with independent scroll */}
+        {/* Right Sidebar - independent scroll */}
         {!hideRightSidebar && (
-          <div className="hidden xl:block flex-shrink-0 border-l border-border sticky top-16 h-[calc(100vh-4rem)] self-start overflow-hidden">
+          <div className="hidden xl:block flex-shrink-0 border-l border-border overflow-hidden">
             <DesktopRightSidebar className="h-full" />
           </div>
         )}
