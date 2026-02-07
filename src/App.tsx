@@ -14,6 +14,7 @@ import { SettingsSheet } from "./components/SettingsSheet";
 import { RequireCountry } from "./components/RequireCountry";
 import { RequireDateOfBirth } from "./components/RequireDateOfBirth";
 import { RequireBanCheck } from "./components/RequireBanCheck";
+import { RequireAuth } from "./components/RequireAuth";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useIsMobile } from "./hooks/use-mobile";
 
@@ -173,8 +174,8 @@ const AppRoutes = () => {
       <Route path="/auth/afumail/callback" element={<AfuMailCallback />} />
       <Route path="/auth/forgot-password" element={<ForgotPassword />} />
       <Route path="/auth/reset-password" element={<ResetPassword />} />
-      <Route path="/chats" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/chat/:chatId" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/chats" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
+      <Route path="/chat/:chatId" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
       <Route path="/search" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SearchPage /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/shorts" element={<Layout><Shorts /></Layout>} />
       <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
@@ -196,7 +197,7 @@ const AppRoutes = () => {
       <Route path="/premium" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Premium /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/creator-earnings" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><CreatorEarnings /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/qr-code" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><QRCode /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/settings" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Settings /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/settings" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Settings /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
       <Route path="/security" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SecurityDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/change-password" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><ChangePassword /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/terms" element={<TermsOfUse />} />
@@ -214,7 +215,7 @@ const AppRoutes = () => {
       <Route path="/business/dashboard" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><BusinessDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/ads" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdManager /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/afumail" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><AfuMail /></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/moments" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Moments /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/moments" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Moments /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
       <Route path="/mini-programs" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><MiniPrograms /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/transfer" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Transfer /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/red-envelope" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><RedEnvelope /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
