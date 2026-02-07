@@ -191,40 +191,41 @@ html.telegram-mini-app .sticky.top-0 {
     }
   }
 
-  /* Desktop (≥ 1024px): Elegant visible scrollbars */
+  /* Desktop (≥ 1024px): Hide page-level scrollbar, style inner panels */
   @media (min-width: 1024px) {
     html, body {
-      overflow: auto !important;
+      overflow: hidden !important;
+      height: 100%;
+    }
+
+    /* Style scrollbars on inner scrollable panels only */
+    .desktop-scroll-panel {
       scrollbar-width: thin;
-      scrollbar-color: hsl(var(--muted-foreground) / 0.25) hsl(var(--muted) / 0.3);
+      scrollbar-color: hsl(var(--muted-foreground) / 0.25) transparent;
     }
 
-    html::-webkit-scrollbar,
-    body::-webkit-scrollbar {
-      width: 10px;
-      height: 10px;
+    .desktop-scroll-panel::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
     }
 
-    html::-webkit-scrollbar-track,
-    body::-webkit-scrollbar-track {
-      background: hsl(var(--muted) / 0.3);
-      border-radius: 5px;
+    .desktop-scroll-panel::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 4px;
     }
 
-    html::-webkit-scrollbar-thumb,
-    body::-webkit-scrollbar-thumb {
+    .desktop-scroll-panel::-webkit-scrollbar-thumb {
       background: linear-gradient(
         180deg,
         hsl(var(--muted-foreground) / 0.3) 0%,
         hsl(var(--muted-foreground) / 0.25) 100%
       );
-      border-radius: 5px;
-      border: 2px solid hsl(var(--background));
+      border-radius: 4px;
+      border: 1px solid hsl(var(--background));
       transition: background 0.2s ease;
     }
 
-    html::-webkit-scrollbar-thumb:hover,
-    body::-webkit-scrollbar-thumb:hover {
+    .desktop-scroll-panel::-webkit-scrollbar-thumb:hover {
       background: linear-gradient(
         180deg,
         hsl(var(--primary) / 0.5) 0%,
@@ -232,13 +233,11 @@ html.telegram-mini-app .sticky.top-0 {
       );
     }
 
-    html::-webkit-scrollbar-thumb:active,
-    body::-webkit-scrollbar-thumb:active {
+    .desktop-scroll-panel::-webkit-scrollbar-thumb:active {
       background: hsl(var(--primary) / 0.6);
     }
 
-    html::-webkit-scrollbar-corner,
-    body::-webkit-scrollbar-corner {
+    .desktop-scroll-panel::-webkit-scrollbar-corner {
       background: transparent;
     }
   }
