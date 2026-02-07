@@ -6,7 +6,7 @@ import {
   Home, MessageSquare, Search, Bell, User, Settings, Shield, 
   BarChart3, ShoppingBag, Wallet, Send, Gift, 
   Image as ImageIcon, Hash, TrendingUp, Menu, DollarSign,
-  ChevronLeft
+  ChevronLeft, Grid3x3, Sun, Moon, Monitor
 } from 'lucide-react';
 import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
@@ -19,6 +19,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
+import { useTheme } from '@/contexts/ThemeContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface DesktopHybridLayoutProps {
   children: ReactNode;
@@ -37,6 +44,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const { isDeveloper } = useDeveloperStatus();
+  const { theme, setTheme } = useTheme();
 
   // Hide right sidebar on certain pages (active chat rooms, settings, admin, etc.)
   const hideRightSidebar = ['/chat/', '/settings', '/admin', '/wallet', '/afuai', '/post/', '/edit-profile', '/security', '/change-password'].some(
@@ -124,6 +132,11 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
     { path: '/trending', icon: Hash, label: 'Trending' },
   ];
 
+  // Mini Programs - admin only (same as mobile)
+  if (isAdmin) {
+    featureItems.push({ path: '/mini-programs', icon: Grid3x3, label: 'Mini Programs', requiresAuth: true });
+  }
+
   if (isAffiliate && !isDeveloper) {
     navItems.push({ path: '/affiliate-dashboard', icon: TrendingUp, label: 'Affiliate' });
   }
@@ -189,6 +202,26 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Theme Toggle */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
+                  {theme === 'dark' ? <Moon className="h-5 w-5" /> : theme === 'light' ? <Sun className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTheme('light')} className="gap-2">
+                  <Sun className="h-4 w-4" /> Light
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme('dark')} className="gap-2">
+                  <Moon className="h-4 w-4" /> Dark
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme('system')} className="gap-2">
+                  <Monitor className="h-4 w-4" /> System
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Link to="/notifications">
               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full relative">
                 <Bell className="h-5 w-5" />

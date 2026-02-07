@@ -306,7 +306,7 @@ export const DesktopRightSidebar = ({ className, variant = 'full' }: DesktopRigh
           <Link to="/privacy" className="hover:underline">Privacy</Link>
           <Link to="/support" className="hover:underline">Support</Link>
         </div>
-        <p>© 2024 AfuChat</p>
+        <p>© 2025–{new Date().getFullYear()} AfuChat</p>
       </div>
     </aside>
   );
