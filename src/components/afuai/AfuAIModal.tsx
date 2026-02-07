@@ -44,19 +44,20 @@ interface AIModel {
   name: string;
   icon: string;
   isImageModel?: boolean;
+  comingSoon?: boolean;
 }
 
 const AI_MODELS_DESKTOP: AIModel[] = [
   { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', icon: '⚡' },
   { id: 'google/gemini-2.5-pro', name: 'Gemini Pro', icon: '🧠' },
-  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨' },
+  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨', comingSoon: true },
 ];
 
 const AI_MODELS_MOBILE: AIModel[] = [
   { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', icon: '⚡' },
   { id: 'google/gemini-2.5-flash-image', name: 'Image Gen', icon: '🎨', isImageModel: true },
   { id: 'google/gemini-2.5-pro', name: 'Gemini Pro', icon: '🧠' },
-  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨' },
+  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨', comingSoon: true },
 ];
 
 function parsePostAction(content: string): PostAction | null {
@@ -493,11 +494,19 @@ const AfuAIModal = () => {
                           {aiModels.map((model) => (
                             <DropdownMenuItem
                               key={model.id}
-                              onClick={() => setSelectedModel(model)}
-                              className={cn("flex items-center gap-2 cursor-pointer", selectedModel.id === model.id && "bg-primary/10 text-primary")}
+                              onClick={() => !model.comingSoon && setSelectedModel(model)}
+                              disabled={model.comingSoon}
+                              className={cn(
+                                "flex items-center gap-2",
+                                model.comingSoon ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
+                                selectedModel.id === model.id && !model.comingSoon && "bg-primary/10 text-primary"
+                              )}
                             >
                               <span className="text-base">{model.icon}</span>
                               <span className="font-medium">{model.name}</span>
+                              {model.comingSoon && (
+                                <span className="ml-auto text-[9px] font-bold uppercase tracking-wider text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">Soon</span>
+                              )}
                             </DropdownMenuItem>
                           ))}
                         </DropdownMenuContent>
