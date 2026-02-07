@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { PageSkeleton } from '@/components/skeletons';
-import { TrendingUp, MessageCircle, Heart, Pencil, Send, Repeat2 } from 'lucide-react';
+import { TrendingUp, MessageCircle, Heart, Pencil, Send, Repeat2, ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -179,6 +179,11 @@ const PostDetail = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+
+  // Scroll to top on mount/post change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [postId]);
 
   // Check if user has liked the post
   useEffect(() => {
@@ -597,8 +602,18 @@ const PostDetail = () => {
   }
 
   return (
-    <div ref={postRef} className="min-h-screen bg-background border-x border-border max-w-2xl mx-auto flex flex-col">
-      <div className="flex-1">
+    <div ref={postRef} className="min-h-screen bg-background border-x border-border max-w-2xl mx-auto">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-bold">Post</h1>
+        </div>
+      </div>
+
+      <div>
         
         {/* --- MAIN POST CONTENT --- */}
         <div className="p-4 border-b border-border">

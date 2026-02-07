@@ -15,7 +15,6 @@ import { RequireCountry } from "./components/RequireCountry";
 import { RequireDateOfBirth } from "./components/RequireDateOfBirth";
 import { RequireBanCheck } from "./components/RequireBanCheck";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { DesktopBlocker } from "./components/DesktopBlocker";
 import { useIsMobile } from "./hooks/use-mobile";
 
 import { useDailyLogin } from "./hooks/useDailyLogin";
