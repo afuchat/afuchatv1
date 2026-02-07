@@ -1915,6 +1915,24 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   useEffect(() => {
     if (!loadMoreRef.current) return;
 
+    // On desktop, the scroll happens inside a parent <main> with overflow-y: auto,
+    // so we need to set the IntersectionObserver root to that scrollable container.
+    // On mobile, root: null (viewport) works fine.
+    let root: Element | null = null;
+    if (!isMobile) {
+      let el: HTMLElement | null = loadMoreRef.current;
+      while (el) {
+        el = el.parentElement;
+        if (el) {
+          const style = window.getComputedStyle(el);
+          if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+            root = el;
+            break;
+          }
+        }
+      }
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
@@ -1922,15 +1940,16 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         }
       },
       { 
+        root,
         threshold: 0.1,
-        rootMargin: '200px' // Start loading 200px before reaching the end
+        rootMargin: '200px'
       }
     );
 
     observer.observe(loadMoreRef.current);
 
     return () => observer.disconnect();
-  }, [handleLoadMore, loadingMore, hasMore, loading]);
+  }, [handleLoadMore, loadingMore, hasMore, loading, isMobile]);
 
 
   useEffect(() => {
@@ -2494,7 +2513,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                     </AnimatePresence>
                   
                   {/* Infinite scroll sentinel */}
-                  <div ref={loadMoreRef} className="h-1" />
+                  <div ref={loadMoreRef} className="h-10" />
 
                   {/* Loading more indicator - inline smooth loader */}
                   {loadingMore && (
