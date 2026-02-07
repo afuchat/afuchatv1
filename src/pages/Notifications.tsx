@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotificationsSkeleton } from '@/components/skeletons';
@@ -380,6 +381,7 @@ const FollowRequestRow = ({ request, onApprove, onReject, isProcessing }: Follow
 
 const Notifications = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [followRequests, setFollowRequests] = useState<FollowRequest[]>([]);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
@@ -911,18 +913,20 @@ const Notifications = () => {
     <div className="h-full flex flex-col max-w-4xl mx-auto">
       <div className="p-3 sm:p-4 md:p-5 border-b border-border flex items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <ProfileDrawer
-            trigger={
-              <button className="flex-shrink-0">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={userProfile?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-            }
-          />
+          {isMobile && (
+            <ProfileDrawer
+              trigger={
+                <button className="flex-shrink-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={userProfile?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              }
+            />
+          )}
           <h1 className="text-lg font-semibold">Notifications</h1>
         </div>
         {deduplicatedNotifications.length > 0 && (

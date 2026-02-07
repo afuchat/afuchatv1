@@ -3,6 +3,7 @@ import { Feather, X, Send, FileEdit, MessageSquare } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FabAction {
   icon: React.ReactNode;
@@ -23,6 +24,7 @@ interface FloatingActionButtonProps {
 }
 
 const FloatingActionButton = ({ wallPostAction, profileActions }: FloatingActionButtonProps) => {
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -106,8 +108,8 @@ const FloatingActionButton = ({ wallPostAction, profileActions }: FloatingAction
 
   const actions = isProfilePage ? profilePageActions : defaultActions;
 
-  // Don't render if no actions available
-  if (actions.length === 0) {
+  // Don't render on desktop or if no actions available
+  if (!isMobile || actions.length === 0) {
     return null;
   }
 
