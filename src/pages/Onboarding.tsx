@@ -1975,17 +1975,24 @@ const Onboarding = () => {
 
           {/* Modal Card */}
           <motion.div
+            key={currentStep}
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="relative z-10 w-full max-w-xl max-h-[90vh] bg-card/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl shadow-black/20 flex flex-col overflow-hidden"
+            className={cn(
+              "relative z-10 w-full bg-card/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl shadow-black/20 flex flex-col overflow-hidden my-4",
+              currentStep === 0 ? "max-w-lg" : "max-w-xl max-h-[90vh]"
+            )}
           >
             {/* Subtle top gradient accent */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary rounded-t-3xl" />
             
             {onboardingHeader}
             
-            <div className="flex-1 overflow-y-auto scrollbar-hide">
+            <div className={cn(
+              "flex-1 scrollbar-hide",
+              currentStep === 0 ? "overflow-visible" : "overflow-y-auto"
+            )}>
               {onboardingContent}
             </div>
           </motion.div>
