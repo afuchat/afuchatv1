@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  ArrowUp, History, Globe, ChevronDown, Sparkles, Plus, Trash2, X, Loader2, Maximize2, Minimize2,
+  ArrowUp, History, Globe, ChevronDown, Sparkles, Plus, Trash2, X, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -81,7 +81,6 @@ const AfuAIModal = () => {
   const [webSearchMode, setWebSearchMode] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [pendingPostAction, setPendingPostAction] = useState<PostAction | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -312,29 +311,30 @@ const AfuAIModal = () => {
     <>
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center"
-          >
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-background/90 backdrop-blur-xl" onClick={closeAfuAI} />
+          <>
+            {/* Backdrop - only on mobile */}
+            {isMobile && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-[200] bg-background/80 backdrop-blur-sm"
+                onClick={closeAfuAI}
+              />
+            )}
 
-            {/* Modal */}
+            {/* Panel */}
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              initial={isMobile ? { y: '100%' } : { x: '100%' }}
+              animate={isMobile ? { y: 0 } : { x: 0 }}
+              exit={isMobile ? { y: '100%' } : { x: '100%' }}
+              transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
               className={cn(
-                "relative flex flex-col bg-card border border-border shadow-2xl overflow-hidden",
+                "fixed z-[200] flex flex-col bg-card shadow-2xl overflow-hidden",
                 isMobile
-                  ? "w-full h-full"
-                  : isExpanded
-                    ? "w-full h-full rounded-none"
-                    : "w-full max-w-2xl h-[90vh] rounded-2xl"
+                  ? "inset-0"
+                  : "top-0 right-0 h-full w-[380px] border-l border-border"
               )}
             >
               {/* Header */}
@@ -357,11 +357,6 @@ const AfuAIModal = () => {
                   <Button variant="ghost" size="icon" onClick={handleNewChat} className="h-8 w-8 rounded-full">
                     <Plus className="h-4 w-4" />
                   </Button>
-                  {!isMobile && (
-                    <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="h-8 w-8 rounded-full">
-                      {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                    </Button>
-                  )}
                   <Button variant="ghost" size="icon" onClick={closeAfuAI} className="h-8 w-8 rounded-full">
                     <X className="h-4 w-4" />
                   </Button>
@@ -373,7 +368,7 @@ const AfuAIModal = () => {
                 className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"
                 style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
               >
-                <div className={cn("mx-auto px-4 py-6", isMobile ? "max-w-full" : "max-w-2xl")}>
+                <div className="mx-auto px-3 py-6 max-w-full">
                   {messages.length === 0 && !loading && (
                     <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
                       <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
@@ -396,11 +391,10 @@ const AfuAIModal = () => {
                         )}
                       >
                         {msg.role === 'assistant' && msg.thought && (
-                          <CollapsibleThinking thought={msg.thought} className={cn("mb-3", isMobile ? "w-[92%]" : "w-[85%]")} />
+                          <CollapsibleThinking thought={msg.thought} className="mb-3 w-full" />
                         )}
                         <div className={cn(
-                          "px-4 py-3 rounded-2xl shadow-sm",
-                          isMobile ? "max-w-[92%]" : "max-w-[85%]",
+                          "px-3.5 py-2.5 rounded-2xl shadow-sm max-w-[90%]",
                           msg.role === 'user'
                             ? "bg-primary text-primary-foreground rounded-tr-sm"
                             : "bg-muted/60 border border-border/40 rounded-tl-sm"
@@ -425,7 +419,7 @@ const AfuAIModal = () => {
                         thought={currentThinking}
                         isStreaming={isThinkingStreaming}
                         isComplete={thinkingComplete}
-                        className={cn(isMobile ? "w-full" : "w-[85%]")}
+                        className="w-full"
                       />
                     </div>
                   )}
@@ -451,7 +445,7 @@ const AfuAIModal = () => {
                 "shrink-0 bg-card border-t border-border/40",
                 isMobile ? "p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]" : "p-3"
               )}>
-                <div className={cn("mx-auto", isMobile ? "max-w-full" : "max-w-2xl")}>
+                <div className="mx-auto max-w-full">
                   <div className="relative bg-muted/30 border border-border rounded-2xl p-2 focus-within:ring-2 ring-primary/20 transition-all">
                     <div className="flex items-end gap-2">
                       <Textarea
@@ -517,7 +511,7 @@ const AfuAIModal = () => {
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
 

@@ -123,7 +123,6 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   ];
 
   const featureItems = [
-    { path: '/afuai', icon: null, customIcon: aiChatIcon, label: 'AfuAI', requiresAuth: true },
     { path: '/creator-earnings', icon: DollarSign, label: 'Creator Earnings', requiresAuth: true },
     { path: '/shop', icon: ShoppingBag, label: 'Shop' },
     { path: '/wallet', icon: Wallet, label: 'Wallet', requiresAuth: true },
@@ -314,9 +313,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
                               : "hover:bg-muted/70 text-foreground"
                           )}
                         >
-                          {item.customIcon ? (
-                            <img src={item.customIcon} alt={item.label} className="h-5 w-5 flex-shrink-0 object-contain select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
-                          ) : item.icon ? (
+                          {item.icon ? (
                             <item.icon className="h-5 w-5 flex-shrink-0" />
                           ) : null}
                           <span className="truncate">{item.label}</span>
