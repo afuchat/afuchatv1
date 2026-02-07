@@ -46,7 +46,13 @@ interface AIModel {
   isImageModel?: boolean;
 }
 
-const AI_MODELS: AIModel[] = [
+const AI_MODELS_DESKTOP: AIModel[] = [
+  { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', icon: '⚡' },
+  { id: 'google/gemini-2.5-pro', name: 'Gemini Pro', icon: '🧠' },
+  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨' },
+];
+
+const AI_MODELS_MOBILE: AIModel[] = [
   { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', icon: '⚡' },
   { id: 'google/gemini-2.5-flash-image', name: 'Image Gen', icon: '🎨', isImageModel: true },
   { id: 'google/gemini-2.5-pro', name: 'Gemini Pro', icon: '🧠' },
@@ -77,7 +83,8 @@ const AfuAIModal = () => {
   const [currentThinking, setCurrentThinking] = useState<string | null>(null);
   const [isThinkingStreaming, setIsThinkingStreaming] = useState(false);
   const [thinkingComplete, setThinkingComplete] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModel>(AI_MODELS[0]);
+  const aiModels = isMobile ? AI_MODELS_MOBILE : AI_MODELS_DESKTOP;
+  const [selectedModel, setSelectedModel] = useState<AIModel>(AI_MODELS_DESKTOP[0]);
   const [webSearchMode, setWebSearchMode] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [pendingPostAction, setPendingPostAction] = useState<PostAction | null>(null);
@@ -265,11 +272,14 @@ const AfuAIModal = () => {
     }
   };
 
+  const AI_WATERMARK = '\n\n✦ Generated with AfuAI';
+
   const createPost = async (content: string) => {
     if (!user) return;
+    const watermarkedContent = content.trim() + AI_WATERMARK;
     const { error } = await supabase.from('posts').insert({
       author_id: user.id,
-      content,
+      content: watermarkedContent,
       post_type: 'text',
     });
     if (error) {
@@ -480,7 +490,7 @@ const AfuAIModal = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-48 z-[300]">
-                          {AI_MODELS.map((model) => (
+                          {aiModels.map((model) => (
                             <DropdownMenuItem
                               key={model.id}
                               onClick={() => setSelectedModel(model)}
