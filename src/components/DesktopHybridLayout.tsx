@@ -42,7 +42,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const { isDeveloper } = useDeveloperStatus();
 
   // Hide right sidebar on certain pages
-  const hideRightSidebar = ['/chats', '/chat/', '/settings', '/admin', '/wallet', '/afuai'].some(
+  const hideRightSidebar = ['/chats', '/chat/', '/settings', '/admin', '/wallet', '/afuai', '/post/', '/edit-profile', '/security', '/change-password'].some(
     path => location.pathname.startsWith(path)
   );
 

@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { DesktopBlocker } from '@/components/DesktopBlocker';
+import { DesktopHybridLayout } from '@/components/DesktopHybridLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
@@ -291,14 +291,18 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   // Use MainTabsNavigation for main tab routes (sliding tab behavior)
   const onMainTab = isMainTabRoute(location.pathname);
   
+  // Desktop: use DesktopHybridLayout for all pages
+  if (isDesktop) {
+    return (
+      <DesktopHybridLayout>
+        {children}
+      </DesktopHybridLayout>
+    );
+  }
+
   if (onMainTab && !shouldHideNav) {
     return (
-      <div
-        className={cn(
-          "h-[100dvh] overflow-hidden bg-background select-none touch-pan-y",
-          isDesktop && "desktop-scrollbar"
-        )}
-      >
+      <div className="h-[100dvh] overflow-hidden bg-background select-none touch-pan-y">
         <MainTabsNavigation isScrollingDown={isScrollingDown} chatScrollHide={chatScrollHide}>
           {children}
         </MainTabsNavigation>
