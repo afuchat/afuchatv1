@@ -28,9 +28,10 @@ interface SuggestedUser {
 
 interface DesktopRightSidebarProps {
   className?: string;
+  variant?: 'full' | 'suggestions';
 }
 
-export const DesktopRightSidebar = ({ className }: DesktopRightSidebarProps) => {
+export const DesktopRightSidebar = ({ className, variant = 'full' }: DesktopRightSidebarProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -175,49 +176,51 @@ export const DesktopRightSidebar = ({ className }: DesktopRightSidebarProps) => 
   return (
     <aside className={cn('w-80 flex-shrink-0 space-y-4 p-4', className)}>
 
-      {/* Trending Topics */}
-      <Card className="bg-card border-border/50 overflow-hidden">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-primary" />
-            Trending
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0 space-y-1">
-          {isLoadingTrending ? (
-            Array(3).fill(0).map((_, i) => (
-              <div key={i} className="py-2">
-                <Skeleton className="h-3 w-16 mb-1" />
-                <Skeleton className="h-4 w-24" />
-              </div>
-            ))
-          ) : trending.length > 0 ? (
-            <>
-              {trending.slice(0, 4).map((topic, index) => (
-                <button
-                  key={index}
-                  className="w-full text-left p-2 rounded-lg hover:bg-muted/50 transition-colors block"
-                  onClick={() => navigate(`/search?q=${encodeURIComponent(topic.topic)}`)}
+      {/* Trending Topics - only show on full variant */}
+      {variant === 'full' && (
+        <Card className="bg-card border-border/50 overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              Trending
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-1">
+            {isLoadingTrending ? (
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="py-2">
+                  <Skeleton className="h-3 w-16 mb-1" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))
+            ) : trending.length > 0 ? (
+              <>
+                {trending.slice(0, 4).map((topic, index) => (
+                  <button
+                    key={index}
+                    className="w-full text-left p-2 rounded-lg hover:bg-muted/50 transition-colors block"
+                    onClick={() => navigate(`/search?q=${encodeURIComponent(topic.topic)}`)}
+                  >
+                    <p className="text-[11px] text-muted-foreground">Trending</p>
+                    <p className="font-medium text-sm">#{topic.topic}</p>
+                    <p className="text-[11px] text-muted-foreground">{topic.count.toLocaleString()} posts</p>
+                  </button>
+                ))}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-primary hover:text-primary/80 mt-2"
+                  onClick={() => navigate('/trending')}
                 >
-                  <p className="text-[11px] text-muted-foreground">Trending</p>
-                  <p className="font-medium text-sm">#{topic.topic}</p>
-                  <p className="text-[11px] text-muted-foreground">{topic.count.toLocaleString()} posts</p>
-                </button>
-              ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-primary hover:text-primary/80 mt-2"
-                onClick={() => navigate('/trending')}
-              >
-                Show more
-              </Button>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">No trending topics</p>
-          )}
-        </CardContent>
-      </Card>
+                  Show more
+                </Button>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No trending topics</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Who to Follow */}
       <Card className="bg-card border-border/50 overflow-hidden">
