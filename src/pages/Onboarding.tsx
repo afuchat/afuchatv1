@@ -58,6 +58,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/Logo';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Background images for each step
 import signupBg from '@/assets/auth/signup-bg.jpg';
@@ -171,6 +172,7 @@ interface SuggestedUser {
 const Onboarding = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
   
   // Persist step in localStorage to survive page refresh
   const [currentStep, setCurrentStep] = useState(() => {
@@ -1857,72 +1859,138 @@ const Onboarding = () => {
     }
   };
 
+  const onboardingHeader = (
+    <header className={cn(
+      "relative pb-2 px-4 z-10",
+      isMobile ? "pt-6" : "pt-4"
+    )}>
+      <div className="flex items-center justify-between max-w-lg mx-auto mb-4">
+        {canGoBack ? (
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setCurrentStep(prev => prev - 1)}
+            className="rounded-xl hover:bg-muted"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        ) : (
+          <div className="w-10" />
+        )}
+        
+        <Logo className="h-8" />
+        
+        {canSkip ? (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={handleSkip}
+            className="text-muted-foreground hover:text-foreground font-medium"
+          >
+            Skip
+          </Button>
+        ) : (
+          <div className="w-10" />
+        )}
+      </div>
+      
+      {renderStepIndicator()}
+    </header>
+  );
+
+  const onboardingContent = (
+    <main className={cn(
+      "relative flex-1 flex items-start justify-center z-10 overflow-y-auto",
+      isMobile ? "pb-12 pt-4" : "pb-6 pt-2"
+    )}>
+      <AnimatePresence mode="wait">
+        {currentStep === 0 && renderAuthStep()}
+        {currentStep === 1 && renderAccountTypeStep()}
+        {currentStep === 2 && renderProfileStep()}
+        {currentStep === 3 && renderInterestsStep()}
+        {currentStep === 4 && renderSuggestionsStep()}
+        {currentStep === 5 && renderTourStep()}
+      </AnimatePresence>
+    </main>
+  );
+
+  // Desktop: modal card centered on a rich background
+  // Mobile: full-page layout (original)
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col relative overflow-x-hidden overflow-y-auto">
-        {/* Background image */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src={getBackgroundImage()} 
-            alt="" 
-            className="w-full h-full object-cover opacity-10 transition-opacity duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
-        </div>
-        
-        {/* Decorative background elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
-        </div>
-        
-        {/* Header with progress */}
-        <header className="relative pt-6 pb-2 px-4 z-10">
-          <div className="flex items-center justify-between max-w-lg mx-auto mb-4">
-            {canGoBack ? (
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setCurrentStep(prev => prev - 1)}
-                className="rounded-xl hover:bg-muted"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            ) : (
-              <div className="w-10" />
-            )}
-            
-            <Logo className="h-8" />
-            
-            {canSkip ? (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={handleSkip}
-                className="text-muted-foreground hover:text-foreground font-medium"
-              >
-                Skip
-              </Button>
-            ) : (
-              <div className="w-10" />
-            )}
+      {isMobile ? (
+        /* Mobile: Full-page layout */
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col relative overflow-x-hidden overflow-y-auto">
+          {/* Background image */}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={getBackgroundImage()} 
+              alt="" 
+              className="w-full h-full object-cover opacity-10 transition-opacity duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
           </div>
           
-          {renderStepIndicator()}
-        </header>
-        
-        {/* Main content */}
-        <main className="relative flex-1 flex items-start justify-center pb-12 pt-4 z-10 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            {currentStep === 0 && renderAuthStep()}
-            {currentStep === 1 && renderAccountTypeStep()}
-            {currentStep === 2 && renderProfileStep()}
-            {currentStep === 3 && renderInterestsStep()}
-            {currentStep === 4 && renderSuggestionsStep()}
-            {currentStep === 5 && renderTourStep()}
-          </AnimatePresence>
-        </main>
-      </div>
+          {/* Decorative background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+          </div>
+          
+          {onboardingHeader}
+          {onboardingContent}
+        </div>
+      ) : (
+        /* Desktop: Centered modal card on rich background */
+        <div className="fixed inset-0 flex items-center justify-center overflow-hidden">
+          {/* Full-bleed background image */}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={getBackgroundImage()} 
+              alt="" 
+              className="w-full h-full object-cover transition-opacity duration-700"
+            />
+            <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
+          </div>
+          
+          {/* Decorative floating orbs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
+            <motion.div 
+              animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-[10%] right-[15%] w-72 h-72 bg-primary/10 rounded-full blur-3xl" 
+            />
+            <motion.div 
+              animate={{ y: [0, 15, 0], x: [0, -10, 0] }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute bottom-[10%] left-[10%] w-80 h-80 bg-accent/10 rounded-full blur-3xl" 
+            />
+            <motion.div 
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-[40%] left-[5%] w-48 h-48 bg-primary/5 rounded-full blur-2xl" 
+            />
+          </div>
+
+          {/* Modal Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="relative z-10 w-full max-w-xl max-h-[90vh] bg-card/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl shadow-black/20 flex flex-col overflow-hidden"
+          >
+            {/* Subtle top gradient accent */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary rounded-t-3xl" />
+            
+            {onboardingHeader}
+            
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              {onboardingContent}
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Reward Modal */}
       <Dialog open={showRewardModal} onOpenChange={setShowRewardModal}>
