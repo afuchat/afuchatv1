@@ -201,7 +201,7 @@ export const TrendingInfoSheet = ({
             </Button>
             <Button
               variant="outline"
-              onClick={() => navigate('/trending')}
+              onClick={() => navigate('/search')}
             >
               See More Trends
             </Button>

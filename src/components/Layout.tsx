@@ -254,8 +254,6 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     { path: '/transfer', icon: Send, label: 'Transfer', requiresAuth: true },
     { path: '/gifts', icon: Gift, label: 'Gifts' },
     { path: '/moments', icon: ImageIcon, label: 'Moments' },
-    { path: '/trending', icon: Hash, label: 'Trending' },
-    // Mini Programs hidden - admin only access via direct URL
   ];
 
   if (user) {

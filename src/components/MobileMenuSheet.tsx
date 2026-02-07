@@ -119,7 +119,6 @@ export function MobileMenuSheet({ trigger }: MobileMenuSheetProps) {
     { icon: Send, label: 'Transfer', path: '/transfer', requiresAuth: true },
     { icon: Gift, label: 'Gifts', path: '/gifts' },
     { icon: ImageIcon, label: 'Moments', path: '/moments' },
-    { icon: Hash, label: 'Trending', path: '/trending' },
     ...(isAdmin ? [{ icon: Grid3x3, label: 'Mini Programs', path: '/mini-programs' }] : []),
     { icon: Bell, label: 'Notifications', path: '/notifications', requiresAuth: true },
     { icon: Settings, label: 'Settings', path: '/settings', requiresAuth: true },

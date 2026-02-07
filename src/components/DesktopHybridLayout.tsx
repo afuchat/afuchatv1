@@ -12,6 +12,7 @@ import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import { ContextualRightSidebar } from '@/components/desktop/ContextualRightSidebar';
 import { DesktopAccountSwitcher } from '@/components/desktop/DesktopAccountSwitcher';
+import { AfuAISidebarPanel } from '@/components/desktop/AfuAISidebarPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -44,6 +45,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [showAfuAI, setShowAfuAI] = useState(false);
   const { isDeveloper } = useDeveloperStatus();
   const { theme, setTheme } = useTheme();
 
@@ -118,8 +120,6 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const navItems = [
     { path: '/', icon: Home, label: t('common.home') },
     { path: '/chats', icon: MessageSquare, label: t('common.messages') },
-    { path: '/notifications', icon: Bell, label: t('common.notifications'), badge: unreadNotifications },
-    { path: user ? `/${user.id}` : '/auth', icon: User, label: t('common.profile') },
   ];
 
   const featureItems = [
@@ -130,7 +130,6 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
     { path: '/transfer', icon: Send, label: 'Transfer', requiresAuth: true },
     { path: '/gifts', icon: Gift, label: 'Gifts' },
     { path: '/moments', icon: ImageIcon, label: 'Moments' },
-    { path: '/trending', icon: Hash, label: 'Trending' },
   ];
 
   // Mini Programs - admin only (same as mobile)
@@ -223,6 +222,19 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* AfuAI Toggle */}
+            {user && (
+              <Button
+                variant={showAfuAI ? 'default' : 'ghost'}
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                onClick={() => setShowAfuAI(!showAfuAI)}
+                title="Toggle AfuAI"
+              >
+                <img src={aiChatIcon} alt="AfuAI" className={cn("h-5 w-5 object-contain select-none", showAfuAI ? "brightness-200" : "")} draggable={false} />
+              </Button>
+            )}
+
             <Link to="/notifications">
               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full relative">
                 <Bell className="h-5 w-5" />
@@ -274,9 +286,9 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         <span className="truncate">{item.label}</span>
-                        {'badge' in item && item.badge && item.badge > 0 && (
+                        {'badge' in item && typeof item.badge === 'number' && item.badge > 0 && (
                           <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full">
-                            {item.badge > 99 ? '99+' : item.badge}
+                            {(item.badge as number) > 99 ? '99+' : item.badge}
                           </span>
                         )}
                       </Link>
@@ -322,14 +334,29 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
         <main className="flex-1 min-w-0 overflow-y-auto desktop-scroll-panel">
           <div className={cn(
             "min-h-full",
-            !hideRightSidebar && "max-w-3xl"
+            !hideRightSidebar && !showAfuAI && "max-w-3xl"
           )}>
             {children}
           </div>
         </main>
 
-        {/* Right Sidebar - independent scroll */}
-        {!hideRightSidebar && (
+        {/* AfuAI Sidebar Panel - takes priority over right sidebar */}
+        <AnimatePresence>
+          {showAfuAI && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 320, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="flex-shrink-0 overflow-hidden"
+            >
+              <AfuAISidebarPanel onClose={() => setShowAfuAI(false)} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Right Sidebar - independent scroll, hidden when AfuAI is open */}
+        {!hideRightSidebar && !showAfuAI && (
           <div className="hidden xl:block flex-shrink-0 border-l border-border overflow-y-auto desktop-scroll-panel">
             <ContextualRightSidebar className="h-full" />
           </div>

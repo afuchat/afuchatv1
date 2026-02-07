@@ -20,9 +20,8 @@ export const ContextualRightSidebar = ({ className }: ContextualRightSidebarProp
     return <DesktopRightSidebar className={className} variant="full" />;
   }
 
-  // Profile pages → show who to follow only
-  // Search / trending → show who to follow only
-  if (path === '/search' || path === '/trending' || path.startsWith('/gifts') || path.startsWith('/shop') || path.startsWith('/moments')) {
+  // Search / other pages → show who to follow only
+  if (path === '/search' || path.startsWith('/gifts') || path.startsWith('/shop') || path.startsWith('/moments')) {
     return <DesktopRightSidebar className={className} variant="suggestions" />;
   }
 

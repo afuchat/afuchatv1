@@ -210,7 +210,7 @@ export const DesktopRightSidebar = ({ className, variant = 'full' }: DesktopRigh
                   variant="ghost"
                   size="sm"
                   className="w-full text-primary hover:text-primary/80 mt-2"
-                  onClick={() => navigate('/trending')}
+                  onClick={() => navigate('/search')}
                 >
                   Show more
                 </Button>

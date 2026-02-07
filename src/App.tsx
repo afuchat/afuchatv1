@@ -60,7 +60,7 @@ const QRCode = lazy(() => import("./pages/QRCode"));
 const Settings = lazy(() => import("./pages/Settings"));
 const TermsOfUse = lazy(() => import("./pages/TermsOfUse"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const TrendingHashtags = lazy(() => import("./pages/TrendingHashtags"));
+
 const AdminAffiliateRequests = lazy(() => import("./pages/AdminAffiliateRequests"));
 const AdminVerificationRequests = lazy(() => import("./pages/AdminVerificationRequests"));
 const AffiliateRequest = lazy(() => import("./pages/AffiliateRequest"));
@@ -205,7 +205,7 @@ const AppRoutes = () => {
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:slug" element={<BlogArticle />} />
       <Route path="/admin/blog" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><AdminBlog /></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/trending" element={<Layout><TrendingHashtags /></Layout>} />
+      <Route path="/trending" element={<Navigate to="/search" replace />} />
       <Route path="/admin/affiliate-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminAffiliateRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/admin/creator-withdrawals" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminCreatorWithdrawals /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/admin/verification-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminVerificationRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
