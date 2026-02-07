@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
-import { DesktopRightSidebar } from '@/components/desktop/DesktopRightSidebar';
+import { ContextualRightSidebar } from '@/components/desktop/ContextualRightSidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -38,8 +38,8 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const { isDeveloper } = useDeveloperStatus();
 
-  // Hide right sidebar on certain pages
-  const hideRightSidebar = ['/chats', '/chat/', '/settings', '/admin', '/wallet', '/afuai', '/post/', '/edit-profile', '/security', '/change-password'].some(
+  // Hide right sidebar on certain pages (active chat rooms, settings, admin, etc.)
+  const hideRightSidebar = ['/chat/', '/settings', '/admin', '/wallet', '/afuai', '/post/', '/edit-profile', '/security', '/change-password'].some(
     path => location.pathname.startsWith(path)
   );
 
@@ -303,7 +303,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
         {/* Right Sidebar - independent scroll */}
         {!hideRightSidebar && (
           <div className="hidden xl:block flex-shrink-0 border-l border-border overflow-y-auto desktop-scroll-panel">
-            <DesktopRightSidebar className="h-full" />
+            <ContextualRightSidebar className="h-full" />
           </div>
         )}
       </div>
