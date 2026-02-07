@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChatMenuDrawer } from './ChatMenuDrawer';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface StoryUser {
   user_id: string;
@@ -25,6 +26,7 @@ interface ChatStoriesHeaderProps {
 export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: ChatStoriesHeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [storyUsers, setStoryUsers] = useState<StoryUser[]>([]);
   const [currentUserProfile, setCurrentUserProfile] = useState<{
     avatar_url: string | null;
@@ -202,17 +204,19 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
             </div>
           ) : (
             <>
-              <button 
-                onClick={() => setIsMenuOpen(true)}
-                className="flex-shrink-0"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={currentUserProfile?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    {currentUserProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
+              {isMobile && (
+                <button 
+                  onClick={() => setIsMenuOpen(true)}
+                  className="flex-shrink-0"
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={currentUserProfile?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {currentUserProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              )}
 
               {/* Collapsed stories preview - only show when NOT expanded and has stories */}
               {!isExpanded && totalStories > 0 ? (
