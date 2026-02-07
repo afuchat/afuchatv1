@@ -15,18 +15,30 @@ async function fetchUserContext(supabase: any, userId: string) {
       supabase.from('user_subscriptions').select('*, subscription_plans(name, tier)').eq('user_id', userId).eq('is_active', true).gt('expires_at', new Date().toISOString()).single(),
       supabase.from('creator_earnings').select('*').eq('user_id', userId).order('earned_date', { ascending: false }).limit(5)
     ]);
-    
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const oneWeekAgo = new Date(); oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     const { data: weeklyPosts } = await supabase.from('posts').select('view_count').eq('author_id', userId).gte('created_at', oneWeekAgo.toISOString());
     
+    // Fetch group mentions and unread context
+    let groupMentions: any[] = [];
+    const handle = profileRes.data?.handle;
+    if (handle) {
+      const { data: mentions } = await supabase.from('messages').select('content, chat_id, created_at').ilike('content', `%@${handle}%`).neq('sender_id', userId).order('created_at', { ascending: false }).limit(5);
+      if (mentions?.length) {
+        const chatIds = [...new Set(mentions.map((m: any) => m.chat_id))];
+        const { data: chats } = await supabase.from('chats').select('id, name, is_group').in('id', chatIds).eq('is_group', true);
+        groupMentions = mentions.filter((m: any) => chats?.some((c: any) => c.id === m.chat_id)).map((m: any) => ({
+          chat: chats?.find((c: any) => c.id === m.chat_id)?.name || 'Group',
+          preview: m.content.substring(0, 80),
+          time: m.created_at
+        }));
+      }
+    }
+    
     return {
-      profile: profileRes.data,
-      followerCount: followerRes.count || 0,
-      followingCount: followingRes.count || 0,
-      subscription: subscriptionRes.data,
-      creatorEarnings: earningsRes.data,
-      weeklyViews: weeklyPosts?.reduce((sum: number, p: any) => sum + (p.view_count || 0), 0) || 0
+      profile: profileRes.data, followerCount: followerRes.count || 0, followingCount: followingRes.count || 0,
+      subscription: subscriptionRes.data, creatorEarnings: earningsRes.data,
+      weeklyViews: weeklyPosts?.reduce((sum: number, p: any) => sum + (p.view_count || 0), 0) || 0,
+      groupMentions
     };
   } catch (e) { return null; }
 }
@@ -103,10 +115,13 @@ Creator Eligible: ${isEligible ? 'Yes' : 'No'} (Uganda+10 followers+${p?.is_admi
 
   const memInfo = memories.length > 0 ? `\nMEMORIES: ${memories.slice(0,10).map(m => m.content).join(' | ')}` : '';
 
+  const mentionInfo = user?.groupMentions?.length > 0 
+    ? `\nGROUP MENTIONS (unread): ${user.groupMentions.map((m: any) => `${m.chat} - "${m.preview}"`).join(' | ')}` : '';
+
   return `You are AfuAI, the exclusive AI assistant for AfuChat. You have FULL platform knowledge and user data access.
 
 CURRENT: ${dt.date}, ${dt.time} | Earnings: ${dt.isEarning ? 'ACTIVE' : 'CLOSED'} | Weekend: ${dt.isWeekend ? 'Yes' : 'No'}
-${userInfo}${memInfo}
+${userInfo}${memInfo}${mentionInfo}
 
 KEY FEATURES:
 - Wallet: /wallet | Premium: /premium | Gifts: /gifts | Creator Earnings: /creator-earnings
@@ -115,13 +130,20 @@ KEY FEATURES:
 - Creator program: Uganda only, 10+ followers, ${p?.is_admin ? '50' : '500'}+ weekly views, 8AM-8PM EAT
 - Nexa to ACoin: 100:1 (5.99% fee) | Withdrawals: Weekends (admins anytime)
 
+POSTING ON BEHALF OF USER:
+When user asks you to create/post something on their feed, include this in your response:
+[POST_ACTION]{"content":"the post text here","auto_publish":false}[/POST_ACTION]
+Set auto_publish to true ONLY if user explicitly says "post directly" or "publish now".
+Always confirm what will be posted. NEVER expose private chat messages. Only reference group/channel messages.
+
 RULES:
 1. NEVER use /profile - always use /@username or the user's actual handle
 2. Use paths like /wallet, /premium - they auto-convert to links
 3. Be personal - use their name, reference their stats
 4. Greet with "Good ${dt.greeting}!" on first message
 5. Reference memories when relevant
-6. Keep responses concise and helpful`;
+6. If user has unread group mentions, proactively inform them
+7. Keep responses concise and helpful`;
 }
 
 serve(async (req) => {
