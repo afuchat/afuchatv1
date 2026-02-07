@@ -7,7 +7,7 @@ import { ChatListSkeleton } from '@/components/chat/ChatListSkeleton';
 import NewChatDialog from '@/components/ui/NewChatDialog';
 import { CreateGroupDialog } from '@/components/chat/CreateGroupDialog';
 import { CreateChannelDialog } from '@/components/chat/CreateChannelDialog';
-import ChatFloatingActionButton from '@/components/chat/ChatFloatingActionButton';
+
 import { toast } from 'sonner';
 import { ChatSettingsSheet } from '@/components/chat/ChatSettingsSheet';
 import { UserAvatar } from '@/components/avatar/UserAvatar';
@@ -687,13 +687,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
         )}
       </div>
 
-      {/* Floating Action Button */}
-      <ChatFloatingActionButton
-        onNewChat={() => setIsNewChatDialogOpen(true)}
-        onCreateGroup={() => setIsCreateGroupDialogOpen(true)}
-        onCreateChannel={() => setIsCreateChannelDialogOpen(true)}
-        isVisible={showFab}
-      />
+      {/* Floating Action Button removed - use header actions instead */}
 
       <NewChatDialog
         isOpen={isNewChatDialogOpen}

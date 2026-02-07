@@ -5,13 +5,12 @@ import { useAccountMode } from '@/contexts/AccountModeContext';
 import { 
   Home, MessageSquare, Search, Bell, User, Settings, Shield, 
   BarChart3, Grid3x3, ShoppingBag, Wallet, Send, Gift, 
-  Image as ImageIcon, Hash, TrendingUp, Menu, Plus, DollarSign,
+  Image as ImageIcon, Hash, TrendingUp, Menu, DollarSign,
   ChevronLeft
 } from 'lucide-react';
 import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import Logo from '@/components/Logo';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
-import NewPostModal from '@/components/ui/NewPostModal';
 import { DesktopRightSidebar } from '@/components/desktop/DesktopRightSidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -38,7 +37,6 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const { isDeveloper } = useDeveloperStatus();
 
   // Hide right sidebar on certain pages
@@ -193,17 +191,6 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {user && (
-              <Button 
-                variant="default" 
-                onClick={() => setIsPostModalOpen(true)}
-                className="h-10 px-5 rounded-full font-semibold"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Post
-              </Button>
-            )}
-            
             <Link to="/notifications">
               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full relative">
                 <Bell className="h-5 w-5" />
@@ -305,8 +292,8 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
           )}
         </AnimatePresence>
 
-        {/* Main Content - scrollable with desktop scrollbar */}
-        <main className="flex-1 min-w-0 overflow-y-auto desktop-scrollbar">
+        {/* Main Content - scrolls naturally with page */}
+        <main className="flex-1 min-w-0">
           <div className={cn(
             "min-h-[calc(100vh-4rem)]",
             !hideRightSidebar && "max-w-3xl"
@@ -329,14 +316,6 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
           </div>
         )}
       </div>
-
-      {/* New Post Modal */}
-      {user && (
-        <NewPostModal
-          isOpen={isPostModalOpen}
-          onClose={() => setIsPostModalOpen(false)}
-        />
-      )}
     </div>
   );
 };

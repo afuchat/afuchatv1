@@ -602,7 +602,7 @@ const PostDetail = () => {
   }
 
   return (
-    <div ref={postRef} className="min-h-screen bg-background border-x border-border max-w-2xl mx-auto">
+    <div ref={postRef} className="bg-background border-x border-border max-w-2xl mx-auto pb-8" style={{ minHeight: '100vh', overflowY: 'visible' }}>
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="flex items-center gap-3 px-4 py-3">
