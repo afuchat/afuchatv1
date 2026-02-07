@@ -173,20 +173,7 @@ export const DesktopRightSidebar = ({ className }: DesktopRightSidebarProps) => 
   };
 
   return (
-    <aside className={cn('w-80 flex-shrink-0 space-y-4 p-4 overflow-y-auto max-h-[calc(100vh-4rem)]', className)}>
-      {/* Search */}
-      <form onSubmit={handleSearch}>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-muted/50 border-border/50 rounded-full h-10"
-          />
-        </div>
-      </form>
+    <aside className={cn('w-80 flex-shrink-0 space-y-4 p-4 overflow-y-auto', className)}>
 
       {/* Trending Topics */}
       <Card className="bg-card border-border/50 overflow-hidden">
