@@ -48,6 +48,9 @@ export const PostPreviewDialog = ({ postAction, onConfirm, onCancel }: PostPrevi
           ) : (
             <div className="bg-muted/50 rounded-xl p-4 text-sm whitespace-pre-wrap border border-border/40">
               {editedContent || postAction.content}
+              <div className="mt-3 pt-2 border-t border-border/30 text-[11px] text-muted-foreground/70 italic">
+                ✦ Generated with AfuAI
+              </div>
             </div>
           )}
         </div>
