@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { getCountryFlag } from '@/lib/countryFlags';
+import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdminAnalyticsCharts } from '@/components/admin/AdminAnalyticsCharts';
 import { ActiveUsersAnalytics } from '@/components/admin/ActiveUsersAnalytics';
@@ -63,7 +64,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [hasAdminPrivileges, setHasAdminPrivileges] = useState(false);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [activeTab, setActiveTab] = useState('overview');
   const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month' | 'year'>('week');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -575,139 +576,23 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Stats Overview */}
+        {/* Stats summary bar */}
         {stats && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5 text-primary" />
-                  Users
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-xl font-bold">{stats.totalUsers.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">{stats.totalVerifiedUsers} verified</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <MessageSquare className="h-3.5 w-3.5 text-blue-500" />
-                  Messages
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-xl font-bold">{stats.totalMessages.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">{stats.totalChats} chats</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <Package className="h-3.5 w-3.5 text-green-500" />
-                  Posts
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-xl font-bold">{stats.totalPosts.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">{stats.totalReplies} replies</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <Eye className="h-3.5 w-3.5 text-purple-500" />
-                  Post Views
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-xl font-bold">{stats.totalPostViews.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <Heart className="h-3.5 w-3.5 text-red-500" />
-                  Likes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-xl font-bold">{stats.totalLikes.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <Gift className="h-3.5 w-3.5 text-yellow-500" />
-                  Gifts Sent
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-xl font-bold">{stats.totalGiftTransactions.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <Coins className="h-3.5 w-3.5 text-amber-500" />
-                  ACoin Txns
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-xl font-bold">{stats.totalAcoinTransactions.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">{stats.totalPremiumUsers} premium</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <UserPlus className="h-3.5 w-3.5 text-cyan-500" />
-                  Follows
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-xl font-bold">{stats.totalFollows.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <Image className="h-3.5 w-3.5 text-pink-500" />
-                  Stories
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-xl font-bold">{stats.totalStories.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">{stats.totalGroups} groups</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <Gamepad2 className="h-3.5 w-3.5 text-indigo-500" />
-                  Game Scores
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-xl font-bold">{stats.totalGameScores.toLocaleString()}</div>
-              </CardContent>
-            </Card>
+          <div className="flex flex-wrap gap-4 mb-6 text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{stats.totalUsers.toLocaleString()} users</span>
+            <span>·</span>
+            <span>{stats.totalPosts.toLocaleString()} posts</span>
+            <span>·</span>
+            <span>{stats.totalMessages.toLocaleString()} messages</span>
+            <span>·</span>
+            <span>{stats.totalPremiumUsers} premium</span>
           </div>
         )}
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
+            <TabsTrigger value="overview" className="text-xs font-bold">Overview</TabsTrigger>
             <TabsTrigger value="analytics" className="text-xs">Analytics</TabsTrigger>
             <TabsTrigger value="users" className="text-xs">Users</TabsTrigger>
             <TabsTrigger value="developers" className="text-xs gap-1">
@@ -729,6 +614,201 @@ const AdminDashboard = () => {
               Year Wrapped
             </TabsTrigger>
           </TabsList>
+
+          {/* Overview Tab - Complete platform snapshot */}
+          <TabsContent value="overview" className="mt-6 space-y-6">
+            {stats && (
+              <>
+                {/* Key Metrics Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {[
+                    { icon: Users, label: 'Total Users', value: stats.totalUsers, sub: `${stats.totalVerifiedUsers} verified`, color: 'text-primary' },
+                    { icon: MessageSquare, label: 'Messages', value: stats.totalMessages, sub: `${stats.totalChats} chats`, color: 'text-blue-500' },
+                    { icon: Package, label: 'Posts', value: stats.totalPosts, sub: `${stats.totalReplies} replies`, color: 'text-green-500' },
+                    { icon: Eye, label: 'Post Views', value: stats.totalPostViews, sub: '', color: 'text-purple-500' },
+                    { icon: Heart, label: 'Total Likes', value: stats.totalLikes, sub: '', color: 'text-red-500' },
+                    { icon: Gift, label: 'Gift Transactions', value: stats.totalGiftTransactions, sub: '', color: 'text-yellow-500' },
+                    { icon: Coins, label: 'ACoin Transactions', value: stats.totalAcoinTransactions, sub: `${stats.totalPremiumUsers} premium`, color: 'text-amber-500' },
+                    { icon: UserPlus, label: 'Follows', value: stats.totalFollows, sub: '', color: 'text-cyan-500' },
+                    { icon: Image, label: 'Stories', value: stats.totalStories, sub: `${stats.totalGroups} groups`, color: 'text-pink-500' },
+                    { icon: Gamepad2, label: 'Game Scores', value: stats.totalGameScores, sub: '', color: 'text-indigo-500' },
+                    { icon: TrendingUp, label: 'Tips Sent', value: stats.totalTips, sub: '', color: 'text-emerald-500' },
+                    { icon: Activity, label: 'Red Envelopes', value: stats.totalRedEnvelopes, sub: '', color: 'text-orange-500' },
+                    { icon: Users, label: 'Referrals', value: stats.totalReferrals, sub: '', color: 'text-teal-500' },
+                    { icon: AlertTriangle, label: 'Blocked Users', value: stats.totalBlockedUsers, sub: '', color: 'text-destructive' },
+                  ].map((metric, i) => (
+                    <Card key={i} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-1 pt-3 px-3">
+                        <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+                          <metric.icon className={cn("h-3.5 w-3.5", metric.color)} />
+                          {metric.label}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-3 pb-3">
+                        <div className="text-xl font-bold">{metric.value.toLocaleString()}</div>
+                        {metric.sub && <p className="text-xs text-muted-foreground">{metric.sub}</p>}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Quick Actions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-primary" />
+                      Quick Actions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setActiveTab('users')} className="gap-1.5">
+                        <Users className="h-3.5 w-3.5" /> Manage Users
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setActiveTab('reports')} className="gap-1.5">
+                        <AlertTriangle className="h-3.5 w-3.5" /> View Reports
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setActiveTab('withdrawals')} className="gap-1.5">
+                        <Wallet className="h-3.5 w-3.5" /> Withdrawals
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setActiveTab('premium')} className="gap-1.5">
+                        <Shield className="h-3.5 w-3.5" /> Premium Users
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setActiveTab('groups')} className="gap-1.5">
+                        <Globe className="h-3.5 w-3.5" /> Verify Groups
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setActiveTab('developers')} className="gap-1.5">
+                        <Github className="h-3.5 w-3.5" /> Developers
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setActiveTab('year-wrapped')} className="gap-1.5">
+                        <Mail className="h-3.5 w-3.5" /> Year Wrapped
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => navigate('/business-dashboard')} className="gap-1.5">
+                        <Briefcase className="h-3.5 w-3.5" /> Business
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Recent Activity Tables */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Recent Users */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-bold">Recent Users</CardTitle>
+                        <Button size="sm" variant="ghost" onClick={() => setActiveTab('users')} className="text-xs text-primary h-7">
+                          View All
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-2">
+                        {users.slice(0, 8).map((u: any) => (
+                          <div key={u.id} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold shrink-0">
+                                {u.display_name?.[0]?.toUpperCase() || '?'}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium truncate">{u.display_name || 'Unknown'}</p>
+                                <p className="text-[10px] text-muted-foreground">@{u.handle}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              {u.is_verified && <Badge variant="secondary" className="text-[9px] h-4 px-1">✓</Badge>}
+                              {u.country && <span className="text-xs">{getCountryFlag(u.country)}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Recent Posts */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-bold">Recent Posts</CardTitle>
+                        <Button size="sm" variant="ghost" onClick={() => setActiveTab('posts')} className="text-xs text-primary h-7">
+                          View All
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-2">
+                        {posts.slice(0, 8).map((p: any) => (
+                          <div key={p.id} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-medium text-muted-foreground">@{p.profiles?.handle || 'unknown'}</p>
+                              <p className="text-xs truncate max-w-[250px]">{p.content}</p>
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground shrink-0 ml-2">
+                              <Eye className="h-3 w-3" />
+                              <span className="text-[10px]">{p.view_count || 0}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Recent Gift Transactions */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-bold">Recent Gifts</CardTitle>
+                        <Button size="sm" variant="ghost" onClick={() => setActiveTab('gifts')} className="text-xs text-primary h-7">
+                          View All
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-2">
+                        {giftTransactions.slice(0, 6).map((g: any) => (
+                          <div key={g.id} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base">{g.gifts?.emoji || '🎁'}</span>
+                              <div>
+                                <p className="text-xs font-medium">{g.gifts?.name || 'Gift'}</p>
+                                <p className="text-[10px] text-muted-foreground">{g.xp_cost} Nexa</p>
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">{formatDate(g.created_at)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Recent Game Scores */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-bold">Recent Game Scores</CardTitle>
+                        <Button size="sm" variant="ghost" onClick={() => setActiveTab('games')} className="text-xs text-primary h-7">
+                          View All
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-2">
+                        {gameScores.slice(0, 6).map((s: any) => (
+                          <div key={s.id} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+                            <div>
+                              <p className="text-xs font-medium">@{s.profiles?.handle || 'unknown'}</p>
+                              <p className="text-[10px] text-muted-foreground">{s.game_type} · {s.difficulty}</p>
+                            </div>
+                            <Badge variant="outline" className="text-xs font-bold">{s.score}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            )}
+          </TabsContent>
 
           <TabsContent value="analytics" className="mt-6 space-y-8">
             {/* Active Users Analytics - DAU, WAU, MAU, YAU */}
