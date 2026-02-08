@@ -284,10 +284,12 @@ const Shorts = () => {
       if (error) throw error;
 
       if (data?.success && data.videos) {
+        // Shuffle videos randomly
+        const shuffled = [...data.videos].sort(() => Math.random() - 0.5);
         if (append) {
-          setVideos(prev => [...prev, ...data.videos]);
+          setVideos(prev => [...prev, ...shuffled]);
         } else {
-          setVideos(data.videos);
+          setVideos(shuffled);
         }
         setHasMore(data.hasMore);
       }
