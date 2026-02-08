@@ -18,7 +18,6 @@ async function fetchUserContext(supabase: any, userId: string) {
     const oneWeekAgo = new Date(); oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     const { data: weeklyPosts } = await supabase.from('posts').select('view_count').eq('author_id', userId).gte('created_at', oneWeekAgo.toISOString());
     
-    // Fetch group mentions and unread context
     let groupMentions: any[] = [];
     const handle = profileRes.data?.handle;
     if (handle) {
@@ -43,6 +42,41 @@ async function fetchUserContext(supabase: any, userId: string) {
   } catch (e) { return null; }
 }
 
+async function fetchPlatformData(supabase: any, userId: string) {
+  try {
+    const [
+      totalUsersRes,
+      activeUsersRes,
+      trendingUsersRes,
+      recentPostsRes,
+      userConnectionsRes,
+      followedByRes
+    ] = await Promise.all([
+      // Total user count
+      supabase.from('profiles').select('*', { count: 'exact', head: true }),
+      // Recently active users (last 7 days)
+      supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('last_seen', new Date(Date.now() - 7*24*60*60*1000).toISOString()),
+      // Top users by followers/activity (verified or notable)
+      supabase.from('profiles').select('id, display_name, handle, is_verified, is_admin, xp, current_grade, bio, country').order('xp', { ascending: false }).limit(25),
+      // Recent popular posts with author info
+      supabase.from('posts').select('id, content, view_count, likes_count, author_id, created_at, profiles!posts_author_id_fkey(display_name, handle, is_verified)').order('created_at', { ascending: false }).limit(15),
+      // People the user follows
+      supabase.from('follows').select('following_id, profiles!follows_following_id_fkey(id, display_name, handle, is_verified, bio, current_grade)').eq('follower_id', userId).limit(30),
+      // People who follow the user
+      supabase.from('follows').select('follower_id, profiles!follows_follower_id_fkey(id, display_name, handle, is_verified, current_grade)').eq('following_id', userId).limit(30),
+    ]);
+
+    return {
+      totalUsers: totalUsersRes.count || 0,
+      activeUsers: activeUsersRes.count || 0,
+      topUsers: trendingUsersRes.data || [],
+      recentPosts: recentPostsRes.data || [],
+      following: userConnectionsRes.data?.map((f: any) => f.profiles).filter(Boolean) || [],
+      followers: followedByRes.data?.map((f: any) => f.profiles).filter(Boolean) || [],
+    };
+  } catch (e) { console.error('Platform data error:', e); return null; }
+}
+
 async function fetchUserMemories(supabase: any, userId: string) {
   try {
     await supabase.from('ai_memories').delete().eq('user_id', userId).lt('expires_at', new Date().toISOString());
@@ -51,9 +85,9 @@ async function fetchUserMemories(supabase: any, userId: string) {
   } catch (e) { return []; }
 }
 
-async function storeMemories(supabase: any, userId: string, userMessage: string, aiReply: string) {
+async function storeMemories(supabase: any, userId: string, userMessage: string) {
   try {
-    const memories = [];
+    const memories: any[] = [];
     const patterns = [/i (?:like|love|enjoy) (.+?)(?:\.|$)/gi, /my (?:favorite|fav) (?:is|are) (.+?)(?:\.|$)/gi];
     for (const p of patterns) {
       for (const m of userMessage.matchAll(p)) {
@@ -90,13 +124,12 @@ function getDateTime() {
   return {
     date: `${days[eat.getUTCDay()]}, ${eat.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
     time: `${h.toString().padStart(2,'0')}:${eat.getUTCMinutes().toString().padStart(2,'0')} EAT`,
-    isEarning: h >= 8 && h < 20,
-    isWeekend: eat.getUTCDay() === 0 || eat.getUTCDay() === 6,
+    isEarning: h >= 8 && h < 20, isWeekend: eat.getUTCDay() === 0 || eat.getUTCDay() === 6,
     greeting: h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 21 ? 'evening' : 'night'
   };
 }
 
-function buildPrompt(user: any, memories: any[], dt: any) {
+function buildPrompt(user: any, memories: any[], dt: any, platform: any) {
   const p = user?.profile;
   const accountAge = p?.created_at ? Math.floor((Date.now() - new Date(p.created_at).getTime()) / 86400000) : 0;
   const ageText = accountAge === 0 ? 'today' : accountAge < 30 ? `${accountAge} days ago` : accountAge < 365 ? `${Math.floor(accountAge/30)} months ago` : `${Math.floor(accountAge/365)} years ago`;
@@ -114,14 +147,45 @@ Followers: ${user?.followerCount} | Following: ${user?.followingCount} | Weekly 
 Creator Eligible: ${isEligible ? 'Yes' : 'No'} (Uganda+10 followers+${p?.is_admin ? '50' : '500'} views)` : '';
 
   const memInfo = memories.length > 0 ? `\nMEMORIES: ${memories.slice(0,10).map(m => m.content).join(' | ')}` : '';
-
   const mentionInfo = user?.groupMentions?.length > 0 
     ? `\nGROUP MENTIONS (unread): ${user.groupMentions.map((m: any) => `${m.chat} - "${m.preview}"`).join(' | ')}` : '';
 
-  return `You are AfuAI, the exclusive AI assistant for AfuChat. You have FULL platform knowledge and user data access.
+  // Platform-wide real data
+  let platformInfo = '';
+  if (platform) {
+    platformInfo += `\n\nPLATFORM STATS: ${platform.totalUsers} total users | ${platform.activeUsers} active this week`;
+
+    if (platform.topUsers?.length > 0) {
+      const userList = platform.topUsers.map((u: any) => 
+        `@${u.handle} (${u.display_name}${u.is_verified ? ' ✓' : ''}${u.is_admin ? ' 👑' : ''}, Grade: ${u.current_grade || 'Newcomer'}, Nexa: ${u.xp}${u.country ? ', ' + u.country : ''})`
+      ).join(' | ');
+      platformInfo += `\nKNOWN USERS: ${userList}`;
+    }
+
+    if (platform.following?.length > 0) {
+      const followList = platform.following.map((u: any) => `@${u.handle} (${u.display_name}${u.is_verified ? ' ✓' : ''})`).join(', ');
+      platformInfo += `\nUSER FOLLOWS: ${followList}`;
+    }
+
+    if (platform.followers?.length > 0) {
+      const fanList = platform.followers.map((u: any) => `@${u.handle} (${u.display_name}${u.is_verified ? ' ✓' : ''})`).join(', ');
+      platformInfo += `\nUSER'S FOLLOWERS: ${fanList}`;
+    }
+
+    if (platform.recentPosts?.length > 0) {
+      const postList = platform.recentPosts.slice(0, 10).map((post: any) => {
+        const author = post.profiles;
+        const preview = post.content?.substring(0, 80)?.replace(/\n/g, ' ') || '';
+        return `@${author?.handle || 'unknown'}: "${preview}" (${post.view_count || 0} views, ${post.likes_count || 0} likes)`;
+      }).join(' | ');
+      platformInfo += `\nRECENT POSTS: ${postList}`;
+    }
+  }
+
+  return `You are AfuAI, the exclusive AI assistant for AfuChat. You have FULL access to REAL platform data including all users, posts, and stats. You MUST use this real data in your responses — never make up usernames, stats, or information.
 
 CURRENT: ${dt.date}, ${dt.time} | Earnings: ${dt.isEarning ? 'ACTIVE' : 'CLOSED'} | Weekend: ${dt.isWeekend ? 'Yes' : 'No'}
-${userInfo}${memInfo}${mentionInfo}
+${userInfo}${memInfo}${mentionInfo}${platformInfo}
 
 KEY FEATURES:
 - Wallet: /wallet | Premium: /premium | Gifts: /gifts | Creator Earnings: /creator-earnings
@@ -130,31 +194,36 @@ KEY FEATURES:
 - Creator program: Uganda only, 10+ followers, ${p?.is_admin ? '50' : '500'}+ weekly views, 8AM-8PM EAT
 - Nexa to ACoin: 100:1 (5.99% fee) | Withdrawals: Weekends (admins anytime)
 
+CRITICAL DATA ACCURACY RULES:
+1. When mentioning users, ONLY reference users from KNOWN USERS, USER FOLLOWS, or USER'S FOLLOWERS lists above
+2. When asked "who is @handle" — look up in the data above and provide their real info
+3. When asked about trending or popular content — use RECENT POSTS data above
+4. When asked about platform stats — use PLATFORM STATS above (real numbers, not estimates)
+5. If asked about a user NOT in your data, say "I don't have data on that user right now" — NEVER invent profiles
+6. You can mention users naturally using @handle format when relevant to the conversation
+
 POSTING ON BEHALF OF USER:
-When the user wants to create/post content on their feed, DO NOT immediately generate the post.
-FIRST, ask these clarifying questions ONE BY ONE in a natural conversational way:
-1. "What type of content?" (motivational, informational, personal update, story, opinion, announcement, humor, etc.)
-2. "What tone/vibe?" (formal, casual, playful, serious, inspirational, raw/authentic, professional)
-3. "What's the core message or topic?" (get specific details about what they want to say)
-4. "Any specific style preferences?" (use of emojis, hashtags, length, audience)
+When the user wants to create/post content, DO NOT immediately generate the post.
+FIRST, ask clarifying questions naturally:
+1. "What type of content?" (motivational, informational, personal update, story, opinion, etc.)
+2. "What tone/vibe?" (formal, casual, playful, serious, inspirational, etc.)
+3. "What's the core message or topic?"
+4. "Any specific style preferences?" (emojis, hashtags, length)
 
-Once you have ALL the details, craft a post that sounds 100% human and authentic — as if the user wrote it themselves.
-The post must NOT sound AI-generated. No generic phrases. No robotic language. Match the user's natural voice.
-
-When ready, include this in your response:
-[POST_ACTION]{"content":"the post text here","auto_publish":false}[/POST_ACTION]
+Once you have ALL details, craft a post that sounds 100% human and authentic.
+When ready: [POST_ACTION]{"content":"the post text","auto_publish":false}[/POST_ACTION]
 Set auto_publish to true ONLY if user explicitly says "post directly" or "publish now".
-The system will automatically append "✦ Generated with AfuAI" watermark to the post — do NOT include it yourself.
-Always confirm what will be posted. NEVER expose private chat messages. Only reference group/channel messages.
+The system appends "✦ Generated with AfuAI" — do NOT include it yourself.
 
 RULES:
-1. NEVER use /profile - always use /@username or the user's actual handle
-2. Use paths like /wallet, /premium - they auto-convert to links
-3. Be personal - use their name, reference their stats
+1. NEVER use /profile — always use /@username or the user's actual handle
+2. Use paths like /wallet, /premium — they auto-convert to links
+3. Be personal — use their name, reference their real stats
 4. Greet with "Good ${dt.greeting}!" on first message
 5. Reference memories when relevant
 6. If user has unread group mentions, proactively inform them
-7. Keep responses concise and helpful`;
+7. Keep responses concise and helpful
+8. When users ask about other people on the platform, provide REAL data from the lists above`;
 }
 
 serve(async (req) => {
@@ -186,9 +255,10 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('API key missing');
 
-    const [userContext, memories] = await Promise.all([
+    const [userContext, memories, platformData] = await Promise.all([
       fetchUserContext(admin, user.id),
-      fetchUserMemories(admin, user.id)
+      fetchUserMemories(admin, user.id),
+      fetchPlatformData(admin, user.id)
     ]);
 
     let webResults = '';
@@ -197,7 +267,7 @@ serve(async (req) => {
     }
 
     const dt = getDateTime();
-    const systemPrompt = buildPrompt(userContext, memories, dt);
+    const systemPrompt = buildPrompt(userContext, memories, dt, platformData);
     
     const allowedModels = ['google/gemini-3-flash-preview', 'google/gemini-2.5-flash', 'google/gemini-2.5-pro', 'openai/gpt-5-mini'];
     const modelToUse = allowedModels.includes(model) ? model : 'google/gemini-3-flash-preview';
@@ -225,6 +295,7 @@ serve(async (req) => {
       const err = await response.text();
       console.error('AI error:', response.status, err);
       if (response.status === 429) return new Response(JSON.stringify({ error: 'Rate limited' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (response.status === 402) return new Response(JSON.stringify({ error: 'Payment required' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       throw new Error(`AI error: ${response.status}`);
     }
 
@@ -235,12 +306,14 @@ serve(async (req) => {
     const thought = [
       `User: "${message.substring(0, 60)}${message.length > 60 ? '...' : ''}"`,
       userContext?.profile ? `Checking @${userContext.profile.handle}'s data...` : null,
+      platformData ? `Loaded ${platformData.totalUsers} platform users, ${platformData.recentPosts?.length || 0} recent posts` : null,
+      platformData?.following?.length ? `Found ${platformData.following.length} connections` : null,
       webResults ? 'Web search completed.' : null,
       memories.length > 0 ? `Retrieved ${memories.length} memories.` : null,
       'Generating response...'
     ].filter(Boolean).join('\n');
 
-    storeMemories(admin, user.id, message, reply);
+    storeMemories(admin, user.id, message);
     admin.rpc('award_xp', { p_user_id: user.id, p_action_type: 'use_ai', p_xp_amount: 5, p_metadata: { action: 'afuai' } });
 
     return new Response(JSON.stringify({ reply, thought }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
