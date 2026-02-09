@@ -925,9 +925,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </div>
       </div>
 
-      {/* Content Area - Instagram: images first, then text */}
+      {/* Media - Full width */}
       <div className="cursor-pointer" onClick={() => navigate(`/post/${post.id}`)}>
-        {/* Images / Media - Full width like Instagram */}
         {((post.post_images && post.post_images.length > 0) || post.image_url) && (
           <div className="w-full">
             <ImageCarousel 
@@ -951,29 +950,45 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             <QuotedPostCard quotedPost={post.quoted_post} />
           </div>
         )}
+      </div>
 
-        {/* Link Previews */}
-        {post.post_link_previews && post.post_link_previews.length > 0 && (
-          <div className="px-3 pt-2 space-y-2">
-            {post.post_link_previews.map((preview, index) => (
-              <LinkPreviewCard
-                key={index}
-                url={preview.url}
-                title={preview.title}
-                description={preview.description}
-                image_url={preview.image_url}
-                site_name={preview.site_name}
-              />
-            ))}
-          </div>
+      {/* Text Content */}
+      <div className="px-3 pt-2 pb-1">
+        <ReadMoreText
+          text={parsePostContent(translatedContent || post.content, post.id, navigate)}
+          maxLines={3}
+          minCharsToShow={0}
+          className="text-foreground text-sm whitespace-pre-wrap"
+        />
+        {i18n.language !== 'en' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTranslate();
+            }}
+            disabled={isTranslating}
+            className="text-xs text-muted-foreground hover:text-primary mt-0.5 p-0 h-auto"
+          >
+            {isTranslating ? t('common.translating') : translatedContent ? t('common.showOriginal') : t('common.translate')}
+          </Button>
         )}
       </div>
 
-      {/* Action Buttons Row - Instagram style */}
-      <div className="flex justify-between items-center px-3 pt-2 pb-1">
+      {/* AI Post Summary */}
+      {post.content.length >= 150 && (
+        <div className="px-3 pb-1">
+          <AIPostSummary postContent={post.content} postId={post.id} />
+        </div>
+      )}
+
+      {/* Action Buttons Row - below text */}
+      <div className="flex justify-between items-center px-3 py-1">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={() => onAcknowledge(post.id, post.has_liked)}>
             <Heart className={`h-6 w-6 transition-all ${post.has_liked ? 'text-red-500 fill-red-500 scale-110' : 'group-hover:text-red-500'}`} strokeWidth={1.5} />
+            {post.like_count > 0 && <span className="text-xs font-semibold text-foreground">{post.like_count.toLocaleString()}</span>}
           </Button>
           <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={() => {
             if (!showComments && post.profiles.handle) {
@@ -982,6 +997,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             setShowComments(!showComments);
           }}>
             <MessageCircle className="h-6 w-6 group-hover:text-primary transition-colors" strokeWidth={1.5} />
+            {post.reply_count > 0 && <span className="text-xs text-muted-foreground">{post.reply_count}</span>}
           </Button>
           <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={handleShare}>
             <Send className="h-5 w-5 group-hover:text-primary transition-colors" strokeWidth={1.5} />
@@ -1013,105 +1029,80 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </Button>
       </div>
 
-      {/* Likes count */}
-      {post.like_count > 0 && (
-        <div className="px-3 pb-0.5">
-          <span className="text-sm font-bold text-foreground">{post.like_count.toLocaleString()} {post.like_count === 1 ? 'like' : 'likes'}</span>
+      {/* Highlighted Comments Preview */}
+      {!showComments && organizedReplies.length > 0 && (
+        <div className="px-3 pb-1">
+          {organizedReplies.slice(0, 2).map((reply) => (
+            <div key={reply.id} className="flex gap-1.5 py-0.5">
+              <span className="text-sm font-bold text-foreground truncate max-w-[100px]">{reply.profiles.display_name}</span>
+              <span className="text-sm text-foreground line-clamp-1 flex-1">{reply.content}</span>
+            </div>
+          ))}
+          {post.reply_count > 2 && (
+            <span
+              className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              onClick={() => setShowComments(true)}
+            >
+              View all {post.reply_count} comments
+            </span>
+          )}
         </div>
       )}
 
-      {/* Text Content - Below actions like Instagram */}
-      <div className="px-3 pb-2">
-        <ReadMoreText
-          text={parsePostContent(translatedContent || post.content, post.id, navigate)}
-          maxLines={3}
-          minCharsToShow={0}
-          className="text-foreground text-sm whitespace-pre-wrap"
-        />
-        {i18n.language !== 'en' && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleTranslate();
-            }}
-            disabled={isTranslating}
-            className="text-xs text-muted-foreground hover:text-primary mt-0.5 p-0 h-auto"
-          >
-            {isTranslating ? t('common.translating') : translatedContent ? t('common.showOriginal') : t('common.translate')}
-          </Button>
-        )}
-      </div>
-
-      {/* AI Post Summary */}
-      {post.content.length >= 150 && (
+      {/* Expanded Comments Section */}
+      {showComments && (
         <div className="px-3 pb-2">
-          <AIPostSummary postContent={post.content} postId={post.id} />
+          {post.replies && post.replies.length > 0 && (
+            <div className="space-y-1 pt-1">
+              {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
+                <FeedNestedReplyItem
+                  key={reply.id} 
+                  reply={reply}
+                  depth={0}
+                  handleViewProfile={handleViewProfile}
+                  onReplyToReply={handleReplyToReply}
+                  onPinReply={handlePinReply}
+                  onDeleteReply={handleDeleteReply}
+                  isPostAuthor={user?.id === post.author_id}
+                  currentUserId={user?.id}
+                  parsePostContent={(content, postId) => parsePostContent(content, postId, navigate)}
+                  formatTime={formatTime}
+                  UserAvatarSmall={UserAvatarSmall}
+                  VerifiedBadge={VerifiedBadge}
+                />
+              ))}
+              {organizedReplies.length > visibleRepliesCount && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setVisibleRepliesCount(prev => prev + 10)}
+                  className="text-primary text-xs mt-1 hover:underline p-0 h-auto"
+                >
+                  {t('feed.loadMoreComments', { count: organizedReplies.length - visibleRepliesCount })}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {user && (
+            <div className="mt-2">
+              <CommentInput
+                postId={post.id}
+                postAuthorHandle={post.profiles.handle}
+                onCommentSubmitted={() => {
+                  awardNexa('create_reply', { post_id: post.id });
+                }}
+                compact
+              />
+            </div>
+          )}
+          {!user && (
+            <div className="mt-2 text-xs text-muted-foreground">
+              {t('feed.signInToReply')}
+            </div>
+          )}
         </div>
       )}
-
-      {/* Comments Section */}
-      <div className="px-3 pb-2">
-        {post.reply_count > 0 && !showComments && (
-          <span
-            className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-            onClick={() => setShowComments(true)}
-          >
-            {t('feed.viewComments', { count: post.reply_count })}
-          </span>
-        )}
-
-        {showComments && post.replies && post.replies.length > 0 && (
-          <div className="space-y-1 pt-1">
-            {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
-              <FeedNestedReplyItem
-                key={reply.id} 
-                reply={reply}
-                depth={0}
-                handleViewProfile={handleViewProfile}
-                onReplyToReply={handleReplyToReply}
-                onPinReply={handlePinReply}
-                onDeleteReply={handleDeleteReply}
-                isPostAuthor={user?.id === post.author_id}
-                currentUserId={user?.id}
-                parsePostContent={(content, postId) => parsePostContent(content, postId, navigate)}
-                formatTime={formatTime}
-                UserAvatarSmall={UserAvatarSmall}
-                VerifiedBadge={VerifiedBadge}
-              />
-            ))}
-            {organizedReplies.length > visibleRepliesCount && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setVisibleRepliesCount(prev => prev + 10)}
-                className="text-primary text-xs mt-1 hover:underline p-0 h-auto"
-              >
-                {t('feed.loadMoreComments', { count: organizedReplies.length - visibleRepliesCount })}
-              </Button>
-            )}
-          </div>
-        )}
-
-        {showComments && user && (
-          <div className="mt-2">
-            <CommentInput
-              postId={post.id}
-              postAuthorHandle={post.profiles.handle}
-              onCommentSubmitted={() => {
-                awardNexa('create_reply', { post_id: post.id });
-              }}
-              compact
-            />
-          </div>
-        )}
-        {showComments && !user && (
-          <div className="mt-2 text-xs text-muted-foreground">
-            {t('feed.signInToReply')}
-          </div>
-        )}
-      </div>
 
       <ViewsAnalyticsSheet
         postId={post.id}
