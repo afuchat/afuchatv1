@@ -7,7 +7,8 @@ import { AdminDashboardSkeleton } from '@/components/skeletons';
 import { 
   Users, MessageSquare, Package, Activity, Shield, Gift, Coins, 
   TrendingUp, Globe, Briefcase, Wallet, AlertTriangle, Eye, 
-  Heart, UserPlus, FileText, Image, Gamepad2, RefreshCw, Store, Github, Mail
+  Heart, UserPlus, FileText, Image, Gamepad2, RefreshCw, Store, Github, Mail,
+  ShieldAlert, Ban, Trash2, BadgeCheck, BadgeX, Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -309,9 +310,9 @@ const AdminDashboard = () => {
     try {
       const { data } = await supabase
         .from('user_subscriptions')
-        .select('id, user_id, plan_id, started_at, expires_at, is_active, profiles(display_name, handle)')
+        .select('id, user_id, plan_id, started_at, expires_at, is_active, profiles(display_name, handle, avatar_url, is_verified)')
         .order('started_at', { ascending: false })
-        .limit(100);
+        .limit(500);
       setSubscriptions(data || []);
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
@@ -608,6 +609,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="messages" className="text-xs">Messages</TabsTrigger>
             <TabsTrigger value="gifts" className="text-xs">Gifts</TabsTrigger>
             <TabsTrigger value="premium" className="text-xs">Premium</TabsTrigger>
+            <TabsTrigger value="moderation" className="text-xs gap-1">
+              <ShieldAlert className="h-3 w-3" />
+              Moderation
+            </TabsTrigger>
             <TabsTrigger value="games" className="text-xs">Games</TabsTrigger>
             <TabsTrigger value="year-wrapped" className="text-xs gap-1">
               <Mail className="h-3 w-3" />
@@ -1076,8 +1081,11 @@ const AdminDashboard = () => {
           <TabsContent value="premium" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Premium Subscriptions ({subscriptions.length})</CardTitle>
-                <CardDescription>Active premium subscribers</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-amber-500" />
+                  Premium Subscriptions ({subscriptions.length})
+                </CardTitle>
+                <CardDescription>All premium subscribers — active and expired</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -1085,31 +1093,315 @@ const AdminDashboard = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>User</TableHead>
+                        <TableHead>Plan</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Started</TableHead>
                         <TableHead>Expires</TableHead>
+                        <TableHead>Days Left</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {subscriptions.map((sub: any) => (
-                        <TableRow key={sub.id}>
-                          <TableCell className="font-medium">
-                            @{sub.profiles?.handle || 'unknown'}
+                      {subscriptions.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                            No premium subscriptions found
                           </TableCell>
-                          <TableCell>
-                            {sub.is_active ? (
-                              <Badge className="bg-green-500">Active</Badge>
-                            ) : (
-                              <Badge variant="secondary">Inactive</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{formatDate(sub.started_at)}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{formatDate(sub.expires_at)}</TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        subscriptions.map((sub: any) => {
+                          const daysLeft = sub.expires_at ? Math.ceil((new Date(sub.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
+                          return (
+                            <TableRow key={sub.id}>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden">
+                                    {sub.profiles?.avatar_url ? (
+                                      <img src={sub.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
+                                    ) : (
+                                      sub.profiles?.display_name?.[0]?.toUpperCase() || '?'
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium">{sub.profiles?.display_name || 'Unknown'}</p>
+                                    <p className="text-xs text-muted-foreground">@{sub.profiles?.handle || 'unknown'}</p>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="capitalize">{sub.plan_id || 'premium'}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                {sub.is_active ? (
+                                  <Badge className="bg-green-500">Active</Badge>
+                                ) : (
+                                  <Badge variant="secondary">Expired</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-xs text-muted-foreground">{formatDate(sub.started_at)}</TableCell>
+                              <TableCell className="text-xs text-muted-foreground">{formatDate(sub.expires_at)}</TableCell>
+                              <TableCell>
+                                {sub.is_active && daysLeft > 0 ? (
+                                  <span className={cn("text-xs font-bold", daysLeft <= 7 ? "text-destructive" : "text-green-500")}>{daysLeft}d</span>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
                     </TableBody>
                   </Table>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Moderation Tab */}
+          <TabsContent value="moderation" className="mt-6 space-y-6">
+            {/* Warned Users */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-500">
+                  <AlertTriangle className="h-5 w-5" />
+                  Warned Users ({users.filter((u: any) => u.is_warned).length})
+                </CardTitle>
+                <CardDescription>Users currently under warning</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {users.filter((u: any) => u.is_warned).length === 0 ? (
+                  <p className="text-center text-muted-foreground py-6 text-sm">No warned users</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>User</TableHead>
+                          <TableHead>Handle</TableHead>
+                          <TableHead>Country</TableHead>
+                          <TableHead>Joined</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {users.filter((u: any) => u.is_warned).map((u: any) => (
+                          <TableRow key={u.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className="h-7 w-7 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold shrink-0">
+                                  {u.display_name?.[0]?.toUpperCase() || '?'}
+                                </div>
+                                <span className="font-medium text-sm">{u.display_name || 'Unknown'}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">@{u.handle}</TableCell>
+                            <TableCell>{u.country ? <span>{getCountryFlag(u.country)} {u.country}</span> : '—'}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{formatDate(u.created_at)}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-1">
+                                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={async () => {
+                                  await supabase.rpc('admin_remove_warning', { p_user_id: u.id });
+                                  toast.success('Warning removed');
+                                  fetchUsers();
+                                }}>
+                                  <ShieldAlert className="h-3 w-3" /> Remove Warning
+                                </Button>
+                                <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={async () => {
+                                  await supabase.rpc('admin_ban_user', { p_user_id: u.id, p_reason: 'Escalated from warning' });
+                                  toast.success('User banned');
+                                  fetchUsers();
+                                }}>
+                                  <Ban className="h-3 w-3" /> Ban
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Banned Users */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <Ban className="h-5 w-5" />
+                  Banned Users ({users.filter((u: any) => u.is_banned).length})
+                </CardTitle>
+                <CardDescription>Users currently banned from the platform</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {users.filter((u: any) => u.is_banned).length === 0 ? (
+                  <p className="text-center text-muted-foreground py-6 text-sm">No banned users</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>User</TableHead>
+                          <TableHead>Handle</TableHead>
+                          <TableHead>Country</TableHead>
+                          <TableHead>Joined</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {users.filter((u: any) => u.is_banned).map((u: any) => (
+                          <TableRow key={u.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className="h-7 w-7 rounded-full bg-destructive/20 flex items-center justify-center text-xs font-bold shrink-0">
+                                  {u.display_name?.[0]?.toUpperCase() || '?'}
+                                </div>
+                                <span className="font-medium text-sm">{u.display_name || 'Unknown'}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">@{u.handle}</TableCell>
+                            <TableCell>{u.country ? <span>{getCountryFlag(u.country)} {u.country}</span> : '—'}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{formatDate(u.created_at)}</TableCell>
+                            <TableCell>
+                              <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={async () => {
+                                await supabase.rpc('admin_unban_user', { p_user_id: u.id });
+                                toast.success('User unbanned');
+                                fetchUsers();
+                              }}>
+                                <ShieldAlert className="h-3 w-3" /> Unban
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* User Reports */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                  User Reports ({userReports.length})
+                </CardTitle>
+                <CardDescription>All reported users</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userReports.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-6 text-sm">No user reports</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Reporter ID</TableHead>
+                          <TableHead>Reported User ID</TableHead>
+                          <TableHead>Reason</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {userReports.map((r: any) => (
+                          <TableRow key={r.id}>
+                            <TableCell className="text-xs font-mono truncate max-w-[120px]">{r.reporter_id}</TableCell>
+                            <TableCell className="text-xs font-mono truncate max-w-[120px]">{r.reported_user_id}</TableCell>
+                            <TableCell className="text-sm max-w-[200px] truncate">{r.reason}</TableCell>
+                            <TableCell>
+                              <Badge variant={r.status === 'pending' ? 'destructive' : 'secondary'} className="text-xs">{r.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{formatDate(r.created_at)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Message Reports */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-yellow-500" />
+                  Message Reports ({messageReports.length})
+                </CardTitle>
+                <CardDescription>All reported messages</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {messageReports.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-6 text-sm">No message reports</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Reporter ID</TableHead>
+                          <TableHead>Message ID</TableHead>
+                          <TableHead>Reason</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {messageReports.map((r: any) => (
+                          <TableRow key={r.id}>
+                            <TableCell className="text-xs font-mono truncate max-w-[120px]">{r.reporter_id}</TableCell>
+                            <TableCell className="text-xs font-mono truncate max-w-[120px]">{r.message_id}</TableCell>
+                            <TableCell className="text-sm max-w-[200px] truncate">{r.reason}</TableCell>
+                            <TableCell>
+                              <Badge variant={r.status === 'pending' ? 'destructive' : 'secondary'} className="text-xs">{r.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{formatDate(r.created_at)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Blocked Users */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Ban className="h-5 w-5 text-muted-foreground" />
+                  Blocked Users ({blockedUsers.length})
+                </CardTitle>
+                <CardDescription>User-to-user blocks on the platform</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {blockedUsers.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-6 text-sm">No blocked users</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Blocker ID</TableHead>
+                          <TableHead>Blocked ID</TableHead>
+                          <TableHead>Reason</TableHead>
+                          <TableHead>Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {blockedUsers.map((b: any) => (
+                          <TableRow key={b.id}>
+                            <TableCell className="text-xs font-mono truncate max-w-[120px]">{b.blocker_id}</TableCell>
+                            <TableCell className="text-xs font-mono truncate max-w-[120px]">{b.blocked_id}</TableCell>
+                            <TableCell className="text-sm max-w-[200px] truncate">{b.reason || '—'}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{formatDate(b.blocked_at)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
