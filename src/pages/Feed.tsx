@@ -847,101 +847,89 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   };
 
   return (
-    <div ref={postRef} className="flex py-2 pl-0 pr-4 transition-colors hover:bg-muted/5">
-      <div
-        className="mr-2 sm:mr-3 flex-shrink-0 cursor-pointer ml-0.5 sm:ml-1"
-        onClick={() => handleViewProfile(post.author_id)}
-      >
-        <UserAvatarMedium 
-          userId={post.author_id} 
-          name={post.profiles.display_name}
-          avatarUrl={post.profiles.avatar_url}
-          lastSeen={post.profiles.last_seen}
-          showOnlineStatus={post.profiles.show_online_status}
-          isBusiness={post.profiles.is_business_mode}
-        />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-x-1.5 min-w-0">
-            <span
-              className="font-bold text-foreground text-base sm:text-lg cursor-pointer hover:underline truncate max-w-[120px] sm:max-w-[160px]"
-              onClick={() => handleViewProfile(post.author_id)}
-              title={post.profiles.display_name}
-            >
-              {post.profiles.display_name.length > 12 ? `${post.profiles.display_name.slice(0, 10)}...` : post.profiles.display_name}
-            </span>
-            
-            {post.profiles.is_affiliate && post.profiles.is_business_mode && (
-              <AffiliatedBadge size="sm" />
-            )}
-            
-            {post.profiles.is_warned && (
-              <WarningBadge size="sm" reason={post.profiles.warning_reason} variant="post" />
-            )}
-            
-            <VerifiedBadge 
-              isVerified={post.profiles.is_verified || post.is_developer}
-              isOrgVerified={post.profiles.is_organization_verified}
-              isAffiliate={post.profiles.is_affiliate}
-              isDeveloper={post.is_developer}
-              affiliateBusinessLogo={post.profiles.affiliated_business?.avatar_url}
-              affiliateBusinessName={post.profiles.affiliated_business?.display_name}
-              size="sm"
-              userId={post.author_id}
-              verificationSource={post.profiles.verification_source}
+    <div ref={postRef} className="border-b border-border/40 bg-background transition-colors">
+      {/* Instagram-style Header: Avatar + Name + Handle + Time + Actions */}
+      <div className="flex items-center justify-between px-3 py-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            className="flex-shrink-0 cursor-pointer"
+            onClick={() => handleViewProfile(post.author_id)}
+          >
+            <UserAvatarMedium 
+              userId={post.author_id} 
+              name={post.profiles.display_name}
+              avatarUrl={post.profiles.avatar_url}
+              lastSeen={post.profiles.last_seen}
+              showOnlineStatus={post.profiles.show_online_status}
+              isBusiness={post.profiles.is_business_mode}
             />
-            {post.profiles.is_business_mode && !post.profiles.is_affiliate && (
-              <BusinessBadge size="sm" />
-            )}
-
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1 flex-wrap">
+              <span
+                className="font-bold text-foreground text-sm cursor-pointer hover:underline truncate max-w-[130px]"
+                onClick={() => handleViewProfile(post.author_id)}
+                title={post.profiles.display_name}
+              >
+                {post.profiles.display_name}
+              </span>
+              {post.profiles.is_affiliate && post.profiles.is_business_mode && (
+                <AffiliatedBadge size="sm" />
+              )}
+              {post.profiles.is_warned && (
+                <WarningBadge size="sm" reason={post.profiles.warning_reason} variant="post" />
+              )}
+              <VerifiedBadge 
+                isVerified={post.profiles.is_verified || post.is_developer}
+                isOrgVerified={post.profiles.is_organization_verified}
+                isAffiliate={post.profiles.is_affiliate}
+                isDeveloper={post.is_developer}
+                affiliateBusinessLogo={post.profiles.affiliated_business?.avatar_url}
+                affiliateBusinessName={post.profiles.affiliated_business?.display_name}
+                size="sm"
+                userId={post.author_id}
+                verificationSource={post.profiles.verification_source}
+              />
+              {post.profiles.is_business_mode && !post.profiles.is_affiliate && (
+                <BusinessBadge size="sm" />
+              )}
+              <span className="text-muted-foreground text-xs">·</span>
+              <span className="text-muted-foreground text-xs whitespace-nowrap">{formatTime(post.created_at)}</span>
+            </div>
             <span
-              className="text-muted-foreground text-xs sm:text-sm hover:underline cursor-pointer truncate flex-shrink min-w-0"
+              className="text-muted-foreground text-xs cursor-pointer hover:underline"
               onClick={() => handleViewProfile(post.author_id)}
             >
               @{post.profiles.handle}
             </span>
-
-            <span className="text-muted-foreground text-xs sm:text-sm flex-shrink-0">·</span>
-            <span className="text-muted-foreground text-[10px] sm:text-xs whitespace-nowrap flex-shrink-0">
-              {formatTime(post.created_at)}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button 
-                className="p-1 opacity-60 hover:opacity-100 transition-opacity" 
-                title={t('feed.analyzePost')}
-                onClick={handleAiTransfer}
-            >
-                <img src={aiSparkIcon} alt="AI" className="h-6 w-6 select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
-            </button>
-            
-            <PostActionsSheet
-                post={post}
-                user={user}
-                navigate={navigate}
-                onDelete={onDeletePost}
-                onReport={onReportPost}
-                onEdit={onEditPost}
-                onQuote={onQuotePost}
-                onHidePost={onHidePost}
-            />
           </div>
         </div>
-
-        <div 
-          className="block cursor-pointer"
-          onClick={() => navigate(`/post/${post.id}`)}
-        >
-          <ReadMoreText
-            text={parsePostContent(translatedContent || post.content, post.id, navigate)}
-            maxLines={4}
-            minCharsToShow={0}
-            className="text-foreground whitespace-pre-wrap"
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button 
+            className="p-1.5 opacity-60 hover:opacity-100 transition-opacity" 
+            title={t('feed.analyzePost')}
+            onClick={handleAiTransfer}
+          >
+            <img src={aiSparkIcon} alt="AI" className="h-5 w-5 select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
+          </button>
+          <PostActionsSheet
+            post={post}
+            user={user}
+            navigate={navigate}
+            onDelete={onDeletePost}
+            onReport={onReportPost}
+            onEdit={onEditPost}
+            onQuote={onQuotePost}
+            onHidePost={onHidePost}
           />
-          {((post.post_images && post.post_images.length > 0) || post.image_url) && (
+        </div>
+      </div>
+
+      {/* Content Area - Instagram: images first, then text */}
+      <div className="cursor-pointer" onClick={() => navigate(`/post/${post.id}`)}>
+        {/* Images / Media - Full width like Instagram */}
+        {((post.post_images && post.post_images.length > 0) || post.image_url) && (
+          <div className="w-full">
             <ImageCarousel 
               images={
                 post.post_images && post.post_images.length > 0
@@ -952,152 +940,177 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                     ? [{ url: post.image_url, alt: 'Post image' }] 
                     : []
               }
-              className="mt-2"
+              className="rounded-none"
             />
-          )}
-          {/* Quoted Post */}
-          {post.quoted_post && (
-            <QuotedPostCard quotedPost={post.quoted_post} />
-          )}
-          {post.post_link_previews && post.post_link_previews.length > 0 && (
-            <div className="mt-2 space-y-2">
-              {post.post_link_previews.map((preview, index) => (
-                <LinkPreviewCard
-                  key={index}
-                  url={preview.url}
-                  title={preview.title}
-                  description={preview.description}
-                  image_url={preview.image_url}
-                  site_name={preview.site_name}
-                />
-              ))}
-            </div>
-          )}
-          {i18n.language !== 'en' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleTranslate();
-              }}
-              disabled={isTranslating}
-              className="text-xs text-muted-foreground hover:text-primary mt-1 p-0 h-auto"
-            >
-              {isTranslating ? t('common.translating') : translatedContent ? t('common.showOriginal') : t('common.translate')}
-            </Button>
-          )}
-        </div>
-        
-        {/* AI Post Summary for longer posts */}
-        {post.content.length >= 150 && (
-          <AIPostSummary postContent={post.content} postId={post.id} />
+          </div>
         )}
 
+        {/* Quoted Post */}
+        {post.quoted_post && (
+          <div className="px-3 pt-2">
+            <QuotedPostCard quotedPost={post.quoted_post} />
+          </div>
+        )}
 
-        <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-1.5 sm:-ml-2 max-w-full sm:max-w-[450px]">
-          <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3" onClick={() => {
+        {/* Link Previews */}
+        {post.post_link_previews && post.post_link_previews.length > 0 && (
+          <div className="px-3 pt-2 space-y-2">
+            {post.post_link_previews.map((preview, index) => (
+              <LinkPreviewCard
+                key={index}
+                url={preview.url}
+                title={preview.title}
+                description={preview.description}
+                image_url={preview.image_url}
+                site_name={preview.site_name}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Action Buttons Row - Instagram style */}
+      <div className="flex justify-between items-center px-3 pt-2 pb-1">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={() => onAcknowledge(post.id, post.has_liked)}>
+            <Heart className={`h-6 w-6 transition-all ${post.has_liked ? 'text-red-500 fill-red-500 scale-110' : 'group-hover:text-red-500'}`} strokeWidth={1.5} />
+          </Button>
+          <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={() => {
             if (!showComments && post.profiles.handle) {
               setReplyText(`@${post.profiles.handle} `);
             }
             setShowComments(!showComments);
           }}>
-            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-primary transition-colors" strokeWidth={2} />
-            <span className="group-hover:text-primary transition-colors text-xs sm:text-sm font-medium">{post.reply_count > 0 ? post.reply_count : ''}</span>
+            <MessageCircle className="h-6 w-6 group-hover:text-primary transition-colors" strokeWidth={1.5} />
           </Button>
-          <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3" onClick={() => onAcknowledge(post.id, post.has_liked)}>
-            <Heart className={`h-4 w-4 sm:h-5 sm:w-5 group-hover:text-red-500 transition-colors ${post.has_liked ? 'text-red-500 fill-red-500' : ''}`} strokeWidth={2} />
-            <span className={`group-hover:text-red-500 transition-colors text-xs sm:text-sm font-medium ${post.has_liked ? 'text-red-500' : ''}`}>{post.like_count > 0 ? post.like_count : ''}</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setShowViewsSheet(true);
-            }}
-          >
-            <BarChart2 className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-primary transition-colors" strokeWidth={2} />
-            <span className="text-xs sm:text-sm font-medium group-hover:text-primary transition-colors">{post.view_count > 0 ? post.view_count : ''}</span>
-          </Button>
-          <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3" onClick={handleShare}>
-            <Send className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-primary transition-colors" strokeWidth={2} />
+          <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={handleShare}>
+            <Send className="h-5 w-5 group-hover:text-primary transition-colors" strokeWidth={1.5} />
           </Button>
           {user && user.id !== post.author_id && (
             <SendGiftDialog
               receiverId={post.author_id}
               receiverName={post.profiles.display_name}
               trigger={
-                <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-1.5 group h-8 sm:h-9 px-2 sm:px-3">
-                  <Gift className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-pink-500 transition-colors" strokeWidth={2} />
+                <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1">
+                  <Gift className="h-5 w-5 group-hover:text-pink-500 transition-colors" strokeWidth={1.5} />
                 </Button>
               }
             />
           )}
         </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex items-center gap-1 group h-9 px-1"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowViewsSheet(true);
+          }}
+        >
+          <BarChart2 className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" strokeWidth={1.5} />
+          <span className="text-xs text-muted-foreground">{post.view_count > 0 ? post.view_count : ''}</span>
+        </Button>
+      </div>
 
-        <div className="mt-1 ml-[-8px] sm:ml-[-12px] pr-[8px] sm:pr-[12px]">
-          {post.reply_count > 0 && !showComments && (
-            <span
-              className="text-sm sm:text-base font-semibold text-muted-foreground cursor-pointer hover:underline hover:text-primary transition-colors"
-              onClick={() => setShowComments(true)}
-            >
-              {t('feed.viewComments', { count: post.reply_count })}
-            </span>
-          )}
-
-          {showComments && post.replies && post.replies.length > 0 && (
-            <div className="space-y-1 pt-2 pl-3 sm:pl-4 ml-2 sm:ml-3">
-              {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
-                <FeedNestedReplyItem
-                  key={reply.id} 
-                  reply={reply}
-                  depth={0}
-                  handleViewProfile={handleViewProfile}
-                  onReplyToReply={handleReplyToReply}
-                  onPinReply={handlePinReply}
-                  onDeleteReply={handleDeleteReply}
-                  isPostAuthor={user?.id === post.author_id}
-                  currentUserId={user?.id}
-                  parsePostContent={(content, postId) => parsePostContent(content, postId, navigate)}
-                  formatTime={formatTime}
-                  UserAvatarSmall={UserAvatarSmall}
-                  VerifiedBadge={VerifiedBadge}
-                />
-              ))}
-              {organizedReplies.length > visibleRepliesCount && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setVisibleRepliesCount(prev => prev + 10)}
-                  className="text-primary text-xs mt-2 hover:underline"
-                >
-                  {t('feed.loadMoreComments', { count: organizedReplies.length - visibleRepliesCount })}
-                </Button>
-              )}
-            </div>
-          )}
-
-          {showComments && user && (
-            <div className="mt-2">
-              <CommentInput
-                postId={post.id}
-                postAuthorHandle={post.profiles.handle}
-                onCommentSubmitted={() => {
-                  awardNexa('create_reply', { post_id: post.id });
-                }}
-                compact
-              />
-            </div>
-          )}
-          {showComments && !user && (
-            <div className="mt-2 text-[10px] sm:text-xs text-muted-foreground">
-              {t('feed.signInToReply')}
-            </div>
-          )}
+      {/* Likes count */}
+      {post.like_count > 0 && (
+        <div className="px-3 pb-0.5">
+          <span className="text-sm font-bold text-foreground">{post.like_count.toLocaleString()} {post.like_count === 1 ? 'like' : 'likes'}</span>
         </div>
+      )}
+
+      {/* Text Content - Below actions like Instagram */}
+      <div className="px-3 pb-2">
+        <ReadMoreText
+          text={parsePostContent(translatedContent || post.content, post.id, navigate)}
+          maxLines={3}
+          minCharsToShow={0}
+          className="text-foreground text-sm whitespace-pre-wrap"
+        />
+        {i18n.language !== 'en' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTranslate();
+            }}
+            disabled={isTranslating}
+            className="text-xs text-muted-foreground hover:text-primary mt-0.5 p-0 h-auto"
+          >
+            {isTranslating ? t('common.translating') : translatedContent ? t('common.showOriginal') : t('common.translate')}
+          </Button>
+        )}
+      </div>
+
+      {/* AI Post Summary */}
+      {post.content.length >= 150 && (
+        <div className="px-3 pb-2">
+          <AIPostSummary postContent={post.content} postId={post.id} />
+        </div>
+      )}
+
+      {/* Comments Section */}
+      <div className="px-3 pb-2">
+        {post.reply_count > 0 && !showComments && (
+          <span
+            className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+            onClick={() => setShowComments(true)}
+          >
+            {t('feed.viewComments', { count: post.reply_count })}
+          </span>
+        )}
+
+        {showComments && post.replies && post.replies.length > 0 && (
+          <div className="space-y-1 pt-1">
+            {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
+              <FeedNestedReplyItem
+                key={reply.id} 
+                reply={reply}
+                depth={0}
+                handleViewProfile={handleViewProfile}
+                onReplyToReply={handleReplyToReply}
+                onPinReply={handlePinReply}
+                onDeleteReply={handleDeleteReply}
+                isPostAuthor={user?.id === post.author_id}
+                currentUserId={user?.id}
+                parsePostContent={(content, postId) => parsePostContent(content, postId, navigate)}
+                formatTime={formatTime}
+                UserAvatarSmall={UserAvatarSmall}
+                VerifiedBadge={VerifiedBadge}
+              />
+            ))}
+            {organizedReplies.length > visibleRepliesCount && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setVisibleRepliesCount(prev => prev + 10)}
+                className="text-primary text-xs mt-1 hover:underline p-0 h-auto"
+              >
+                {t('feed.loadMoreComments', { count: organizedReplies.length - visibleRepliesCount })}
+              </Button>
+            )}
+          </div>
+        )}
+
+        {showComments && user && (
+          <div className="mt-2">
+            <CommentInput
+              postId={post.id}
+              postAuthorHandle={post.profiles.handle}
+              onCommentSubmitted={() => {
+                awardNexa('create_reply', { post_id: post.id });
+              }}
+              compact
+            />
+          </div>
+        )}
+        {showComments && !user && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            {t('feed.signInToReply')}
+          </div>
+        )}
       </div>
 
       <ViewsAnalyticsSheet
