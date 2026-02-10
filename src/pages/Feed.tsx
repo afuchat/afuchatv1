@@ -1059,11 +1059,30 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </div>
       )}
 
-      {/* Expanded Comments Section */}
+      {/* Expanded Comments Section - Instagram Style */}
       {showComments && (
-        <div className="px-3 pb-2">
+        <div className="pb-2">
+          {/* Comment input at top - Instagram style */}
+          {user && (
+            <div className="px-3 py-2 border-t border-border/30">
+              <CommentInput
+                postId={post.id}
+                postAuthorHandle={post.profiles.handle}
+                onCommentSubmitted={() => {
+                  awardNexa('create_reply', { post_id: post.id });
+                }}
+                compact
+              />
+            </div>
+          )}
+          {!user && (
+            <div className="px-3 py-2 border-t border-border/30 text-xs text-muted-foreground">
+              {t('feed.signInToReply')}
+            </div>
+          )}
+
           {post.replies && post.replies.length > 0 && (
-            <div className="space-y-1 pt-1">
+            <div className="pt-1">
               {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
                 <FeedNestedReplyItem
                   key={reply.id} 
@@ -1082,33 +1101,13 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 />
               ))}
               {organizedReplies.length > visibleRepliesCount && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={() => setVisibleRepliesCount(prev => prev + 10)}
-                  className="text-primary text-xs mt-1 hover:underline p-0 h-auto"
+                  className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {t('feed.loadMoreComments', { count: organizedReplies.length - visibleRepliesCount })}
-                </Button>
+                  View more comments
+                </button>
               )}
-            </div>
-          )}
-
-          {user && (
-            <div className="mt-2">
-              <CommentInput
-                postId={post.id}
-                postAuthorHandle={post.profiles.handle}
-                onCommentSubmitted={() => {
-                  awardNexa('create_reply', { post_id: post.id });
-                }}
-                compact
-              />
-            </div>
-          )}
-          {!user && (
-            <div className="mt-2 text-xs text-muted-foreground">
-              {t('feed.signInToReply')}
             </div>
           )}
         </div>
