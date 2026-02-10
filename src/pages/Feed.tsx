@@ -952,8 +952,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         )}
       </div>
 
-      {/* Text Content - clickable to navigate to post detail */}
-      <div className="px-3 pt-2 pb-1 cursor-pointer" onClick={() => navigate(`/post/${post.id}`)}>
+      {/* Text Content */}
+      <div className="px-3 pt-2 pb-1">
         <ReadMoreText
           text={parsePostContent(translatedContent || post.content, post.id, navigate)}
           maxLines={3}
@@ -990,7 +990,12 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             <Heart className={`h-6 w-6 transition-all ${post.has_liked ? 'text-red-500 fill-red-500 scale-110' : 'group-hover:text-red-500'}`} strokeWidth={1.5} />
             {post.like_count > 0 && <span className="text-xs font-semibold text-foreground">{post.like_count.toLocaleString()}</span>}
           </Button>
-          <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={() => navigate(`/post/${post.id}`)}>
+          <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={() => {
+            if (!showComments && post.profiles.handle) {
+              setReplyText(`@${post.profiles.handle} `);
+            }
+            setShowComments(!showComments);
+          }}>
             <MessageCircle className="h-6 w-6 group-hover:text-primary transition-colors" strokeWidth={1.5} />
             {post.reply_count > 0 && <span className="text-xs text-muted-foreground">{post.reply_count}</span>}
           </Button>
@@ -1028,7 +1033,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       {!showComments && post.reply_count > 0 && (
         <div 
           className="px-3 pb-2 flex items-center gap-2 cursor-pointer group"
-          onClick={() => navigate(`/post/${post.id}`)}
+          onClick={() => setShowComments(true)}
         >
           {/* Overlapping avatar stack (max 3) */}
           <div className="flex items-center -space-x-2">
@@ -1054,30 +1059,11 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </div>
       )}
 
-      {/* Expanded Comments Section - Instagram Style */}
+      {/* Expanded Comments Section */}
       {showComments && (
-        <div className="pb-2">
-          {/* Comment input at top - Instagram style */}
-          {user && (
-            <div className="px-3 py-2 border-t border-border/30">
-              <CommentInput
-                postId={post.id}
-                postAuthorHandle={post.profiles.handle}
-                onCommentSubmitted={() => {
-                  awardNexa('create_reply', { post_id: post.id });
-                }}
-                compact
-              />
-            </div>
-          )}
-          {!user && (
-            <div className="px-3 py-2 border-t border-border/30 text-xs text-muted-foreground">
-              {t('feed.signInToReply')}
-            </div>
-          )}
-
+        <div className="px-3 pb-2">
           {post.replies && post.replies.length > 0 && (
-            <div className="pt-1">
+            <div className="space-y-1 pt-1">
               {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
                 <FeedNestedReplyItem
                   key={reply.id} 
@@ -1096,13 +1082,33 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 />
               ))}
               {organizedReplies.length > visibleRepliesCount && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setVisibleRepliesCount(prev => prev + 10)}
-                  className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-primary text-xs mt-1 hover:underline p-0 h-auto"
                 >
-                  View more comments
-                </button>
+                  {t('feed.loadMoreComments', { count: organizedReplies.length - visibleRepliesCount })}
+                </Button>
               )}
+            </div>
+          )}
+
+          {user && (
+            <div className="mt-2">
+              <CommentInput
+                postId={post.id}
+                postAuthorHandle={post.profiles.handle}
+                onCommentSubmitted={() => {
+                  awardNexa('create_reply', { post_id: post.id });
+                }}
+                compact
+              />
+            </div>
+          )}
+          {!user && (
+            <div className="mt-2 text-xs text-muted-foreground">
+              {t('feed.signInToReply')}
             </div>
           )}
         </div>
