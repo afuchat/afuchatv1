@@ -952,8 +952,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         )}
       </div>
 
-      {/* Text Content */}
-      <div className="px-3 pt-2 pb-1">
+      {/* Text Content - clickable to navigate to post detail */}
+      <div className="px-3 pt-2 pb-1 cursor-pointer" onClick={() => navigate(`/post/${post.id}`)}>
         <ReadMoreText
           text={parsePostContent(translatedContent || post.content, post.id, navigate)}
           maxLines={3}
@@ -990,12 +990,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             <Heart className={`h-6 w-6 transition-all ${post.has_liked ? 'text-red-500 fill-red-500 scale-110' : 'group-hover:text-red-500'}`} strokeWidth={1.5} />
             {post.like_count > 0 && <span className="text-xs font-semibold text-foreground">{post.like_count.toLocaleString()}</span>}
           </Button>
-          <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={() => {
-            if (!showComments && post.profiles.handle) {
-              setReplyText(`@${post.profiles.handle} `);
-            }
-            setShowComments(!showComments);
-          }}>
+          <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={() => navigate(`/post/${post.id}`)}>
             <MessageCircle className="h-6 w-6 group-hover:text-primary transition-colors" strokeWidth={1.5} />
             {post.reply_count > 0 && <span className="text-xs text-muted-foreground">{post.reply_count}</span>}
           </Button>
@@ -1033,7 +1028,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       {!showComments && post.reply_count > 0 && (
         <div 
           className="px-3 pb-2 flex items-center gap-2 cursor-pointer group"
-          onClick={() => setShowComments(true)}
+          onClick={() => navigate(`/post/${post.id}`)}
         >
           {/* Overlapping avatar stack (max 3) */}
           <div className="flex items-center -space-x-2">
