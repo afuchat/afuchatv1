@@ -602,7 +602,7 @@ const PostDetail = () => {
   }
 
   return (
-    <div ref={postRef} className="bg-background border-x border-border max-w-2xl mx-auto pb-8" style={{ minHeight: '100vh', overflowY: 'visible' }}>
+    <div ref={postRef} className="bg-background max-w-2xl mx-auto pb-20" style={{ minHeight: '100dvh', WebkitOverflowScrolling: 'touch' }}>
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="flex items-center gap-3 px-4 py-3">
@@ -613,265 +613,245 @@ const PostDetail = () => {
         </div>
       </div>
 
+      {/* Instagram-style Post Content */}
       <div>
-        
-        {/* --- MAIN POST CONTENT --- */}
-        <div className="p-4 border-b border-border">
-            {/* AUTHOR BLOCK */}
-            <div className="flex items-center gap-3 mb-4">
-              <Link to={`/${post.author.handle}`}>
-                <Avatar className="h-12 w-12 border border-border">
-                  <AvatarImage src={post.author.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-                    {post.author.display_name?.charAt(0)?.toUpperCase() || '?'}
-                  </AvatarFallback>
-                </Avatar>
-              </Link>
-              <Link to={`/${post.author.handle}`} className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="text-lg font-bold hover:underline truncate">
-                    {post.author.display_name}
-                  </span>
-                  <VerifiedBadge 
-                    isVerified={post.author.is_verified} 
-                    isOrgVerified={post.author.is_organization_verified} 
-                  />
-                  {post.author.is_warned && (
-                    <WarningBadge size="sm" reason={post.author.warning_reason} variant="post" />
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">@{post.author.handle}</p>
-              </Link>
-              {/* Edit button for own posts */}
-              {user?.id === post.author.id && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => setIsEditModalOpen(true)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+        {/* Author Header - Instagram style */}
+        <div className="flex items-center gap-3 px-4 py-3">
+          <Link to={`/${post.author.handle}`}>
+            <Avatar className="h-10 w-10 border border-border">
+              <AvatarImage src={post.author.avatar_url || undefined} />
+              <AvatarFallback className="bg-muted text-muted-foreground font-bold">
+                {post.author.display_name?.charAt(0)?.toUpperCase() || '?'}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+          <Link to={`/${post.author.handle}`} className="flex-1 min-w-0">
+            <div className="flex items-center gap-1">
+              <span className="font-bold text-sm hover:underline truncate">
+                {post.author.display_name}
+              </span>
+              <VerifiedBadge 
+                isVerified={post.author.is_verified} 
+                isOrgVerified={post.author.is_organization_verified} 
+              />
+              {post.author.is_warned && (
+                <WarningBadge size="sm" reason={post.author.warning_reason} variant="post" />
               )}
             </div>
-
-            {/* POST TEXT */}
-            <p className="text-2xl leading-relaxed whitespace-pre-wrap mb-4">
-              {renderContentWithMentions(translatedPost || post.content)}
-            </p>
-            {/* POST IMAGE */}
-            {((post.post_images && post.post_images.length > 0) || post.image_url) && (
-              <ImageCarousel
-                images={
-                  post.post_images && post.post_images.length > 0
-                    ? post.post_images
-                        .sort((a, b) => a.display_order - b.display_order)
-                        .map(img => ({ url: img.image_url, alt: img.alt_text || 'Post image' }))
-                    : post.image_url 
-                      ? [{ url: post.image_url, alt: 'Post image' }] 
-                      : []
-                }
-                className="mb-4"
-              />
-            )}
-
-            {/* Quoted Post */}
-            {post.quoted_post && (
-              <QuotedPostCard quotedPost={post.quoted_post} className="mb-4" />
-            )}
-            
-            {post.post_link_previews && post.post_link_previews.length > 0 && (
-              <div className="mb-4 space-y-2">
-                {post.post_link_previews.map((preview, index) => (
-                  <LinkPreviewCard
-                    key={index}
-                    url={preview.url}
-                    title={preview.title}
-                    description={preview.description}
-                    image_url={preview.image_url}
-                    site_name={preview.site_name}
-                  />
-                ))}
-              </div>
-            )}
-            
-            {i18n.language !== 'en' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleTranslatePost}
-                disabled={isTranslatingPost}
-                className="text-xs text-muted-foreground hover:text-primary mb-3 p-0 h-auto"
-              >
-                {isTranslatingPost ? t('common.translating') : translatedPost ? t('common.showOriginal') : t('common.translate')}
-              </Button>
-            )}
-
-            {/* TIME & DATE */}
-            <p className="text-sm text-muted-foreground border-b border-border pb-3 mb-3">
-              {formatDate(post.created_at)}
-            </p>
-
-            {/* STATS SECTION - Interactive buttons */}
-            <div className="flex items-center justify-between py-3 border-t border-border">
-              <div className="flex items-center gap-6">
-                {/* Like Button */}
-                <button 
-                  onClick={handleLike}
-                  disabled={isLiking}
-                  className={cn(
-                    "flex items-center gap-2 transition-colors",
-                    isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-                  )}
-                >
-                  <Heart className={cn("h-5 w-5", isLiked && "fill-red-500")} />
-                  <span className="text-sm font-semibold">{post.likes_count}</span>
-                </button>
-                
-                {/* Comment Button */}
-                <button 
-                  onClick={() => {
-                    const input = document.querySelector('textarea[placeholder]') as HTMLTextAreaElement;
-                    input?.focus();
-                  }}
-                  className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  <span className="text-sm font-semibold">{post.replies_count}</span>
-                </button>
-                
-                {/* Repost Button */}
-                <button 
-                  onClick={handleRepost}
-                  className="flex items-center gap-2 text-muted-foreground hover:text-green-500 transition-colors"
-                >
-                  <Repeat2 className="h-5 w-5" />
-                </button>
-                
-                {/* Views Button */}
-                <button 
-                  onClick={() => setShowViewsSheet(true)}
-                  className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <TrendingUp className="h-5 w-5" />
-                  <span className="text-sm font-semibold">{post.view_count}</span>
-                </button>
-              </div>
-              
-              {/* Share Button */}
-              <button 
-                onClick={handleShare}
-                className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-              >
-                <Send className="h-5 w-5" />
-              </button>
-            </div>
+            <p className="text-xs text-muted-foreground">@{post.author.handle}</p>
+          </Link>
+          {user?.id === post.author.id && (
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setIsEditModalOpen(true)}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
-        {/* --- REPLY INPUT SECTION --- */}
-        <CommentInput
-          postId={postId || ''}
-          replyingTo={replyingTo}
-          postAuthorHandle={post?.author.handle}
-          onCancelReply={() => setReplyingTo(null)}
-          onCommentSubmitted={async () => {
-            // Refresh replies
-            const { data } = await supabase
-              .from('post_replies')
-              .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url)')
-              .eq('post_id', postId);
-            
-            if (data) {
-              const mappedReplies: Reply[] = data.map((r: any) => ({
-                id: r.id,
-                content: r.content,
-                created_at: r.created_at,
-                parent_reply_id: r.parent_reply_id,
-                is_pinned: r.is_pinned,
-                pinned_by: r.pinned_by,
-                pinned_at: r.pinned_at,
-                author: {
-                  display_name: r.profiles.display_name,
-                  handle: r.profiles.handle,
-                  is_verified: r.profiles.is_verified,
-                  is_organization_verified: r.profiles.is_organization_verified,
-                  avatar_url: r.profiles.avatar_url,
-                },
-              }));
-              setReplies(organizeReplies(mappedReplies));
-              setPost(prev => prev ? { ...prev, replies_count: prev.replies_count + 1 } : null);
+        {/* Media - Full width, Instagram style */}
+        {((post.post_images && post.post_images.length > 0) || post.image_url) && (
+          <ImageCarousel
+            images={
+              post.post_images && post.post_images.length > 0
+                ? post.post_images
+                    .sort((a, b) => a.display_order - b.display_order)
+                    .map(img => ({ url: img.image_url, alt: img.alt_text || 'Post image' }))
+                : post.image_url 
+                  ? [{ url: post.image_url, alt: 'Post image' }] 
+                  : []
             }
-          }}
-        />
+            className="rounded-none"
+          />
+        )}
 
-        {/* --- REPLIES LIST --- */}
+        {/* Quoted Post */}
+        {post.quoted_post && (
+          <div className="px-4 pt-2">
+            <QuotedPostCard quotedPost={post.quoted_post} className="mb-2" />
+          </div>
+        )}
+
+        {/* Action Buttons Row - Instagram style */}
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-4">
+            <button onClick={handleLike} disabled={isLiking} className="transition-transform active:scale-90">
+              <Heart className={cn("h-6 w-6", isLiked ? "text-red-500 fill-red-500" : "text-foreground hover:text-muted-foreground")} strokeWidth={1.5} />
+            </button>
+            <button onClick={() => {
+              const input = document.querySelector('textarea[placeholder]') as HTMLTextAreaElement;
+              input?.focus();
+            }}>
+              <MessageCircle className="h-6 w-6 text-foreground hover:text-muted-foreground" strokeWidth={1.5} />
+            </button>
+            <button onClick={handleShare}>
+              <Send className="h-5 w-5 text-foreground hover:text-muted-foreground" strokeWidth={1.5} />
+            </button>
+            <button onClick={handleRepost}>
+              <Repeat2 className="h-6 w-6 text-foreground hover:text-muted-foreground" strokeWidth={1.5} />
+            </button>
+          </div>
+          <button onClick={() => setShowViewsSheet(true)} className="text-muted-foreground hover:text-foreground transition-colors">
+            <TrendingUp className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Likes count */}
+        {post.likes_count > 0 && (
+          <div className="px-4 pb-1">
+            <span className="text-sm font-bold">{post.likes_count.toLocaleString()} {post.likes_count === 1 ? 'like' : 'likes'}</span>
+          </div>
+        )}
+
+        {/* Text Content */}
+        <div className="px-4 pb-2">
+          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+            <Link to={`/${post.author.handle}`} className="font-bold mr-1.5 hover:underline">
+              {post.author.display_name}
+            </Link>
+            {renderContentWithMentions(translatedPost || post.content)}
+          </p>
+          {i18n.language !== 'en' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleTranslatePost}
+              disabled={isTranslatingPost}
+              className="text-xs text-muted-foreground hover:text-primary mt-0.5 p-0 h-auto"
+            >
+              {isTranslatingPost ? t('common.translating') : translatedPost ? t('common.showOriginal') : t('common.translate')}
+            </Button>
+          )}
+        </div>
+
+        {/* Link Previews */}
+        {post.post_link_previews && post.post_link_previews.length > 0 && (
+          <div className="px-4 pb-2 space-y-2">
+            {post.post_link_previews.map((preview, index) => (
+              <LinkPreviewCard
+                key={index}
+                url={preview.url}
+                title={preview.title}
+                description={preview.description}
+                image_url={preview.image_url}
+                site_name={preview.site_name}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Timestamp */}
+        <div className="px-4 pb-3">
+          <p className="text-xs text-muted-foreground">{formatDate(post.created_at)}</p>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-border" />
+
+        {/* Comment Input - Instagram style (sticky at section top) */}
+        <div className="px-4 py-3 border-b border-border">
+          <CommentInput
+            postId={postId || ''}
+            replyingTo={replyingTo}
+            postAuthorHandle={post?.author.handle}
+            onCancelReply={() => setReplyingTo(null)}
+            onCommentSubmitted={async () => {
+              const { data } = await supabase
+                .from('post_replies')
+                .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url, is_warned, warning_reason)')
+                .eq('post_id', postId);
+              
+              if (data) {
+                const mappedReplies: Reply[] = data.map((r: any) => ({
+                  id: r.id,
+                  content: r.content,
+                  created_at: r.created_at,
+                  parent_reply_id: r.parent_reply_id,
+                  is_pinned: r.is_pinned,
+                  pinned_by: r.pinned_by,
+                  pinned_at: r.pinned_at,
+                  author: {
+                    display_name: r.profiles.display_name,
+                    handle: r.profiles.handle,
+                    is_verified: r.profiles.is_verified,
+                    is_organization_verified: r.profiles.is_organization_verified,
+                    avatar_url: r.profiles.avatar_url,
+                    is_warned: r.profiles.is_warned,
+                    warning_reason: r.profiles.warning_reason,
+                  },
+                }));
+                setReplies(organizeReplies(mappedReplies));
+                setPost(prev => prev ? { ...prev, replies_count: prev.replies_count + 1 } : null);
+              }
+            }}
+            compact
+          />
+        </div>
+
+        {/* Comments List - Instagram style */}
         <div className="flex flex-col">
-            {/* Comments header */}
-            <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-              <MessageCircle className="h-6 w-6 text-primary" />
-              <h3 className="font-extrabold text-xl">Comments</h3>
-              {replies.length > 0 && (
-                <span className="text-base font-semibold text-muted-foreground">({replies.length})</span>
-              )}
+          {replies.length > 0 && (
+            <div className="px-4 py-2">
+              <span className="text-sm font-semibold text-muted-foreground">
+                {replies.length} {replies.length === 1 ? 'comment' : 'comments'}
+              </span>
             </div>
-            
-            <div className="divide-y divide-border">
-              {replies.map(reply => (
-                <NestedReplyItem
-                  key={reply.id}
-                  reply={reply}
-                  postId={postId || ''}
-                  depth={0}
-                  onTranslate={handleTranslateReply}
-                  translatedReplies={translatedReplies}
-                  onReplyClick={(replyId, authorHandle) => {
-                    setReplyingTo({ replyId, authorHandle });
-                  }}
-                  onPinReply={handlePinReply}
-                  onDeleteReply={handleDeleteReply}
-                  isPostAuthor={user?.id === post?.author.id}
-                  currentUserId={user?.id}
-                  VerifiedBadge={VerifiedBadge}
-                  renderContentWithMentions={renderContentWithMentions}
-                  onCommentSubmitted={async () => {
-                    // Refresh replies
-                    const { data } = await supabase
-                      .from('post_replies')
-                      .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url)')
-                      .eq('post_id', postId);
-                    
-                    if (data) {
-                      const mappedReplies: Reply[] = data.map((r: any) => ({
-                        id: r.id,
-                        content: r.content,
-                        created_at: r.created_at,
-                        parent_reply_id: r.parent_reply_id,
-                        is_pinned: r.is_pinned,
-                        pinned_by: r.pinned_by,
-                        pinned_at: r.pinned_at,
-                        author: {
-                          display_name: r.profiles.display_name,
-                          handle: r.profiles.handle,
-                          is_verified: r.profiles.is_verified,
-                          is_organization_verified: r.profiles.is_organization_verified,
-                          avatar_url: r.profiles.avatar_url,
-                        },
-                      }));
-                      setReplies(organizeReplies(mappedReplies));
-                      setPost(prev => prev ? { ...prev, replies_count: prev.replies_count + 1 } : null);
-                    }
-                  }}
-                />
-              ))}
+          )}
+          
+          <div>
+            {replies.map(reply => (
+              <NestedReplyItem
+                key={reply.id}
+                reply={reply}
+                postId={postId || ''}
+                depth={0}
+                onTranslate={handleTranslateReply}
+                translatedReplies={translatedReplies}
+                onReplyClick={(replyId, authorHandle) => {
+                  setReplyingTo({ replyId, authorHandle });
+                }}
+                onPinReply={handlePinReply}
+                onDeleteReply={handleDeleteReply}
+                isPostAuthor={user?.id === post?.author.id}
+                currentUserId={user?.id}
+                VerifiedBadge={VerifiedBadge}
+                renderContentWithMentions={renderContentWithMentions}
+                onCommentSubmitted={async () => {
+                  const { data } = await supabase
+                    .from('post_replies')
+                    .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url)')
+                    .eq('post_id', postId);
+                  
+                  if (data) {
+                    const mappedReplies: Reply[] = data.map((r: any) => ({
+                      id: r.id,
+                      content: r.content,
+                      created_at: r.created_at,
+                      parent_reply_id: r.parent_reply_id,
+                      is_pinned: r.is_pinned,
+                      pinned_by: r.pinned_by,
+                      pinned_at: r.pinned_at,
+                      author: {
+                        display_name: r.profiles.display_name,
+                        handle: r.profiles.handle,
+                        is_verified: r.profiles.is_verified,
+                        is_organization_verified: r.profiles.is_organization_verified,
+                        avatar_url: r.profiles.avatar_url,
+                      },
+                    }));
+                    setReplies(organizeReplies(mappedReplies));
+                    setPost(prev => prev ? { ...prev, replies_count: prev.replies_count + 1 } : null);
+                  }
+                }}
+              />
+            ))}
+          </div>
+          
+          {replies.length === 0 && (
+            <div className="text-center py-12">
+              <MessageCircle className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
+              <p className="text-sm text-muted-foreground">No comments yet</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">Be the first to comment</p>
             </div>
-            
-            {replies.length === 0 && (
-              <div className="text-center py-12">
-                <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground font-medium">No comments yet</p>
-                <p className="text-sm text-muted-foreground/70">Be the first to share your thoughts!</p>
-              </div>
-            )}
+          )}
         </div>
       </div>
 
@@ -883,7 +863,6 @@ const PostDetail = () => {
         isPostOwner={user?.id === post?.author.id}
       />
 
-      {/* Edit Post Modal */}
       {post && (
         <EditPostModal
           isOpen={isEditModalOpen}
@@ -899,7 +878,6 @@ const PostDetail = () => {
           }}
           onPostUpdated={() => {
             setIsEditModalOpen(false);
-            // Refresh post data
             window.location.reload();
           }}
         />
