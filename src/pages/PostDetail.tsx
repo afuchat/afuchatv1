@@ -254,7 +254,7 @@ const PostDetail = () => {
     
     if (navigator.share) {
       navigator.share({ 
-        title: post?.author.display_name ? `Post by ${post.author.display_name}` : 'Check out this post',
+        title: post?.author?.display_name ? `Post by ${post.author.display_name}` : 'Check out this post',
         url 
       });
     } else {
@@ -507,7 +507,7 @@ const PostDetail = () => {
   };
 
   const handlePinReply = async (replyId: string, currentPinnedState: boolean) => {
-    if (!user || !post || user.id !== post.author.id) {
+    if (!user || !post || user.id !== post.author?.id) {
       toast.error('Only post authors can pin comments');
       return;
     }
@@ -616,21 +616,21 @@ const PostDetail = () => {
       <article className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Link to={`/${post.author.handle}`}>
+            <Link to={`/${post.author?.handle}`}>
               <Avatar className="h-12 w-12">
-                <AvatarImage src={post.author.avatar_url ?? undefined} />
-                <AvatarFallback>{post.author.display_name[0]}</AvatarFallback>
+                <AvatarImage src={post.author?.avatar_url ?? undefined} />
+                <AvatarFallback>{post.author?.display_name?.[0] || 'U'}</AvatarFallback>
               </Avatar>
             </Link>
             <div className="flex flex-col">
               <div className="flex items-center gap-1">
-                <span className="font-bold">{post.author.display_name}</span>
-                <VerifiedBadge isVerified={post.author.is_verified} isOrg={post.author.is_organization_verified} />
+                <span className="font-bold">{post.author?.display_name}</span>
+                <VerifiedBadge isVerified={post.author?.is_verified} isOrg={post.author?.is_organization_verified} />
               </div>
-              <span className="text-muted-foreground text-sm">@{post.author.handle}</span>
+              <span className="text-muted-foreground text-sm">@{post.author?.handle}</span>
             </div>
           </div>
-          {user?.id === post.author.id && (
+          {user?.id === post.author?.id && (
             <Button variant="ghost" size="icon" onClick={() => setIsEditModalOpen(true)}>
               <Pencil className="h-4 w-4" />
             </Button>
@@ -639,7 +639,7 @@ const PostDetail = () => {
 
         <div className="text-[1.35rem] leading-snug mb-4 break-words">
           {renderContentWithMentions(translatedPost || post.content)}
-          {post.author.is_warned && <WarningBadge reason={post.author.warning_reason} />}
+          {post.author?.is_warned && <WarningBadge reason={post.author?.warning_reason} />}
         </div>
 
         <Button 
@@ -715,7 +715,7 @@ const PostDetail = () => {
           <NestedReplyItem 
             key={reply.id} 
             reply={reply} 
-            postAuthorId={post.author.id}
+            postAuthorId={post.author?.id}
             onDelete={handleDeleteReply}
             onPin={handlePinReply}
           />
