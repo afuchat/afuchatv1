@@ -1029,23 +1029,33 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </Button>
       </div>
 
-      {/* Highlighted Comments Preview */}
-      {!showComments && organizedReplies.length > 0 && (
-        <div className="px-3 pb-1">
-          {organizedReplies.slice(0, 2).map((reply) => (
-            <div key={reply.id} className="flex gap-1.5 py-0.5">
-              <span className="text-sm font-bold text-foreground truncate max-w-[100px]">{reply.profiles.display_name}</span>
-              <span className="text-sm text-foreground line-clamp-1 flex-1">{reply.content}</span>
-            </div>
-          ))}
-          {post.reply_count > 2 && (
-            <span
-              className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-              onClick={() => setShowComments(true)}
-            >
-              View all {post.reply_count} comments
-            </span>
-          )}
+      {/* Highlighted Comments Preview - Overlapping Avatars + Count */}
+      {!showComments && post.reply_count > 0 && (
+        <div 
+          className="px-3 pb-2 flex items-center gap-2 cursor-pointer group"
+          onClick={() => setShowComments(true)}
+        >
+          {/* Overlapping avatar stack (max 3) */}
+          <div className="flex items-center -space-x-2">
+            {organizedReplies.slice(0, 3).map((reply, idx) => (
+              <Avatar 
+                key={reply.id} 
+                className="h-7 w-7 ring-2 ring-background border-0 shadow-none"
+                style={{ zIndex: 3 - idx }}
+              >
+                <AvatarImage src={reply.profiles.avatar_url || undefined} alt={reply.profiles.display_name} />
+                <AvatarFallback className="text-[10px] font-semibold bg-muted text-muted-foreground">
+                  {reply.profiles.display_name?.charAt(0)?.toUpperCase() || '?'}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+          </div>
+          {/* Comment count */}
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+            {post.reply_count === 1 
+              ? 'View 1 comment' 
+              : `View all ${post.reply_count} comments`}
+          </span>
         </div>
       )}
 
