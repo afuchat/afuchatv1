@@ -602,309 +602,137 @@ const PostDetail = () => {
   }
 
   return (
-    <div ref={postRef} className="bg-background border-x border-border max-w-2xl mx-auto pb-8" style={{ minHeight: '100vh', overflowY: 'visible' }}>
+    <div ref={postRef} className="bg-background border-x border-border max-w-2xl mx-auto pb-8 min-h-screen">
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold">Post</h1>
+          <h2 className="text-xl font-bold">Post</h2>
         </div>
       </div>
 
-      <div>
-        
-        {/* --- MAIN POST CONTENT --- */}
-        <div className="p-4 border-b border-border">
-            {/* AUTHOR BLOCK */}
-            <div className="flex items-center gap-3 mb-4">
-              <Link to={`/${post.author.handle}`}>
-                <Avatar className="h-12 w-12 border border-border">
-                  <AvatarImage src={post.author.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-                    {post.author.display_name?.charAt(0)?.toUpperCase() || '?'}
-                  </AvatarFallback>
-                </Avatar>
-              </Link>
-              <Link to={`/${post.author.handle}`} className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="text-lg font-bold hover:underline truncate">
-                    {post.author.display_name}
-                  </span>
-                  <VerifiedBadge 
-                    isVerified={post.author.is_verified} 
-                    isOrgVerified={post.author.is_organization_verified} 
-                  />
-                  {post.author.is_warned && (
-                    <WarningBadge size="sm" reason={post.author.warning_reason} variant="post" />
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">@{post.author.handle}</p>
-              </Link>
-              {/* Edit button for own posts */}
-              {user?.id === post.author.id && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => setIsEditModalOpen(true)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-
-            {/* POST TEXT */}
-            <p className="text-2xl leading-relaxed whitespace-pre-wrap mb-4">
-              {renderContentWithMentions(translatedPost || post.content)}
-            </p>
-            {/* POST IMAGE */}
-            {((post.post_images && post.post_images.length > 0) || post.image_url) && (
-              <ImageCarousel
-                images={
-                  post.post_images && post.post_images.length > 0
-                    ? post.post_images
-                        .sort((a, b) => a.display_order - b.display_order)
-                        .map(img => ({ url: img.image_url, alt: img.alt_text || 'Post image' }))
-                    : post.image_url 
-                      ? [{ url: post.image_url, alt: 'Post image' }] 
-                      : []
-                }
-                className="mb-4"
-              />
-            )}
-
-            {/* Quoted Post */}
-            {post.quoted_post && (
-              <QuotedPostCard quotedPost={post.quoted_post} className="mb-4" />
-            )}
-            
-            {post.post_link_previews && post.post_link_previews.length > 0 && (
-              <div className="mb-4 space-y-2">
-                {post.post_link_previews.map((preview, index) => (
-                  <LinkPreviewCard
-                    key={index}
-                    url={preview.url}
-                    title={preview.title}
-                    description={preview.description}
-                    image_url={preview.image_url}
-                    site_name={preview.site_name}
-                  />
-                ))}
+      <article className="p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Link to={`/${post.author.handle}`}>
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={post.author.avatar_url ?? undefined} />
+                <AvatarFallback>{post.author.display_name[0]}</AvatarFallback>
+              </Avatar>
+            </Link>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1">
+                <span className="font-bold">{post.author.display_name}</span>
+                <VerifiedBadge isVerified={post.author.is_verified} isOrg={post.author.is_organization_verified} />
               </div>
-            )}
-            
-            {i18n.language !== 'en' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleTranslatePost}
-                disabled={isTranslatingPost}
-                className="text-xs text-muted-foreground hover:text-primary mb-3 p-0 h-auto"
-              >
-                {isTranslatingPost ? t('common.translating') : translatedPost ? t('common.showOriginal') : t('common.translate')}
-              </Button>
-            )}
-
-            {/* TIME & DATE */}
-            <p className="text-sm text-muted-foreground border-b border-border pb-3 mb-3">
-              {formatDate(post.created_at)}
-            </p>
-
-            {/* STATS SECTION - Interactive buttons */}
-            <div className="flex items-center justify-between py-3 border-t border-border">
-              <div className="flex items-center gap-6">
-                {/* Like Button */}
-                <button 
-                  onClick={handleLike}
-                  disabled={isLiking}
-                  className={cn(
-                    "flex items-center gap-2 transition-colors",
-                    isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-                  )}
-                >
-                  <Heart className={cn("h-5 w-5", isLiked && "fill-red-500")} />
-                  <span className="text-sm font-semibold">{post.likes_count}</span>
-                </button>
-                
-                {/* Comment Button */}
-                <button 
-                  onClick={() => {
-                    const input = document.querySelector('textarea[placeholder]') as HTMLTextAreaElement;
-                    input?.focus();
-                  }}
-                  className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  <span className="text-sm font-semibold">{post.replies_count}</span>
-                </button>
-                
-                {/* Repost Button */}
-                <button 
-                  onClick={handleRepost}
-                  className="flex items-center gap-2 text-muted-foreground hover:text-green-500 transition-colors"
-                >
-                  <Repeat2 className="h-5 w-5" />
-                </button>
-                
-                {/* Views Button */}
-                <button 
-                  onClick={() => setShowViewsSheet(true)}
-                  className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <TrendingUp className="h-5 w-5" />
-                  <span className="text-sm font-semibold">{post.view_count}</span>
-                </button>
-              </div>
-              
-              {/* Share Button */}
-              <button 
-                onClick={handleShare}
-                className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-              >
-                <Send className="h-5 w-5" />
-              </button>
+              <span className="text-muted-foreground text-sm">@{post.author.handle}</span>
             </div>
+          </div>
+          {user?.id === post.author.id && (
+            <Button variant="ghost" size="icon" onClick={() => setIsEditModalOpen(true)}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
-        {/* --- REPLY INPUT SECTION --- */}
-        <CommentInput
-          postId={postId || ''}
-          replyingTo={replyingTo}
-          postAuthorHandle={post?.author.handle}
-          onCancelReply={() => setReplyingTo(null)}
-          onCommentSubmitted={async () => {
-            // Refresh replies
-            const { data } = await supabase
-              .from('post_replies')
-              .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url)')
-              .eq('post_id', postId);
-            
-            if (data) {
-              const mappedReplies: Reply[] = data.map((r: any) => ({
-                id: r.id,
-                content: r.content,
-                created_at: r.created_at,
-                parent_reply_id: r.parent_reply_id,
-                is_pinned: r.is_pinned,
-                pinned_by: r.pinned_by,
-                pinned_at: r.pinned_at,
-                author: {
-                  display_name: r.profiles.display_name,
-                  handle: r.profiles.handle,
-                  is_verified: r.profiles.is_verified,
-                  is_organization_verified: r.profiles.is_organization_verified,
-                  avatar_url: r.profiles.avatar_url,
-                },
-              }));
-              setReplies(organizeReplies(mappedReplies));
-              setPost(prev => prev ? { ...prev, replies_count: prev.replies_count + 1 } : null);
-            }
-          }}
-        />
-
-        {/* --- REPLIES LIST --- */}
-        <div className="flex flex-col">
-            {/* Comments header */}
-            <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-              <MessageCircle className="h-6 w-6 text-primary" />
-              <h3 className="font-extrabold text-xl">Comments</h3>
-              {replies.length > 0 && (
-                <span className="text-base font-semibold text-muted-foreground">({replies.length})</span>
-              )}
-            </div>
-            
-            <div className="divide-y divide-border">
-              {replies.map(reply => (
-                <NestedReplyItem
-                  key={reply.id}
-                  reply={reply}
-                  postId={postId || ''}
-                  depth={0}
-                  onTranslate={handleTranslateReply}
-                  translatedReplies={translatedReplies}
-                  onReplyClick={(replyId, authorHandle) => {
-                    setReplyingTo({ replyId, authorHandle });
-                  }}
-                  onPinReply={handlePinReply}
-                  onDeleteReply={handleDeleteReply}
-                  isPostAuthor={user?.id === post?.author.id}
-                  currentUserId={user?.id}
-                  VerifiedBadge={VerifiedBadge}
-                  renderContentWithMentions={renderContentWithMentions}
-                  onCommentSubmitted={async () => {
-                    // Refresh replies
-                    const { data } = await supabase
-                      .from('post_replies')
-                      .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url)')
-                      .eq('post_id', postId);
-                    
-                    if (data) {
-                      const mappedReplies: Reply[] = data.map((r: any) => ({
-                        id: r.id,
-                        content: r.content,
-                        created_at: r.created_at,
-                        parent_reply_id: r.parent_reply_id,
-                        is_pinned: r.is_pinned,
-                        pinned_by: r.pinned_by,
-                        pinned_at: r.pinned_at,
-                        author: {
-                          display_name: r.profiles.display_name,
-                          handle: r.profiles.handle,
-                          is_verified: r.profiles.is_verified,
-                          is_organization_verified: r.profiles.is_organization_verified,
-                          avatar_url: r.profiles.avatar_url,
-                        },
-                      }));
-                      setReplies(organizeReplies(mappedReplies));
-                      setPost(prev => prev ? { ...prev, replies_count: prev.replies_count + 1 } : null);
-                    }
-                  }}
-                />
-              ))}
-            </div>
-            
-            {replies.length === 0 && (
-              <div className="text-center py-12">
-                <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground font-medium">No comments yet</p>
-                <p className="text-sm text-muted-foreground/70">Be the first to share your thoughts!</p>
-              </div>
-            )}
+        <div className="text-[1.35rem] leading-snug mb-4 break-words">
+          {renderContentWithMentions(translatedPost || post.content)}
+          {post.author.is_warned && <WarningBadge reason={post.author.warning_reason} />}
         </div>
+
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-primary h-7 px-2 mb-4" 
+          onClick={handleTranslatePost}
+          disabled={isTranslatingPost}
+        >
+          {isTranslatingPost ? 'Translating...' : translatedPost ? 'Show Original' : 'Translate Post'}
+        </Button>
+
+        {post.post_images && post.post_images.length > 0 && (
+          <div className="mb-4 rounded-2xl overflow-hidden border border-border">
+            <ImageCarousel images={post.post_images.map(img => img.image_url)} />
+          </div>
+        )}
+
+        {post.post_link_previews?.map((preview, idx) => (
+          <div key={idx} className="mb-4">
+            <LinkPreviewCard {...preview} />
+          </div>
+        ))}
+
+        {post.quoted_post && (
+          <div className="mb-4">
+            <QuotedPostCard post={post.quoted_post} />
+          </div>
+        )}
+
+        <div className="text-muted-foreground py-3 border-b border-border text-[0.95rem]">
+          {formatDate(post.created_at)}
+        </div>
+
+        <div className="flex items-center gap-6 py-4 border-b border-border text-sm">
+          <button onClick={() => setShowViewsSheet(true)} className="hover:underline flex items-center gap-1">
+            <span className="font-bold">{post.view_count}</span>
+            <span className="text-muted-foreground">Views</span>
+          </button>
+          <div className="flex items-center gap-1">
+            <span className="font-bold">{post.likes_count}</span>
+            <span className="text-muted-foreground">Likes</span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-around py-2 border-b border-border">
+          <Button variant="ghost" size="sm" className="text-muted-foreground">
+            <MessageCircle className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleRepost} className="text-muted-foreground hover:text-green-500">
+            <Repeat2 className="h-5 w-5" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleLike} 
+            className={cn(isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500")}
+          >
+            <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleShare} className="text-muted-foreground">
+            <Send className="h-5 w-5" />
+          </Button>
+        </div>
+      </article>
+
+      <div className="px-4 py-2 border-b border-border">
+        <CommentInput postId={post.id} onSuccess={fetchPostAndReplies} />
       </div>
 
-      <ViewsAnalyticsSheet
-        postId={postId || ''}
-        isOpen={showViewsSheet}
-        onClose={() => setShowViewsSheet(false)}
-        totalViews={post?.view_count || 0}
-        isPostOwner={user?.id === post?.author.id}
+      <div className="divide-y divide-border">
+        {replies.map((reply) => (
+          <NestedReplyItem 
+            key={reply.id} 
+            reply={reply} 
+            postAuthorId={post.author.id}
+            onDelete={handleDeleteReply}
+            onPin={handlePinReply}
+          />
+        ))}
+      </div>
+
+      <EditPostModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        post={post} 
       />
-
-      {/* Edit Post Modal */}
-      {post && (
-        <EditPostModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          post={{
-            id: post.id,
-            content: post.content,
-            image_url: post.image_url,
-            post_images: post.post_images?.map(img => ({
-              image_url: img.image_url,
-              display_order: img.display_order
-            }))
-          }}
-          onPostUpdated={() => {
-            setIsEditModalOpen(false);
-            // Refresh post data
-            window.location.reload();
-          }}
-        />
-      )}
-      {user && <FloatingActionButton />}
+      <ViewsAnalyticsSheet 
+        isOpen={showViewsSheet} 
+        onClose={() => setShowViewsSheet(false)} 
+        postId={post.id} 
+      />
+      <FloatingActionButton />
     </div>
   );
 };
