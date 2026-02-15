@@ -13,15 +13,10 @@ import {
   Key,
   Activity,
   Sparkles,
+  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
 import { PageHeader } from '@/components/PageHeader';
 
 // Settings components
@@ -44,23 +39,6 @@ type SettingsTab =
   | '2fa'
   | 'activity';
 
-const SectionHeader = ({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) => (
-  <div className="space-y-1 mb-6">
-    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-      {title}
-    </h2>
-    <p className="text-muted-foreground text-sm md:text-base">
-      {description}
-    </p>
-  </div>
-);
-
 const Settings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -79,7 +57,6 @@ const Settings = () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Logout error:', error);
         localStorage.clear();
         window.location.href = '/';
         return;
@@ -87,7 +64,6 @@ const Settings = () => {
       toast.success('Logged out successfully');
       navigate('/');
     } catch (error: any) {
-      console.error('Logout error:', error);
       toast.error(error?.message || 'Failed to log out');
       localStorage.clear();
       window.location.href = '/';
@@ -96,14 +72,37 @@ const Settings = () => {
 
   const tabs = [
     { value: 'account', label: 'Account', icon: User },
-    { value: 'security', label: 'Security', icon: Shield },
-    { value: '2fa', label: '2FA', icon: Key },
-    { value: 'blocked', label: 'Blocked', icon: UserX },
+    { value: 'security', label: 'Security & Privacy', icon: Shield },
+    { value: '2fa', label: 'Two-Factor Authentication', icon: Key },
+    { value: 'blocked', label: 'Blocked Users', icon: UserX },
     { value: 'notifications', label: 'Notifications', icon: Bell },
-    { value: 'activity', label: 'Activity', icon: Activity },
+    { value: 'activity', label: 'Activity Log', icon: Activity },
     { value: 'data', label: 'Data & Privacy', icon: Database },
     { value: 'appearance', label: 'Appearance', icon: Palette },
   ];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'account':
+        return <AccountSettings />;
+      case 'security':
+        return <SecuritySettings />;
+      case '2fa':
+        return <TwoFactorAuthSettings />;
+      case 'blocked':
+        return <BlockedUsersSettings />;
+      case 'notifications':
+        return <NotificationsSettings />;
+      case 'activity':
+        return <ActivityLog />;
+      case 'data':
+        return <DataPrivacySettings />;
+      case 'appearance':
+        return <AppearanceSettings />;
+      default:
+        return <AccountSettings />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -127,102 +126,41 @@ const Settings = () => {
         }
       />
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) =>
-            handleTabChange(value as SettingsTab)
-          }
-          className="w-full"
-        >
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* Sidebar */}
-            <div className="md:w-64 w-full">
-              <TabsList className="flex md:flex-col flex-col gap-2 bg-muted/40 p-2 rounded-xl w-full">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="flex items-center gap-3 px-4 py-2 rounded-lg justify-start"
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="text-sm">{tab.label}</span>
-                    </TabsTrigger>
-                  );
-                })}
-              </TabsList>
-            </div>
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row">
 
-            {/* Content */}
-            <div className="flex-1">
-              <TabsContent value="account">
-                <SectionHeader
-                  title="Account Settings"
-                  description="Manage your account and profile information"
-                />
-                <AccountSettings />
-              </TabsContent>
+        {/* Sidebar */}
+        <div className="w-full md:w-72 border-r border-border">
+          <div className="flex flex-col">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.value;
 
-              <TabsContent value="security">
-                <SectionHeader
-                  title="Security & Privacy"
-                  description="Manage your account security and privacy settings"
-                />
-                <SecuritySettings />
-              </TabsContent>
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => handleTabChange(tab.value as SettingsTab)}
+                  className={`flex items-center justify-between px-4 py-4 text-left transition-colors border-b border-border ${
+                    isActive
+                      ? 'font-semibold bg-muted'
+                      : 'hover:bg-muted/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-5 w-5" />
+                    <span className="text-sm">{tab.label}</span>
+                  </div>
 
-              <TabsContent value="2fa">
-                <SectionHeader
-                  title="Two-Factor Authentication"
-                  description="Add an extra layer of security to your account"
-                />
-                <TwoFactorAuthSettings />
-              </TabsContent>
-
-              <TabsContent value="blocked">
-                <SectionHeader
-                  title="Blocked Users"
-                  description="Manage users you've blocked"
-                />
-                <BlockedUsersSettings />
-              </TabsContent>
-
-              <TabsContent value="notifications">
-                <SectionHeader
-                  title="Notifications"
-                  description="Control how you receive notifications"
-                />
-                <NotificationsSettings />
-              </TabsContent>
-
-              <TabsContent value="activity">
-                <SectionHeader
-                  title="Activity Log"
-                  description="View your recent activity and Nexa earnings"
-                />
-                <ActivityLog />
-              </TabsContent>
-
-              <TabsContent value="data">
-                <SectionHeader
-                  title="Data & Privacy"
-                  description="Manage your data and privacy preferences"
-                />
-                <DataPrivacySettings />
-              </TabsContent>
-
-              <TabsContent value="appearance">
-                <SectionHeader
-                  title="Appearance"
-                  description="Customize how the app looks"
-                />
-                <AppearanceSettings />
-              </TabsContent>
-            </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              );
+            })}
           </div>
-        </Tabs>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 px-4 md:px-8 py-6">
+          {renderContent()}
+        </div>
       </div>
     </div>
   );
