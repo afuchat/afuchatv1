@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -171,6 +171,7 @@ interface SuggestedUser {
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
   
@@ -373,12 +374,33 @@ const Onboarding = () => {
     autoDetectCountry();
   }, []);
 
-  // Skip to correct step if already authenticated
+  // Skip to correct step if already authenticated or after redirect
   useEffect(() => {
-    if (!authLoading && user) {
-      loadProfileData();
+    if (authLoading) return;
+
+    const params = new URLSearchParams(location.search);
+
+    if (!user) {
+      // Not logged in → force auth step
+      setCurrentStep(0);
+      // Check if signin mode from params
+      if (params.get('signin') === 'true') {
+        setAuthMode('login');
+      }
+      return;
     }
-  }, [user, authLoading]);
+
+    // We have a user → load profile & decide step
+    loadProfileData();
+
+    // Check URL param after confirmation or OAuth redirect
+    if (params.get('welcome') === 'true' || params.get('mode') === 'oauth') {
+      // Came from confirmation link or OAuth redirect
+      setCurrentStep(1); // Start from account type
+      // Clean URL
+      navigate('/onboarding', { replace: true });
+    }
+  }, [user, authLoading, navigate, location.search]);
 
   const loadProfileData = async () => {
     if (!user) return;
@@ -464,9 +486,7 @@ const Onboarding = () => {
       setCurrentStep(correctStep);
     } else {
       // No profile data, ensure we're at step 1 (account type) if authenticated
-      if (currentStep === 0) {
-        setCurrentStep(1);
-      }
+      setCurrentStep(1);
     }
   };
 
@@ -572,7 +592,7 @@ const Onboarding = () => {
     setLoading(true);
     try {
       if (authMode === 'signup') {
-        const redirectUrl = `${window.location.origin}/onboarding`;
+        const redirectUrl = `${window.location.origin}/onboarding?welcome=true`;
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -580,14 +600,32 @@ const Onboarding = () => {
         });
         if (error) throw error;
         toast.success('Account created! Check your email to verify.');
+        // Do not navigate - wait for confirmation
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success('Welcome back!');
+        // Let useEffect handle step advancement
       }
     } catch (error: any) {
       toast.error(error.message || 'Authentication failed');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+    setLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/onboarding?mode=oauth`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: redirectUrl }
+      });
+      if (error) throw error;
+      // Supabase will handle the redirect to provider and back
+    } catch (error: any) {
+      toast.error(error.message || `Failed to sign in with ${provider}`);
       setLoading(false);
     }
   };
@@ -617,8 +655,8 @@ const Onboarding = () => {
       // Determine file extension and content type
       const fileExt = avatarFile.name?.split('.').pop()?.toLowerCase() || 'jpg';
       const contentType = avatarFile.type || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      const fileName = `\( {Date.now()}. \){fileExt}`;
+      const filePath = `\( {user.id}/ \){fileName}`;
 
       const { error } = await supabase.storage
         .from('avatars')
@@ -964,21 +1002,6 @@ const Onboarding = () => {
       </div>
     </div>
   );
-
-  const handleOAuthLogin = async (provider: 'google' | 'github') => {
-    setLoading(true);
-    try {
-      const redirectUrl = `${window.location.origin}/onboarding`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: redirectUrl }
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      toast.error(error.message || `Failed to sign in with ${provider}`);
-      setLoading(false);
-    }
-  };
 
   const renderAuthStep = () => (
     <motion.div
