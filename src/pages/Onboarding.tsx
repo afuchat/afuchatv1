@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -171,6 +171,7 @@ interface SuggestedUser {
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
   
@@ -180,11 +181,13 @@ const Onboarding = () => {
     return saved ? parseInt(saved, 10) : 0;
   });
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false); // New: for transition UX
 
   // Save step to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('onboarding_step', currentStep.toString());
   }, [currentStep]);
+
   const [showPassword, setShowPassword] = useState(false);
   
   // Auth state - check for signin query param
@@ -373,19 +376,41 @@ const Onboarding = () => {
     autoDetectCountry();
   }, []);
 
-  // Skip to correct step if already authenticated
+  // Skip to correct step if already authenticated or after redirect
   useEffect(() => {
-    if (!authLoading && user) {
-      loadProfileData();
+    if (authLoading) return;
+
+    const params = new URLSearchParams(location.search);
+
+    if (!user) {
+      // Not logged in → force auth step
+      setCurrentStep(0);
+      // Check if signin mode from params
+      if (params.get('signin') === 'true') {
+        setAuthMode('login');
+      }
+      return;
     }
-  }, [user, authLoading]);
+
+    // Immediate advancement for authenticated users (no delay)
+    setProfileLoading(true); // Show loader during check
+    setCurrentStep(1); // Assume new/partial user, start at account type
+
+    // Background load profile to advance further if needed
+    loadProfileData().finally(() => setProfileLoading(false));
+
+    // Clean URL if from redirect
+    if (params.get('welcome') === 'true' || params.get('mode') === 'oauth') {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [user, authLoading, navigate, location.search]);
 
   const loadProfileData = async () => {
     if (!user) return;
     
     const { data: profile } = await supabase
       .from('profiles')
-      .select('display_name, handle, bio, avatar_url, interests, country, date_of_birth, phone_number')
+      .select('display_name, handle, bio, avatar_url, interests, country, date_of_birth, phone_number, is_business_mode')
       .eq('id', user.id)
       .maybeSingle();
     
@@ -402,10 +427,10 @@ const Onboarding = () => {
       if (profile.country) setCountry(profile.country);
       if (profile.date_of_birth) setDateOfBirth(profile.date_of_birth);
       if (profile.phone_number) setPhoneNumber(profile.phone_number);
+      if (profile.is_business_mode !== undefined) setAccountType(profile.is_business_mode ? 'business' : 'personal');
       
-      // Check completion status for each step
-      const isProfileComplete = profile.display_name && profile.handle && profile.country && 
-                                profile.date_of_birth && profile.avatar_url;
+      // Check completion status for each step (relaxed: only require essentials for "complete")
+      const isProfileComplete = profile.handle && profile.avatar_url; // Relaxed check
       const hasInterests = profile.interests && (profile.interests as string[]).length > 0;
       
       // Check if user has followed anyone
@@ -417,56 +442,36 @@ const Onboarding = () => {
       
       const hasFollows = follows && follows.length > 0;
       
-      // Determine correct step based on saved localStorage step vs actual completion
-      const savedStep = parseInt(localStorage.getItem('onboarding_step') || '0', 10);
-      
-      // If user has completed everything - go to home
+      // If fully completed, go home immediately
       if (isProfileComplete && hasInterests && hasFollows) {
         localStorage.removeItem('onboarding_step');
         navigate('/home', { replace: true });
         return;
       }
       
-      // Otherwise, determine the correct step the user should be on
-      // Step 0: Auth (skip if user exists)
-      // Step 1: Account Type
-      // Step 2: Profile
-      // Step 3: Interests
-      // Step 4: Suggestions
-      // Step 5: Tour
+      // Determine correct step based on completion (no loop back to 0)
+      const savedStep = parseInt(localStorage.getItem('onboarding_step') || '1', 10); // Start from 1 min
       
       let correctStep = savedStep;
       
-      // If at auth step but user exists, move to account type
-      if (savedStep === 0) {
-        correctStep = 1;
-      }
-      
-      // Enforce sequential completion - can't skip ahead of required steps
-      // Profile must be complete before interests (step 3)
+      // Enforce sequential completion
       if (!isProfileComplete && correctStep >= 3) {
         correctStep = 2;
-      }
-      // Interests must be complete before suggestions (step 4)
-      else if (isProfileComplete && !hasInterests && correctStep >= 4) {
+      } else if (isProfileComplete && !hasInterests && correctStep >= 4) {
         correctStep = 3;
-      }
-      // Must follow at least one user before tour (step 5)
-      else if (isProfileComplete && hasInterests && !hasFollows && correctStep >= 5) {
+      } else if (isProfileComplete && hasInterests && !hasFollows && correctStep >= 5) {
         correctStep = 4;
       }
       
-      // Load suggested users if we're at or going to step 4
+      // Load suggested users if needed
       if (correctStep === 4) {
         await loadSuggestedUsers();
       }
       
       setCurrentStep(correctStep);
     } else {
-      // No profile data, ensure we're at step 1 (account type) if authenticated
-      if (currentStep === 0) {
-        setCurrentStep(1);
-      }
+      // No profile yet (brand new) - stay at 1
+      setCurrentStep(1);
     }
   };
 
@@ -572,7 +577,7 @@ const Onboarding = () => {
     setLoading(true);
     try {
       if (authMode === 'signup') {
-        const redirectUrl = `${window.location.origin}/onboarding`;
+        const redirectUrl = `${window.location.origin}/onboarding?welcome=true`;
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -580,14 +585,32 @@ const Onboarding = () => {
         });
         if (error) throw error;
         toast.success('Account created! Check your email to verify.');
+        // Do not navigate - wait for confirmation
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success('Welcome back!');
+        // Let useEffect handle step advancement
       }
     } catch (error: any) {
       toast.error(error.message || 'Authentication failed');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+    setLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/onboarding?mode=oauth`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: redirectUrl }
+      });
+      if (error) throw error;
+      // Supabase will handle the redirect to provider and back
+    } catch (error: any) {
+      toast.error(error.message || `Failed to sign in with ${provider}`);
       setLoading(false);
     }
   };
@@ -617,8 +640,8 @@ const Onboarding = () => {
       // Determine file extension and content type
       const fileExt = avatarFile.name?.split('.').pop()?.toLowerCase() || 'jpg';
       const contentType = avatarFile.type || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      const fileName = `\( {Date.now()}. \){fileExt}`;
+      const filePath = `\( {user.id}/ \){fileName}`;
 
       const { error } = await supabase.storage
         .from('avatars')
@@ -784,11 +807,9 @@ const Onboarding = () => {
         setShowRewardModal(true);
         setTimeout(() => {
           setShowRewardModal(false);
-          // Profile done - go to interests step (step 3)
           setCurrentStep(3);
         }, 2500);
       } else {
-        // Profile done - go to interests step (step 3)
         setCurrentStep(3);
       }
     } catch (error: any) {
@@ -801,7 +822,6 @@ const Onboarding = () => {
   const handleInterestsSubmit = async () => {
     if (!user) return;
     
-    // Require at least 1 interest
     if (selectedInterests.length === 0) {
       toast.error('Please select at least one interest to continue');
       return;
@@ -816,7 +836,6 @@ const Onboarding = () => {
 
       if (error) throw error;
       
-      // Load suggested users and go to suggestions step (step 4)
       await loadSuggestedUsers();
       setCurrentStep(4);
     } catch (error: any) {
@@ -848,25 +867,25 @@ const Onboarding = () => {
       return;
     }
     
-    // Go to tour/explore step (final step 5)
     setCurrentStep(5);
   };
 
   const handleTourComplete = async () => {
-    // Clear onboarding step from localStorage - onboarding is complete
     localStorage.removeItem('onboarding_step');
     
-    // Final step - process referral and go to home
+    // Force session refresh to stabilize auth
+    await supabase.auth.getSession();
+    
     const referralSuccess = await processReferral();
     
     if (referralSuccess) {
       setShowReferralWelcome(true);
       setTimeout(() => {
-        window.location.href = '/home';
+        navigate('/home', { replace: true });
       }, 4000);
     } else {
       toast.success('Welcome to AfuChat! 🎉');
-      navigate('/home');
+      navigate('/home', { replace: true });
     }
   };
 
@@ -884,17 +903,14 @@ const Onboarding = () => {
 
   const handleSkip = async () => {
     if (currentStep === 5) {
-      // Tour/Explore step - complete onboarding
       handleTourComplete();
     } else if (currentStep === 4) {
-      // Suggestions step - cannot skip, must follow at least one user
       if (followedUsers.length === 0) {
         toast.error('Please follow at least one user to continue');
         return;
       }
       setCurrentStep(5);
     } else if (currentStep === 3) {
-      // Interests step - require at least 1 interest
       if (selectedInterests.length === 0) {
         toast.error('Please select at least one interest to continue');
         return;
@@ -907,7 +923,6 @@ const Onboarding = () => {
   const handleAccountTypeSelect = async (type: 'personal' | 'business') => {
     setAccountType(type);
     
-    // Save account type to database
     if (user) {
       try {
         const { error } = await supabase
@@ -923,16 +938,14 @@ const Onboarding = () => {
       }
     }
     
-    setCurrentStep(2); // Go to profile step
+    setCurrentStep(2);
   };
 
   const canGoBack = currentStep > 0 && !(currentStep === 1 && user);
-  // Can skip tour (5) only, interests (3) requires selection, suggestions (4) requires follow
   const canSkip = currentStep === 5 || (currentStep === 3 && selectedInterests.length > 0) || (currentStep === 4 && followedUsers.length > 0);
 
   const renderStepIndicator = () => (
     <div className="w-full max-w-lg mx-auto mb-8">
-      {/* Modern step dots */}
       <div className="flex items-center justify-center gap-2 mb-4">
         {STEPS.map((step, index) => {
           const isActive = index === currentStep;
@@ -956,7 +969,6 @@ const Onboarding = () => {
         })}
       </div>
       
-      {/* Step title */}
       <div className="text-center">
         <p className="text-sm font-medium text-muted-foreground">
           Step {currentStep + 1} of {STEPS.length}
@@ -965,21 +977,6 @@ const Onboarding = () => {
     </div>
   );
 
-  const handleOAuthLogin = async (provider: 'google' | 'github') => {
-    setLoading(true);
-    try {
-      const redirectUrl = `${window.location.origin}/onboarding`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: redirectUrl }
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      toast.error(error.message || `Failed to sign in with ${provider}`);
-      setLoading(false);
-    }
-  };
-
   const renderAuthStep = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -987,7 +984,6 @@ const Onboarding = () => {
       exit={{ opacity: 0, y: -20 }}
       className="w-full max-w-sm mx-auto px-6 py-4"
     >
-      {/* Header */}
       <div className="text-center mb-6">
         <motion.h2 
           initial={{ opacity: 0, y: 10 }}
@@ -1015,7 +1011,6 @@ const Onboarding = () => {
         transition={{ delay: 0.3 }}
         className="space-y-3"
       >
-        {/* OAuth Buttons - Full width horizontal */}
         <div className="space-y-2.5">
           <Button
             variant="outline"
@@ -1045,7 +1040,6 @@ const Onboarding = () => {
           </Button>
         </div>
         
-        {/* Divider */}
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border/60" />
@@ -1130,7 +1124,6 @@ const Onboarding = () => {
           </button>
         </p>
         
-        {/* Security badge */}
         <div className="flex items-center justify-center gap-1.5 text-muted-foreground pt-1">
           <Shield className="h-3 w-3" />
           <span className="text-[11px]">Secure & encrypted</span>
@@ -1178,7 +1171,6 @@ const Onboarding = () => {
                   : "border-border bg-card/50 hover:border-primary/50 hover:bg-card"
               )}
             >
-              {/* Gradient background on select */}
               {isSelected && (
                 <motion.div 
                   initial={{ opacity: 0 }}
@@ -1249,7 +1241,6 @@ const Onboarding = () => {
         <p className="text-muted-foreground">Let's make your account unique</p>
       </div>
       
-      {/* Avatar with premium styling - different shape based on account type */}
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -1538,7 +1529,6 @@ const Onboarding = () => {
                   : "border-border bg-card hover:border-primary/50 hover:bg-card/80"
               )}
             >
-              {/* Animated background */}
               {isSelected && (
                 <motion.div 
                   initial={{ scale: 0 }}
@@ -1803,7 +1793,7 @@ const Onboarding = () => {
     </motion.div>
   );
 
-  if (authLoading) {
+  if (authLoading || profileLoading) { // Updated: Show loader during any delay
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
         <motion.div 
@@ -1813,7 +1803,7 @@ const Onboarding = () => {
         >
           <Logo className="h-12 mb-2" />
           <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-muted-foreground text-sm">Loading...</p>
+          <p className="text-muted-foreground text-sm">Setting up your account...</p> {/* Better message for UX */}
         </motion.div>
       </div>
     );
@@ -1822,14 +1812,14 @@ const Onboarding = () => {
   // Get background image based on current step
   const getBackgroundImage = () => {
     switch (currentStep) {
-      case 0: // Auth step
+      case 0: 
         return authMode === 'signup' ? signupBg : signinBg;
-      case 1: // Account type
-      case 2: // Profile
+      case 1: 
+      case 2: 
         return signupBg;
-      case 3: // Interests
-      case 4: // Suggestions
-      case 5: // Tour/Explore
+      case 3: 
+      case 4: 
+      case 5: 
         return signinBg;
       default:
         return signupBg;
@@ -1915,14 +1905,10 @@ const Onboarding = () => {
     </main>
   );
 
-  // Desktop: modal card centered on a rich background
-  // Mobile: full-page layout (original)
   return (
     <>
       {isMobile ? (
-        /* Mobile: Full-page layout */
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col relative overflow-x-hidden overflow-y-auto">
-          {/* Background image */}
           <div className="absolute inset-0 z-0">
             <img 
               src={getBackgroundImage()} 
@@ -1932,7 +1918,6 @@ const Onboarding = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
           </div>
           
-          {/* Decorative background elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
             <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
@@ -1942,9 +1927,7 @@ const Onboarding = () => {
           {onboardingContent}
         </div>
       ) : (
-        /* Desktop: Centered modal card on rich background */
         <div className="fixed inset-0 flex items-center justify-center overflow-hidden">
-          {/* Full-bleed background image */}
           <div className="absolute inset-0 z-0">
             <img 
               src={getBackgroundImage()} 
@@ -1955,7 +1938,6 @@ const Onboarding = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
           </div>
           
-          {/* Decorative floating orbs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
             <motion.div 
               animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
@@ -1974,7 +1956,6 @@ const Onboarding = () => {
             />
           </div>
 
-          {/* Modal Card */}
           <motion.div
             key={currentStep}
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -1982,7 +1963,6 @@ const Onboarding = () => {
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="relative z-10 w-full max-w-xl max-h-[90vh] bg-card/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl shadow-black/20 flex flex-col overflow-hidden my-4"
           >
-            {/* Subtle top gradient accent */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary rounded-t-3xl" />
             
             {onboardingHeader}
@@ -1994,7 +1974,6 @@ const Onboarding = () => {
         </div>
       )}
 
-      {/* Reward Modal */}
       <Dialog open={showRewardModal} onOpenChange={setShowRewardModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -2020,18 +1999,16 @@ const Onboarding = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Referral Welcome Banner */}
       {showReferralWelcome && (
         <ReferralWelcomeBanner 
           referrerName={referrerName}
           onClose={() => {
             setShowReferralWelcome(false);
-            window.location.href = '/home';
+            navigate('/home', { replace: true });
           }}
         />
       )}
 
-      {/* Image Crop Modals */}
       {accountType === 'personal' ? (
         <CircularImageCrop
           imageFile={tempImageFile}
