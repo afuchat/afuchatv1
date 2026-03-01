@@ -183,7 +183,7 @@ const AppRoutes = () => {
       <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
       <Route path="/marketplace" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Marketplace /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/notifications" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Notifications /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/post/:postId" element={<Layout><PostDetail /></Layout>} />
+      <Route path="/post/:postId" element={<Navigate to="/home" replace />} />
       <Route path="/admin" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/afuai" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AfuAI /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       

@@ -10,6 +10,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import aiSparkIcon from '@/assets/ai-chat-icon.ico';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useFeedAlgorithm } from '@/hooks/useFeedAlgorithm';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 
 import { InlineSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
@@ -926,7 +927,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       </div>
 
       {/* Media - Full width */}
-      <div className="cursor-pointer" onClick={() => navigate(`/post/${post.id}`)}>
+      <div>
         {((post.post_images && post.post_images.length > 0) || post.image_url) && (
           <div className="w-full">
             <ImageCarousel 
@@ -991,10 +992,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             {post.like_count > 0 && <span className="text-xs font-semibold text-foreground">{post.like_count.toLocaleString()}</span>}
           </Button>
           <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={() => {
-            if (!showComments && post.profiles.handle) {
-              setReplyText(`@${post.profiles.handle} `);
-            }
-            setShowComments(!showComments);
+            setShowComments(true);
           }}>
             <MessageCircle className="h-6 w-6 group-hover:text-primary transition-colors" strokeWidth={1.5} />
             {post.reply_count > 0 && <span className="text-xs text-muted-foreground">{post.reply_count}</span>}
@@ -1059,60 +1057,156 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </div>
       )}
 
-      {/* Expanded Comments Section */}
-      {showComments && (
-        <div className="px-3 pb-2">
-          {post.replies && post.replies.length > 0 && (
-            <div className="space-y-1 pt-1">
-              {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
-                <FeedNestedReplyItem
-                  key={reply.id} 
-                  reply={reply}
-                  depth={0}
-                  handleViewProfile={handleViewProfile}
-                  onReplyToReply={handleReplyToReply}
-                  onPinReply={handlePinReply}
-                  onDeleteReply={handleDeleteReply}
-                  isPostAuthor={user?.id === post.author_id}
-                  currentUserId={user?.id}
-                  parsePostContent={(content, postId) => parsePostContent(content, postId, navigate)}
-                  formatTime={formatTime}
-                  UserAvatarSmall={UserAvatarSmall}
-                  VerifiedBadge={VerifiedBadge}
-                />
-              ))}
-              {organizedReplies.length > visibleRepliesCount && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setVisibleRepliesCount(prev => prev + 10)}
-                  className="text-primary text-xs mt-1 hover:underline p-0 h-auto"
-                >
-                  {t('feed.loadMoreComments', { count: organizedReplies.length - visibleRepliesCount })}
-                </Button>
-              )}
-            </div>
-          )}
+      {/* Instagram-style Comments Bottom Sheet */}
+      <Drawer open={showComments} onOpenChange={setShowComments}>
+        <DrawerContent className="max-h-[85vh] flex flex-col">
+          <DrawerHeader className="border-b border-border/40 py-3 px-4 flex-shrink-0">
+            <DrawerTitle className="text-center text-base font-bold">Comments</DrawerTitle>
+          </DrawerHeader>
+          
+          <div className="flex-1 overflow-y-auto px-4 py-2">
+            {post.replies && post.replies.length > 0 ? (
+              <div className="space-y-4">
+                {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
+                  <div key={reply.id} className="flex gap-3">
+                    <div className="flex-shrink-0 cursor-pointer" onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}>
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={reply.profiles.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs bg-muted">{reply.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-sm text-foreground cursor-pointer hover:underline" onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}>
+                          {reply.profiles.display_name}
+                        </span>
+                        <VerifiedBadge 
+                          isVerified={reply.profiles.is_verified || reply.is_developer}
+                          isOrgVerified={reply.profiles.is_organization_verified}
+                          isAffiliate={reply.profiles.is_affiliate}
+                          isDeveloper={reply.is_developer}
+                          size="sm"
+                          userId={reply.author_id}
+                        />
+                        <span className="text-xs text-muted-foreground">{formatTime(reply.created_at)}</span>
+                      </div>
+                      <p className="text-sm text-foreground mt-0.5 whitespace-pre-wrap break-words">
+                        {parsePostContent(reply.content, reply.id, navigate)}
+                      </p>
+                      <div className="flex items-center gap-4 mt-1.5">
+                        <button className="text-xs text-muted-foreground hover:text-foreground font-medium">Reply</button>
+                      </div>
+                      
+                      {/* Nested replies */}
+                      {reply.nested_replies && reply.nested_replies.length > 0 && (
+                        <div className="mt-3 space-y-3 pl-2 border-l-2 border-border/30">
+                          {reply.nested_replies.map((nested) => (
+                            <div key={nested.id} className="flex gap-2.5">
+                              <Avatar className="h-7 w-7 flex-shrink-0">
+                                <AvatarImage src={nested.profiles.avatar_url || undefined} />
+                                <AvatarFallback className="text-[10px] bg-muted">{nested.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-semibold text-xs text-foreground">{nested.profiles.display_name}</span>
+                                  <span className="text-[10px] text-muted-foreground">{formatTime(nested.created_at)}</span>
+                                </div>
+                                <p className="text-xs text-foreground mt-0.5 whitespace-pre-wrap break-words">
+                                  {parsePostContent(nested.content, nested.id, navigate)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {/* Like button for comment */}
+                    <div className="flex-shrink-0 pt-1">
+                      <Heart className="h-4 w-4 text-muted-foreground hover:text-red-500 cursor-pointer transition-colors" strokeWidth={1.5} />
+                    </div>
+                  </div>
+                ))}
+                {organizedReplies.length > visibleRepliesCount && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setVisibleRepliesCount(prev => prev + 10)}
+                    className="text-primary text-xs hover:underline p-0 h-auto w-full text-center"
+                  >
+                    Load more comments
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <MessageCircle className="h-12 w-12 text-muted-foreground/30 mb-3" />
+                <p className="text-sm font-semibold text-foreground">No comments yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Start the conversation.</p>
+              </div>
+            )}
+          </div>
 
-          {user && (
-            <div className="mt-2">
-              <CommentInput
-                postId={post.id}
-                postAuthorHandle={post.profiles.handle}
-                onCommentSubmitted={() => {
-                  awardNexa('create_reply', { post_id: post.id });
-                }}
-                compact
-              />
+          {/* Quick emoji reactions row */}
+          <div className="flex-shrink-0 border-t border-border/40">
+            <div className="flex items-center gap-3 px-4 py-2 overflow-x-auto scrollbar-hide">
+              {['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'].map((emoji) => (
+                <button
+                  key={emoji}
+                  className="text-2xl hover:scale-125 transition-transform flex-shrink-0"
+                  onClick={() => {
+                    if (!user) {
+                      toast.info('Sign in to comment');
+                      return;
+                    }
+                    setReplyText(emoji);
+                    handleReplySubmit();
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
             </div>
-          )}
-          {!user && (
-            <div className="mt-2 text-xs text-muted-foreground">
-              {t('feed.signInToReply')}
-            </div>
-          )}
-        </div>
-      )}
+            
+            {/* Comment input */}
+            {user ? (
+              <div className="flex items-center gap-3 px-4 py-3 border-t border-border/20">
+                <Avatar className="h-8 w-8 flex-shrink-0">
+                  <AvatarImage src={userProfile?.avatar_url || undefined} />
+                  <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                    {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <input
+                  type="text"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey && replyText.trim()) {
+                      e.preventDefault();
+                      handleReplySubmit();
+                    }
+                  }}
+                  placeholder={`Add a comment for ${post.profiles.handle}...`}
+                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                />
+                {replyText.trim() && (
+                  <Button
+                    size="sm"
+                    className="rounded-full h-8 px-4 text-xs font-bold"
+                    onClick={handleReplySubmit}
+                  >
+                    Post
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="px-4 py-3 text-center text-xs text-muted-foreground border-t border-border/20">
+                <Link to="/auth/signin" className="text-primary font-medium hover:underline">Sign in</Link> to comment
+              </div>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       <ViewsAnalyticsSheet
         postId={post.id}
