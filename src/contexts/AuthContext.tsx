@@ -181,6 +181,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Skip profile check if already on onboarding page
             if (currentPath === '/onboarding' || currentPath === '/complete-profile') {
+              // Ensure onboarding_step is at least 1 for authenticated users
+              const savedStep = localStorage.getItem('onboarding_step');
+              if (!savedStep || savedStep === '0') {
+                localStorage.setItem('onboarding_step', '1');
+              }
+              return;
+            }
+            
+            // Check if pending signup data exists (OAuth flow from signup page)
+            const hasPendingSignup = localStorage.getItem('pendingSignupData');
+            
+            // If coming from OAuth signup flow, redirect to onboarding directly
+            if (hasPendingSignup && (currentPath === '/' || currentPath.startsWith('/auth'))) {
+              localStorage.setItem('onboarding_step', '1');
+              window.location.href = '/onboarding';
               return;
             }
             
@@ -207,7 +222,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 // If on landing/auth pages
                 if (currentPath === '/' || currentPath.startsWith('/auth')) {
-                  window.location.href = hasEssentialFields ? '/home' : '/onboarding';
+                  if (hasEssentialFields) {
+                    window.location.href = '/home';
+                  } else {
+                    localStorage.setItem('onboarding_step', '1');
+                    window.location.href = '/onboarding';
+                  }
                 }
               });
           }
