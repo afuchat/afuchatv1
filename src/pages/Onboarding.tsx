@@ -376,6 +376,10 @@ const Onboarding = () => {
   // Skip to correct step if already authenticated
   useEffect(() => {
     if (!authLoading && user) {
+      // If user just authenticated and is on step 0, move to step 1
+      if (currentStep === 0) {
+        setCurrentStep(1);
+      }
       loadProfileData();
     }
   }, [user, authLoading]);
@@ -569,24 +573,47 @@ const Onboarding = () => {
       return;
     }
 
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
     setLoading(true);
     try {
       if (authMode === 'signup') {
         const redirectUrl = `${window.location.origin}/onboarding`;
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: redirectUrl }
         });
         if (error) throw error;
-        toast.success('Account created! Check your email to verify.');
+        
+        // If user is returned and session exists, auto-login happened (email confirm disabled)
+        if (data?.user && data?.session) {
+          toast.success('Account created! Setting up your profile...');
+          setCurrentStep(1);
+        } else {
+          toast.success('Account created! Check your email to verify, then sign in.');
+          setAuthMode('login');
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('Email not confirmed')) {
+            toast.error('Please check your email and confirm your account first.');
+          } else if (error.message.includes('Invalid login credentials')) {
+            toast.error('Invalid email or password. Please try again.');
+          } else {
+            throw error;
+          }
+          return;
+        }
         toast.success('Welcome back!');
+        // Auth state change listener will handle moving to next step
       }
     } catch (error: any) {
-      toast.error(error.message || 'Authentication failed');
+      toast.error(error.message || 'Authentication failed. Please try again.');
     } finally {
       setLoading(false);
     }
