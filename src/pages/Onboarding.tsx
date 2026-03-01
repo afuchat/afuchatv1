@@ -379,7 +379,22 @@ const Onboarding = () => {
       // If user just authenticated and is on step 0, move to step 1
       if (currentStep === 0) {
         setCurrentStep(1);
+        localStorage.setItem('onboarding_step', '1');
       }
+      
+      // Process pending signup data from OAuth flow (country, business mode, referral)
+      const pendingData = localStorage.getItem('pendingSignupData');
+      if (pendingData) {
+        try {
+          const parsed = JSON.parse(pendingData);
+          if (parsed.country && !country) setCountry(parsed.country);
+          if (parsed.is_business_mode) setAccountType('business');
+          if (parsed.referral_code && !referralCode) setReferralCode(parsed.referral_code);
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+      
       loadProfileData();
     }
   }, [user, authLoading]);
@@ -994,13 +1009,33 @@ const Onboarding = () => {
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     setLoading(true);
+    // Pre-set step and store referral for OAuth redirect
+    localStorage.setItem('onboarding_step', '1');
+    if (referralCode) {
+      localStorage.setItem('pendingSignupData', JSON.stringify({ referral_code: referralCode }));
+      document.cookie = `afuchat_referral=${referralCode}; path=/; max-age=3600; SameSite=Lax`;
+    }
     try {
-      const redirectUrl = `${window.location.origin}/onboarding`;
-      const { error } = await supabase.auth.signInWithOAuth({
+      const redirectUrl = referralCode
+        ? `${window.location.origin}/onboarding?ref=${referralCode}`
+        : `${window.location.origin}/onboarding`;
+      
+      const isCustomDomain = !window.location.hostname.includes('lovable.app') && 
+                             !window.location.hostname.includes('lovableproject.com') &&
+                             window.location.hostname !== 'localhost';
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: redirectUrl }
+        options: { 
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: isCustomDomain,
+        }
       });
       if (error) throw error;
+      
+      if (isCustomDomain && data?.url) {
+        window.location.href = data.url;
+      }
     } catch (error: any) {
       toast.error(error.message || `Failed to sign in with ${provider}`);
       setLoading(false);
