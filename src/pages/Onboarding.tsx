@@ -695,8 +695,8 @@ const Onboarding = () => {
       // Determine file extension and content type
       const fileExt = avatarFile.name?.split('.').pop()?.toLowerCase() || 'jpg';
       const contentType = avatarFile.type || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      const fileName = `\( {Date.now()}. \){fileExt}`;
+      const filePath = `\( {user.id}/ \){fileName}`;
 
       const { error } = await supabase.storage
         .from('avatars')
@@ -1053,7 +1053,7 @@ const Onboarding = () => {
     }
     try {
       const redirectUrl = referralCode
-        ? `${window.location.origin}/onboarding?ref=${referralCode}`
+        ? `\( {window.location.origin}/onboarding?ref= \){referralCode}`
         : `${window.location.origin}/onboarding`;
       
       const isCustomDomain = !window.location.hostname.includes('lovable.app') && 
