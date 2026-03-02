@@ -467,6 +467,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const { translateText } = useAITranslation();
   const [showComments, setShowComments] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [replyingTo, setReplyingTo] = useState<{ id: string; handle: string } | null>(null);
+  const replyInputRef = useRef<HTMLInputElement>(null);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [visibleRepliesCount, setVisibleRepliesCount] = useState(5);
@@ -1094,7 +1096,16 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         {parsePostContent(reply.content, reply.id, navigate)}
                       </p>
                       <div className="flex items-center gap-4 mt-1.5">
-                        <button className="text-xs text-muted-foreground hover:text-foreground font-medium">Reply</button>
+                        <button 
+                          className="text-xs text-muted-foreground hover:text-foreground font-medium"
+                          onClick={() => {
+                            setReplyingTo({ id: reply.id, handle: reply.profiles.handle });
+                            setReplyText(`@${reply.profiles.handle} `);
+                            setTimeout(() => replyInputRef.current?.focus(), 100);
+                          }}
+                        >
+                          Reply
+                        </button>
                       </div>
                       
                       {/* Nested replies */}
@@ -1177,24 +1188,45 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                     {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
+                {replyingTo && (
+                  <div className="flex items-center justify-between px-4 py-1.5 bg-muted/50 border-t border-border/20">
+                    <span className="text-xs text-muted-foreground">Replying to <span className="font-semibold text-foreground">@{replyingTo.handle}</span></span>
+                    <button className="text-xs text-primary font-medium" onClick={() => { setReplyingTo(null); setReplyText(''); }}>✕</button>
+                  </div>
+                )}
                 <input
+                  ref={replyInputRef}
                   type="text"
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey && replyText.trim()) {
                       e.preventDefault();
-                      handleReplySubmit();
+                      if (replyingTo) {
+                        handleReplyToReply(replyingTo.id, replyText.trim());
+                        setReplyingTo(null);
+                        setReplyText('');
+                      } else {
+                        handleReplySubmit();
+                      }
                     }
                   }}
-                  placeholder={`Add a comment for ${post.profiles.handle}...`}
+                  placeholder={replyingTo ? `Reply to @${replyingTo.handle}...` : `Add a comment for ${post.profiles.handle}...`}
                   className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
                 />
                 {replyText.trim() && (
                   <Button
                     size="sm"
                     className="rounded-full h-8 px-4 text-xs font-bold"
-                    onClick={handleReplySubmit}
+                    onClick={() => {
+                      if (replyingTo) {
+                        handleReplyToReply(replyingTo.id, replyText.trim());
+                        setReplyingTo(null);
+                        setReplyText('');
+                      } else {
+                        handleReplySubmit();
+                      }
+                    }}
                   >
                     Post
                   </Button>
