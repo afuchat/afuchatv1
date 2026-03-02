@@ -39,7 +39,7 @@ const SignIn = () => {
   }
 
   if (user) {
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -62,9 +62,8 @@ const SignIn = () => {
         }
       } else {
         toast.success('Signed in successfully!');
-        // Set step to 1 (account type) - loadProfileData will determine correct step
-        localStorage.setItem('onboarding_step', '1');
-        navigate('/onboarding', { replace: true });
+        // AuthContext will handle redirect based on profile completion
+        navigate('/home', { replace: true });
       }
     } catch (error: any) {
       toast.error(error.errors?.[0]?.message || error.message || 'An error occurred.');
@@ -79,7 +78,7 @@ const SignIn = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/onboarding`,
+          redirectTo: `${window.location.origin}/home`,
         },
       });
       if (error) throw error;
@@ -95,7 +94,7 @@ const SignIn = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: `${window.location.origin}/onboarding`,
+          redirectTo: `${window.location.origin}/home`,
         },
       });
       if (error) throw error;

@@ -43,6 +43,8 @@ import Banned from "./pages/Banned";
 
 
 // Lazy load other pages
+const SignIn = lazy(() => import("./pages/auth/SignIn"));
+const SignUp = lazy(() => import("./pages/auth/SignUp"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const DesktopChats = lazy(() => import("./pages/DesktopChats"));
@@ -171,8 +173,8 @@ const AppRoutes = () => {
       <Route path="/feed" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Home /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/home" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Home /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/auth" element={<Welcome />} />
-      <Route path="/auth/signin" element={<Navigate to="/onboarding?signin=true" replace />} />
-      <Route path="/auth/signup" element={<Navigate to="/onboarding" replace />} />
+      <Route path="/auth/signin" element={<SignIn />} />
+      <Route path="/auth/signup" element={<SignUp />} />
       <Route path="/auth/afumail/callback" element={<AfuMailCallback />} />
       <Route path="/auth/forgot-password" element={<ForgotPassword />} />
       <Route path="/auth/reset-password" element={<ResetPassword />} />

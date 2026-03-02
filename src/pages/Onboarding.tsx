@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -400,6 +400,40 @@ const Onboarding = () => {
       loadProfileData();
     }
   }, [user, authLoading]);
+
+  // Redirect fully completed users away from onboarding
+  useEffect(() => {
+    if (!authLoading && user) {
+      const checkCompletion = async () => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name, handle, country, avatar_url, date_of_birth, interests')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (profile) {
+          const isComplete = profile.display_name && profile.handle && profile.country && 
+                            profile.avatar_url && profile.date_of_birth;
+          const hasInterests = profile.interests && (profile.interests as string[]).length > 0;
+          
+          if (isComplete && hasInterests) {
+            // Check follows
+            const { data: follows } = await supabase
+              .from('follows')
+              .select('id')
+              .eq('follower_id', user.id)
+              .limit(1);
+            
+            if (follows && follows.length > 0) {
+              localStorage.removeItem('onboarding_step');
+              navigate('/home', { replace: true });
+            }
+          }
+        }
+      };
+      checkCompletion();
+    }
+  }, [user, authLoading, navigate]);
 
   const loadProfileData = async () => {
     if (!user) return;
@@ -1969,7 +2003,9 @@ const Onboarding = () => {
       isMobile ? "pb-12 pt-4" : "pb-6 pt-2"
     )}>
       <AnimatePresence mode="wait">
-        {currentStep === 0 && renderAuthStep()}
+        {currentStep === 0 && !user && (
+          <Navigate to="/auth/signup" replace />
+        )}
         {currentStep === 1 && renderAccountTypeStep()}
         {currentStep === 2 && renderProfileStep()}
         {currentStep === 3 && renderInterestsStep()}
