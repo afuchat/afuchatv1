@@ -116,33 +116,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
           setTimeout(() => recordUserSession(session), 100);
           
-          // Check for pending signup data from OAuth flow
-          if (event === 'SIGNED_IN' && session) {
-            // Use localStorage (more reliable across OAuth redirects)
-            const pendingSignupData = localStorage.getItem('pendingSignupData');
+          if (event === 'SIGNED_IN') {
+            const currentPath = window.location.pathname;
             
+            // If already on onboarding, just ensure step is correct
+            if (currentPath === '/onboarding' || currentPath === '/complete-profile') {
+              const savedStep = localStorage.getItem('onboarding_step');
+              if (!savedStep || savedStep === '0') {
+                localStorage.setItem('onboarding_step', '1');
+              }
+              return;
+            }
+            
+            // Apply pending signup data (country, business mode) from OAuth
+            const pendingSignupData = localStorage.getItem('pendingSignupData');
             if (pendingSignupData) {
               try {
                 const signupData = JSON.parse(pendingSignupData);
-                localStorage.removeItem('pendingSignupData');
-                
-                // Build update object with only non-empty values
+                // Don't remove yet - onboarding needs referral_code from it
                 const updateData: Record<string, any> = {};
                 if (signupData.country) updateData.country = signupData.country;
                 if (signupData.is_business_mode !== undefined) updateData.is_business_mode = signupData.is_business_mode;
                 
-                // Only update if there's data to update
                 if (Object.keys(updateData).length > 0) {
-                  // Wait a moment for profile to be created by trigger
                   setTimeout(async () => {
-                    const { error } = await supabase
+                    await supabase
                       .from('profiles')
                       .update(updateData)
                       .eq('id', session.user.id);
-                    
-                    if (error) {
-                      console.error('Error updating profile with signup data:', error);
-                    }
                   }, 500);
                 }
               } catch (e) {
@@ -150,11 +151,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
             
-            // Also check user metadata for country (email signup flow)
+            // Apply user metadata country (email signup flow)
             const userMetadata = session.user.user_metadata;
             if (userMetadata?.country && !pendingSignupData) {
               setTimeout(async () => {
-                // Check if country is already set
                 const { data: profile } = await supabase
                   .from('profiles')
                   .select('country')
@@ -162,13 +162,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   .maybeSingle();
                 
                 if (profile && !profile.country) {
-                  const updateData: Record<string, any> = {
-                    country: userMetadata.country,
-                  };
+                  const updateData: Record<string, any> = { country: userMetadata.country };
                   if (userMetadata.is_business_mode !== undefined) {
                     updateData.is_business_mode = userMetadata.is_business_mode;
                   }
-                  
                   await supabase
                     .from('profiles')
                     .update(updateData)
@@ -177,59 +174,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }, 500);
             }
             
-            const currentPath = window.location.pathname;
-            
-            // Skip profile check if already on onboarding page
-            if (currentPath === '/onboarding' || currentPath === '/complete-profile') {
-              // Ensure onboarding_step is at least 1 for authenticated users
-              const savedStep = localStorage.getItem('onboarding_step');
-              if (!savedStep || savedStep === '0') {
-                localStorage.setItem('onboarding_step', '1');
-              }
-              return;
-            }
-            
-            // Check if pending signup data exists (OAuth flow from signup page)
-            const hasPendingSignup = localStorage.getItem('pendingSignupData');
-            
-            // If coming from OAuth signup flow, redirect to onboarding directly
-            if (hasPendingSignup && (currentPath === '/' || currentPath.startsWith('/auth'))) {
-              localStorage.setItem('onboarding_step', '1');
-              window.location.href = '/onboarding';
-              return;
-            }
-            
-            // Check if essential profile fields are complete (include country + avatar + DOB)
-            supabase
-              .from('profiles')
-              .select('display_name, handle, country, avatar_url, date_of_birth')
-              .eq('id', session.user.id)
-              .maybeSingle()
-              .then(({ data: profile, error }) => {
-                // If we got a hard error (network/permission), don't lock users in a redirect loop.
-                if (error) {
-                  console.error('Profile check error:', error);
-                  return;
-                }
+            // Only redirect if on landing/auth pages
+            if (currentPath === '/' || currentPath.startsWith('/auth') || currentPath === '/welcome') {
+              // Check profile completion to decide destination
+              setTimeout(() => {
+                supabase
+                  .from('profiles')
+                  .select('display_name, handle, country, avatar_url, date_of_birth')
+                  .eq('id', session.user.id)
+                  .maybeSingle()
+                  .then(({ data: profile, error }) => {
+                    if (error) {
+                      console.error('Profile check error:', error);
+                      return;
+                    }
 
-                // If profile row is missing or essential fields are missing, then user must complete profile.
-                const hasEssentialFields =
-                  !!profile?.display_name &&
-                  !!profile?.handle &&
-                  !!profile?.country &&
-                  !!profile?.avatar_url &&
-                  !!profile?.date_of_birth;
+                    const hasEssentialFields =
+                      !!profile?.display_name &&
+                      !!profile?.handle &&
+                      !!profile?.country &&
+                      !!profile?.avatar_url &&
+                      !!profile?.date_of_birth;
 
-                // If on landing/auth pages
-                if (currentPath === '/' || currentPath.startsWith('/auth')) {
-                  if (hasEssentialFields) {
-                    window.location.href = '/home';
-                  } else {
-                    localStorage.setItem('onboarding_step', '1');
-                    window.location.href = '/onboarding';
-                  }
-                }
-              });
+                    if (hasEssentialFields) {
+                      window.location.href = '/home';
+                    } else {
+                      localStorage.setItem('onboarding_step', '1');
+                      window.location.href = '/onboarding';
+                    }
+                  });
+              }, 300);
+            }
           }
         }
       }

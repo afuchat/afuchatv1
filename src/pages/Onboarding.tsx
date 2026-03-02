@@ -390,6 +390,8 @@ const Onboarding = () => {
           if (parsed.country && !country) setCountry(parsed.country);
           if (parsed.is_business_mode) setAccountType('business');
           if (parsed.referral_code && !referralCode) setReferralCode(parsed.referral_code);
+          // Clean up after extracting - referral code is now in state
+          localStorage.removeItem('pendingSignupData');
         } catch (e) {
           // ignore parse errors
         }

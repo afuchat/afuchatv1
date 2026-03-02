@@ -1153,13 +1153,14 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 <button
                   key={emoji}
                   className="text-2xl hover:scale-125 transition-transform flex-shrink-0"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
                     if (!user) {
                       toast.info('Sign in to comment');
                       return;
                     }
-                    setReplyText(emoji);
-                    handleReplySubmit();
+                    setReplyText(prev => prev + emoji);
                   }}
                 >
                   {emoji}
