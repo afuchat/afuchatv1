@@ -14,7 +14,7 @@ const Index = () => {
 
   // Not logged in - go to welcome
   if (!user) {
-    return <Navigate to="/welcome" replace />;
+    return <Navigate to="/auth/signin" replace />;
   }
 
   // Banned users go to banned page
