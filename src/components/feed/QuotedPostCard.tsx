@@ -52,7 +52,7 @@ export const QuotedPostCard: React.FC<QuotedPostCardProps> = ({ quotedPost, clas
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/post/${quotedPost.id}`);
+    // No navigation - quoted posts are displayed inline
   };
 
   return (
