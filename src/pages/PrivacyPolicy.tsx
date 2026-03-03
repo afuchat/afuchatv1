@@ -22,7 +22,7 @@ const PrivacyPolicy = () => {
       <main className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 pb-24">
         <article className="prose prose-slate dark:prose-invert max-w-none">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Privacy Policy</h1>
-          <p className="text-muted-foreground mb-8">Version 2.2.0 | Last Updated: March 2, 2026</p>
+          <p className="text-muted-foreground mb-8">Version 2.2.0 | Last Updated: December 28, 2025</p>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">Introduction</h2>

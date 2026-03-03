@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -379,61 +379,10 @@ const Onboarding = () => {
       // If user just authenticated and is on step 0, move to step 1
       if (currentStep === 0) {
         setCurrentStep(1);
-        localStorage.setItem('onboarding_step', '1');
       }
-      
-      // Process pending signup data from OAuth flow (country, business mode, referral)
-      const pendingData = localStorage.getItem('pendingSignupData');
-      if (pendingData) {
-        try {
-          const parsed = JSON.parse(pendingData);
-          if (parsed.country && !country) setCountry(parsed.country);
-          if (parsed.is_business_mode) setAccountType('business');
-          if (parsed.referral_code && !referralCode) setReferralCode(parsed.referral_code);
-          // Clean up after extracting - referral code is now in state
-          localStorage.removeItem('pendingSignupData');
-        } catch (e) {
-          // ignore parse errors
-        }
-      }
-      
       loadProfileData();
     }
   }, [user, authLoading]);
-
-  // Redirect fully completed users away from onboarding
-  useEffect(() => {
-    if (!authLoading && user) {
-      const checkCompletion = async () => {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('display_name, handle, country, avatar_url, date_of_birth, interests')
-          .eq('id', user.id)
-          .maybeSingle();
-        
-        if (profile) {
-          const isComplete = profile.display_name && profile.handle && profile.country && 
-                            profile.avatar_url && profile.date_of_birth;
-          const hasInterests = profile.interests && (profile.interests as string[]).length > 0;
-          
-          if (isComplete && hasInterests) {
-            // Check follows
-            const { data: follows } = await supabase
-              .from('follows')
-              .select('id')
-              .eq('follower_id', user.id)
-              .limit(1);
-            
-            if (follows && follows.length > 0) {
-              localStorage.removeItem('onboarding_step');
-              navigate('/home', { replace: true });
-            }
-          }
-        }
-      };
-      checkCompletion();
-    }
-  }, [user, authLoading, navigate]);
 
   const loadProfileData = async () => {
     if (!user) return;
@@ -695,8 +644,8 @@ const Onboarding = () => {
       // Determine file extension and content type
       const fileExt = avatarFile.name?.split('.').pop()?.toLowerCase() || 'jpg';
       const contentType = avatarFile.type || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
-      const fileName = `\( {Date.now()}. \){fileExt}`;
-      const filePath = `\( {user.id}/ \){fileName}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
       const { error } = await supabase.storage
         .from('avatars')
@@ -1045,33 +994,13 @@ const Onboarding = () => {
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     setLoading(true);
-    // Pre-set step and store referral for OAuth redirect
-    localStorage.setItem('onboarding_step', '1');
-    if (referralCode) {
-      localStorage.setItem('pendingSignupData', JSON.stringify({ referral_code: referralCode }));
-      document.cookie = `afuchat_referral=${referralCode}; path=/; max-age=3600; SameSite=Lax`;
-    }
     try {
-      const redirectUrl = referralCode
-        ? `\( {window.location.origin}/onboarding?ref= \){referralCode}`
-        : `${window.location.origin}/onboarding`;
-      
-      const isCustomDomain = !window.location.hostname.includes('lovable.app') && 
-                             !window.location.hostname.includes('lovableproject.com') &&
-                             window.location.hostname !== 'localhost';
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const redirectUrl = `${window.location.origin}/onboarding`;
+      const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { 
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: isCustomDomain,
-        }
+        options: { redirectTo: redirectUrl }
       });
       if (error) throw error;
-      
-      if (isCustomDomain && data?.url) {
-        window.location.href = data.url;
-      }
     } catch (error: any) {
       toast.error(error.message || `Failed to sign in with ${provider}`);
       setLoading(false);
@@ -2003,9 +1932,7 @@ const Onboarding = () => {
       isMobile ? "pb-12 pt-4" : "pb-6 pt-2"
     )}>
       <AnimatePresence mode="wait">
-        {currentStep === 0 && !user && (
-          <Navigate to="/auth/signup" replace />
-        )}
+        {currentStep === 0 && renderAuthStep()}
         {currentStep === 1 && renderAccountTypeStep()}
         {currentStep === 2 && renderProfileStep()}
         {currentStep === 3 && renderInterestsStep()}

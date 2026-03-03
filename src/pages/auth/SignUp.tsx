@@ -38,7 +38,7 @@ const SignUp = () => {
   }
 
   if (user) {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <SignUpContent />;
@@ -202,29 +202,19 @@ const SignUpContent = () => {
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true);
     storeSignupDataForOAuth();
-    // Pre-set onboarding step so user lands on step 1 after OAuth
-    localStorage.setItem('onboarding_step', '1');
     try {
+      // Include referral code in redirect URL as backup
       const redirectUrl = referralCode 
         ? `${window.location.origin}/onboarding?ref=${referralCode}`
         : `${window.location.origin}/onboarding`;
       
-      const isCustomDomain = !window.location.hostname.includes('lovable.app') && 
-                             !window.location.hostname.includes('lovableproject.com') &&
-                             window.location.hostname !== 'localhost';
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          skipBrowserRedirect: isCustomDomain,
         },
       });
       if (error) throw error;
-      
-      if (isCustomDomain && data?.url) {
-        window.location.href = data.url;
-      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign up with Google');
       setGoogleLoading(false);
@@ -234,28 +224,19 @@ const SignUpContent = () => {
   const handleGithubSignUp = async () => {
     setGithubLoading(true);
     storeSignupDataForOAuth();
-    localStorage.setItem('onboarding_step', '1');
     try {
+      // Include referral code in redirect URL as backup
       const redirectUrl = referralCode 
         ? `${window.location.origin}/onboarding?ref=${referralCode}`
         : `${window.location.origin}/onboarding`;
       
-      const isCustomDomain = !window.location.hostname.includes('lovable.app') && 
-                             !window.location.hostname.includes('lovableproject.com') &&
-                             window.location.hostname !== 'localhost';
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
           redirectTo: redirectUrl,
-          skipBrowserRedirect: isCustomDomain,
         },
       });
       if (error) throw error;
-      
-      if (isCustomDomain && data?.url) {
-        window.location.href = data.url;
-      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign up with GitHub');
       setGithubLoading(false);
