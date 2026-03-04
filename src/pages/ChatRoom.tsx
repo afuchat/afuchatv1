@@ -1957,6 +1957,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                         fontSize={chatPreferences.fontSize}
                         isChannel={chatInfo?.is_channel || false}
                         viewCount={message.view_count || 0}
+                        isGroup={chatInfo?.is_group || false}
                       />
                     </div>
                   );

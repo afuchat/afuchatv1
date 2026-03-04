@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -269,7 +269,7 @@ serve(async (req) => {
     const dt = getDateTime();
     const systemPrompt = buildPrompt(userContext, memories, dt, platformData);
     
-    const allowedModels = ['google/gemini-3-flash-preview', 'google/gemini-2.5-flash', 'google/gemini-2.5-pro', 'openai/gpt-5-mini'];
+    const allowedModels = ['google/gemini-3-flash-preview', 'google/gemini-2.5-flash', 'google/gemini-2.5-pro', 'google/gemini-3-pro-preview', 'openai/gpt-5-mini', 'openai/gpt-5-nano'];
     const modelToUse = allowedModels.includes(model) ? model : 'google/gemini-3-flash-preview';
 
     const messages: any[] = [{ role: 'system', content: systemPrompt }];
