@@ -14,7 +14,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Camera, Loader2, Users } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Camera, Loader2, Users, Trash2, LogOut } from 'lucide-react';
 import { UserAvatar } from '@/components/avatar/UserAvatar';
 
 interface GroupSettingsSheetProps {
@@ -24,14 +26,28 @@ interface GroupSettingsSheetProps {
   isAdmin: boolean;
 }
 
-export const GroupSettingsSheet = ({ isOpen, onClose, chatId, isAdmin }: GroupSettingsSheetProps) => {
+export const GroupSettingsSheet = ({
+  isOpen,
+  onClose,
+  chatId,
+  isAdmin,
+}: GroupSettingsSheetProps) => {
   const { user } = useAuth();
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
   const [groupName, setGroupName] = useState('');
   const [description, setDescription] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [whoCanSend, setWhoCanSend] = useState<'everyone' | 'admins'>('everyone');
+  const [whoCanEditInfo, setWhoCanEditInfo] = useState<'admins' | 'everyone'>('admins');
+  const [maxMembers, setMaxMembers] = useState<number | null>(null);
+
+  const originalState = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -45,28 +61,56 @@ export const GroupSettingsSheet = ({ isOpen, onClose, chatId, isAdmin }: GroupSe
     try {
       const { data, error } = await supabase
         .from('chats')
-        .select('name, description, avatar_url')
+        .select('*')
         .eq('id', chatId)
         .single();
 
       if (error) throw error;
 
       if (data) {
-        setGroupName(data.name || '');
-        setDescription(data.description || '');
-        setAvatarUrl(data.avatar_url);
+        const state = {
+          name: data.name || '',
+          description: data.description || '',
+          avatar_url: data.avatar_url,
+          is_private: data.is_private || false,
+          who_can_send: data.who_can_send || 'everyone',
+          who_can_edit_info: data.who_can_edit_info || 'admins',
+          max_members: data.max_members,
+        };
+
+        setGroupName(state.name);
+        setDescription(state.description);
+        setAvatarUrl(state.avatar_url);
+        setIsPrivate(state.is_private);
+        setWhoCanSend(state.who_can_send);
+        setWhoCanEditInfo(state.who_can_edit_info);
+        setMaxMembers(state.max_members);
+
+        originalState.current = state;
       }
     } catch (error) {
-      console.error('Error loading group info:', error);
       toast.error('Failed to load group information');
     } finally {
       setLoading(false);
     }
   };
 
+  const hasChanges = () => {
+    const current = {
+      name: groupName,
+      description,
+      avatar_url: avatarUrl,
+      is_private: isPrivate,
+      who_can_send: whoCanSend,
+      who_can_edit_info: whoCanEditInfo,
+      max_members: maxMembers,
+    };
+    return JSON.stringify(current) !== JSON.stringify(originalState.current);
+  };
+
   const handleSave = async () => {
     if (!isAdmin) {
-      toast.error('Only group admins can edit group information');
+      toast.error('Only admins can edit settings');
       return;
     }
 
@@ -83,64 +127,103 @@ export const GroupSettingsSheet = ({ isOpen, onClose, chatId, isAdmin }: GroupSe
           name: groupName.trim(),
           description: description.trim() || null,
           avatar_url: avatarUrl,
+          is_private: isPrivate,
+          who_can_send: whoCanSend,
+          who_can_edit_info: whoCanEditInfo,
+          max_members: maxMembers,
           updated_at: new Date().toISOString(),
         })
         .eq('id', chatId);
 
       if (error) throw error;
 
-      toast.success('Group information updated');
+      toast.success('Settings updated');
       onClose();
-    } catch (error) {
-      console.error('Error updating group info:', error);
-      toast.error('Failed to update group information');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update settings');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+      toast.error('Select an image file');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
+      toast.error('Image must be under 5MB');
       return;
     }
 
     setUploading(true);
+
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${chatId}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const filePath = `${chatId}/${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error } = await supabase.storage
         .from('group-avatars')
         .upload(filePath, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage
+      const {
+        data: { publicUrl },
+      } = supabase.storage
         .from('group-avatars')
         .getPublicUrl(filePath);
 
-      setAvatarUrl(publicUrl);
+      setAvatarUrl(`${publicUrl}?t=${Date.now()}`);
       toast.success('Avatar uploaded');
     } catch (error) {
-      console.error('Error uploading avatar:', error);
       toast.error('Failed to upload avatar');
     } finally {
       setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
+  const handleLeaveGroup = async () => {
+    if (!user) return;
+
+    await supabase
+      .from('chat_members')
+      .delete()
+      .eq('chat_id', chatId)
+      .eq('user_id', user.id);
+
+    toast.success('You left the group');
+    onClose();
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!isAdmin) return;
+
+    const confirmDelete = confirm(
+      'Are you sure you want to permanently delete this group?'
+    );
+    if (!confirmDelete) return;
+
+    await supabase.from('chats').delete().eq('id', chatId);
+
+    toast.success('Group deleted');
+    onClose();
+  };
+
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <SheetContent side="right" className="w-full sm:w-[540px] p-0">
         <SheetHeader className="p-6 pb-4">
           <SheetTitle className="text-2xl font-bold flex items-center gap-2">
@@ -148,21 +231,21 @@ export const GroupSettingsSheet = ({ isOpen, onClose, chatId, isAdmin }: GroupSe
             Group Settings
           </SheetTitle>
           <SheetDescription>
-            {isAdmin ? 'Edit group information' : 'View group information'}
+            Manage your group preferences and permissions
           </SheetDescription>
         </SheetHeader>
 
         <ScrollArea className="h-[calc(100vh-180px)]">
-          <div className="px-6 py-6 space-y-6">
+          <div className="px-6 py-6 space-y-8">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin" />
               </div>
             ) : (
               <>
-                {/* Group Avatar */}
+                {/* Avatar */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-semibold">Group Avatar</Label>
+                  <Label>Group Avatar</Label>
                   <div className="flex items-center gap-4">
                     <UserAvatar
                       userId={chatId}
@@ -177,93 +260,121 @@ export const GroupSettingsSheet = ({ isOpen, onClose, chatId, isAdmin }: GroupSe
                           size="sm"
                           onClick={() => fileInputRef.current?.click()}
                           disabled={uploading}
-                          className="gap-2"
                         >
-                          {uploading ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Uploading...
-                            </>
-                          ) : (
-                            <>
-                              <Camera className="h-4 w-4" />
-                              Change Avatar
-                            </>
-                          )}
+                          {uploading ? 'Uploading...' : 'Change Avatar'}
                         </Button>
                         <input
                           ref={fileInputRef}
                           type="file"
+                          hidden
                           accept="image/*"
                           onChange={handleAvatarChange}
-                          className="hidden"
                         />
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* Group Name */}
+                {/* Name */}
                 <div className="space-y-3">
-                  <Label htmlFor="groupName" className="text-sm font-semibold">
-                    Group Name
-                  </Label>
+                  <Label>Group Name</Label>
                   <Input
-                    id="groupName"
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
-                    placeholder="Enter group name"
                     disabled={!isAdmin}
                     maxLength={50}
-                    className="h-12"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {groupName.length}/50 characters
-                  </p>
                 </div>
 
-                {/* Group Description */}
+                {/* Description */}
                 <div className="space-y-3">
-                  <Label htmlFor="description" className="text-sm font-semibold">
-                    Description
-                  </Label>
+                  <Label>Description</Label>
                   <Textarea
-                    id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Enter group description (optional)"
                     disabled={!isAdmin}
                     maxLength={200}
-                    rows={4}
-                    className="resize-none"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {description.length}/200 characters
-                  </p>
                 </div>
+
+                {/* Privacy */}
+                <div className="flex items-center justify-between">
+                  <Label>Private Group</Label>
+                  <Switch
+                    checked={isPrivate}
+                    onCheckedChange={setIsPrivate}
+                    disabled={!isAdmin}
+                  />
+                </div>
+
+                {/* Who can send */}
+                <div className="space-y-3">
+                  <Label>Who can send messages</Label>
+                  <Select
+                    value={whoCanSend}
+                    onValueChange={(v: any) => setWhoCanSend(v)}
+                    disabled={!isAdmin}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="everyone">Everyone</SelectItem>
+                      <SelectItem value="admins">Admins only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Max members */}
+                <div className="space-y-3">
+                  <Label>Maximum Members</Label>
+                  <Input
+                    type="number"
+                    value={maxMembers ?? ''}
+                    onChange={(e) =>
+                      setMaxMembers(
+                        e.target.value ? Number(e.target.value) : null
+                      )
+                    }
+                    disabled={!isAdmin}
+                  />
+                </div>
+
+                {isAdmin && (
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteGroup}
+                    className="w-full gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Group
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={handleLeaveGroup}
+                  className="w-full gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Leave Group
+                </Button>
 
                 {isAdmin && (
                   <div className="flex gap-3 pt-4">
                     <Button
                       variant="outline"
-                      className="flex-1 h-12"
+                      className="flex-1"
                       onClick={onClose}
                     >
                       Cancel
                     </Button>
                     <Button
-                      className="flex-1 h-12"
+                      className="flex-1"
                       onClick={handleSave}
-                      disabled={saving || !groupName.trim()}
+                      disabled={saving || !hasChanges()}
                     >
-                      {saving ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Saving...
-                        </>
-                      ) : (
-                        'Save Changes'
-                      )}
+                      {saving ? 'Saving...' : 'Save Changes'}
                     </Button>
                   </div>
                 )}
