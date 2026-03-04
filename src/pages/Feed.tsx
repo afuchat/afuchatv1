@@ -631,7 +631,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   };
 
   const handleReplySubmit = async () => {
-    if (!replyText.trim() || !user || guestMode) {
+    if (!replyText.trim()) return;
+    if (!user || guestMode) {
       toast.info('Please sign in to comment on posts', {
         action: {
           label: 'Sign In',
@@ -1158,8 +1159,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                       toast.info('Sign in to comment');
                       return;
                     }
-                    setReplyText(emoji);
-                    handleReplySubmit();
+                    setReplyText(prev => prev + emoji);
                   }}
                 >
                   {emoji}
