@@ -15,15 +15,21 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Camera, Loader2, Users, Trash2, LogOut } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Camera, Loader2, Users, LogOut } from 'lucide-react';
 import { UserAvatar } from '@/components/avatar/UserAvatar';
 
 interface GroupSettingsSheetProps {
   isOpen: boolean;
   onClose: () => void;
   chatId: string;
-  isAdmin: boolean;
+  isAdmin: boolean; // ✅ kept as isAdmin
 }
 
 export const GroupSettingsSheet = ({
@@ -43,17 +49,16 @@ export const GroupSettingsSheet = ({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const [isPrivate, setIsPrivate] = useState(false);
-  const [whoCanSend, setWhoCanSend] = useState<'everyone' | 'admins'>('everyone');
-  const [whoCanEditInfo, setWhoCanEditInfo] = useState<'admins' | 'everyone'>('admins');
+  const [whoCanSend, setWhoCanSend] = useState<'everyone' | 'admins'>(
+    'everyone'
+  );
   const [maxMembers, setMaxMembers] = useState<number | null>(null);
 
   const originalState = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      loadGroupInfo();
-    }
+    if (isOpen) loadGroupInfo();
   }, [isOpen, chatId]);
 
   const loadGroupInfo = async () => {
@@ -74,7 +79,6 @@ export const GroupSettingsSheet = ({
           avatar_url: data.avatar_url,
           is_private: data.is_private || false,
           who_can_send: data.who_can_send || 'everyone',
-          who_can_edit_info: data.who_can_edit_info || 'admins',
           max_members: data.max_members,
         };
 
@@ -83,12 +87,11 @@ export const GroupSettingsSheet = ({
         setAvatarUrl(state.avatar_url);
         setIsPrivate(state.is_private);
         setWhoCanSend(state.who_can_send);
-        setWhoCanEditInfo(state.who_can_edit_info);
         setMaxMembers(state.max_members);
 
         originalState.current = state;
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load group information');
     } finally {
       setLoading(false);
@@ -102,7 +105,6 @@ export const GroupSettingsSheet = ({
       avatar_url: avatarUrl,
       is_private: isPrivate,
       who_can_send: whoCanSend,
-      who_can_edit_info: whoCanEditInfo,
       max_members: maxMembers,
     };
     return JSON.stringify(current) !== JSON.stringify(originalState.current);
@@ -129,7 +131,6 @@ export const GroupSettingsSheet = ({
           avatar_url: avatarUrl,
           is_private: isPrivate,
           who_can_send: whoCanSend,
-          who_can_edit_info: whoCanEditInfo,
           max_members: maxMembers,
           updated_at: new Date().toISOString(),
         })
@@ -149,6 +150,8 @@ export const GroupSettingsSheet = ({
   const handleAvatarChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
+    if (!isAdmin) return;
+
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -181,8 +184,8 @@ export const GroupSettingsSheet = ({
         .getPublicUrl(filePath);
 
       setAvatarUrl(`${publicUrl}?t=${Date.now()}`);
-      toast.success('Avatar uploaded');
-    } catch (error) {
+      toast.success('Avatar updated');
+    } catch {
       toast.error('Failed to upload avatar');
     } finally {
       setUploading(false);
@@ -203,20 +206,6 @@ export const GroupSettingsSheet = ({
     onClose();
   };
 
-  const handleDeleteGroup = async () => {
-    if (!isAdmin) return;
-
-    const confirmDelete = confirm(
-      'Are you sure you want to permanently delete this group?'
-    );
-    if (!confirmDelete) return;
-
-    await supabase.from('chats').delete().eq('id', chatId);
-
-    toast.success('Group deleted');
-    onClose();
-  };
-
   return (
     <Sheet
       open={isOpen}
@@ -231,7 +220,9 @@ export const GroupSettingsSheet = ({
             Group Settings
           </SheetTitle>
           <SheetDescription>
-            Manage your group preferences and permissions
+            {isAdmin
+              ? 'Manage your group settings'
+              : 'View group information'}
           </SheetDescription>
         </SheetHeader>
 
@@ -340,17 +331,7 @@ export const GroupSettingsSheet = ({
                   />
                 </div>
 
-                {isAdmin && (
-                  <Button
-                    variant="destructive"
-                    onClick={handleDeleteGroup}
-                    className="w-full gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Group
-                  </Button>
-                )}
-
+                {/* Leave group */}
                 <Button
                   variant="outline"
                   onClick={handleLeaveGroup}
