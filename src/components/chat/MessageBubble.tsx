@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { MessageActionsMenu } from './MessageActionsMenu';
 import { OrderNotificationActions } from '@/components/shop/OrderNotificationActions';
 import { useAuth } from '@/contexts/AuthContext';
+import { Avatar as UIAvatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Helper function to parse message content with clickable links, mentions, and hashtags
 const parseMessageContent = (content: string): React.ReactNode => {
@@ -201,8 +202,9 @@ interface MessageBubbleProps {
   bubbleStyle?: 'rounded' | 'square' | 'minimal';
   showReadReceipts?: boolean;
   fontSize?: number;
-  isChannel?: boolean; // Channel messages don't show sender identity or read receipts
-  viewCount?: number; // View count for channel messages
+  isChannel?: boolean;
+  viewCount?: number;
+  isGroup?: boolean;
 }
 
 export const MessageBubble = ({
@@ -222,6 +224,7 @@ export const MessageBubble = ({
   fontSize = 16,
   isChannel = false,
   viewCount = 0,
+  isGroup = false,
 }: MessageBubbleProps) => {
   const { user } = useAuth();
   const [actionsSheetOpen, setActionsSheetOpen] = useState(false);
@@ -440,21 +443,40 @@ export const MessageBubble = ({
       onContextMenu={handleContextMenu}
       style={{ touchAction: 'pan-y' }}
       className={`flex w-full ${
-        // For channels, all messages appear left-aligned (from the channel)
         isChannel ? 'justify-start' : (isOwn ? 'justify-end' : 'justify-start')
       } ${
         isLastInGroup ? 'mb-1' : 'mb-px'
-      }`}
+      } ${isGroup && !isOwn ? 'items-end gap-2' : ''}`}
     >
+      {/* Sender avatar in group chats only */}
+      {isGroup && !isOwn && isLastInGroup && (
+        <Link to={`/${message.profiles.handle}`} className="flex-shrink-0 mb-0.5" onClick={(e) => e.stopPropagation()}>
+          <UIAvatar className="h-7 w-7">
+            <AvatarImage src={message.profiles.avatar_url || undefined} alt={message.profiles.display_name} />
+            <AvatarFallback className="text-[10px]">
+              {message.profiles.display_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+            </AvatarFallback>
+          </UIAvatar>
+        </Link>
+      )}
+      {isGroup && !isOwn && !isLastInGroup && (
+        <div className="w-7 flex-shrink-0" />
+      )}
+      <div className="flex flex-col max-w-[85%]">
+        {/* Sender name in group chats */}
+        {isGroup && !isOwn && !isGrouped && (
+          <Link to={`/${message.profiles.handle}`} className="text-[11px] font-semibold text-primary ml-1 mb-0.5 hover:underline" onClick={(e) => e.stopPropagation()}>
+            {message.profiles.display_name}
+          </Link>
+        )}
       <div
         className={`${
-          // For channels, all messages use receiver styling (muted background)
           isChannel
             ? 'bg-muted text-foreground'
             : isOwn
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-foreground'
-        } ${getBubbleRadius()} max-w-[85%] overflow-hidden`}
+        } ${getBubbleRadius()} overflow-hidden`}
       >
         {repliedMessage && (
           <div className={`px-2 pt-1.5 pb-1 border-l-2 ${isOwn ? 'border-primary-foreground/50 bg-primary-foreground/10' : 'border-primary/50 bg-primary/10'} mx-1 mt-1 rounded-r`}>
@@ -580,6 +602,7 @@ export const MessageBubble = ({
             currentUserId={user?.id}
           />
         )}
+      </div>
       </div>
     </motion.div>
 

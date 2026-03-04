@@ -49,15 +49,17 @@ interface AIModel {
 
 const AI_MODELS_DESKTOP: AIModel[] = [
   { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', icon: '⚡' },
-  { id: 'google/gemini-2.5-pro', name: 'Gemini Pro', icon: '🧠' },
-  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨', comingSoon: true },
+  { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', icon: '💫' },
+  { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', icon: '🧠' },
+  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨' },
 ];
 
 const AI_MODELS_MOBILE: AIModel[] = [
   { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', icon: '⚡' },
+  { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', icon: '💫' },
   { id: 'google/gemini-2.5-flash-image', name: 'Image Gen', icon: '🎨', isImageModel: true },
-  { id: 'google/gemini-2.5-pro', name: 'Gemini Pro', icon: '🧠' },
-  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨', comingSoon: true },
+  { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', icon: '🧠' },
+  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', icon: '💨' },
 ];
 
 function parsePostAction(content: string): PostAction | null {
