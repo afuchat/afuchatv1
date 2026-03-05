@@ -467,6 +467,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const { translateText } = useAITranslation();
   const [showComments, setShowComments] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [replyingToReply, setReplyingToReply] = useState<{ id: string; handle: string } | null>(null);
+  const commentInputRef = useRef<HTMLInputElement>(null);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [visibleRepliesCount, setVisibleRepliesCount] = useState(5);
@@ -643,8 +645,9 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     }
 
     const trimmedReplyText = replyText.trim();
-    const mention = post.profiles.handle ? `@${post.profiles.handle}` : '';
-    const finalContent = mention ? `${trimmedReplyText} ${mention}` : trimmedReplyText;
+    const replyToHandle = replyingToReply ? `@${replyingToReply.handle}` : (post.profiles.handle ? `@${post.profiles.handle}` : '');
+    const finalContent = replyToHandle ? `${trimmedReplyText} ${replyToHandle}` : trimmedReplyText;
+    const parentId = replyingToReply?.id || null;
     const tempId = `temp-reply-${Date.now()}`;
     
     // Create optimistic reply
@@ -654,7 +657,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       author_id: user.id,
       content: finalContent,
       created_at: new Date().toISOString(),
-      parent_reply_id: null,
+      parent_reply_id: parentId,
       nested_replies: [],
       profiles: {
         display_name: user?.user_metadata?.display_name || 'User',
@@ -670,6 +673,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     // Add optimistic reply immediately
     addReply(post.id, optimisticReply);
     setReplyText('');
+    setReplyingToReply(null);
     setShowComments(true);
 
     try {
@@ -679,7 +683,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           post_id: post.id,
           author_id: user.id,
           content: finalContent,
-          parent_reply_id: null,
+          parent_reply_id: parentId,
         })
         .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, verification_source)')
         .single();
@@ -1095,7 +1099,14 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         {parsePostContent(reply.content, reply.id, navigate)}
                       </p>
                       <div className="flex items-center gap-4 mt-1.5">
-                        <button className="text-xs text-muted-foreground hover:text-foreground font-medium">Reply</button>
+                        <button 
+                          className="text-xs text-muted-foreground hover:text-foreground font-medium"
+                          onClick={() => {
+                            setReplyingToReply({ id: reply.id, handle: reply.profiles.handle });
+                            setReplyText(`@${reply.profiles.handle} `);
+                            setTimeout(() => commentInputRef.current?.focus(), 100);
+                          }}
+                        >Reply</button>
                       </div>
                       
                       {/* Nested replies */}
@@ -1169,26 +1180,34 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             
             {/* Comment input */}
             {user ? (
-              <div className="flex items-center gap-3 px-4 py-3 border-t border-border/20">
-                <Avatar className="h-8 w-8 flex-shrink-0">
-                  <AvatarImage src={userProfile?.avatar_url || undefined} />
-                  <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                    {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <input
-                  type="text"
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && replyText.trim()) {
-                      e.preventDefault();
-                      handleReplySubmit();
-                    }
-                  }}
-                  placeholder={`Add a comment for ${post.profiles.handle}...`}
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                />
+              <div>
+                {replyingToReply && (
+                  <div className="flex items-center justify-between px-4 py-1.5 bg-muted/50 border-t border-border/20">
+                    <span className="text-xs text-muted-foreground">Replying to <span className="font-semibold text-foreground">@{replyingToReply.handle}</span></span>
+                    <button className="text-xs text-primary font-medium" onClick={() => { setReplyingToReply(null); setReplyText(''); }}>Cancel</button>
+                  </div>
+                )}
+                <div className="flex items-center gap-3 px-4 py-3 border-t border-border/20">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarImage src={userProfile?.avatar_url || undefined} />
+                    <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                      {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <input
+                    ref={commentInputRef}
+                    type="text"
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey && replyText.trim()) {
+                        e.preventDefault();
+                        handleReplySubmit();
+                      }
+                    }}
+                    placeholder={replyingToReply ? `Reply to @${replyingToReply.handle}...` : `Add a comment for ${post.profiles.handle}...`}
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                  />
                 {replyText.trim() && (
                   <Button
                     size="sm"
@@ -1198,6 +1217,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                     Post
                   </Button>
                 )}
+                </div>
               </div>
             ) : (
               <div className="px-4 py-3 text-center text-xs text-muted-foreground border-t border-border/20">
