@@ -6,11 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Plus, ArrowLeft, Eye, Crown } from 'lucide-react';
+import { Plus, ArrowLeft, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { StoryViewer } from '@/components/moments/StoryViewer';
 import { CreateStoryDialog } from '@/components/moments/CreateStoryDialog';
-import { useSubscription } from '@/hooks/useSubscription';
+
 
 interface Story {
   id: string;
@@ -38,14 +38,10 @@ const Moments = () => {
   const [loading, setLoading] = useState(true);
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const { canCreateStories, tier } = useSubscription();
-
-  const canCreate = canCreateStories();
-
   const handleCreateStory = () => {
-    if (!canCreate) {
-      toast.error('Gold or Platinum subscription required to create stories');
-      navigate('/premium');
+    if (!user) {
+      toast.info('Sign in to create stories');
+      navigate('/auth/signin');
       return;
     }
     setCreateDialogOpen(true);
@@ -155,7 +151,6 @@ const Moments = () => {
                 </div>
               </div>
               <Button onClick={handleCreateStory} size="lg" className="gap-2">
-                {!canCreate && <Crown className="h-4 w-4 text-amber-500" />}
                 <Plus className="h-5 w-5" />
                 <span className="hidden sm:inline">Create</span>
               </Button>

@@ -967,12 +967,14 @@ export type Database = {
           is_favorite: boolean | null
           is_group: boolean | null
           is_pinned: boolean | null
+          is_private: boolean | null
           is_system_notifications: boolean | null
           is_verified: boolean | null
           member_limit: number | null
           name: string | null
           updated_at: string | null
           user_id: string | null
+          who_can_send: string | null
         }
         Insert: {
           archived_at?: string | null
@@ -986,12 +988,14 @@ export type Database = {
           is_favorite?: boolean | null
           is_group?: boolean | null
           is_pinned?: boolean | null
+          is_private?: boolean | null
           is_system_notifications?: boolean | null
           is_verified?: boolean | null
           member_limit?: number | null
           name?: string | null
           updated_at?: string | null
           user_id?: string | null
+          who_can_send?: string | null
         }
         Update: {
           archived_at?: string | null
@@ -1005,12 +1009,14 @@ export type Database = {
           is_favorite?: boolean | null
           is_group?: boolean | null
           is_pinned?: boolean | null
+          is_private?: boolean | null
           is_system_notifications?: boolean | null
           is_verified?: boolean | null
           member_limit?: number | null
           name?: string | null
           updated_at?: string | null
           user_id?: string | null
+          who_can_send?: string | null
         }
         Relationships: [
           {

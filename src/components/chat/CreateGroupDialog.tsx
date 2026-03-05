@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -13,8 +12,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Users, Crown } from 'lucide-react';
-import { useSubscription } from '@/hooks/useSubscription';
+import { Switch } from '@/components/ui/switch';
+import { Users, Lock, Globe } from 'lucide-react';
 
 interface CreateGroupDialogProps {
   isOpen: boolean;
@@ -24,19 +23,11 @@ interface CreateGroupDialogProps {
 
 export const CreateGroupDialog = ({ isOpen, onClose, onGroupCreated }: CreateGroupDialogProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { canCreateGroups, tier, planName } = useSubscription();
   const [groupName, setGroupName] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleCreateGroup = async () => {
-    if (!canCreateGroups()) {
-      toast.error('Gold or Platinum subscription required to create groups');
-      navigate('/premium');
-      onClose();
-      return;
-    }
-
     if (!user || !groupName.trim()) {
       toast.error('Please enter a group name');
       return;
@@ -44,20 +35,19 @@ export const CreateGroupDialog = ({ isOpen, onClose, onGroupCreated }: CreateGro
 
     setLoading(true);
     try {
-      // Create group chat
       const { data: chat, error: chatError } = await supabase
         .from('chats')
         .insert({
           name: groupName.trim(),
           is_group: true,
+          is_private: isPrivate,
           created_by: user.id,
-        })
+        } as any)
         .select()
         .single();
 
       if (chatError) throw chatError;
 
-      // Add creator as admin member
       const { error: memberError } = await supabase
         .from('chat_members')
         .insert({
@@ -71,6 +61,7 @@ export const CreateGroupDialog = ({ isOpen, onClose, onGroupCreated }: CreateGro
       toast.success('Group created successfully');
       onGroupCreated(chat.id);
       setGroupName('');
+      setIsPrivate(false);
       onClose();
     } catch (error) {
       console.error('Error creating group:', error);
@@ -87,12 +78,9 @@ export const CreateGroupDialog = ({ isOpen, onClose, onGroupCreated }: CreateGro
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
             Create Group
-            {!canCreateGroups() && <Crown className="h-4 w-4 text-yellow-500" />}
           </DialogTitle>
           <DialogDescription>
-            {canCreateGroups() 
-              ? 'Create a new group chat to communicate with multiple people'
-              : 'Gold or Platinum subscription required to create groups'}
+            Create a new group chat to communicate with multiple people
           </DialogDescription>
         </DialogHeader>
 
@@ -112,22 +100,26 @@ export const CreateGroupDialog = ({ isOpen, onClose, onGroupCreated }: CreateGro
               autoFocus
             />
           </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">
+            <div className="flex items-center gap-3">
+              {isPrivate ? <Lock className="h-5 w-5 text-muted-foreground" /> : <Globe className="h-5 w-5 text-muted-foreground" />}
+              <div>
+                <p className="text-sm font-medium">{isPrivate ? 'Private Group' : 'Public Group'}</p>
+                <p className="text-xs text-muted-foreground">
+                  {isPrivate ? 'Only invited members can join' : 'Anyone can find and join'}
+                </p>
+              </div>
+            </div>
+            <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
+          </div>
         </div>
 
         <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1"
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={onClose} className="flex-1" disabled={loading}>
             Cancel
           </Button>
-          <Button
-            onClick={handleCreateGroup}
-            className="flex-1"
-            disabled={loading || !groupName.trim()}
-          >
+          <Button onClick={handleCreateGroup} className="flex-1" disabled={loading || !groupName.trim()}>
             {loading ? 'Creating...' : 'Create Group'}
           </Button>
         </div>

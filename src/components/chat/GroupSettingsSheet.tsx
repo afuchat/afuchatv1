@@ -73,13 +73,14 @@ export const GroupSettingsSheet = ({
       if (error) throw error;
 
       if (data) {
+        const chatData = data as any;
         const state = {
-          name: data.name || '',
-          description: data.description || '',
-          avatar_url: data.avatar_url,
-          is_private: data.is_private || false,
-          who_can_send: data.who_can_send || 'everyone',
-          max_members: data.max_members,
+          name: chatData.name || '',
+          description: chatData.description || '',
+          avatar_url: chatData.avatar_url,
+          is_private: chatData.is_private || false,
+          who_can_send: chatData.who_can_send || 'everyone',
+          max_members: chatData.member_limit,
         };
 
         setGroupName(state.name);
@@ -129,11 +130,11 @@ export const GroupSettingsSheet = ({
           name: groupName.trim(),
           description: description.trim() || null,
           avatar_url: avatarUrl,
-          is_private: isPrivate,
-          who_can_send: whoCanSend,
-          max_members: maxMembers,
+          is_private: isPrivate as any,
+          who_can_send: whoCanSend as any,
+          member_limit: maxMembers,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', chatId);
 
       if (error) throw error;

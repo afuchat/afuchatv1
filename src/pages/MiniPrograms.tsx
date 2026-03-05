@@ -888,25 +888,7 @@ const MiniPrograms = () => {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const showMobileHeader = isMobile && !isInIframe;
 
-  // Require admin access for mini programs
-  if (!user || (!isAdmin && !loading)) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
-            <Shield className="h-10 w-10 text-muted-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold mb-3">Admin Access Only</h1>
-          <p className="text-muted-foreground mb-6">
-            Mini Programs are currently available to administrators only. Check back later for updates.
-          </p>
-          <Button onClick={() => navigate('/home')} className="w-full max-w-xs">
-            Go to Home
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // Mini programs are now public for all users
 
   return (
     <>
