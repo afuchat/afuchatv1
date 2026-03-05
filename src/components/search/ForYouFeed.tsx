@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { 
   TrendingUp, 
   Newspaper, 
-  BookOpen, 
+   
   Heart,
   MessageCircle,
   Clock,
@@ -21,12 +21,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 
-type FeedItemType = 'post' | 'news' | 'blog';
+type FeedItemType = 'post' | 'news';
 
 interface FeedItem {
   id: string;
   type: FeedItemType;
-  data: TrendingPost | NewsItem | BlogArticle;
+  data: TrendingPost | NewsItem;
   priority: number;
   createdAt: Date;
 }
@@ -60,17 +60,6 @@ interface NewsItem {
   publishedAt?: string;
 }
 
-interface BlogArticle {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  cover_image: string | null;
-  category: string;
-  ai_summary: string | null;
-  reading_time_minutes: number;
-  published_at: string | null;
-}
 
 const FAVICON_SIZE = 32;
 
@@ -226,25 +215,6 @@ export const ForYouFeed = ({ onPostClick }: { onPostClick: (postId: string) => v
         }
       }
 
-      // Fetch blog articles (only on first page or every 2nd page)
-      if (pageNum % 2 === 0) {
-        const { data: blogArticles } = await supabase
-          .from('blog_articles')
-          .select('id, title, slug, excerpt, cover_image, category, ai_summary, reading_time_minutes, published_at')
-          .eq('is_published', true)
-          .order('published_at', { ascending: false })
-          .range(Math.floor(pageNum / 2) * 2, Math.floor(pageNum / 2) * 2 + 1);
-
-        (blogArticles || []).forEach((article) => {
-          items.push({
-            id: `blog-${article.id}`,
-            type: 'blog',
-            data: article as BlogArticle,
-            priority: 80,
-            createdAt: article.published_at ? new Date(article.published_at) : new Date()
-          });
-        });
-      }
 
       // Shuffle items for variety
       const shuffled = items.sort(() => Math.random() - 0.5);
@@ -396,52 +366,12 @@ export const ForYouFeed = ({ onPostClick }: { onPostClick: (postId: string) => v
     </Card>
   );
 
-  const renderBlog = (article: BlogArticle) => (
-    <Link to={`/blog/${article.slug}`}>
-      <Card className="overflow-hidden border-border/50 hover:bg-muted/30 transition-colors">
-        <div className="flex">
-          {article.cover_image ? (
-            <div className="w-24 h-24 flex-shrink-0">
-              <img src={article.cover_image} alt="" className="w-full h-full object-cover" />
-            </div>
-          ) : (
-            <div className="w-24 h-24 flex-shrink-0 bg-muted flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-muted-foreground" />
-            </div>
-          )}
-          <div className="flex-1 p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant="secondary" className="text-[10px]">
-                <BookOpen className="h-3 w-3 mr-1" />
-                Blog
-              </Badge>
-              <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
-            </div>
-            <h3 className="font-semibold text-sm line-clamp-2">{article.title}</h3>
-            {article.ai_summary && (
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-1 flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-primary flex-shrink-0" />
-                {article.ai_summary}
-              </p>
-            )}
-            <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
-              <Clock className="h-2.5 w-2.5" />
-              {article.reading_time_minutes}m read
-            </div>
-          </div>
-        </div>
-      </Card>
-    </Link>
-  );
-
   const renderItem = (item: FeedItem) => {
     switch (item.type) {
       case 'post':
         return renderPost(item.data as TrendingPost);
       case 'news':
         return renderNews(item.data as NewsItem);
-      case 'blog':
-        return renderBlog(item.data as BlogArticle);
       default:
         return null;
     }

@@ -28,7 +28,7 @@ import {
 } from '@/lib/contentCategorization';
 import { GlobalNewsSection } from '@/components/search/GlobalNewsSection';
 import { FinanceSection } from '@/components/search/FinanceSection';
-import { BlogSection } from '@/components/search/BlogSection';
+
 import { ForYouFeed } from '@/components/search/ForYouFeed';
 import { WebSearchSection } from '@/components/search/WebSearchSection';
 
@@ -135,7 +135,7 @@ const GoldVerifiedBadge = ({ size = 'w-4 h-4' }: { size?: string }) => (
   </svg>
 );
 
-const TABS = ['For You', 'Web', 'Trending', 'Blogs', 'News', 'Finance', 'Sports', 'Entertainment'] as const;
+const TABS = ['For You', 'Web', 'Trending', 'News', 'Finance', 'Sports', 'Entertainment'] as const;
 const SEARCH_RESULT_TABS = ['All', 'People', 'Communities', 'Posts', 'Messages'] as const;
 type TabType = typeof TABS[number];
 type SearchResultTabType = typeof SEARCH_RESULT_TABS[number];
@@ -391,10 +391,6 @@ const TrendingSection = ({
     return <WebSearchSection query={searchQuery || ''} />;
   }
 
-  // Show blogs tab
-  if (activeTab === 'Blogs') {
-    return <BlogSection />;
-  }
 
   // Show global news for News, Sports, and Entertainment tabs
   if (activeTab === 'News') {
