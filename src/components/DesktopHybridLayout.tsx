@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccountMode } from '@/contexts/AccountModeContext';
@@ -6,7 +6,7 @@ import {
   Home, MessageSquare, Search, Bell, User, Settings, Shield, 
   BarChart3, ShoppingBag, Wallet, Send, Gift, 
   Image as ImageIcon, Hash, TrendingUp, Menu, DollarSign,
-  ChevronLeft, Grid3x3, Sun, Moon, Monitor, PenSquare, BookOpen
+  ChevronLeft, Grid3x3, Sun, Moon, Monitor, PenSquare
 } from 'lucide-react';
 import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 import { useTheme } from '@/contexts/ThemeContext';
+import DesktopPageWindow, { isBaseRoute } from '@/components/desktop/DesktopPageWindow';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -122,7 +123,6 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const navItems = [
     { path: '/', icon: Home, label: t('common.home') },
     { path: '/chats', icon: MessageSquare, label: t('common.messages') },
-    { path: '/blog', icon: BookOpen, label: 'Blog' },
   ];
 
   const featureItems = [
@@ -159,6 +159,8 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
     }
     return location.pathname.startsWith(path);
   };
+
+  const isWindowedRoute = !isBaseRoute(location.pathname);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -346,10 +348,16 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
         {/* Main Content - independent scroll */}
         <main className="flex-1 min-w-0 overflow-y-auto desktop-scroll-panel">
           <div className={cn(
-            "min-h-full",
-            !hideRightSidebar && "max-w-3xl"
+            "min-h-full flex flex-col items-center",
+            !hideRightSidebar && "max-w-4xl mx-auto"
           )}>
-            {children}
+            {isWindowedRoute ? (
+              <DesktopPageWindow title={undefined}>
+                {children}
+              </DesktopPageWindow>
+            ) : (
+              <div className="w-full">{children}</div>
+            )}
           </div>
         </main>
 

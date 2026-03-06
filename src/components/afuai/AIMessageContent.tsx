@@ -46,7 +46,7 @@ const PLATFORM_ROUTES: Record<string, { path: string; label: string }> = {
   'qr code': { path: '/qr-code', label: 'QR Code' },
   'security': { path: '/security', label: 'Security' },
   'developer sdk': { path: '/developer-sdk', label: 'Developer SDK' },
-  'blog': { path: '/blog', label: 'Blog' },
+  
   "what's new": { path: '/whats-new', label: "What's New" },
   'leaderboard': { path: '/leaderboard', label: 'Leaderboard' },
   'christmas gifts': { path: '/christmas-gifts', label: 'Christmas Gifts' },
@@ -65,7 +65,7 @@ const SLASH_ROUTES: Record<string, string> = {
   '/bookings': 'Bookings', '/afumail': 'AfuMail', '/business-dashboard': 'Business Dashboard',
   '/affiliate-dashboard': 'Affiliate Dashboard', '/affiliate-request': 'Affiliate Request',
   '/verification-request': 'Verification Request', '/qr-code': 'QR Code',
-  '/security': 'Security', '/developer-sdk': 'Developer SDK', '/blog': 'Blog',
+  '/security': 'Security', '/developer-sdk': 'Developer SDK',
   '/whats-new': "What's New", '/leaderboard': 'Leaderboard',
   '/christmas-gifts': 'Christmas Gifts', '/home': 'Home',
 };

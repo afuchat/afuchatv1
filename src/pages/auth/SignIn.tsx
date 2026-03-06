@@ -10,6 +10,7 @@ import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageSkeleton } from '@/components/skeletons';
 import { motion } from 'framer-motion';
+import DesktopAuthWindow from '@/components/desktop/DesktopAuthWindow';
 import signinBg from '@/assets/auth/signin-bg.jpg';
 
 const SignIn = () => {
@@ -71,6 +72,7 @@ const SignIn = () => {
   };
 
   return (
+    <DesktopAuthWindow>
     <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 z-0">
@@ -213,6 +215,7 @@ const SignIn = () => {
         </motion.div>
       </div>
     </div>
+    </DesktopAuthWindow>
   );
 };
 
