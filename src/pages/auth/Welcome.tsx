@@ -7,6 +7,7 @@ import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageSkeleton } from '@/components/skeletons';
 import { supabase } from '@/integrations/supabase/client';
+import DesktopAuthWindow from '@/components/desktop/DesktopAuthWindow';
 
 // Import onboarding images
 import welcomeHero from '@/assets/onboarding/welcome-hero.jpg';
@@ -152,7 +153,8 @@ const Welcome = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col overflow-hidden">
+    <DesktopAuthWindow>
+    <div className="fixed inset-0 bg-background flex flex-col overflow-hidden lg:relative lg:min-h-[500px]">
       {/* Header with Logo */}
       <div className="absolute top-0 left-0 right-0 z-20 p-4 flex items-center justify-between">
         <Logo size="sm" />
@@ -280,6 +282,7 @@ const Welcome = () => {
         )}
       </div>
     </div>
+    </DesktopAuthWindow>
   );
 };
 

@@ -203,8 +203,6 @@ const AppRoutes = () => {
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/whats-new" element={<WhatsNew />} />
-      <Route path="/blog" element={<Navigate to="/home" replace />} />
-      <Route path="/blog/:slug" element={<Navigate to="/home" replace />} />
       <Route path="/trending" element={<Navigate to="/search" replace />} />
       <Route path="/admin/affiliate-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminAffiliateRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/admin/creator-withdrawals" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminCreatorWithdrawals /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
