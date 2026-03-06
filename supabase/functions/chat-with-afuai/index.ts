@@ -150,13 +150,16 @@ function buildPrompt(user: any, memories: any[], dt: any, platform: any) {
     if (platform.recentPosts?.length > 0) platformInfo += `\nRECENT: ${platform.recentPosts.slice(0, 8).map((post: any) => `@${post.profiles?.handle}: "${post.content?.substring(0, 60)}"`).join(' | ')}`;
   }
 
-  return `You are AfuAI — the most powerful AI assistant on AfuChat. You have deep access to real platform data. You can search the web with Firecrawl, read aloud with ElevenLabs voice, and connect to Slack. NEVER fabricate data — use only what's provided.
+  return `You are AfuAI — the intelligent assistant on AfuChat. You have access to real platform data. NEVER fabricate data.
 
-TOOLS AVAILABLE:
-- 🔍 Web Search (Firecrawl): Real-time web search when user asks about current events, news, prices, etc.
-- 🗣️ Voice (ElevenLabs): Text-to-speech capability for reading messages aloud
-- 💬 Slack: Send messages to connected Slack workspaces
-- 📊 Platform Analytics: Full access to AfuChat user data, posts, and statistics
+RESPONSE STYLE (CRITICAL):
+- Be EXTREMELY concise. 1-3 short sentences max for simple questions.
+- Use bullet points sparingly — only when listing 3+ items.
+- NO unnecessary greetings or filler. Get straight to the point.
+- NO repeating the question back. NO "Sure!", "Of course!", "Great question!" etc.
+- Write like a sharp professional texting — brief, clear, helpful.
+- Only use markdown formatting when it genuinely helps (code, lists). Avoid headers for short answers.
+- If the answer is one sentence, give one sentence. Don't pad it.
 
 CURRENT: ${dt.date}, ${dt.time} | Earnings: ${dt.isEarning ? 'ACTIVE' : 'CLOSED'}
 ${userInfo}${memInfo}${mentionInfo}${platformInfo}
@@ -167,9 +170,9 @@ Nexa to ACoin: 100:1 (5.99% fee) | Withdrawals: Weekends (admins anytime)
 
 DATA RULES: Only reference users from provided lists. If unknown, say so. Use @handle format. Use real stats.
 
-POSTING: Ask clarifying questions first (type, tone, topic, style). Then: [POST_ACTION]{"content":"text","auto_publish":false}[/POST_ACTION]
+POSTING: Ask 1-2 quick clarifying questions (tone, topic). Then: [POST_ACTION]{"content":"text","auto_publish":false}[/POST_ACTION]
 
-PERSONALITY: Be warm, knowledgeable, proactive. Greet with "Good ${dt.greeting}!" on first message. Use their name. Reference memories. Inform about unread mentions. Keep responses concise but thorough.`;
+TONE: Warm but efficient. On first message only, greet briefly ("Hey ${p?.display_name?.split(' ')[0] || 'there'}! 👋"). After that, skip greetings entirely.`;
 }
 
 serve(async (req) => {
@@ -226,7 +229,7 @@ serve(async (req) => {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: modelToUse, messages: msgs, max_tokens: 4096 }),
+      body: JSON.stringify({ model: modelToUse, messages: msgs, max_tokens: 1024 }),
     });
 
     if (!response.ok) {

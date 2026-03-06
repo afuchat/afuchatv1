@@ -175,7 +175,7 @@ const AIMessageContent: React.FC<AIMessageContentProps> = ({ content, isUser }) 
   }
 
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5">
+    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0">
       <ReactMarkdown
         components={{
           p: ({ children }) => {
@@ -184,7 +184,7 @@ const AIMessageContent: React.FC<AIMessageContentProps> = ({ content, isUser }) 
               return child;
             };
             return (
-              <p className="text-[14.5px] leading-[1.75] text-foreground/90">
+              <p className="text-[13.5px] leading-[1.65] text-foreground/90">
                 {React.Children.map(children, processChildren)}
               </p>
             );
@@ -215,8 +215,8 @@ const AIMessageContent: React.FC<AIMessageContentProps> = ({ content, isUser }) 
               return child;
             };
             return (
-              <li className="text-[14.5px] leading-[1.7] flex items-start gap-2">
-                <span className="mt-2 w-1.5 h-1.5 rounded-full bg-primary/60 shrink-0" />
+              <li className="text-[13.5px] leading-[1.6] flex items-start gap-1.5">
+                <span className="mt-[7px] w-1 h-1 rounded-full bg-primary/60 shrink-0" />
                 <span className="flex-1">{React.Children.map(children, processChildren)}</span>
               </li>
             );
