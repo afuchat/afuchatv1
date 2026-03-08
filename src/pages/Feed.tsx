@@ -190,7 +190,7 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
       return;
     }
 
-    navigate(`/profile/${data.id}`); 
+    navigate(`/${data.id}`); 
   };
   
   // First process mentions, then process hashtags and links (including plain domains like dev-write.netlify.app)
@@ -571,7 +571,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const organizedReplies = organizeReplies(post.replies || []);
   
   const handleViewProfile = (userId: string) => {
-    navigate(`/profile/${userId}`);
+    navigate(`/${userId}`);
   };
 
   const handleTranslate = async () => {

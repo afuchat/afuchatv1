@@ -167,7 +167,7 @@ const NotificationRow = ({
               className="h-8 text-xs"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/profile/${actor.handle}`);
+                navigate(`/${actor.handle}`);
               }}
             >
               <Eye className="h-3.5 w-3.5 mr-1" />
@@ -198,7 +198,7 @@ const NotificationRow = ({
               className="h-8 text-xs"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/profile/${actor.handle}`);
+                navigate(`/${actor.handle}`);
               }}
             >
               <Eye className="h-3.5 w-3.5 mr-1" />
@@ -247,7 +247,7 @@ const NotificationRow = ({
         </button>
       )}
       <Link 
-        to={`/profile/${actor.handle}`} 
+        to={`/${actor.handle}`} 
         onClick={(e) => {
           if (isSelectionMode) {
             e.preventDefault();
@@ -314,7 +314,7 @@ const FollowRequestRow = ({ request, onApprove, onReject, isProcessing }: Follow
 
   return (
     <div className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border-b border-border bg-primary/5">
-      <Link to={`/profile/${requester.handle}`} onClick={(e) => e.stopPropagation()}>
+      <Link to={`/${requester.handle}`} onClick={(e) => e.stopPropagation()}>
         <Avatar className="h-10 w-10 flex-shrink-0">
           <AvatarImage src={requester.avatar_url} alt={requester.display_name} />
           <AvatarFallback>{requester.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
@@ -338,7 +338,7 @@ const FollowRequestRow = ({ request, onApprove, onReject, isProcessing }: Follow
             className="h-8 text-xs"
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/profile/${requester.handle}`);
+              navigate(`/${requester.handle}`);
             }}
           >
             <Eye className="h-3.5 w-3.5 mr-1" />
