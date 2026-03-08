@@ -138,7 +138,7 @@ export default function AfuMail() {
             </SheetContent>
           </Sheet>
         </header>
-      )}
+      }
 
       {/* Main layout */}
       <div className="flex-1 flex min-h-0">
