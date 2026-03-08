@@ -90,3 +90,6 @@ verify_jwt = true
 [functions.you-search]
 verify_jwt = false
 
+[functions.fetch-music-tracks]
+verify_jwt = false
+

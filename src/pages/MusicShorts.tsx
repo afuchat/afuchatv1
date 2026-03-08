@@ -110,15 +110,31 @@ const MusicShorts = () => {
     );
   }
 
+  const seedMusic = async () => {
+    toast.info('Loading real music tracks...');
+    const { error } = await supabase.functions.invoke('fetch-music-tracks');
+    if (error) {
+      toast.error('Failed to load music');
+    } else {
+      toast.success('Real music tracks loaded!');
+      fetchShorts();
+    }
+  };
+
   if (shorts.length === 0) {
     return (
       <div className="h-screen bg-black flex flex-col items-center justify-center text-white gap-4">
         <Music2 className="h-12 w-12 text-muted-foreground" />
         <p className="text-muted-foreground text-sm">No music shorts yet</p>
         <p className="text-muted-foreground text-xs">Be the first to create one!</p>
-        <Button onClick={() => setShowComposer(true)} className="gap-2">
-          <Plus className="h-4 w-4" /> Create Music Short
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={seedMusic} variant="outline" className="gap-2">
+            <RefreshCw className="h-4 w-4" /> Load Music
+          </Button>
+          <Button onClick={() => setShowComposer(true)} className="gap-2">
+            <Plus className="h-4 w-4" /> Create Short
+          </Button>
+        </div>
         <MusicShortsComposer isOpen={showComposer} onClose={() => { setShowComposer(false); fetchShorts(); }} />
       </div>
     );
