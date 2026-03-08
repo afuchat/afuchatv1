@@ -139,7 +139,7 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
     }
   };
 
-  if (!hasAccess || !shouldShow) return null;
+  if (!shouldShow) return null;
 
   // Show loading state or summary inline - no user interaction needed
   if (loading) {
