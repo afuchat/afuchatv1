@@ -143,32 +143,20 @@ const Moments = () => {
     setViewerGroupIndex(groupIdx);
     setViewerStoryIndex(0);
     setViewerOpen(true);
-
-    // Record view for the first story
-    const story = groups[groupIdx].stories[0];
-    recordView(story);
   };
 
-  const recordView = async (story: Story) => {
-    if (story.user_id === user?.id || !user) return;
-    try {
-      await supabase.from('story_views').insert({ story_id: story.id, viewer_id: user.id });
-      await supabase.from('stories').update({ view_count: story.view_count + 1 }).eq('id', story.id);
-    } catch {}
-  };
-
+  // Navigate: go through all stories of the current user first, then move to the next user
   const handleViewerNext = () => {
     const currentGroup = viewerGroups[viewerGroupIndex];
     if (viewerStoryIndex < currentGroup.stories.length - 1) {
-      const nextIdx = viewerStoryIndex + 1;
-      setViewerStoryIndex(nextIdx);
-      recordView(currentGroup.stories[nextIdx]);
+      // More stories from this user — advance within the group
+      setViewerStoryIndex(viewerStoryIndex + 1);
     } else if (viewerGroupIndex < viewerGroups.length - 1) {
-      const nextGroupIdx = viewerGroupIndex + 1;
-      setViewerGroupIndex(nextGroupIdx);
+      // This user's stories are done — move to the next user's group
+      setViewerGroupIndex(viewerGroupIndex + 1);
       setViewerStoryIndex(0);
-      recordView(viewerGroups[nextGroupIdx].stories[0]);
     } else {
+      // All stories viewed
       setViewerOpen(false);
     }
   };
