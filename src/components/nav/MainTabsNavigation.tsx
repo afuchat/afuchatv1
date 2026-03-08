@@ -176,10 +176,11 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
       <div
         ref={scrollContainerRef}
         className={cn(
-          "flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-20",
+          "flex-1 min-h-0 overflow-y-auto overflow-x-hidden",
           isDesktop && "desktop-scrollbar"
         )}
         style={{
+          paddingBottom: 'calc(64px + var(--tg-safe-bottom, env(safe-area-inset-bottom, 0px)))',
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
         }}
@@ -196,11 +197,16 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
       </div>
 
       {/* Bottom Tab Bar */}
-      <div className={cn(
-        "fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
-        (isNavHidden || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
-      )}>
-        <nav className="bg-background">
+      <div
+        className={cn(
+          "fixed left-0 right-0 z-50 transition-all duration-300 ease-out",
+          (isNavHidden || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
+        )}
+        style={{
+          bottom: 'var(--tg-safe-bottom, 0px)',
+        }}
+      >
+        <nav className="bg-background border-t border-border/40">
           <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
             {TABS.map((tab, index) => {
               const isActive = activeTab === index;
@@ -240,9 +246,12 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
             })}
           </div>
         </nav>
-        {/* Safe area padding for devices with home indicator */}
-        <div className="bg-background h-[env(safe-area-inset-bottom)]" />
       </div>
+      {/* Bottom safe area background fill */}
+      <div
+        className="fixed bottom-0 left-0 right-0 bg-background z-40"
+        style={{ height: 'var(--tg-safe-bottom, env(safe-area-inset-bottom, 0px))' }}
+      />
     </div>
   );
 };

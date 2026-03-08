@@ -1034,28 +1034,24 @@ html.telegram-mini-app .fixed.bottom-0 {
    Telegram Mini App Styles
    ========================================== */
 
-/* Telegram CSS Variables */
+/* Telegram CSS Variables - defaults before JS sets real values */
 :root {
   --tg-viewport-height: 100vh;
   --tg-viewport-stable-height: 100vh;
-  --tg-bg-color: hsl(var(--background));
-  --tg-text-color: hsl(var(--foreground));
-  --tg-hint-color: hsl(var(--muted-foreground));
-  --tg-link-color: hsl(var(--primary));
-  --tg-button-color: hsl(var(--primary));
-  --tg-button-text-color: hsl(var(--primary-foreground));
-  --tg-secondary-bg-color: hsl(var(--secondary));
+  --tg-safe-top: 0px;
+  --tg-safe-bottom: 0px;
+  --tg-safe-left: 0px;
+  --tg-safe-right: 0px;
 }
 
-/* Telegram Mini App specific styles */
+/* Telegram Mini App container */
 html.telegram-mini-app {
-  /* Use Telegram viewport height for full-screen experience */
-  height: var(--tg-viewport-height, 100vh);
+  height: var(--tg-viewport-stable-height, 100vh);
   overflow: hidden;
 }
 
 html.telegram-mini-app body {
-  height: var(--tg-viewport-height, 100vh);
+  height: var(--tg-viewport-stable-height, 100vh);
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: none;
@@ -1070,11 +1066,11 @@ html.telegram-mini-app .desktop-blocker {
 /* Telegram haptic feedback visual cue */
 html.telegram-mini-app button:active,
 html.telegram-mini-app [role="button"]:active {
-  transform: scale(0.98);
-  transition: transform 0.1s ease;
+  transform: scale(0.97);
+  transition: transform 0.08s ease;
 }
 
-/* Telegram safe area fallbacks via env() - used before JS sets real values */
+/* Telegram safe area fallbacks via env() */
 html.telegram-mini-app {
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
@@ -1088,10 +1084,14 @@ html.telegram-mini-app .scroll-container {
   overscroll-behavior-y: contain;
 }
 
-/* Hide scrollbar in Telegram for cleaner look */
+/* Hide scrollbar in Telegram for cleaner native look */
 html.telegram-mini-app ::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+html.telegram-mini-app * {
+  scrollbar-width: none;
 }
 
 /* Touch optimization for Telegram */
@@ -1108,4 +1108,18 @@ html.telegram-mini-app input[type="button"],
 html.telegram-mini-app input[type="submit"] {
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Telegram-specific: softer active state for nav items (matches native feel) */
+html.telegram-mini-app .nav-glass-active {
+  /* Use Telegram's accent for the glow, inherits from --primary which is mapped to button_color */
+  box-shadow:
+    0 4px 16px hsl(var(--primary) / 0.25),
+    0 2px 4px hsl(var(--primary) / 0.15),
+    inset 0 1px 4px hsl(0 0% 100% / 0.1);
+}
+
+/* Telegram-specific: use Telegram's bottom bar color if available */
+html.telegram-mini-app nav {
+  background-color: hsl(var(--background));
 }
