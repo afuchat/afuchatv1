@@ -222,16 +222,6 @@ export const PostShortPlayer = ({
           </div>
           <span className="text-white text-[10px] font-medium">Share</span>
         </button>
-
-        <button onClick={onToggleMute} className="flex flex-col items-center gap-1">
-          <div className={cn(
-            "w-11 h-11 rounded-full backdrop-blur-sm flex items-center justify-center",
-            isMuted ? "bg-white/10" : "bg-primary/30"
-          )}>
-            {isMuted ? <VolumeX className="h-5 w-5 text-white" /> : <Volume2 className="h-5 w-5 text-white" />}
-          </div>
-          <span className="text-white text-[10px] font-medium">{isMuted ? 'Muted' : 'Sound'}</span>
-        </button>
       </div>
     </div>
   );
