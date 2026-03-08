@@ -2008,7 +2008,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
         {/* Join Group Button for Non-Members */}
         {chatInfo?.is_group && !isMember && (
-          <div className="flex-shrink-0 bg-card border-t border-border px-4 py-4 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex-shrink-0 bg-card border-t border-border px-4 py-4" style={{ paddingBottom: 'max(1rem, var(--tg-safe-bottom, env(safe-area-inset-bottom)))' }}>
             <Button
               onClick={handleJoinGroup}
               disabled={isJoining}
