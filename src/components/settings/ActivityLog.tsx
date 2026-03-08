@@ -79,8 +79,8 @@ export const ActivityLog = () => {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <SettingsStatCard icon={TrendingUp} iconColor="bg-primary" label="Total Nexa" value={stats.totalXP} />
-        <SettingsStatCard icon={Calendar} iconColor="bg-green-500" label="Today" value={stats.todayXP} />
-        <SettingsStatCard icon={Activity} iconColor="bg-blue-500" label="This Week" value={stats.weekXP} />
+        <SettingsStatCard icon={Calendar} iconColor="bg-primary/80" label="Today" value={stats.todayXP} />
+        <SettingsStatCard icon={Activity} iconColor="bg-primary" label="This Week" value={stats.weekXP} />
       </div>
 
       {/* Activity Log */}
