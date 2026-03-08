@@ -645,8 +645,10 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     }
 
     const trimmedReplyText = replyText.trim();
-    const replyToHandle = replyingToReply ? `@${replyingToReply.handle}` : (post.profiles.handle ? `@${post.profiles.handle}` : '');
-    const finalContent = replyToHandle ? `${trimmedReplyText} ${replyToHandle}` : trimmedReplyText;
+    // Only append mention for nested replies (not top-level), and don't duplicate if user typed it
+    const replyToHandle = replyingToReply ? `@${replyingToReply.handle}` : '';
+    const hasMention = replyToHandle && trimmedReplyText.includes(replyToHandle);
+    const finalContent = (replyToHandle && !hasMention) ? `${replyToHandle} ${trimmedReplyText}` : trimmedReplyText;
     const parentId = replyingToReply?.id || null;
     const tempId = `temp-reply-${Date.now()}`;
     
