@@ -6,12 +6,11 @@ export const ScrollToTop = () => {
   const navType = useNavigationType();
 
   useEffect(() => {
-    // Only scroll to top for new navigations, not for POP (back/forward)
     if (navType !== "POP") {
-      // Try scrolling the TG page scroll container first, then window
-      const tgScroller = document.querySelector('.tg-page-scroll, .flex-1.min-h-0.overflow-y-auto');
-      if (tgScroller) {
-        tgScroller.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+      // In Telegram, #root is the scroll container
+      const root = document.getElementById('root');
+      if (root && root.scrollTop > 0) {
+        root.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
       }
       window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
     }

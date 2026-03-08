@@ -304,7 +304,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     return (
       <div className={cn(
         "overflow-hidden bg-background select-none touch-pan-y",
-        isTelegram ? "flex-1 min-h-0 flex flex-col" : "h-[100dvh]"
+        isTelegram ? "h-full" : "h-[100dvh]"
       )}>
         <MainTabsNavigation chatScrollHide={chatScrollHide}>
           {children}
@@ -316,17 +316,14 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   return (
     <div
       className={cn(
-        "bg-background select-none touch-pan-y overflow-y-auto",
-        isTelegram ? "flex-1 min-h-0 flex flex-col" : "min-h-screen",
+        "min-h-screen bg-background select-none touch-pan-y",
         isDesktop && "desktop-scrollbar"
       )}
-      style={isTelegram ? { WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } : undefined}
     >
       {/* Main Content */}
       <main className={cn(
         shouldHideUI ? "" : "pb-20",
-        !isTelegram && "min-h-screen",
-        isTelegram && "flex-1"
+        "min-h-screen"
       )}>
         <motion.div 
           initial={{ opacity: 0 }}
