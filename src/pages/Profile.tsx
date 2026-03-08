@@ -290,7 +290,8 @@ interface ProfileProps {
 
 const Profile = ({ mustExist = false }: ProfileProps) => {
 	const { t } = useTranslation();
-    const { userId: urlParam } = useParams<{ userId: string }>(); 
+    const { userId: rawUrlParam, username: rawUsername } = useParams<{ userId: string; username: string }>(); 
+    const urlParam = (rawUrlParam || rawUsername || '').replace(/^@/, '');
 	const navigate = useNavigate();
 	const { user } = useAuth();
 	const [profile, setProfile] = useState<Profile | null>(null);
