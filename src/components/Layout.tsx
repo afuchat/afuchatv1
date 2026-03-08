@@ -208,9 +208,11 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     }
   }, [user]);
 
+  const isTelegram = useIsTelegram();
+
   useEffect(() => {
-    // Only run scroll handlers on mobile
-    if (!isMobile) return;
+    // Disable scroll-to-hide in Telegram — keep nav always visible
+    if (!isMobile || isTelegram) return;
     
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -235,7 +237,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('chat-scroll-state' as any, handleChatScroll as any);
     };
-  }, [isMobile]);
+  }, [isMobile, isTelegram]);
 
   // Show desktop-friendly layout instead of blocking
   const isDesktop = !isMobile;
