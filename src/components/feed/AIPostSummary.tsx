@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Sparkles, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { supabase } from '@/integrations/supabase/client';
-import { useSubscription } from '@/hooks/useSubscription';
 import { motion, AnimatePresence } from 'framer-motion';
 import { categorizeContent, ContentCategory } from '@/lib/contentCategorization';
 
