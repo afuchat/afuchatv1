@@ -1903,7 +1903,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 										<div 
 											key={affiliatedUser.id}
 											className="p-4 hover:bg-muted/10 cursor-pointer transition-colors flex items-center gap-3"
-											onClick={() => navigate(`/${affiliatedUser.handle}`)}
+											onClick={() => navigate(`/@${affiliatedUser.handle}`)}
 										>
 										<StoryAvatar 
 											userId={affiliatedUser.id}
