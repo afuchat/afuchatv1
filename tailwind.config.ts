@@ -168,6 +168,14 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-4px)" },
         },
+        "marquee": {
+          "0%": { transform: "translateX(0%)" },
+          "100%": { transform: "translateX(-100%)" },
+        },
+        "music-progress": {
+          "0%": { width: "0%" },
+          "100%": { width: "100%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.25s ease-out",
@@ -185,6 +193,8 @@ export default {
         "shimmer": "shimmer 2s linear infinite",
         "spin-slow": "spin-slow 8s linear infinite",
         "bounce-soft": "bounce-soft 1s ease-in-out infinite",
+        "marquee": "marquee 8s linear infinite",
+        "music-progress": "music-progress 30s linear infinite",
         "enter": "fade-in 0.3s ease-out, scale-in 0.2s ease-out",
         "exit": "fade-out 0.2s ease-in, scale-out 0.15s ease-in",
       },
