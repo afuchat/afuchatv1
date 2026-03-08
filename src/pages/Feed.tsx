@@ -190,7 +190,7 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
       return;
     }
 
-    navigate(`/${data.id}`); 
+    navigate(`/@${data.id}`); 
   };
   
   // First process mentions, then process hashtags and links (including plain domains like dev-write.netlify.app)
