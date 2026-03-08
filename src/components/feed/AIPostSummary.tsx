@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Sparkles, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { supabase } from '@/integrations/supabase/client';
-import { useSubscription } from '@/hooks/useSubscription';
 import { motion, AnimatePresence } from 'framer-motion';
 import { categorizeContent, ContentCategory } from '@/lib/contentCategorization';
 
@@ -41,7 +40,6 @@ const isWorthSummarizing = (content: string): boolean => {
 };
 
 export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
-  const { canUseAIPostAnalysis } = useSubscription();
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [shouldShow, setShouldShow] = useState(false);
@@ -50,15 +48,13 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
   const mountedRef = useRef(true);
   const generatingRef = useRef(false);
 
-  const hasAccess = canUseAIPostAnalysis();
-
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 
   useEffect(() => {
-    if (!hasAccess || checkedRef.current) return;
+    if (checkedRef.current) return;
     checkedRef.current = true;
     
     const worthSummarizing = isWorthSummarizing(postContent);
@@ -68,7 +64,7 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
     if (worthSummarizing) {
       checkAndGenerateSummary();
     }
-  }, [hasAccess, postId]);
+  }, [postId]);
 
   const checkAndGenerateSummary = async () => {
     // Check for cached summary first
@@ -143,7 +139,7 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
     }
   };
 
-  if (!hasAccess || !shouldShow) return null;
+  if (!shouldShow) return null;
 
   // Show loading state or summary inline - no user interaction needed
   if (loading) {
