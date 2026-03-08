@@ -69,6 +69,30 @@ function extractFirstImage(markdown?: string): string | null {
   return match?.[1] || null;
 }
 
+function getYouTubeVideoId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('youtube.com') && u.searchParams.get('v')) {
+      return u.searchParams.get('v');
+    }
+    if (u.hostname === 'youtu.be') {
+      return u.pathname.slice(1).split('/')[0] || null;
+    }
+    if (u.hostname.includes('youtube.com') && u.pathname.startsWith('/embed/')) {
+      return u.pathname.split('/embed/')[1]?.split('?')[0] || null;
+    }
+  } catch {}
+  return null;
+}
+
+function isYouTubeUrl(url: string): boolean {
+  return getYouTubeVideoId(url) !== null;
+}
+
+function getYouTubeThumbnail(videoId: string): string {
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+}
+
 function extractSnippet(description?: string, markdown?: string, maxLen = 180): string {
   if (description && description.length > 20) return description.slice(0, maxLen);
   if (!markdown) return '';
