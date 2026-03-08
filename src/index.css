@@ -71,6 +71,12 @@ html.telegram-mini-app #root {
   overflow: hidden;
 }
 
+/* Ensure the App wrapper div propagates height in TMA */
+html.telegram-mini-app #root > div {
+  height: 100%;
+  overflow: hidden;
+}
+
 /* Ensure fixed headers account for combined safe area in Telegram */
 html.telegram-mini-app .sticky.top-0 {
   top: 0 !important;
