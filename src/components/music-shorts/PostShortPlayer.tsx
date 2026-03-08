@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Heart, MessageCircle, Share2, Volume2, VolumeX, Music, Eye } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Volume2, VolumeX, Music } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
