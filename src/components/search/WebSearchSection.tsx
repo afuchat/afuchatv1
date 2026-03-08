@@ -363,7 +363,7 @@ const ResultCard = ({ result, index, onClick, onOpenUrl }: { result: WebSearchRe
                 <button
                   key={i}
                   className="text-[12px] text-primary/80 hover:text-primary hover:underline flex items-center gap-0.5"
-                  onClick={(e) => { e.stopPropagation(); window.open(link.url, '_blank', 'noopener'); }}
+                  onClick={(e) => { e.stopPropagation(); onOpenUrl(link.url, link.text); }}
                 >
                   <ChevronRight className="h-3 w-3" />
                   {link.text}
