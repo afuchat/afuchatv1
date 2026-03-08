@@ -160,11 +160,7 @@ export default function AfuMail() {
               onArchive={() => {}}
             />
           ) : (
-            <div className="flex-1 flex flex-col min-h-0">
-              {/* Mobile compose button */}
-              <div className="md:hidden p-3 border-b border-border">
-                <Button onClick={handleCompose} className="w-full gap-2">Compose</Button>
-              </div>
+            <div className="flex-1 flex flex-col min-h-0 relative">
               <div className="flex-1 overflow-y-auto">
                 <EmailList
                   emails={emails}
@@ -174,6 +170,13 @@ export default function AfuMail() {
                   loading={loading}
                 />
               </div>
+              {/* Floating compose pencil button */}
+              <button
+                onClick={handleCompose}
+                className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all md:bottom-8 md:right-8"
+              >
+                <PenLine className="h-6 w-6" />
+              </button>
             </div>
           )}
         </div>
