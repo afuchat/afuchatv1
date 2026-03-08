@@ -8,9 +8,9 @@ export const AppearanceSettings = () => {
   const { theme, setTheme } = useTheme();
 
   const themeOptions = [
-    { value: 'light' as const, label: 'Light', icon: Sun, description: 'Bright and clean', color: 'bg-amber-500' },
-    { value: 'dark' as const, label: 'Dark', icon: Moon, description: 'Easy on the eyes', color: 'bg-slate-700' },
-    { value: 'system' as const, label: 'System', icon: Monitor, description: 'Follows device', color: 'bg-blue-500' },
+    { value: 'light' as const, label: 'Light', icon: Sun, description: 'Bright and clean', color: 'bg-primary' },
+    { value: 'dark' as const, label: 'Dark', icon: Moon, description: 'Easy on the eyes', color: 'bg-primary/80' },
+    { value: 'system' as const, label: 'System', icon: Monitor, description: 'Follows device', color: 'bg-primary' },
   ];
 
   return (

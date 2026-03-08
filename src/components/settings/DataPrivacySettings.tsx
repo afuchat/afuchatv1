@@ -115,8 +115,8 @@ export const DataPrivacySettings = () => {
         <div className="p-4 space-y-2">
           {rights.map((right, i) => (
             <div key={i} className="flex items-center gap-2.5 text-sm text-muted-foreground">
-              <div className="h-5 w-5 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                <Scale className="h-3 w-3 text-green-500" />
+              <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Scale className="h-3 w-3 text-primary" />
               </div>
               {right}
             </div>
