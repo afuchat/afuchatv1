@@ -14,10 +14,7 @@ import { TelegramProvider } from "./contexts/TelegramContext";
 import { AfuAIProvider } from "./contexts/AfuAIContext";
 import AfuAIModal from "./components/afuai/AfuAIModal";
 import { SettingsSheet } from "./components/SettingsSheet";
-import { RequireCountry } from "./components/RequireCountry";
-import { RequireDateOfBirth } from "./components/RequireDateOfBirth";
-import { RequireBanCheck } from "./components/RequireBanCheck";
-import { RequireAuth } from "./components/RequireAuth";
+import { CombinedRouteGuard } from "./components/CombinedRouteGuard";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useIsMobile } from "./hooks/use-mobile";
 
