@@ -9,21 +9,15 @@ interface EmailListProps {
   emails: EmailMessage[];
   selectedId?: string;
   onSelect: (email: EmailMessage) => void;
-  onStar: (emailId: string) => void;
+  onStar: (userEmailId: string, starred: boolean) => void;
   loading?: boolean;
 }
 
 function formatEmailDate(dateStr: string): string {
   const date = new Date(dateStr);
-  if (isToday(date)) {
-    return format(date, 'h:mm a');
-  }
-  if (isYesterday(date)) {
-    return 'Yesterday';
-  }
-  if (isThisYear(date)) {
-    return format(date, 'MMM d');
-  }
+  if (isToday(date)) return format(date, 'h:mm a');
+  if (isYesterday(date)) return 'Yesterday';
+  if (isThisYear(date)) return format(date, 'MMM d');
   return format(date, 'MM/dd/yy');
 }
 
@@ -55,7 +49,7 @@ export function EmailList({ emails, selectedId, onSelect, onStar, loading }: Ema
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
         <Mail className="h-12 w-12 mb-4 opacity-50" />
         <p className="text-lg font-medium">No emails</p>
-        <p className="text-sm">Your inbox is empty</p>
+        <p className="text-sm">This folder is empty</p>
       </div>
     );
   }
@@ -69,62 +63,41 @@ export function EmailList({ emails, selectedId, onSelect, onStar, loading }: Ema
           className={cn(
             "flex items-start gap-3 p-4 cursor-pointer transition-colors hover:bg-muted/50",
             selectedId === email.id && "bg-primary/5 border-l-2 border-l-primary",
-            !email.read_status && "bg-primary/5"
+            !email.is_read && "bg-primary/5"
           )}
         >
-          {/* Read/Unread indicator */}
           <div className="pt-1">
-            {email.read_status ? (
+            {email.is_read ? (
               <MailOpen className="h-5 w-5 text-muted-foreground" />
             ) : (
               <Mail className="h-5 w-5 text-primary" />
             )}
           </div>
 
-          {/* Email content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-1">
-              <span className={cn(
-                "font-medium truncate",
-                !email.read_status && "font-semibold"
-              )}>
-                {extractSenderName(email.from)}
+              <span className={cn("font-medium truncate", !email.is_read && "font-semibold")}>
+                {extractSenderName(email.sender_email)}
               </span>
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {formatEmailDate(email.timestamp)}
+                {formatEmailDate(email.sent_at || email.created_at)}
               </span>
             </div>
-            
-            <p className={cn(
-              "text-sm truncate mb-1",
-              !email.read_status ? "font-medium text-foreground" : "text-foreground"
-            )}>
+            <p className={cn("text-sm truncate mb-1", !email.is_read ? "font-medium text-foreground" : "text-foreground")}>
               {email.subject || '(No subject)'}
             </p>
-            
             <p className="text-xs text-muted-foreground truncate">
-              {email.preview}
+              {email.body_text.slice(0, 100)}
             </p>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-2 pt-1">
-            {email.has_attachments && (
-              <Paperclip className="h-4 w-4 text-muted-foreground" />
-            )}
+            {email.has_attachments && <Paperclip className="h-4 w-4 text-muted-foreground" />}
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onStar(email.id);
-              }}
+              onClick={(e) => { e.stopPropagation(); onStar(email.user_email_id, email.is_starred); }}
               className="p-1 hover:bg-muted rounded transition-colors"
             >
-              <Star
-                className={cn(
-                  "h-4 w-4",
-                  email.starred ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
-                )}
-              />
+              <Star className={cn("h-4 w-4", email.is_starred ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground")} />
             </button>
           </div>
         </div>
