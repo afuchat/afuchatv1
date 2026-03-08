@@ -39,10 +39,43 @@ const Welcome = () => {
   const [direction, setDirection] = useState(1);
   const [tgLoading, setTgLoading] = useState(false);
 
+  // Auto-login for Telegram Mini App users
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
+  
   useEffect(() => {
     const check = async () => {
       if (loading) return;
-      if (!user) { setCheckingProfile(false); return; }
+      if (!user) {
+        // If in Telegram, try auto-login immediately
+        if (!autoLoginAttempted && window.Telegram?.WebApp?.initData) {
+          setAutoLoginAttempted(true);
+          setTgLoading(true);
+          try {
+            const initData = window.Telegram.WebApp.initData;
+            const { data, error } = await supabase.functions.invoke('telegram-web-auth', {
+              body: { initData },
+            });
+            if (error) throw error;
+            if (!data?.success) throw new Error(data?.error || 'Login failed');
+            if (data?.token) {
+              const { error: verifyError } = await supabase.auth.verifyOtp({
+                token_hash: data.token,
+                type: 'magiclink',
+              });
+              if (verifyError) throw verifyError;
+              // Auth state will update via onAuthStateChange, which re-triggers this effect
+              return;
+            }
+          } catch (err: any) {
+            console.log('[TG Auto-Login] Failed:', err?.message);
+            // Silent fail — user can tap "Continue with Telegram" manually
+          } finally {
+            setTgLoading(false);
+          }
+        }
+        setCheckingProfile(false);
+        return;
+      }
 
       try {
         const { data: profile } = await supabase

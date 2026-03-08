@@ -258,9 +258,26 @@ serve(async (req) => {
         const displayName = [firstName, lastName].filter(Boolean).join(' ') || `User ${telegramId}`;
         const handle = username || `tg_${telegramId}`;
 
-        const { data: existingUsers } = await supabase.auth.admin.listUsers();
-        const existingAuth = existingUsers?.users?.find(u => u.email === email);
-
+        // Try to find existing auth user by email efficiently
+        const { data: existingAuthList } = await supabase.auth.admin.listUsers({
+          page: 1,
+          perPage: 1,
+        });
+        
+        // Use generateLink to check if user exists (creates session for existing user)
+        let existingAuth: any = null;
+        try {
+          const { data: userByEmail } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', (await supabase.auth.admin.generateLink({ type: 'magiclink', email })).data?.user?.id || '')
+            .maybeSingle();
+          if (userByEmail) {
+            existingAuth = { id: userByEmail.id };
+          }
+        } catch {}
+        
+        // Fallback: try createUser, if it fails with "already registered", get existing user
         if (existingAuth) {
           userId = existingAuth.id;
           console.log('[TG Auth] Reusing existing auth user:', userId);
