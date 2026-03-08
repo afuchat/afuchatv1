@@ -586,7 +586,7 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
           </div>
 
           {/* Wikipedia Knowledge Panel */}
-          {wikiProfile && <WikiKnowledgePanel profile={wikiProfile} />}
+          {wikiProfile && <WikiKnowledgePanel profile={wikiProfile} onOpenUrl={openUrl} />}
 
           {/* Quick answer from first result */}
           {!wikiProfile && featured && <QuickAnswerBox query={query} markdown={featured.markdown} />}
