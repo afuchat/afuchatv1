@@ -11,7 +11,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // This is a webhook from Resend for inbound emails
     const payload = await req.json();
 
     const supabase = createClient(
@@ -60,17 +59,14 @@ Deno.serve(async (req) => {
 
     for (const r of allRecipients) {
       const addr = typeof r.email === "string" ? r.email : r.email;
-      
-      // Insert recipient record
-      let recipientId = null;
+
+      // Use the resolve function to find the user (handles mailbox, aliases, plus-addressing)
+      let recipientId: string | null = null;
       if (addr.endsWith("@afuchat.com")) {
-        const handle = addr.replace("@afuchat.com", "");
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("handle", handle)
-          .single();
-        recipientId = profile?.id || null;
+        const { data: resolvedId } = await supabase.rpc("resolve_afumail_recipient", {
+          p_email: addr.toLowerCase(),
+        });
+        recipientId = resolvedId || null;
       }
 
       await supabase.from("afumail_recipients").insert({

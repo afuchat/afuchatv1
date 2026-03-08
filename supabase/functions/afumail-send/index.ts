@@ -27,6 +27,11 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
+    const serviceSupabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
     const { data: claims, error: authErr } = await supabase.auth.getClaims(
       authHeader.replace("Bearer ", "")
     );
@@ -37,7 +42,7 @@ Deno.serve(async (req) => {
     }
 
     const userId = claims.claims.sub as string;
-    const { to, cc, bcc, subject, body_text, body_html } = await req.json();
+    const { to, cc, bcc, subject, body_text, body_html, from_alias } = await req.json();
 
     if (!to || !Array.isArray(to) || to.length === 0) {
       return new Response(JSON.stringify({ error: "Recipients required" }), {
@@ -45,9 +50,31 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get sender mailbox
-    const { data: senderEmail } = await supabase.rpc("get_or_create_mailbox", { p_user_id: userId });
-    if (!senderEmail) throw new Error("Could not create mailbox");
+    // Determine sender address (main mailbox or alias)
+    let senderEmail: string;
+    if (from_alias) {
+      // Verify the alias belongs to this user
+      const { data: alias } = await supabase
+        .from("afumail_aliases")
+        .select("alias_email")
+        .eq("alias_email", from_alias.toLowerCase())
+        .eq("user_id", userId)
+        .eq("is_active", true)
+        .single();
+
+      if (alias) {
+        senderEmail = alias.alias_email;
+      } else {
+        // Fall back to main mailbox
+        const { data: mailbox } = await supabase.rpc("get_or_create_mailbox", { p_user_id: userId });
+        senderEmail = mailbox;
+      }
+    } else {
+      const { data: mailbox } = await supabase.rpc("get_or_create_mailbox", { p_user_id: userId });
+      senderEmail = mailbox;
+    }
+
+    if (!senderEmail) throw new Error("Could not determine sender address");
 
     // Create email record
     const { data: email, error: emailErr } = await supabase
@@ -81,32 +108,28 @@ Deno.serve(async (req) => {
     const internalDeliveries = [];
 
     for (const r of allRecipients) {
-      // Check if internal @afuchat.com address
       if (r.email.endsWith("@afuchat.com")) {
-        const handle = r.email.replace("@afuchat.com", "");
-        const { data: recipientProfile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("handle", handle)
-          .single();
+        // Use resolve function for aliases + plus-addressing
+        const { data: resolvedId } = await serviceSupabase.rpc("resolve_afumail_recipient", {
+          p_email: r.email.toLowerCase(),
+        });
 
         recipientInserts.push({
           email_id: email.id,
           recipient_email: r.email,
-          recipient_id: recipientProfile?.id || null,
+          recipient_id: resolvedId || null,
           recipient_type: r.type,
         });
 
-        if (recipientProfile) {
+        if (resolvedId) {
           internalDeliveries.push({
-            user_id: recipientProfile.id,
+            user_id: resolvedId,
             email_id: email.id,
             folder: "inbox",
             is_read: false,
           });
         }
       } else {
-        // External email - send via Resend
         recipientInserts.push({
           email_id: email.id,
           recipient_email: r.email,
@@ -123,7 +146,7 @@ Deno.serve(async (req) => {
 
     // Deliver to internal users
     if (internalDeliveries.length > 0) {
-      await supabase.from("afumail_user_emails").insert(internalDeliveries);
+      await serviceSupabase.from("afumail_user_emails").insert(internalDeliveries);
     }
 
     // Send external emails via Resend
@@ -155,7 +178,6 @@ Deno.serve(async (req) => {
       if (!resendRes.ok) {
         const err = await resendRes.text();
         console.error("Resend error:", err);
-        // Don't fail - email is saved internally
       } else {
         await resendRes.text();
       }

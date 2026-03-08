@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ComposeEmailData } from '@/hooks/useAfuMail';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ComposeEmailProps {
   initialTo?: string[];
@@ -29,6 +31,7 @@ export function ComposeEmail({
   sending,
   senderEmail,
 }: ComposeEmailProps) {
+  const { user } = useAuth();
   const [to, setTo] = useState<string[]>(initialTo);
   const [cc, setCc] = useState<string[]>([]);
   const [bcc, setBcc] = useState<string[]>([]);
@@ -46,6 +49,36 @@ export function ComposeEmail({
   const [toInput, setToInput] = useState('');
   const [ccInput, setCcInput] = useState('');
   const [bccInput, setBccInput] = useState('');
+  
+  // From alias
+  const [fromAddresses, setFromAddresses] = useState<string[]>([]);
+  const [selectedFrom, setSelectedFrom] = useState(senderEmail || '');
+
+  // Load aliases for "From" selector
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      const addresses: string[] = [];
+      if (senderEmail) addresses.push(senderEmail);
+
+      const { data: aliases } = await supabase
+        .from('afumail_aliases')
+        .select('alias_email')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      if (aliases) {
+        for (const a of aliases) {
+          if (!addresses.includes(a.alias_email)) {
+            addresses.push(a.alias_email);
+          }
+        }
+      }
+      setFromAddresses(addresses);
+      if (!selectedFrom && addresses.length > 0) setSelectedFrom(addresses[0]);
+    };
+    load();
+  }, [user, senderEmail]);
 
   const addRecipient = (input: string, setInput: (v: string) => void, list: string[], setList: (v: string[]) => void) => {
     const email = input.trim();
@@ -68,10 +101,11 @@ export function ComposeEmail({
 
   const handleSend = async () => {
     if (to.length === 0) return;
+    const fromAlias = selectedFrom !== senderEmail ? selectedFrom : undefined;
     const success = await onSend({
       to, cc: cc.length > 0 ? cc : undefined, bcc: bcc.length > 0 ? bcc : undefined,
-      subject, body_text: body,
-    });
+      subject, body_text: body, from_alias: fromAlias,
+    } as ComposeEmailData & { from_alias?: string });
     if (success) onDiscard();
   };
 
@@ -82,12 +116,33 @@ export function ComposeEmail({
           <h2 className="text-lg font-semibold">
             {replyTo ? 'Reply' : forwardFrom ? 'Forward' : 'New Message'}
           </h2>
-          {senderEmail && <p className="text-xs text-muted-foreground">From: {senderEmail}</p>}
         </div>
         <Button variant="ghost" size="icon" onClick={onDiscard}><X className="h-5 w-5" /></Button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* From selector */}
+        {fromAddresses.length > 1 && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-muted-foreground w-12">From</label>
+            <select
+              value={selectedFrom}
+              onChange={(e) => setSelectedFrom(e.target.value)}
+              className="flex-1 h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {fromAddresses.map(addr => (
+                <option key={addr} value={addr}>{addr}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        {fromAddresses.length <= 1 && senderEmail && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-muted-foreground w-12">From</label>
+            <span className="text-sm">{senderEmail}</span>
+          </div>
+        )}
+
         <div className="flex items-start gap-2">
           <label className="text-sm text-muted-foreground w-12 pt-2">To</label>
           <div className="flex-1">

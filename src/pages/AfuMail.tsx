@@ -9,6 +9,7 @@ import { FolderSidebar } from '@/components/afumail/FolderSidebar';
 import { EmailList } from '@/components/afumail/EmailList';
 import { EmailView } from '@/components/afumail/EmailView';
 import { ComposeEmail } from '@/components/afumail/ComposeEmail';
+import { AliasManager } from '@/components/afumail/AliasManager';
 import { useIsTelegram } from '@/hooks/useIsTelegram';
 import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
 
@@ -24,6 +25,7 @@ export default function AfuMail() {
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
   const [composing, setComposing] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [showAliases, setShowAliases] = useState(false);
   const [replyTo, setReplyTo] = useState<{ from: string; subject: string; body: string } | undefined>();
   const [forwardFrom, setForwardFrom] = useState<{ subject: string; body: string } | undefined>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -35,6 +37,7 @@ export default function AfuMail() {
   const handleFolderSelect = useCallback((folder: string) => {
     setSelectedEmail(null);
     setComposing(false);
+    setShowAliases(false);
     fetchEmails(folder);
     setSidebarOpen(false);
   }, [fetchEmails]);
@@ -42,6 +45,7 @@ export default function AfuMail() {
   const handleEmailSelect = useCallback((email: EmailMessage) => {
     setSelectedEmail(email);
     setComposing(false);
+    setShowAliases(false);
     if (!email.is_read) markAsRead(email.user_email_id);
   }, [markAsRead]);
 
@@ -49,6 +53,7 @@ export default function AfuMail() {
     setSelectedEmail(null);
     setReplyTo(undefined);
     setForwardFrom(undefined);
+    setShowAliases(false);
     setComposing(true);
     setSidebarOpen(false);
   }, []);
@@ -90,7 +95,6 @@ export default function AfuMail() {
       {/* Header */}
       {!isInIframe && (
         <header className="border-b border-border px-4 py-3 flex items-center gap-3 shrink-0">
-          {/* In Telegram, back button is native — hide the in-app one */}
           {!isTelegram && (
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
@@ -101,7 +105,6 @@ export default function AfuMail() {
             <h1 className="text-lg font-bold text-primary">AfuMail</h1>
             {mailboxEmail && <p className="text-xs text-muted-foreground">{mailboxEmail}</p>}
           </div>
-          {/* Mobile sidebar trigger */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
@@ -114,6 +117,7 @@ export default function AfuMail() {
                 unreadCount={unreadCount}
                 onSelectFolder={handleFolderSelect}
                 onCompose={handleCompose}
+                onManageAliases={() => { setShowAliases(true); setSidebarOpen(false); }}
               />
             </SheetContent>
           </Sheet>
@@ -122,19 +126,23 @@ export default function AfuMail() {
 
       {/* Main layout */}
       <div className="flex-1 flex min-h-0">
-        {/* Desktop sidebar */}
         <div className="hidden md:block">
           <FolderSidebar
             selectedFolder={currentFolder}
             unreadCount={unreadCount}
             onSelectFolder={handleFolderSelect}
             onCompose={handleCompose}
+            onManageAliases={() => setShowAliases(true)}
           />
         </div>
 
-        {/* Content area */}
         <div className="flex-1 flex min-h-0">
-          {composing ? (
+          {showAliases ? (
+            <AliasManager
+              mailboxEmail={mailboxEmail}
+              onClose={() => setShowAliases(false)}
+            />
+          ) : composing ? (
             <ComposeEmail
               initialTo={replyTo ? [replyTo.from] : []}
               replyTo={replyTo}
@@ -170,7 +178,6 @@ export default function AfuMail() {
                   loading={loading}
                 />
               </div>
-              {/* Floating compose pencil button */}
               <button
                 onClick={handleCompose}
                 className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all md:bottom-8 md:right-8"
