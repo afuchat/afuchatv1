@@ -60,9 +60,19 @@ export const MusicTrackPage = ({
     supabase.from('music_tracks').select('*').eq('id', trackId).single()
       .then(({ data }) => data && setTrack(data as any));
     
-    supabase.from('music_shorts').select('*, profiles:user_id(username, display_name)')
+    supabase.from('music_shorts').select('*')
       .eq('music_track_id', trackId).order('created_at', { ascending: false }).limit(50)
-      .then(({ data }) => data && setShorts(data as any));
+      .then(async ({ data }) => {
+        if (data && data.length > 0) {
+          const userIds = [...new Set(data.map((d: any) => d.user_id))];
+          const { data: profiles } = await supabase
+            .from('profiles').select('id, username, display_name').in('id', userIds);
+          const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+          setShorts(data.map((d: any) => ({ ...d, profiles: profileMap.get(d.user_id) || null })) as any);
+        } else {
+          setShorts([]);
+        }
+      });
   }, [isOpen, trackId]);
 
   const togglePlay = () => {

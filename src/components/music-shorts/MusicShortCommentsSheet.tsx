@@ -38,11 +38,21 @@ export const MusicShortCommentsSheet = ({
   const fetchComments = async () => {
     const { data } = await supabase
       .from('music_short_comments')
-      .select('*, profiles:user_id(username, display_name, avatar_url)')
+      .select('*')
       .eq('short_id', shortId)
       .order('created_at', { ascending: false })
       .limit(50);
-    if (data) setComments(data as any);
+    if (data && data.length > 0) {
+      const userIds = [...new Set(data.map((d: any) => d.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url')
+        .in('id', userIds);
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      setComments(data.map((d: any) => ({ ...d, profiles: profileMap.get(d.user_id) || null })));
+    } else {
+      setComments([]);
+    }
   };
 
   const handleSubmit = async () => {

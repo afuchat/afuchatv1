@@ -50,14 +50,28 @@ const MusicShorts = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('music_shorts')
-      .select('*, music_track:music_track_id(id, title, artist, audio_url), profiles:user_id(username, display_name, avatar_url)')
+      .select('*, music_track:music_track_id(id, title, artist, audio_url)')
       .order('created_at', { ascending: false })
       .limit(30);
 
     if (error) {
       toast.error('Failed to load');
+    } else if (data && data.length > 0) {
+      // Fetch profiles separately
+      const userIds = [...new Set(data.map((d: any) => d.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url')
+        .in('id', userIds);
+
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      const enriched = data.map((d: any) => ({
+        ...d,
+        profiles: profileMap.get(d.user_id) || null,
+      }));
+      setShorts(enriched.sort(() => Math.random() - 0.5) as any);
     } else {
-      setShorts((data || []).sort(() => Math.random() - 0.5) as any);
+      setShorts([]);
     }
     setLoading(false);
   }, []);
