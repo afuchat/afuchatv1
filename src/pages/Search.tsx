@@ -595,6 +595,15 @@ const Search = () => {
   const handleSuggestionSelect = (suggestion: { type: string; id: string; text: string }) => {
     setShowSuggestions(false);
     
+    // Save the selected suggestion text to history
+    if (suggestion.type !== 'user') {
+      const trimmed = suggestion.text.trim();
+      if (trimmed) {
+        addToSearchHistory(trimmed);
+        setHistoryKey(prev => prev + 1);
+      }
+    }
+    
     if (suggestion.type === 'user') {
       navigate(`/@${suggestion.id}`);
     } else if (suggestion.type === 'web') {
