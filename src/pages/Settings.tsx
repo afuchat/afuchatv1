@@ -29,24 +29,24 @@ const settingsSections = [
   {
     group: 'Account',
     items: [
-      { value: 'account' as SettingsTab, label: 'Account', description: 'Profile, language & display', icon: User, color: 'bg-blue-500' },
-      { value: 'appearance' as SettingsTab, label: 'Appearance', description: 'Theme & layout', icon: Palette, color: 'bg-purple-500' },
+      { value: 'account' as SettingsTab, label: 'Account', description: 'Profile, language & display', icon: User, color: 'bg-primary' },
+      { value: 'appearance' as SettingsTab, label: 'Appearance', description: 'Theme & layout', icon: Palette, color: 'bg-primary/80' },
     ]
   },
   {
     group: 'Privacy & Security',
     items: [
-      { value: 'security' as SettingsTab, label: 'Security & Privacy', description: 'Privacy controls & linked accounts', icon: Shield, color: 'bg-green-500' },
-      { value: '2fa' as SettingsTab, label: 'Two-Factor Auth', description: 'Extra security layer', icon: Key, color: 'bg-amber-500' },
-      { value: 'blocked' as SettingsTab, label: 'Blocked Users', description: 'Manage blocked accounts', icon: UserX, color: 'bg-red-500' },
+      { value: 'security' as SettingsTab, label: 'Security & Privacy', description: 'Privacy controls & linked accounts', icon: Shield, color: 'bg-primary' },
+      { value: '2fa' as SettingsTab, label: 'Two-Factor Auth', description: 'Extra security layer', icon: Key, color: 'bg-primary/80' },
+      { value: 'blocked' as SettingsTab, label: 'Blocked Users', description: 'Manage blocked accounts', icon: UserX, color: 'bg-destructive' },
     ]
   },
   {
     group: 'Activity & Data',
     items: [
-      { value: 'notifications' as SettingsTab, label: 'Notifications', description: 'Push, email & quiet hours', icon: Bell, color: 'bg-pink-500' },
-      { value: 'activity' as SettingsTab, label: 'Activity Log', description: 'Recent activity & Nexa earnings', icon: Activity, color: 'bg-cyan-500' },
-      { value: 'data' as SettingsTab, label: 'Data & Privacy', description: 'Export data & account deletion', icon: Database, color: 'bg-orange-500' },
+      { value: 'notifications' as SettingsTab, label: 'Notifications', description: 'Push, email & quiet hours', icon: Bell, color: 'bg-primary' },
+      { value: 'activity' as SettingsTab, label: 'Activity Log', description: 'Recent activity & Nexa earnings', icon: Activity, color: 'bg-primary/80' },
+      { value: 'data' as SettingsTab, label: 'Data & Privacy', description: 'Export data & account deletion', icon: Database, color: 'bg-primary' },
     ]
   }
 ];
