@@ -237,9 +237,11 @@ export const StoryViewer = ({
       {/* Media */}
       <div
         className="absolute inset-0 flex items-center justify-center touch-none select-none"
+        style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' } as React.CSSProperties}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
+        onContextMenu={handleContextMenu}
       >
         <AnimatePresence mode="wait">
           <motion.div
