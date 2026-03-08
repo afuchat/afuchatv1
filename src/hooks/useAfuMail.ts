@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -17,12 +17,10 @@ export interface EmailMessage {
   is_draft: boolean;
   sent_at: string | null;
   created_at: string;
-  // from user_emails join
   is_read: boolean;
   is_starred: boolean;
   folder: string;
   user_email_id: string;
-  // recipients
   recipients?: { recipient_email: string; recipient_type: string }[];
 }
 
@@ -38,35 +36,39 @@ export interface ComposeEmailData {
 
 export function useAfuMail() {
   const { user } = useAuth();
+  const userId = user?.id;
   const [loading, setLoading] = useState(false);
   const [mailboxEmail, setMailboxEmail] = useState<string | null>(null);
   const [emails, setEmails] = useState<EmailMessage[]>([]);
   const [currentFolder, setCurrentFolder] = useState('inbox');
   const [unreadCount, setUnreadCount] = useState(0);
+  const currentFolderRef = useRef(currentFolder);
+  currentFolderRef.current = currentFolder;
 
   // Initialize mailbox
-  const initMailbox = useCallback(async () => {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase.rpc('get_or_create_mailbox', { p_user_id: user.id });
-      if (!error && data) setMailboxEmail(data);
-    } catch (err) {
-      console.error('Mailbox init error:', err);
-    }
-  }, [user]);
-
-  useEffect(() => { initMailbox(); }, [initMailbox]);
+  useEffect(() => {
+    if (!userId) return;
+    const init = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_or_create_mailbox', { p_user_id: userId });
+        if (!error && data) setMailboxEmail(data);
+      } catch (err) {
+        console.error('Mailbox init error:', err);
+      }
+    };
+    init();
+  }, [userId]);
 
   // Fetch emails for a folder
   const fetchEmails = useCallback(async (folder: string = 'inbox') => {
-    if (!user) return;
+    if (!userId) return;
     setLoading(true);
     setCurrentFolder(folder);
     try {
       const { data: userEmails, error } = await supabase
         .from('afumail_user_emails')
         .select('id, email_id, folder, is_read, is_starred, is_trashed')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('folder', folder)
         .eq('is_trashed', false)
         .order('created_at', { ascending: false })
@@ -80,7 +82,6 @@ export function useAfuMail() {
 
       const emailIds = userEmails.map(ue => ue.email_id);
 
-      // Fetch email data and recipients in parallel
       const [emailResult, recipientResult] = await Promise.all([
         supabase
           .from('afumail_emails')
@@ -122,30 +123,35 @@ export function useAfuMail() {
     } catch (err) {
       console.error('Fetch emails error:', err);
       toast.error('Failed to load emails');
+      setEmails([]);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
-  // Get unread count
+  // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
     const { count } = await supabase
       .from('afumail_user_emails')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('folder', 'inbox')
       .eq('is_read', false)
       .eq('is_trashed', false);
     setUnreadCount(count || 0);
-  }, [user]);
+  }, [userId]);
 
-  useEffect(() => { fetchUnreadCount(); }, [fetchUnreadCount]);
+  // Initial fetch
+  useEffect(() => {
+    if (!userId) return;
+    fetchEmails('inbox');
+    fetchUnreadCount();
+  }, [userId, fetchEmails, fetchUnreadCount]);
 
   // Send email
   const sendEmail = useCallback(async (emailData: ComposeEmailData) => {
-    if (!user) return false;
-    setLoading(true);
+    if (!userId) return false;
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
@@ -168,17 +174,15 @@ export function useAfuMail() {
       if (!res.ok) throw new Error(result.error || 'Send failed');
 
       toast.success('Email sent!');
-      await fetchEmails(currentFolder);
+      await fetchEmails(currentFolderRef.current);
       await fetchUnreadCount();
       return true;
     } catch (err: any) {
       console.error('Send email error:', err);
       toast.error(err.message || 'Failed to send email');
       return false;
-    } finally {
-      setLoading(false);
     }
-  }, [user, currentFolder, fetchEmails, fetchUnreadCount]);
+  }, [userId, fetchEmails, fetchUnreadCount]);
 
   // Mark as read
   const markAsRead = useCallback(async (userEmailId: string) => {
