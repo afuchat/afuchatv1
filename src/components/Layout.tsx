@@ -41,9 +41,12 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isBusinessMode, setIsBusinessMode] = useState(false);
   const [isAffiliate, setIsAffiliate] = useState(false);
-  const [isScrollingDown, setIsScrollingDown] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isNavHidden, setIsNavHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const [chatScrollHide, setChatScrollHide] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadChats, setUnreadChats] = useState(0);
+  const { isDeveloper } = useDeveloperStatus();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
   const { isDeveloper } = useDeveloperStatus();
