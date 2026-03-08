@@ -8,6 +8,7 @@ import NewChatDialog from '@/components/ui/NewChatDialog';
 import { CreateGroupDialog } from '@/components/chat/CreateGroupDialog';
 import { CreateChannelDialog } from '@/components/chat/CreateChannelDialog';
 import ChatFloatingActionButton from '@/components/chat/ChatFloatingActionButton';
+import { CreateStoryDialog } from '@/components/moments/CreateStoryDialog';
 
 import { toast } from 'sonner';
 import { ChatSettingsSheet } from '@/components/chat/ChatSettingsSheet';
