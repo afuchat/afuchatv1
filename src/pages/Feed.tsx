@@ -1330,7 +1330,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </div>
       )}
 
-
+      <ViewsAnalyticsSheet
         postId={post.id}
         isOpen={showViewsSheet}
         onClose={() => setShowViewsSheet(false)}
