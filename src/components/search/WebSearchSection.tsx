@@ -185,7 +185,7 @@ function extractWikiProfile(results: WebSearchResult[]): WikiProfile | null {
 }
 
 // ─── Wikipedia Knowledge Panel ───────────────────────────
-const WikiKnowledgePanel = ({ profile }: { profile: WikiProfile }) => {
+const WikiKnowledgePanel = ({ profile, onOpenUrl }: { profile: WikiProfile; onOpenUrl: (url: string, title?: string) => void }) => {
   const [expanded, setExpanded] = useState(false);
   const visibleFacts = expanded ? profile.facts : profile.facts.slice(0, 4);
 
