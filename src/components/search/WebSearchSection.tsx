@@ -355,8 +355,77 @@ const FeaturedResultCard = ({ result, onClick }: { result: WebSearchResult; onCl
   );
 };
 
+// ─── YouTube Video Card ──────────────────────────────────
+const YouTubeVideoCard = ({ result, index, videoId }: { result: WebSearchResult; index: number; videoId: string }) => {
+  const [playing, setPlaying] = useState(false);
+  const snippet = extractSnippet(result.description, result.markdown);
+  const thumbnail = result.metadata?.ogImage || getYouTubeThumbnail(videoId);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.04 }}
+      className="py-4"
+    >
+      {/* Video player / thumbnail */}
+      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-muted mb-2.5">
+        {playing ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+            className="absolute inset-0 w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title={result.title || 'YouTube video'}
+          />
+        ) : (
+          <button
+            className="w-full h-full relative group"
+            onClick={() => setPlaying(true)}
+          >
+            <img
+              src={thumbnail}
+              alt={result.title}
+              className="w-full h-full object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).src = getYouTubeThumbnail(videoId); }}
+            />
+            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+              <div className="h-14 w-14 rounded-full bg-red-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <Play className="h-6 w-6 text-white ml-1" fill="white" />
+              </div>
+            </div>
+            {/* Duration badge placeholder */}
+            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-medium px-1.5 py-0.5 rounded">
+              YouTube
+            </div>
+          </button>
+        )}
+      </div>
+
+      {/* Video info */}
+      <div className="flex items-start gap-2.5">
+        <img src={getFaviconUrl(result.url)} alt="" className="h-5 w-5 rounded-full flex-shrink-0 mt-0.5" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-[14px] leading-snug text-foreground line-clamp-2 mb-0.5">
+            {result.title || 'YouTube Video'}
+          </h3>
+          <p className="text-[12px] text-muted-foreground">{getDomain(result.url)}</p>
+          {snippet && (
+            <p className="text-[12px] text-muted-foreground leading-relaxed line-clamp-1 mt-0.5">{snippet}</p>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // ─── Standard Result Card ────────────────────────────────
 const ResultCard = ({ result, index, onClick, onOpenUrl }: { result: WebSearchResult; index: number; onClick: () => void; onOpenUrl: (url: string, title?: string) => void }) => {
+  const videoId = getYouTubeVideoId(result.url);
+  if (videoId) {
+    return <YouTubeVideoCard result={result} index={index} videoId={videoId} />;
+  }
+
   const imageUrl = result.metadata?.ogImage || extractFirstImage(result.markdown);
   const snippet = extractSnippet(result.description, result.markdown);
   const siteLinks = getRelatedLinks(result.markdown);
