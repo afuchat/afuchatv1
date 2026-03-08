@@ -117,8 +117,9 @@ export const StoryViewer = ({
     setTimeout(() => setShowPauseIcon(false), 600);
   }, []);
 
-  // Long press handlers
+  // Long press handlers — prevent all default behavior (context menu, image save, etc.)
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
     isLongPress.current = false;
     longPressTimer.current = setTimeout(() => {
       isLongPress.current = true;
@@ -128,13 +129,13 @@ export const StoryViewer = ({
   }, []);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
 
     if (isLongPress.current) {
-      // Was a long press — resume on release
       pausedRef.current = false;
       setPaused(false);
       isLongPress.current = false;
@@ -163,6 +164,12 @@ export const StoryViewer = ({
       setPaused(false);
       isLongPress.current = false;
     }
+  }, []);
+
+  // Block context menu (long-press "Save Image" on mobile)
+  const handleContextMenu = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   }, []);
 
   const timeAgo = (date: string) => {
@@ -230,9 +237,11 @@ export const StoryViewer = ({
       {/* Media */}
       <div
         className="absolute inset-0 flex items-center justify-center touch-none select-none"
+        style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' } as React.CSSProperties}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
+        onContextMenu={handleContextMenu}
       >
         <AnimatePresence mode="wait">
           <motion.div
