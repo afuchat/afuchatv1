@@ -114,9 +114,9 @@ export const PostShortPlayer = ({
     if (audioRef.current) audioRef.current.muted = isMuted;
   }, [isMuted]);
 
-  // Cycle images if multiple
+  // Cycle images only if multiple
   useEffect(() => {
-    if (!isActive || images.length <= 1) return;
+    if (!isActive || !hasMultipleImages) return;
     const timer = setInterval(() => {
       setImageIndex(prev => (prev + 1) % images.length);
     }, 3000);
