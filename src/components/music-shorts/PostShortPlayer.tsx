@@ -41,13 +41,16 @@ const BACKGROUND_GRADIENTS = [
   'linear-gradient(135deg, #0f3460 0%, #533483 100%)',
 ];
 
-
 export const PostShortPlayer = ({
   post,
   isActive,
+  onUserInteracted,
+  hasUserInteracted,
 }: {
   post: PostShort;
   isActive: boolean;
+  onUserInteracted: () => void;
+  hasUserInteracted: boolean;
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -55,13 +58,13 @@ export const PostShortPlayer = ({
   const [isLiked, setIsLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(post.like_count);
   const [imageIndex, setImageIndex] = useState(0);
+  const [audioProgress, setAudioProgress] = useState(0);
 
   const hasMultipleImages = post.post_images && post.post_images.length > 1;
   const images = post.post_images?.sort((a, b) => a.display_order - b.display_order).map(i => i.image_url) 
     || (post.image_url ? [post.image_url] : []);
   const hasImages = images.length > 0;
 
-  // Random gradient for text-only posts
   const bgGradient = useMemo(() => {
     const hash = post.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
     return BACKGROUND_GRADIENTS[hash % BACKGROUND_GRADIENTS.length];
@@ -79,17 +82,36 @@ export const PostShortPlayer = ({
       .then(({ data }) => setIsLiked(!!data));
   }, [post.id, user]);
 
-  // Play/pause audio - always unmuted
+  // Play/pause audio
   useEffect(() => {
     if (!audioRef.current || !post.music_track?.audio_url) return;
-    audioRef.current.muted = false;
-    if (isActive) {
+    
+    if (isActive && hasUserInteracted) {
+      audioRef.current.muted = false;
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
+    } else if (isActive && !hasUserInteracted) {
+      // Try muted autoplay first
+      audioRef.current.muted = true;
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
     } else {
       audioRef.current.pause();
     }
-  }, [isActive, post.music_track?.audio_url]);
+  }, [isActive, post.music_track?.audio_url, hasUserInteracted]);
+
+  // Track audio progress
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const handleTimeUpdate = () => {
+      if (audio.duration) {
+        setAudioProgress((audio.currentTime / audio.duration) * 100);
+      }
+    };
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    return () => audio.removeEventListener('timeupdate', handleTimeUpdate);
+  }, []);
 
   // Cycle images only if multiple
   useEffect(() => {
@@ -98,10 +120,11 @@ export const PostShortPlayer = ({
       setImageIndex(prev => (prev + 1) % images.length);
     }, 3000);
     return () => clearInterval(timer);
-  }, [isActive, images.length]);
+  }, [isActive, images.length, hasMultipleImages]);
 
   const handleLike = async () => {
     if (!user) { toast.error('Sign in to like'); return; }
+    onUserInteracted();
     const wasLiked = isLiked;
     setIsLiked(!wasLiked);
     setLocalLikes(prev => wasLiked ? prev - 1 : prev + 1);
@@ -114,6 +137,7 @@ export const PostShortPlayer = ({
   };
 
   const handleShare = async () => {
+    onUserInteracted();
     const url = `${window.location.origin}/post/${post.id}`;
     try {
       if (navigator.share) {
@@ -125,8 +149,17 @@ export const PostShortPlayer = ({
     } catch {}
   };
 
+  const handleTap = () => {
+    onUserInteracted();
+    // Unmute audio on tap
+    if (audioRef.current && post.music_track?.audio_url) {
+      audioRef.current.muted = false;
+      audioRef.current.play().catch(() => {});
+    }
+  };
+
   return (
-    <div className="relative h-full w-full snap-start snap-always overflow-hidden">
+    <div className="relative h-full w-full snap-start snap-always overflow-hidden" onClick={handleTap}>
       {/* Background */}
       {hasImages ? (
         <div className="absolute inset-0">
@@ -135,32 +168,25 @@ export const PostShortPlayer = ({
             alt=""
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
         </div>
       ) : (
         <>
           <div className="absolute inset-0" style={{ background: bgGradient }} />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50" />
+          {/* Quote-style centered text for text-only posts */}
+          <div className="absolute inset-0 flex items-center justify-center px-8 z-10">
+            <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 max-w-[90%]">
+              <div className="text-white/40 text-4xl font-serif mb-2">"</div>
+              <p className="text-white text-xl md:text-2xl font-semibold leading-relaxed"
+                style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+                {post.content?.length > 250 ? post.content.slice(0, 250) + '...' : post.content}
+              </p>
+              <div className="text-white/40 text-4xl font-serif text-right mt-2">"</div>
+            </div>
+          </div>
         </>
       )}
-
-      {/* Center text content */}
-      <div className="absolute inset-0 flex items-center justify-center px-8 z-10">
-        <div className="text-center max-w-[85%]">
-          <p
-            className={cn(
-              "leading-relaxed drop-shadow-lg font-semibold",
-              hasImages ? "text-xl md:text-2xl" : "text-2xl md:text-3xl"
-            )}
-            style={{
-              color: '#FFFFFF',
-              textShadow: '0 2px 12px rgba(0,0,0,0.6)',
-            }}
-          >
-            {post.content?.length > 200 ? post.content.slice(0, 200) + '...' : post.content}
-          </p>
-        </div>
-      </div>
 
       {/* Image carousel dots */}
       {hasMultipleImages && (
@@ -176,11 +202,19 @@ export const PostShortPlayer = ({
         <audio ref={audioRef} src={post.music_track.audio_url} loop preload="auto" />
       )}
 
-      {/* Bottom: Author + Music info */}
+      {/* Tap to unmute overlay - shows only when not yet interacted */}
+      {!hasUserInteracted && isActive && post.music_track && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-40 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
+          <span className="text-white text-xs">Tap to unmute</span>
+        </div>
+      )}
+
+      {/* Bottom section: Author info + Caption + Music */}
       <div className="absolute bottom-20 left-4 right-20 z-30">
+        {/* Author */}
         <button
-          onClick={() => navigate(`/profile/${post.author_id}`)}
-          className="flex items-center gap-2.5 mb-3"
+          onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.author_id}`); }}
+          className="flex items-center gap-2.5 mb-2"
         >
           <Avatar className="w-9 h-9 border-2 border-white/30">
             <AvatarImage src={post.profiles?.avatar_url || ''} />
@@ -188,15 +222,22 @@ export const PostShortPlayer = ({
               {post.profiles?.display_name?.charAt(0) || '?'}
             </AvatarFallback>
           </Avatar>
-          <div className="text-left">
-            <span className="text-white text-sm font-bold drop-shadow block leading-tight">
-              {post.profiles?.display_name || 'User'}
-            </span>
-            <span className="text-white/70 text-xs">@{post.profiles?.handle || 'user'}</span>
-          </div>
+          <span className="text-white text-sm font-bold drop-shadow">
+            @{post.profiles?.handle || 'user'}
+          </span>
         </button>
+
+        {/* Caption - shown below author for image posts */}
+        {hasImages && post.content && (
+          <p className="text-white text-sm leading-snug mb-2 drop-shadow-md"
+            style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
+            {post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content}
+          </p>
+        )}
+
+        {/* Music metadata marquee */}
         {post.music_track && (
-          <div className="flex items-center gap-2 mt-2 overflow-hidden">
+          <div className="flex items-center gap-2 mt-1 overflow-hidden">
             <div className="w-4 h-4 shrink-0">
               <Music className="h-4 w-4 text-white" />
             </div>
@@ -205,22 +246,27 @@ export const PostShortPlayer = ({
                 ♫ {post.music_track.title} — {post.music_track.artist}
               </p>
             </div>
-            <div className="w-8 h-8 rounded-full border-2 border-white/30 bg-black/40 shrink-0 flex items-center justify-center animate-spin-slow">
-              <div className="w-2.5 h-2.5 rounded-full bg-white/60" />
+            <div className="w-8 h-8 rounded-full border-2 border-white/30 bg-black/40 shrink-0 flex items-center justify-center animate-spin-slow overflow-hidden">
+              {post.profiles?.avatar_url ? (
+                <img src={post.profiles.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
+              ) : (
+                <div className="w-2.5 h-2.5 rounded-full bg-white/60" />
+              )}
             </div>
           </div>
         )}
       </div>
+
       {/* Music progress bar */}
       {post.music_track && (
         <div className="absolute bottom-[76px] left-0 right-0 z-30 h-[2px] bg-white/10">
-          <div className="h-full bg-white/60 animate-music-progress" />
+          <div className="h-full bg-white/60 transition-all duration-300" style={{ width: `${audioProgress}%` }} />
         </div>
       )}
 
       {/* Right side actions */}
       <div className="absolute right-3 bottom-32 flex flex-col items-center gap-5 z-30">
-        <button onClick={handleLike} className="flex flex-col items-center gap-1">
+        <button onClick={(e) => { e.stopPropagation(); handleLike(); }} className="flex flex-col items-center gap-1">
           <div className={cn(
             "w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center",
             isLiked && "bg-red-500/20"
@@ -230,14 +276,14 @@ export const PostShortPlayer = ({
           <span className="text-white text-[10px] font-medium">{localLikes}</span>
         </button>
 
-        <button onClick={() => navigate(`/post/${post.id}`)} className="flex flex-col items-center gap-1">
+        <button onClick={(e) => { e.stopPropagation(); navigate(`/post/${post.id}`); }} className="flex flex-col items-center gap-1">
           <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
             <MessageCircle className="h-5 w-5 text-white" />
           </div>
           <span className="text-white text-[10px] font-medium">{post.reply_count}</span>
         </button>
 
-        <button onClick={handleShare} className="flex flex-col items-center gap-1">
+        <button onClick={(e) => { e.stopPropagation(); handleShare(); }} className="flex flex-col items-center gap-1">
           <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
             <Share2 className="h-5 w-5 text-white" />
           </div>
