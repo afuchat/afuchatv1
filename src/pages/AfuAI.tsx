@@ -1,17 +1,7 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAfuAI } from '@/contexts/AfuAIContext';
+import AfuAIModal from '@/components/afuai/AfuAIModal';
 
 const AfuAI = () => {
-  const { openAfuAI } = useAfuAI();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    openAfuAI();
-    navigate('/', { replace: true });
-  }, [openAfuAI, navigate]);
-
-  return null;
+  return <AfuAIModal isPage />;
 };
 
 export default AfuAI;
