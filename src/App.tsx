@@ -332,13 +332,8 @@ const AppRoutes = () => {
 
       <Route path="/profile/:userId" element={<ProfileRedirect />} />
 
-      {/* Profile routes with @ prefix - these will show user not found if user doesn't exist */}
-      <Route path="/@:userId/edit" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><EditProfile /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/@:userId/followers" element={<Layout><Followers /></Layout>} />
-      <Route path="/@:userId/following" element={<Layout><Following /></Layout>} />
-      <Route path="/@:userId" element={<Layout><Profile mustExist={true} /></Layout>} />
-
-      {/* Referral route: afuchat.com/username redirects to signup with referral code */}
+      {/* Catch-all: /@handle, /@handle/edit, /@handle/followers, /@handle/following, or /username for referrals */}
+      <Route path="/:username/*" element={<UsernameOrReferral />} />
       <Route path="/:username" element={<UsernameOrReferral />} />
 
       <Route path="/user-not-found" element={<UserNotFound />} />
