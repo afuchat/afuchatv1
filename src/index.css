@@ -24,8 +24,8 @@ html, body {
   -webkit-touch-callout: none;
 }
 
-/* Safe area insets for notched devices */
-html {
+/* Safe area insets for notched devices (non-Telegram) */
+html:not(.telegram-mini-app) {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
