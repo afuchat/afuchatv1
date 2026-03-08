@@ -1108,7 +1108,7 @@ const Search = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto [.tg-webapp_&]:overflow-visible [.tg-webapp_&]:flex-none">
         {/* Web Search Tab - always show when Web tab is active */}
         {activeTab === 'Web' ? (
           <WebSearchSection query={query} />
