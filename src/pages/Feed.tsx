@@ -1330,7 +1330,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                                             {user && user.id !== nested.author_id && (
                                               <button 
                                                 className="text-[10px] text-muted-foreground hover:text-destructive font-semibold transition-colors"
-                                                onClick={() => handleReportComment(nested.id, 'inappropriate')}
+                                                onClick={() => openReportCard(nested.id)}
                                               >Report</button>
                                             )}
                                           </div>
