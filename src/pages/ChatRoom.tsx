@@ -1198,7 +1198,19 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           if (prev.some(m => m.id === newMsg.id)) return prev;
           return [...prev, newMsg];
         });
-        
+
+        setNewMessage('');
+        setSelectedFile(null);
+        setReplyToMessage(null);
+        removeTypingIndicator();
+      }
+    } catch (error) {
+      toast.error('Failed to send message');
+    }
+    
+    setSending(false);
+  };
+
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
