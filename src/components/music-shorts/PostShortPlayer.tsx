@@ -41,21 +41,6 @@ const BACKGROUND_GRADIENTS = [
   'linear-gradient(135deg, #0f3460 0%, #533483 100%)',
 ];
 
-// Animated particles overlay
-const ParticlesOverlay = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {Array.from({ length: 15 }).map((_, i) => (
-      <motion.div
-        key={i}
-        className="absolute w-1 h-1 rounded-full bg-white/20"
-        initial={{ x: Math.random() * 100 + '%', y: '110%', opacity: 0 }}
-        animate={{ y: '-10%', opacity: [0, 0.5, 0] }}
-        transition={{ duration: 3 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 3, ease: 'linear' }}
-        style={{ left: `${Math.random() * 100}%` }}
-      />
-    ))}
-  </div>
-);
 
 export const PostShortPlayer = ({
   post,
