@@ -1971,24 +1971,24 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
         {/* Reply Preview - positioned above input */}
         {isMember && replyToMessage && !selectedFile && (
-          <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border px-4 py-2">
-            <div className="flex items-center gap-3">
-              <div className="w-1 h-10 bg-primary rounded-full flex-shrink-0" />
+          <div className="flex-shrink-0 bg-background px-4 py-2">
+            <div className="flex items-center gap-2.5 bg-muted/40 rounded-xl px-3 py-2">
+              <div className="w-[3px] h-8 bg-primary rounded-full flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-primary truncate">
+                <p className="text-[12px] font-semibold text-primary leading-tight">
                   Replying to {replyToMessage.profiles?.display_name || 'User'}
                 </p>
-                <p className="text-sm text-foreground/80 truncate mt-0.5">
+                <p className="text-[13px] text-foreground/70 truncate mt-0.5">
                   {replyToMessage.audio_url ? '🎤 Voice message' : replyToMessage.encrypted_content}
                 </p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full hover:bg-muted flex-shrink-0"
+                className="h-7 w-7 rounded-full hover:bg-muted flex-shrink-0"
                 onClick={() => setReplyToMessage(null)}
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
