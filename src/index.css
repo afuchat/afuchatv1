@@ -112,7 +112,13 @@ html.telegram-mini-app .tg-page-scroll {
 }
 
 /* Override min-h-screen inside Telegram to prevent overflow issues */
-html.telegram-mini-app .tg-page-scroll .min-h-screen {
+html.telegram-mini-app .tg-page-scroll .min-h-screen,
+html.telegram-mini-app .min-h-screen.tg-page-scroll {
+  min-height: auto;
+}
+
+/* All direct page wrappers inside Telegram flex containers should shrink properly */
+html.telegram-mini-app .flex-1.min-h-0 .min-h-screen {
   min-height: auto;
 }
 
