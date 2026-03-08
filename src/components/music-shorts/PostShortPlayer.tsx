@@ -219,12 +219,7 @@ export const PostShortPlayer = ({
         </button>
         {post.music_track && (
           <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit">
-            <motion.div
-              animate={isActive ? { rotate: 360 } : {}}
-              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-            >
-              <Music className="h-3.5 w-3.5 text-white" />
-            </motion.div>
+            <Music className="h-3.5 w-3.5 text-white" />
             <span className="text-white text-xs font-medium truncate max-w-[180px]">
               {post.music_track.title} • {post.music_track.artist}
             </span>
