@@ -571,7 +571,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const organizedReplies = organizeReplies(post.replies || []);
   
   const handleViewProfile = (userId: string) => {
-    navigate(`/${userId}`);
+    navigate(`/@${userId}`);
   };
 
   const handleTranslate = async () => {

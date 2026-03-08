@@ -233,7 +233,7 @@ export const PostShortPlayer = ({
       <div className="absolute bottom-[108px] left-4 right-4 z-30">
         {/* Author */}
         <button
-          onClick={(e) => { e.stopPropagation(); navigate(`/${post.author_id}`); }}
+          onClick={(e) => { e.stopPropagation(); navigate(`/@${post.author_id}`); }}
           className="flex items-center gap-2.5 mb-2"
         >
           <Avatar className="w-9 h-9 border-2 border-white/30">
