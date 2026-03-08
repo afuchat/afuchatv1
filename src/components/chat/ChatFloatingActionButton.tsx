@@ -14,6 +14,7 @@ interface ChatFloatingActionButtonProps {
   onNewChat: () => void;
   onCreateGroup: () => void;
   onCreateChannel?: () => void;
+  onCreateStory?: () => void;
   isVisible?: boolean;
 }
 
