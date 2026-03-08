@@ -12,7 +12,6 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { TelegramProvider } from "./contexts/TelegramContext";
 import { SettingsSheet } from "./components/SettingsSheet";
-import { SettingsSheet } from "./components/SettingsSheet";
 import { RequireCountry } from "./components/RequireCountry";
 import { RequireDateOfBirth } from "./components/RequireDateOfBirth";
 import { RequireBanCheck } from "./components/RequireBanCheck";

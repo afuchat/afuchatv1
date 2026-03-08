@@ -248,7 +248,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
 
   // Additional features section
   const featureItems = [
-    { path: '/afuai', icon: null, customIcon: aiChatIcon, label: 'AfuAI', requiresAuth: true },
+    { path: '/shop', icon: ShoppingBag, label: 'Shop' },
     { path: '/shop', icon: ShoppingBag, label: 'Shop' },
     { path: '/wallet', icon: Wallet, label: 'Wallet', requiresAuth: true },
     { path: '/transfer', icon: Send, label: 'Transfer', requiresAuth: true },
