@@ -49,6 +49,7 @@ const Moments = () => {
   const [myStories, setMyStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const isTelegram = useIsTelegram();
 
   // Story viewer state — now supports multi-story navigation
   const [viewerOpen, setViewerOpen] = useState(false);
