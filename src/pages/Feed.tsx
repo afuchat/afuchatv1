@@ -1312,7 +1312,25 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </DrawerContent>
       </Drawer>
 
-      <ViewsAnalyticsSheet
+      {/* Delete comment confirmation */}
+      {showDeleteCommentConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm" onClick={() => setShowDeleteCommentConfirm(false)}>
+          <div className="bg-background border border-border rounded-2xl p-6 mx-4 max-w-sm w-full shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-bold text-foreground mb-1">Delete Comment</h3>
+            <p className="text-sm text-muted-foreground mb-5">Are you sure? This can't be undone.</p>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowDeleteCommentConfirm(false)}>Cancel</Button>
+              <Button variant="destructive" className="flex-1 rounded-xl" onClick={() => {
+                if (commentActionId) handleDeleteReply(commentActionId);
+                setShowDeleteCommentConfirm(false);
+                setCommentActionId(null);
+              }}>Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
         postId={post.id}
         isOpen={showViewsSheet}
         onClose={() => setShowViewsSheet(false)}
