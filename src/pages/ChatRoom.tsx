@@ -1639,10 +1639,10 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh' }}>
+      <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh', paddingTop: isEmbedded ? undefined : 'var(--tg-safe-top, 0px)', paddingBottom: isEmbedded ? undefined : 'var(--tg-safe-bottom, 0px)' }}>
         {/* Search Overlay */}
         {isSearchOpen && (
-          <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3 pt-[env(safe-area-inset-top)]">
+          <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3" style={{ paddingTop: 'max(0.75rem, var(--tg-safe-top, env(safe-area-inset-top)))' }}>
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -1694,7 +1694,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         )}
 
         {/* X-style Header - Clean and minimal */}
-        <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10 pt-[env(safe-area-inset-top)]">
+        <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10" style={{ paddingTop: 'max(0.75rem, var(--tg-safe-top, env(safe-area-inset-top)))' }}>
           {!isEmbedded && (
             <Button
               variant="ghost"
@@ -2008,7 +2008,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
         {/* Join Group Button for Non-Members */}
         {chatInfo?.is_group && !isMember && (
-          <div className="flex-shrink-0 bg-card border-t border-border px-4 py-4 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex-shrink-0 bg-card border-t border-border px-4 py-4" style={{ paddingBottom: 'max(1rem, var(--tg-safe-bottom, env(safe-area-inset-bottom)))' }}>
             <Button
               onClick={handleJoinGroup}
               disabled={isJoining}
@@ -2022,7 +2022,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         {/* Input: X-style - Fixed at bottom */}
         {/* For channels, only admins can send messages */}
         {isMember && (!chatInfo?.is_channel || isGroupAdmin) && (
-          <div className="flex-shrink-0 bg-background border-t border-border px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]" style={{ position: 'sticky', bottom: 0, zIndex: 10 }}>
+          <div className="flex-shrink-0 bg-background border-t border-border px-3 py-2" style={{ paddingBottom: 'max(0.5rem, var(--tg-safe-bottom, env(safe-area-inset-bottom)))', position: 'sticky', bottom: 0, zIndex: 10 }}>
             <input
               ref={fileInputRef}
               type="file"
