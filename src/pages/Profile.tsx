@@ -1847,6 +1847,9 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 												{post.quoted_post && (
 													<QuotedPostCard quotedPost={post.quoted_post} />
 												)}
+												{post.content && post.content.length >= 150 && (
+													<AIPostSummary postContent={post.content} postId={post.id} />
+												)}
 												<div className="flex justify-between items-center text-xs text-muted-foreground mt-2">
 													<span>
 														{new Date(post.created_at).toLocaleString('en-US', {
