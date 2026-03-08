@@ -55,10 +55,7 @@ import Logo from '@/components/Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageSkeleton } from '@/components/skeletons';
 
-import signupBg from '@/assets/auth/signup-bg.jpg';
-import signinBg from '@/assets/auth/signin-bg.jpg';
-
-// Steps - auth removed, starts at account type
+// Steps
 const STEPS = [
   { id: 'accountType', title: 'Type', icon: Store },
   { id: 'profile', title: 'Profile', icon: Camera },
@@ -76,7 +73,6 @@ const ACCOUNT_TYPES = [
     description: 'Connect with friends, share moments, and join communities',
     icon: User,
     features: ['Connect with friends', 'Share posts & stories', 'Send & receive gifts'],
-    gradient: 'from-primary to-accent'
   },
   { 
     id: 'business', 
@@ -84,17 +80,16 @@ const ACCOUNT_TYPES = [
     description: 'Grow your brand, reach customers, and sell products',
     icon: Store,
     features: ['Business analytics', 'Promote products', 'Customer engagement'],
-    gradient: 'from-primary/80 to-primary'
   },
 ];
 
 const FEATURES = [
-  { id: 'chat', title: 'Chat & Connect', description: 'Message friends with real-time chat', icon: MessageCircle, gradient: 'from-primary to-accent', path: '/chats' },
-  { id: 'gifts', title: 'Send Gifts', description: 'Surprise friends with virtual gifts', icon: Gift, gradient: 'from-accent to-primary', path: '/gifts' },
-  { id: 'games', title: 'Play Games', description: 'Challenge friends to mini-games', icon: Gamepad2, gradient: 'from-primary/90 to-primary', path: '/games' },
-  { id: 'leaderboard', title: 'Climb Rankings', description: 'Compete and rise to the top', icon: Trophy, gradient: 'from-warning to-warning/80', path: '/leaderboard' },
-  { id: 'miniapps', title: 'Mini Programs', description: 'Explore apps inside AfuChat', icon: Zap, gradient: 'from-success to-success/80', path: '/mini-programs' },
-  { id: 'shop', title: 'Shop & Earn', description: 'Discover products and earn rewards', icon: Store, gradient: 'from-primary to-primary/80', path: '/shop' },
+  { id: 'chat', title: 'Chat & Connect', description: 'Message friends with real-time chat', icon: MessageCircle, path: '/chats' },
+  { id: 'gifts', title: 'Send Gifts', description: 'Surprise friends with virtual gifts', icon: Gift, path: '/gifts' },
+  { id: 'games', title: 'Play Games', description: 'Challenge friends to mini-games', icon: Gamepad2, path: '/games' },
+  { id: 'leaderboard', title: 'Climb Rankings', description: 'Compete and rise to the top', icon: Trophy, path: '/leaderboard' },
+  { id: 'miniapps', title: 'Mini Programs', description: 'Explore apps inside AfuChat', icon: Zap, path: '/mini-programs' },
+  { id: 'shop', title: 'Shop & Earn', description: 'Discover products and earn rewards', icon: Store, path: '/shop' },
 ];
 
 const INTERESTS = [
@@ -165,7 +160,8 @@ const Onboarding = () => {
   const [showImageCrop, setShowImageCrop] = useState(false);
   const [tempImageFile, setTempImageFile] = useState<File | null>(null);
 
-  // Debounced username check
+  // === ALL BUSINESS LOGIC (unchanged) ===
+
   useEffect(() => {
     if (!handle || handle.length < 4) {
       setUsernameStatus('idle');
@@ -197,7 +193,6 @@ const Onboarding = () => {
     return () => clearTimeout(timer);
   }, [handle, user?.id]);
 
-  // Phone validation
   useEffect(() => {
     if (!phoneNumber || !country) { setPhoneError(''); return; }
     const result = validatePhoneLength(country, phoneNumber);
@@ -219,7 +214,6 @@ const Onboarding = () => {
     return null;
   };
 
-  // Check referral
   useEffect(() => {
     let code: string | null = null;
     const urlParams = new URLSearchParams(window.location.search);
@@ -230,7 +224,6 @@ const Onboarding = () => {
     if (code) setReferralCode(code);
   }, []);
 
-  // Auto-detect country
   useEffect(() => {
     const autoDetect = async () => {
       try {
@@ -241,7 +234,6 @@ const Onboarding = () => {
     autoDetect();
   }, []);
 
-  // Load profile when user is available
   useEffect(() => {
     if (!authLoading && user && !profileLoaded) {
       loadProfileData();
@@ -498,127 +490,162 @@ const Onboarding = () => {
   const canGoBack = currentStep > 0;
   const canSkip = currentStep === 4 || (currentStep === 2 && selectedInterests.length > 0) || (currentStep === 3 && followedUsers.length > 0);
 
-  // Auth guard - redirect to signin if not authenticated
-  if (authLoading) {
-    return <PageSkeleton variant="centered" />;
-  }
+  if (authLoading) return <PageSkeleton variant="centered" />;
+  if (!user) return <Navigate to="/auth/signin" replace />;
 
-  if (!user) {
-    return <Navigate to="/auth/signin" replace />;
-  }
-
-  const getBackgroundImage = () => {
-    return currentStep <= 1 ? signupBg : signinBg;
-  };
-
-  // ============ RENDER STEPS ============
+  // ============ RENDER STEPS (REDESIGNED) ============
 
   const renderAccountTypeStep = () => (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-md mx-auto px-6">
-      <div className="text-center mb-10">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="h-20 w-20 rounded-3xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/25">
-          <Store className="h-10 w-10 text-primary-foreground" />
-        </motion.div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Choose Your Path</h2>
-        <p className="text-muted-foreground">How will you use AfuChat?</p>
+    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }} className="w-full">
+      <div className="mb-8">
+        <h2 className="text-2xl font-black text-foreground tracking-tight">How will you use AfuChat?</h2>
+        <p className="text-sm text-muted-foreground mt-1">You can switch anytime in settings</p>
       </div>
-      <div className="space-y-4 mb-8">
+
+      <div className="space-y-3">
         {ACCOUNT_TYPES.map((type, index) => {
           const Icon = type.icon;
           const isSelected = accountType === type.id;
           return (
-            <motion.button key={type.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + index * 0.1 }} onClick={() => handleAccountTypeSelect(type.id as 'personal' | 'business')} className={cn("w-full p-5 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden group", isSelected ? "border-primary bg-card shadow-xl shadow-primary/10" : "border-border bg-card/50 hover:border-primary/50 hover:bg-card")}>
-              {isSelected && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={cn("absolute inset-0 bg-gradient-to-r opacity-5", type.gradient)} />}
-              <div className="relative flex items-start gap-4">
-                <div className={cn("h-14 w-14 rounded-2xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 shadow-lg", type.gradient)}>
-                  <Icon className="h-7 w-7 text-white" />
+            <motion.button
+              key={type.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + index * 0.08 }}
+              onClick={() => handleAccountTypeSelect(type.id as 'personal' | 'business')}
+              className={cn(
+                "w-full p-4 rounded-2xl border transition-all duration-200 text-left group",
+                isSelected
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                  : "border-border bg-card hover:border-muted-foreground/30"
+              )}
+            >
+              <div className="flex items-center gap-3.5">
+                <div className={cn(
+                  "h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors",
+                  isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                )}>
+                  <Icon className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-lg text-foreground">{type.title}</h3>
-                    {isSelected && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center"><Check className="h-3 w-3" /></motion.div>}
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-[15px] text-foreground">{type.title}</h3>
+                    {isSelected && (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                        <Check className="h-3 w-3" />
+                      </motion.div>
+                    )}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-3">{type.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {type.features.map((feature, i) => <span key={i} className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">{feature}</span>)}
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{type.description}</p>
                 </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mt-3 ml-[3.25rem]">
+                {type.features.map((feature, i) => (
+                  <span key={i} className={cn(
+                    "text-[11px] px-2.5 py-1 rounded-full font-medium",
+                    isSelected ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                  )}>{feature}</span>
+                ))}
               </div>
             </motion.button>
           );
         })}
       </div>
-      <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1"><Sparkles className="h-3 w-3" />You can change this later in settings</p>
     </motion.div>
   );
 
   const renderProfileStep = () => (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-sm mx-auto px-6 pb-8">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">Create Your Profile</h2>
-        <p className="text-muted-foreground">Let's make your account unique</p>
+    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }} className="w-full">
+      <div className="mb-6">
+        <h2 className="text-2xl font-black text-foreground tracking-tight">Set up your profile</h2>
+        <p className="text-sm text-muted-foreground mt-1">This is how others will see you</p>
       </div>
       
-      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1 }} className="flex justify-center mb-8">
+      {/* Avatar */}
+      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1 }} className="flex justify-center mb-6">
         <label className="relative cursor-pointer group">
-          <div className="relative">
-            <div className={cn("absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary opacity-75 blur-sm group-hover:opacity-100 transition-opacity", accountType === 'business' ? 'rounded-2xl' : 'rounded-full')} />
-            <Avatar className={cn("relative h-28 w-28 ring-4 ring-background", accountType === 'business' && 'rounded-2xl')}>
-              <AvatarImage src={avatarPreview} className={cn("object-cover", accountType === 'business' && 'rounded-2xl')} />
-              <AvatarFallback className={cn("bg-gradient-to-br from-muted to-muted/50 text-muted-foreground text-3xl font-bold", accountType === 'business' && 'rounded-2xl')}>
-                {displayName?.[0]?.toUpperCase() || <Camera className="h-10 w-10" />}
-              </AvatarFallback>
-            </Avatar>
+          <Avatar className={cn("h-24 w-24 ring-2 ring-border group-hover:ring-primary transition-all", accountType === 'business' && 'rounded-xl')}>
+            <AvatarImage src={avatarPreview} className={cn("object-cover", accountType === 'business' && 'rounded-xl')} />
+            <AvatarFallback className={cn("bg-muted text-muted-foreground text-2xl font-bold", accountType === 'business' && 'rounded-xl')}>
+              {displayName?.[0]?.toUpperCase() || <Camera className="h-8 w-8" />}
+            </AvatarFallback>
+          </Avatar>
+          <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md">
+            <Camera className="h-4 w-4" />
           </div>
-          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="absolute -bottom-1 -right-1 h-10 w-10 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/25">
-            <Camera className="h-5 w-5" />
-          </motion.div>
           <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
         </label>
       </motion.div>
-      <p className="text-center text-xs text-muted-foreground mb-6">Tap to add {accountType === 'business' ? 'business logo' : 'profile picture'} <span className="text-primary">*</span></p>
+      <p className="text-center text-[11px] text-muted-foreground mb-5">
+        {accountType === 'business' ? 'Add business logo' : 'Add profile picture'} <span className="text-primary">*</span>
+      </p>
       
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <Label htmlFor="displayName" className="text-sm font-medium">Display Name <span className="text-primary">*</span></Label>
-          <Input id="displayName" placeholder="Your name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="h-12 rounded-xl border-2 border-border focus:border-primary bg-card/50" />
+      {/* Form */}
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Display Name <span className="text-primary">*</span></Label>
+          <Input placeholder="Your name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="h-11" />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="handle" className="text-sm font-medium">Username <span className="text-primary">*</span></Label>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Username <span className="text-primary">*</span></Label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">@</span>
-            <Input id="handle" placeholder="username" value={handle} onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} className={cn("pl-10 pr-12 h-12 rounded-xl border-2 bg-card/50", usernameStatus === 'available' && "border-success focus:border-success", (usernameStatus === 'taken' || usernameStatus === 'invalid') && "border-destructive focus:border-destructive", usernameStatus === 'idle' && "border-border focus:border-primary")} />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-              {usernameStatus === 'checking' && <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
-              {usernameStatus === 'available' && <CheckCircle2 className="h-5 w-5 text-success" />}
-              {(usernameStatus === 'taken' || usernameStatus === 'invalid') && <AlertCircle className="h-5 w-5 text-destructive" />}
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">@</span>
+            <Input
+              placeholder="username"
+              value={handle}
+              onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+              className={cn(
+                "pl-8 pr-10 h-11",
+                usernameStatus === 'available' && "border-success",
+                (usernameStatus === 'taken' || usernameStatus === 'invalid') && "border-destructive"
+              )}
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              {usernameStatus === 'checking' && <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
+              {usernameStatus === 'available' && <CheckCircle2 className="h-4 w-4 text-success" />}
+              {(usernameStatus === 'taken' || usernameStatus === 'invalid') && <AlertCircle className="h-4 w-4 text-destructive" />}
             </div>
           </div>
-          {usernameMessage && <p className={cn("text-xs flex items-center gap-1 font-medium", usernameStatus === 'available' ? "text-success" : "text-destructive")}>{usernameStatus === 'available' && <CheckCircle2 className="h-3 w-3" />}{usernameMessage}</p>}
+          {usernameMessage && (
+            <p className={cn("text-[11px] font-medium", usernameStatus === 'available' ? "text-success" : "text-destructive")}>
+              {usernameMessage}
+            </p>
+          )}
         </div>
         
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Country <span className="text-primary">*</span></Label>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Country <span className="text-primary">*</span></Label>
           <Popover open={countryOpen} onOpenChange={setCountryOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" className={cn("w-full justify-between font-normal h-12 rounded-xl border-2 border-border hover:border-primary bg-card/50", !country && "text-muted-foreground")}>
-                <div className="flex items-center gap-3">
-                  {country ? <><span className="text-2xl">{getCountryFlag(country)}</span><span className="font-medium">{country}</span></> : <><MapPin className="h-5 w-5 text-muted-foreground" /><span>Select your country</span></>}
+              <Button variant="outline" role="combobox" className={cn("w-full justify-between font-normal h-11 rounded-xl", !country && "text-muted-foreground")}>
+                <div className="flex items-center gap-2">
+                  {country ? (
+                    <>
+                      <span className="text-lg">{getCountryFlag(country)}</span>
+                      <span className="text-sm">{country}</span>
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="h-4 w-4" />
+                      <span className="text-sm">Select country</span>
+                    </>
+                  )}
                 </div>
-                <ChevronsUpDown className="ml-2 h-5 w-5 shrink-0 opacity-50" />
+                <ChevronsUpDown className="h-4 w-4 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0 bg-popover border-2 shadow-xl z-50" align="start">
+            <PopoverContent className="w-full p-0 bg-popover border shadow-xl z-50" align="start">
               <Command className="bg-popover">
-                <CommandInput placeholder="Search country..." className="h-12" />
-                <CommandList className="max-h-60">
-                  <CommandEmpty>No country found.</CommandEmpty>
+                <CommandInput placeholder="Search..." className="h-10" />
+                <CommandList className="max-h-52">
+                  <CommandEmpty>Not found.</CommandEmpty>
                   <CommandGroup>
                     {countries.map((c) => (
-                      <CommandItem key={c} value={c} onSelect={() => { setCountry(c); setCountryOpen(false); }} className="cursor-pointer py-3">
-                        <Check className={cn("mr-2 h-4 w-4 text-primary", country === c ? "opacity-100" : "opacity-0")} />
-                        <span className="mr-3 text-xl">{getCountryFlag(c)}</span>{c}
+                      <CommandItem key={c} value={c} onSelect={() => { setCountry(c); setCountryOpen(false); }} className="cursor-pointer py-2.5">
+                        <Check className={cn("mr-2 h-3.5 w-3.5 text-primary", country === c ? "opacity-100" : "opacity-0")} />
+                        <span className="mr-2 text-lg">{getCountryFlag(c)}</span>
+                        <span className="text-sm">{c}</span>
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -626,190 +653,301 @@ const Onboarding = () => {
               </Command>
             </PopoverContent>
           </Popover>
-          <p className="text-xs text-warning flex items-center gap-1"><AlertCircle className="h-3 w-3" />Country cannot be changed after signup</p>
+          <p className="text-[11px] text-warning flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" />Cannot be changed later
+          </p>
         </div>
 
         <DateOfBirthSelector value={dateOfBirth} onChange={setDateOfBirth} minAge={13} />
 
-        <div className="space-y-2">
-          <Label htmlFor="phone" className="text-sm font-medium">Phone Number <span className="text-muted-foreground font-normal">(Optional)</span></Label>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Phone <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span></Label>
           <div className="flex gap-2">
-            <div className="flex items-center gap-2 px-4 h-12 rounded-xl border-2 border-border bg-muted/50 text-sm min-w-[90px] justify-center">
-              <span className="text-xl">{country ? getCountryFlag(country) : '🌍'}</span>
-              <span className="font-semibold">{country ? getCountryPhoneCode(country) : '+--'}</span>
+            <div className="flex items-center gap-1.5 px-3 h-11 rounded-xl border border-border bg-muted/50 text-sm min-w-[80px] justify-center">
+              <span className="text-base">{country ? getCountryFlag(country) : '🌍'}</span>
+              <span className="font-semibold text-xs">{country ? getCountryPhoneCode(country) : '+--'}</span>
             </div>
             <div className="relative flex-1">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input id="phone" type="tel" inputMode="numeric" placeholder={country ? `${getPhoneLimits(country).min} digits` : 'Phone number'} value={phoneNumber} onChange={(e) => { const digits = e.target.value.replace(/\D/g, ''); const limits = getPhoneLimits(country); if (digits.length <= limits.max) setPhoneNumber(digits); }} maxLength={getPhoneLimits(country).max} className={cn("pl-12 h-12 rounded-xl border-2 bg-card/50", phoneError ? "border-destructive focus:border-destructive" : "border-border focus:border-primary")} />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="tel"
+                inputMode="numeric"
+                placeholder={country ? `${getPhoneLimits(country).min} digits` : 'Phone'}
+                value={phoneNumber}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '');
+                  const limits = getPhoneLimits(country);
+                  if (digits.length <= limits.max) setPhoneNumber(digits);
+                }}
+                maxLength={getPhoneLimits(country).max}
+                className={cn("pl-10 h-11", phoneError && "border-destructive")}
+              />
             </div>
           </div>
-          {phoneError ? <p className="text-xs text-destructive flex items-center gap-1 font-medium"><AlertCircle className="h-3 w-3" />{phoneError}</p> : <p className="text-xs text-muted-foreground flex items-center gap-1"><Star className="h-3 w-3 text-warning" />Add phone to earn <span className="font-semibold text-primary">100 Nexa</span> reward!</p>}
+          {phoneError ? (
+            <p className="text-[11px] text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{phoneError}</p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+              <Star className="h-3 w-3 text-warning" />Add phone → earn <span className="font-semibold text-primary">100 Nexa</span>
+            </p>
+          )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="bio" className="text-sm font-medium">Bio <span className="text-muted-foreground font-normal">(Optional)</span></Label>
-          <Textarea id="bio" placeholder="Write a short bio..." value={bio} onChange={(e) => setBio(e.target.value)} rows={2} className="resize-none rounded-xl border-2 border-border focus:border-primary bg-card/50" />
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bio <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span></Label>
+          <Textarea placeholder="A few words about you..." value={bio} onChange={(e) => setBio(e.target.value)} rows={2} className="resize-none text-sm" />
         </div>
         
-        <Button onClick={handleProfileSubmit} disabled={loading} className="w-full h-14 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/25" size="lg">
-          {loading ? <div className="flex items-center gap-2"><div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />Saving...</div> : <>Continue<ArrowRight className="ml-2 h-5 w-5" /></>}
+        <Button onClick={handleProfileSubmit} disabled={loading} className="w-full h-12 font-semibold rounded-xl" size="lg">
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            <>Continue <ArrowRight className="ml-1.5 h-4 w-4" /></>
+          )}
         </Button>
       </div>
     </motion.div>
   );
 
   const renderInterestsStep = () => (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-md mx-auto px-6 pb-8">
-      <div className="text-center mb-8">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="h-20 w-20 rounded-3xl bg-gradient-to-br from-accent via-primary to-accent flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/25">
-          <Heart className="h-10 w-10 text-primary-foreground" />
-        </motion.div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">What interests you?</h2>
-        <p className="text-muted-foreground">Select topics to personalize your feed</p>
-        {selectedInterests.length > 0 && <p className="text-sm text-primary font-medium mt-2">{selectedInterests.length} selected</p>}
+    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }} className="w-full">
+      <div className="mb-6">
+        <h2 className="text-2xl font-black text-foreground tracking-tight">Pick your interests</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          We'll personalize your feed
+          {selectedInterests.length > 0 && <span className="text-primary font-medium"> · {selectedInterests.length} selected</span>}
+        </p>
       </div>
-      <div className="grid grid-cols-3 gap-3 mb-8">
+
+      <div className="grid grid-cols-3 gap-2.5 mb-6">
         {INTERESTS.map((interest, index) => {
           const isSelected = selectedInterests.includes(interest.id);
           return (
-            <motion.button key={interest.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 + index * 0.05 }} whileTap={{ scale: 0.95 }} onClick={() => toggleInterest(interest.id)} className={cn("flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-200 relative overflow-hidden group", isSelected ? "border-primary bg-primary/10 shadow-lg shadow-primary/10" : "border-border bg-card hover:border-primary/50")}>
-              {isSelected && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10" />}
-              <motion.span animate={{ scale: isSelected ? 1.2 : 1 }} className="text-2xl mb-2 relative z-10">{interest.emoji}</motion.span>
-              <span className={cn("text-xs font-medium text-center relative z-10", isSelected ? "text-primary" : "text-foreground")}>{interest.label}</span>
-              {isSelected && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md"><Check className="h-3 w-3" /></motion.div>}
+            <motion.button
+              key={interest.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.05 + index * 0.03 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => toggleInterest(interest.id)}
+              className={cn(
+                "flex flex-col items-center justify-center py-4 px-2 rounded-2xl border transition-all duration-150 relative",
+                isSelected
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                  : "border-border bg-card hover:border-muted-foreground/30"
+              )}
+            >
+              <span className="text-2xl mb-1.5">{interest.emoji}</span>
+              <span className={cn("text-[11px] font-semibold text-center leading-tight", isSelected ? "text-primary" : "text-foreground")}>
+                {interest.label}
+              </span>
+              {isSelected && (
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                  <Check className="h-2.5 w-2.5" />
+                </motion.div>
+              )}
             </motion.button>
           );
         })}
       </div>
-      <Button onClick={handleInterestsSubmit} disabled={loading || selectedInterests.length === 0} className={cn("w-full h-14 text-base font-semibold rounded-xl shadow-lg", selectedInterests.length > 0 ? "bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-primary/25" : "bg-muted text-muted-foreground cursor-not-allowed")} size="lg">
-        {loading ? <div className="flex items-center gap-2"><div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />Saving...</div> : <>{selectedInterests.length > 0 ? `Continue with ${selectedInterests.length} interests` : 'Select at least 1 interest'}<ArrowRight className="ml-2 h-5 w-5" /></>}
+
+      <Button
+        onClick={handleInterestsSubmit}
+        disabled={loading || selectedInterests.length === 0}
+        className="w-full h-12 font-semibold rounded-xl"
+        size="lg"
+      >
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+            Saving...
+          </span>
+        ) : selectedInterests.length > 0 ? (
+          <>Continue <ArrowRight className="ml-1.5 h-4 w-4" /></>
+        ) : (
+          'Select at least 1'
+        )}
       </Button>
     </motion.div>
   );
 
   const renderSuggestionsStep = () => (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-md mx-auto px-6 pb-8">
-      <div className="text-center mb-8">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="h-20 w-20 rounded-3xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/25">
-          <Users className="h-10 w-10 text-primary-foreground" />
-        </motion.div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Find Your People</h2>
-        <p className="text-muted-foreground">Follow accounts you might like</p>
-        {followedUsers.length > 0 && <p className="text-sm text-primary font-medium mt-2">{followedUsers.length} following</p>}
+    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }} className="w-full">
+      <div className="mb-6">
+        <h2 className="text-2xl font-black text-foreground tracking-tight">Follow people</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Your feed starts with who you follow
+          {followedUsers.length > 0 && <span className="text-primary font-medium"> · {followedUsers.length} following</span>}
+        </p>
       </div>
+
       {loadingSuggestions ? (
-        <div className="flex flex-col items-center justify-center py-12 gap-3">
-          <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Finding people for you...</p>
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="h-8 w-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Finding people...</p>
         </div>
       ) : (
-        <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto scrollbar-hide">
+        <div className="space-y-2 mb-6 max-h-[45vh] overflow-y-auto scrollbar-hide -mx-1 px-1">
           {suggestedUsers.map((suggestedUser, index) => (
-            <motion.div key={suggestedUser.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} className={cn("flex items-center gap-4 p-4 rounded-2xl bg-card border-2 transition-all duration-200", suggestedUser.isPinned ? "border-primary/50 bg-gradient-to-r from-primary/5 to-accent/5 shadow-lg shadow-primary/5" : "border-border hover:border-primary/30")}>
-              <div className="relative">
-                <Avatar className="h-14 w-14 ring-2 ring-background">
-                  <AvatarImage src={suggestedUser.avatar_url || undefined} className="object-cover" />
-                  <AvatarFallback className="bg-gradient-to-br from-muted to-muted/50 font-bold">{suggestedUser.display_name?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-                </Avatar>
-                {suggestedUser.isPinned && <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md"><Star className="h-3 w-3" /></div>}
-              </div>
+            <motion.div
+              key={suggestedUser.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.03 }}
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-xl border transition-all",
+                suggestedUser.isPinned
+                  ? "border-primary/30 bg-primary/[0.03]"
+                  : "border-border bg-card"
+              )}
+            >
+              <Avatar className="h-11 w-11 flex-shrink-0">
+                <AvatarImage src={suggestedUser.avatar_url || undefined} className="object-cover" />
+                <AvatarFallback className="bg-muted font-bold text-sm">
+                  {suggestedUser.display_name?.[0]?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
+                <div className="flex items-center gap-1.5">
                   <p className="font-bold text-sm truncate">{suggestedUser.display_name}</p>
-                  {suggestedUser.isPinned && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">Recommended</span>}
+                  {suggestedUser.isPinned && (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary whitespace-nowrap">★</span>
+                  )}
                 </div>
-                <p className="text-sm text-muted-foreground truncate">@{suggestedUser.handle}</p>
+                <p className="text-xs text-muted-foreground truncate">@{suggestedUser.handle}</p>
               </div>
-              <Button size="sm" variant={followedUsers.includes(suggestedUser.id) ? "secondary" : "default"} onClick={() => handleFollowUser(suggestedUser.id)} disabled={followedUsers.includes(suggestedUser.id)} className={cn("rounded-xl font-semibold", followedUsers.includes(suggestedUser.id) ? "bg-muted" : "bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-md shadow-primary/20")}>
-                {followedUsers.includes(suggestedUser.id) ? <><Check className="h-4 w-4 mr-1" />Following</> : 'Follow'}
+              <Button
+                size="sm"
+                variant={followedUsers.includes(suggestedUser.id) ? "secondary" : "default"}
+                onClick={() => handleFollowUser(suggestedUser.id)}
+                disabled={followedUsers.includes(suggestedUser.id)}
+                className={cn(
+                  "rounded-lg text-xs h-8 px-3 font-semibold",
+                  followedUsers.includes(suggestedUser.id) && "bg-muted text-muted-foreground"
+                )}
+              >
+                {followedUsers.includes(suggestedUser.id) ? (
+                  <><Check className="h-3.5 w-3.5 mr-1" />Done</>
+                ) : 'Follow'}
               </Button>
             </motion.div>
           ))}
-          {suggestedUsers.length === 0 && <div className="text-center py-8"><Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" /><p className="text-muted-foreground">No suggestions available</p></div>}
+          {suggestedUsers.length === 0 && (
+            <div className="text-center py-12">
+              <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No suggestions yet</p>
+            </div>
+          )}
         </div>
       )}
-      <Button onClick={handleSuggestionsComplete} disabled={followedUsers.length === 0} className={cn("w-full h-14 text-base font-semibold rounded-xl shadow-lg", followedUsers.length > 0 ? "bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-primary/25" : "bg-muted text-muted-foreground cursor-not-allowed")} size="lg">
-        {followedUsers.length > 0 ? `Continue (${followedUsers.length} followed)` : 'Follow at least 1 user'}
-        <ArrowRight className="ml-2 h-5 w-5" />
+
+      <Button
+        onClick={handleSuggestionsComplete}
+        disabled={followedUsers.length === 0}
+        className="w-full h-12 font-semibold rounded-xl"
+        size="lg"
+      >
+        {followedUsers.length > 0 ? (
+          <>Continue <ArrowRight className="ml-1.5 h-4 w-4" /></>
+        ) : 'Follow at least 1'}
       </Button>
     </motion.div>
   );
 
   const renderTourStep = () => (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-md mx-auto px-6">
-      <div className="text-center mb-8">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="relative mx-auto mb-6">
-          <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-success via-success/90 to-primary flex items-center justify-center mx-auto shadow-lg shadow-success/25">
-            <Globe className="h-10 w-10 text-success-foreground" />
+    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }} className="w-full">
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Sparkles className="h-5 w-5 text-primary" />
           </div>
-        </motion.div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">You're All Set!</h2>
-        <p className="text-muted-foreground">Explore everything AfuChat has to offer</p>
+          <div>
+            <h2 className="text-2xl font-black text-foreground tracking-tight">You're all set!</h2>
+            <p className="text-sm text-muted-foreground">Explore what AfuChat offers</p>
+          </div>
+        </div>
       </div>
-      <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto scrollbar-hide">
+
+      <div className="space-y-2 mb-6 max-h-[45vh] overflow-y-auto scrollbar-hide">
         {FEATURES.map((feature, index) => {
           const Icon = feature.icon;
           return (
-            <motion.button key={feature.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.08 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate(feature.path)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border-2 border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300 group text-left">
-              <div className={cn("h-14 w-14 rounded-2xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 shadow-lg", feature.gradient)}>
-                <Icon className="h-7 w-7 text-primary-foreground" />
+            <motion.button
+              key={feature.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              onClick={() => navigate(feature.path)}
+              className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 hover:bg-primary/[0.02] transition-all group text-left"
+            >
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Icon className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-1">{feature.description}</p>
+                <h3 className="font-bold text-sm text-foreground">{feature.title}</h3>
+                <p className="text-xs text-muted-foreground">{feature.description}</p>
               </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
             </motion.button>
           );
         })}
       </div>
-      <Button onClick={handleTourComplete} className="w-full h-14 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/25" size="lg">
+
+      <Button onClick={handleTourComplete} className="w-full h-12 font-semibold rounded-xl" size="lg">
         Start Using AfuChat
-        <Sparkles className="ml-2 h-5 w-5" />
+        <Sparkles className="ml-1.5 h-4 w-4" />
       </Button>
     </motion.div>
   );
 
+  // ============ STEP INDICATOR ============
   const renderStepIndicator = () => (
-    <div className="w-full max-w-lg mx-auto mb-8">
-      <div className="flex items-center justify-center gap-2 mb-4">
-        {STEPS.map((step, index) => {
-          const isActive = index === currentStep;
-          const isComplete = index < currentStep;
-          return (
-            <motion.div key={step.id} initial={false} animate={{ scale: isActive ? 1.2 : 1, backgroundColor: isComplete || isActive ? 'hsl(var(--primary))' : 'hsl(var(--muted))' }} className={cn("h-2.5 rounded-full transition-all duration-300", isActive ? "w-8" : "w-2.5")} />
-          );
-        })}
-      </div>
-      <div className="text-center"><p className="text-sm font-medium text-muted-foreground">Step {currentStep + 1} of {STEPS.length}</p></div>
+    <div className="flex items-center gap-1.5">
+      {STEPS.map((step, index) => {
+        const isActive = index === currentStep;
+        const isComplete = index < currentStep;
+        return (
+          <motion.div
+            key={step.id}
+            initial={false}
+            animate={{
+              backgroundColor: isComplete || isActive ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+            }}
+            className={cn(
+              "h-1.5 rounded-full transition-all duration-300",
+              isActive ? "w-6" : "w-1.5"
+            )}
+          />
+        );
+      })}
     </div>
   );
 
+  // ============ HEADER ============
   const onboardingHeader = (
-    <header className={cn("relative pb-2 px-4 z-10", isMobile ? "pt-6" : "pt-4")}>
-      <div className="flex items-center justify-between max-w-lg mx-auto mb-4">
-        {canGoBack ? <Button variant="ghost" size="icon" onClick={() => setCurrentStep(prev => prev - 1)} className="rounded-xl hover:bg-muted"><ArrowLeft className="h-5 w-5" /></Button> : <div className="w-10" />}
-        {isMobile && <Logo className="h-8" />}
-        {!isMobile && <div />}
-        {canSkip ? <Button variant="ghost" size="sm" onClick={handleSkip} className="text-muted-foreground hover:text-foreground font-medium">Skip</Button> : <div className="w-10" />}
-      </div>
-      {isMobile && renderStepIndicator()}
-      {!isMobile && (
-        <div className="w-full max-w-lg mx-auto mb-4">
-          <div className="flex items-center justify-center gap-1.5">
-            {STEPS.map((step, index) => {
-              const isActive = index === currentStep;
-              const isComplete = index < currentStep;
-              return <motion.div key={step.id} initial={false} animate={{ backgroundColor: isComplete || isActive ? 'hsl(var(--primary))' : 'hsl(var(--muted))' }} className={cn("h-1.5 rounded-full transition-all duration-300", isActive ? "w-6" : "w-1.5")} />;
-            })}
-          </div>
-        </div>
-      )}
+    <header className="flex items-center justify-between px-5 py-4">
+      {canGoBack ? (
+        <Button variant="ghost" size="icon" onClick={() => setCurrentStep(prev => prev - 1)} className="rounded-xl h-9 w-9">
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+      ) : <div className="w-9" />}
+      
+      {renderStepIndicator()}
+      
+      {canSkip ? (
+        <Button variant="ghost" size="sm" onClick={handleSkip} className="text-muted-foreground text-xs font-medium h-9 px-3">
+          Skip
+        </Button>
+      ) : <div className="w-9" />}
     </header>
   );
 
+  // ============ CONTENT ============
   const onboardingContent = (
-    <main className={cn("relative flex-1 flex items-start justify-center z-10 overflow-y-auto", isMobile ? "pb-12 pt-4" : "pb-6 pt-2")}>
+    <div className="flex-1 overflow-y-auto px-5 pb-8">
       <AnimatePresence mode="wait">
         {currentStep === 0 && renderAccountTypeStep()}
         {currentStep === 1 && renderProfileStep()}
@@ -817,62 +955,60 @@ const Onboarding = () => {
         {currentStep === 3 && renderSuggestionsStep()}
         {currentStep === 4 && renderTourStep()}
       </AnimatePresence>
-    </main>
+    </div>
   );
 
+  // ============ LAYOUT ============
   return (
     <>
       {isMobile ? (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col relative overflow-x-hidden overflow-y-auto">
-          <div className="absolute inset-0 z-0">
-            <img src={getBackgroundImage()} alt="" className="w-full h-full object-cover opacity-10 transition-opacity duration-500" />
-            <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
-          </div>
-          <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
-          </div>
+        <div className="min-h-[100dvh] bg-background flex flex-col">
           {onboardingHeader}
           {onboardingContent}
         </div>
       ) : (
-        <div className="fixed inset-0 flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            <img src={getBackgroundImage()} alt="" className="w-full h-full object-cover transition-opacity duration-700" />
-            <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
-          </div>
-          <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
-            <motion.div animate={{ y: [0, -20, 0], x: [0, 10, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} className="absolute top-[10%] right-[15%] w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-            <motion.div animate={{ y: [0, 15, 0], x: [0, -10, 0] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-[10%] left-[10%] w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
-          </div>
-          <motion.div key={currentStep} initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.4, ease: "easeOut" }} className="relative z-10 w-full max-w-xl max-h-[90vh] bg-card/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl shadow-black/20 flex flex-col overflow-hidden my-4">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary rounded-t-3xl" />
+        <div className="fixed inset-0 flex items-center justify-center bg-muted/50">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="relative w-full max-w-md max-h-[85vh] bg-card border border-border rounded-2xl shadow-xl flex flex-col overflow-hidden"
+          >
             {onboardingHeader}
-            <div className="flex-1 overflow-y-auto scrollbar-hide">{onboardingContent}</div>
+            {onboardingContent}
           </motion.div>
         </div>
       )}
 
       <Dialog open={showRewardModal} onOpenChange={setShowRewardModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <div className="flex justify-center mb-4"><div className="w-20 h-20 rounded-full bg-gradient-to-br from-warning to-warning/80 flex items-center justify-center animate-scale-in"><Trophy className="h-10 w-10 text-warning-foreground" /></div></div>
-            <DialogTitle className="text-2xl text-center">Congratulations! 🎉</DialogTitle>
-            <DialogDescription className="text-center text-base">You've completed your profile and earned your reward!</DialogDescription>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Trophy className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+            <DialogTitle className="text-xl text-center">Profile Complete! 🎉</DialogTitle>
+            <DialogDescription className="text-center text-sm">You earned a reward for completing your profile</DialogDescription>
           </DialogHeader>
-          <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-6 text-center space-y-2">
-            <p className="text-sm text-muted-foreground">Profile Completion Reward</p>
+          <div className="bg-muted rounded-xl p-5 text-center space-y-1">
+            <p className="text-xs text-muted-foreground">Profile Completion Reward</p>
             <div className="flex items-center justify-center gap-2">
-              <Sparkles className="h-6 w-6 text-warning" />
-              <span className="text-4xl font-bold text-primary">+100</span>
-              <span className="text-2xl font-semibold text-foreground">Nexa</span>
+              <Sparkles className="h-5 w-5 text-primary" />
+              <span className="text-3xl font-black text-primary">+100</span>
+              <span className="text-lg font-bold text-foreground">Nexa</span>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {showReferralWelcome && <ReferralWelcomeBanner referrerName={referrerName} onClose={() => { setShowReferralWelcome(false); window.location.href = '/home'; }} />}
+      {showReferralWelcome && (
+        <ReferralWelcomeBanner
+          referrerName={referrerName}
+          onClose={() => { setShowReferralWelcome(false); window.location.href = '/home'; }}
+        />
+      )}
 
       {accountType === 'personal' ? (
         <CircularImageCrop imageFile={tempImageFile} open={showImageCrop} onOpenChange={setShowImageCrop} onSave={handleImageCropSave} />
