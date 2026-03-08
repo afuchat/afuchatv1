@@ -389,20 +389,6 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
         ))}
       </div>
 
-      {/* Footer: search on Google */}
-      <div className="pt-6 pb-2 flex flex-col items-center gap-3">
-        <div className="h-px w-full bg-border/50" />
-        <p className="text-[11px] text-muted-foreground">Need more results?</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="rounded-full gap-2 text-[13px]"
-          onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank')}
-        >
-          <img src="https://www.google.com/favicon.ico" alt="Google" className="w-3.5 h-3.5" />
-          Continue on Google
-        </Button>
-      </div>
     </div>
   );
 };
