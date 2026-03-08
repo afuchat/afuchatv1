@@ -521,7 +521,13 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
     return results.filter(r => !r.url?.includes('wikipedia.org'));
   }, [results, wikiProfile]);
 
-  const openUrl = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
+  const [browserUrl, setBrowserUrl] = useState<string | null>(null);
+  const [browserTitle, setBrowserTitle] = useState<string | undefined>();
+
+  const openUrl = (url: string, title?: string) => {
+    setBrowserUrl(url);
+    setBrowserTitle(title);
+  };
 
   if (!query.trim()) return <EmptyState />;
   if (loading) return <SearchSkeleton query={query} />;
