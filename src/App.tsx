@@ -136,14 +136,32 @@ const ProfileRedirect = () => {
   return <Navigate to={`/@${userId}`} replace />;
 };
 
-// Referral redirect: afuchat.com/username -> signup with ref
 // Smart catch-all: renders Profile for @handle, or does referral redirect for bare usernames
+// Also handles sub-routes like /@handle/edit, /@handle/followers, /@handle/following
 const UsernameOrReferral = () => {
   const { username } = useParams();
-  const navigate = useNavigate();
+  const location = useLocation();
 
-  // If path is /@handle, render profile directly (no redirect needed)
+  // If path starts with @, it's a profile route
   if (username?.startsWith('@')) {
+    const subPath = location.pathname.split('/').slice(2).join('/'); // e.g. "edit", "followers", "following"
+    
+    if (subPath === 'edit') {
+      return (
+        <RequireBanCheck><RequireCountry><RequireDateOfBirth>
+          <Layout><EditProfile /></Layout>
+        </RequireDateOfBirth></RequireCountry></RequireBanCheck>
+      );
+    }
+    
+    if (subPath === 'followers') {
+      return <Layout><Followers /></Layout>;
+    }
+    
+    if (subPath === 'following') {
+      return <Layout><Following /></Layout>;
+    }
+
     return (
       <Layout>
         <Profile mustExist={true} />
