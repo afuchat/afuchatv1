@@ -1134,6 +1134,21 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                             setTimeout(() => commentInputRef.current?.focus(), 100);
                           }}
                         >Reply</button>
+                        {user?.id === reply.author_id && (
+                          <button 
+                            className="text-[11px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
+                            onClick={() => {
+                              setCommentActionId(reply.id);
+                              setShowDeleteCommentConfirm(true);
+                            }}
+                          >Delete</button>
+                        )}
+                        {user && user.id !== reply.author_id && (
+                          <button 
+                            className="text-[11px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
+                            onClick={() => handleReportComment(reply.id, 'inappropriate')}
+                          >Report</button>
+                        )}
                       </div>
                       
                       {/* Nested replies */}
@@ -1146,7 +1161,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                               const mentionedHandle = nested.content.match(/^@(\S+)/)?.[1];
                               
                               return (
-                                <div key={nested.id} className="flex gap-2.5">
+                                <div key={nested.id} className="flex gap-2.5 group/nested">
                                   <Avatar className="h-6 w-6 flex-shrink-0 ring-1 ring-border/30">
                                     <AvatarImage src={nested.profiles.avatar_url || undefined} />
                                     <AvatarFallback className="text-[9px] bg-muted text-muted-foreground font-semibold">{nested.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
@@ -1162,6 +1177,23 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                                     <p className="text-xs text-foreground/85 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
                                       {parsePostContent(contentText || nested.content, nested.id, navigate)}
                                     </p>
+                                    <div className="flex items-center gap-4 mt-1.5">
+                                      {user?.id === nested.author_id && (
+                                        <button 
+                                          className="text-[10px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
+                                          onClick={() => {
+                                            setCommentActionId(nested.id);
+                                            setShowDeleteCommentConfirm(true);
+                                          }}
+                                        >Delete</button>
+                                      )}
+                                      {user && user.id !== nested.author_id && (
+                                        <button 
+                                          className="text-[10px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
+                                          onClick={() => handleReportComment(nested.id, 'inappropriate')}
+                                        >Report</button>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               );
