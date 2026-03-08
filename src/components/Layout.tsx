@@ -323,8 +323,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
       {/* Main Content */}
       <main className={cn(
         shouldHideUI ? "" : "pb-20",
-        !isTelegram && "min-h-screen",
-        isTelegram && "flex-1"
+        "min-h-screen"
       )}>
         <motion.div 
           initial={{ opacity: 0 }}
