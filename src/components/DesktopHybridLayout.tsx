@@ -8,7 +8,7 @@ import {
   Image as ImageIcon, Hash, TrendingUp, Menu, DollarSign,
   ChevronLeft, Grid3x3, Sun, Moon, Monitor, PenSquare
 } from 'lucide-react';
-import aiChatIcon from '@/assets/ai-chat-icon.ico';
+
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import { ContextualRightSidebar } from '@/components/desktop/ContextualRightSidebar';
 import { DesktopAccountSwitcher } from '@/components/desktop/DesktopAccountSwitcher';
