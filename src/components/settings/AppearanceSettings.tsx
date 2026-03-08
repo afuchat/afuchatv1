@@ -56,8 +56,8 @@ export const AppearanceSettings = () => {
         <div className="px-4 py-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-7 w-7 rounded-lg bg-purple-500 flex items-center justify-center">
-                <Type className="h-3.5 w-3.5 text-white" />
+              <div className="h-7 w-7 rounded-lg bg-primary/80 flex items-center justify-center">
+                <Type className="h-3.5 w-3.5 text-primary-foreground" />
               </div>
               <div>
                 <p className="font-semibold text-sm">Font Size</p>
