@@ -244,57 +244,57 @@ const AppRoutes = () => {
       <Route path="/auth/welcome" element={<Welcome />} />
       <Route path="/banned" element={<Banned />} />
       <Route path="/complete-profile" element={<Onboarding />} />
-      <Route path="/feed" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Home /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/home" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Home /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/feed" element={<CombinedRouteGuard><Layout><Home /></Layout></CombinedRouteGuard>} />
+      <Route path="/home" element={<CombinedRouteGuard><Layout><Home /></Layout></CombinedRouteGuard>} />
       <Route path="/auth" element={<Welcome />} />
       <Route path="/auth/signin" element={<SignIn />} />
       <Route path="/auth/signup" element={<SignUp />} />
       <Route path="/auth/afumail/callback" element={<AfuMailCallback />} />
       <Route path="/auth/forgot-password" element={<ForgotPassword />} />
       <Route path="/auth/reset-password" element={<ResetPassword />} />
-      <Route path="/chats" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
-      <Route path="/chat/:chatId" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
-      <Route path="/search" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SearchPage /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/chats" element={<CombinedRouteGuard requireAuth><Layout><DesktopChats /></Layout></CombinedRouteGuard>} />
+      <Route path="/chat/:chatId" element={<CombinedRouteGuard requireAuth><Layout><DesktopChats /></Layout></CombinedRouteGuard>} />
+      <Route path="/search" element={<CombinedRouteGuard><Layout><SearchPage /></Layout></CombinedRouteGuard>} />
       <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
-      <Route path="/marketplace" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Marketplace /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/notifications" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Notifications /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/post/:postId" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><PostDetail /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/admin" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/afuai" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><AfuAI /></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/marketplace" element={<CombinedRouteGuard><Layout><Marketplace /></Layout></CombinedRouteGuard>} />
+      <Route path="/notifications" element={<CombinedRouteGuard><Layout><Notifications /></Layout></CombinedRouteGuard>} />
+      <Route path="/post/:postId" element={<CombinedRouteGuard><Layout><PostDetail /></Layout></CombinedRouteGuard>} />
+      <Route path="/admin" element={<CombinedRouteGuard><Layout><AdminDashboard /></Layout></CombinedRouteGuard>} />
+      <Route path="/afuai" element={<CombinedRouteGuard><AfuAI /></CombinedRouteGuard>} />
       
       <Route path="/onboarding" element={<Onboarding />} />
       
       <Route path="/support" element={<Layout><Support /></Layout>} />
       <Route path="/leaderboard" element={<Layout><UnifiedLeaderboard /></Layout>} />
-      <Route path="/wallet" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><FinancialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/social" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SocialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/wallet" element={<CombinedRouteGuard><Layout><FinancialHub /></Layout></CombinedRouteGuard>} />
+      <Route path="/social" element={<CombinedRouteGuard><Layout><SocialHub /></Layout></CombinedRouteGuard>} />
       <Route path="/gifts" element={<Layout><Gifts /></Layout>} />
       <Route path="/christmas-gifts" element={<Layout><ChristmasGifts /></Layout>} />
       <Route path="/gifts/:id" element={<Layout><GiftDetail /></Layout>} />
-      <Route path="/premium" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Premium /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/creator-earnings" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><CreatorEarnings /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/qr-code" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><QRCode /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/settings" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Settings /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
-      <Route path="/security" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SecurityDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/change-password" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><ChangePassword /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/premium" element={<CombinedRouteGuard><Layout><Premium /></Layout></CombinedRouteGuard>} />
+      <Route path="/creator-earnings" element={<CombinedRouteGuard><Layout><CreatorEarnings /></Layout></CombinedRouteGuard>} />
+      <Route path="/qr-code" element={<CombinedRouteGuard><Layout><QRCode /></Layout></CombinedRouteGuard>} />
+      <Route path="/settings" element={<CombinedRouteGuard requireAuth><Layout><Settings /></Layout></CombinedRouteGuard>} />
+      <Route path="/security" element={<CombinedRouteGuard><Layout><SecurityDashboard /></Layout></CombinedRouteGuard>} />
+      <Route path="/change-password" element={<CombinedRouteGuard><Layout><ChangePassword /></Layout></CombinedRouteGuard>} />
       <Route path="/terms" element={<Layout><TermsOfUse /></Layout>} />
       <Route path="/privacy" element={<Layout><PrivacyPolicy /></Layout>} />
       <Route path="/whats-new" element={<Layout><WhatsNew /></Layout>} />
       <Route path="/trending" element={<Navigate to="/search" replace />} />
-      <Route path="/admin/affiliate-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminAffiliateRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/admin/creator-withdrawals" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminCreatorWithdrawals /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/admin/verification-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminVerificationRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/affiliate-request" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AffiliateRequest /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/affiliate-dashboard" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AffiliateDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/business/dashboard" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><BusinessDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/ads" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdManager /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/afumail" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><AfuMail /></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/moments" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Moments /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
-      <Route path="/mini-programs" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><MiniPrograms /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/transfer" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Transfer /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/red-envelope" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><RedEnvelope /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/developer-sdk" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DeveloperSDK /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/verification-request" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><VerificationRequest /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/admin/affiliate-requests" element={<CombinedRouteGuard><Layout><AdminAffiliateRequests /></Layout></CombinedRouteGuard>} />
+      <Route path="/admin/creator-withdrawals" element={<CombinedRouteGuard><Layout><AdminCreatorWithdrawals /></Layout></CombinedRouteGuard>} />
+      <Route path="/admin/verification-requests" element={<CombinedRouteGuard><Layout><AdminVerificationRequests /></Layout></CombinedRouteGuard>} />
+      <Route path="/affiliate-request" element={<CombinedRouteGuard><Layout><AffiliateRequest /></Layout></CombinedRouteGuard>} />
+      <Route path="/affiliate-dashboard" element={<CombinedRouteGuard><Layout><AffiliateDashboard /></Layout></CombinedRouteGuard>} />
+      <Route path="/business/dashboard" element={<CombinedRouteGuard><Layout><BusinessDashboard /></Layout></CombinedRouteGuard>} />
+      <Route path="/ads" element={<CombinedRouteGuard><Layout><AdManager /></Layout></CombinedRouteGuard>} />
+      <Route path="/afumail" element={<CombinedRouteGuard><AfuMail /></CombinedRouteGuard>} />
+      <Route path="/moments" element={<CombinedRouteGuard requireAuth><Layout><Moments /></Layout></CombinedRouteGuard>} />
+      <Route path="/mini-programs" element={<CombinedRouteGuard><Layout><MiniPrograms /></Layout></CombinedRouteGuard>} />
+      <Route path="/transfer" element={<CombinedRouteGuard><Layout><Transfer /></Layout></CombinedRouteGuard>} />
+      <Route path="/red-envelope" element={<CombinedRouteGuard><Layout><RedEnvelope /></Layout></CombinedRouteGuard>} />
+      <Route path="/developer-sdk" element={<CombinedRouteGuard><Layout><DeveloperSDK /></Layout></CombinedRouteGuard>} />
+      <Route path="/verification-request" element={<CombinedRouteGuard><Layout><VerificationRequest /></Layout></CombinedRouteGuard>} />
       <Route path="/games" element={<Layout><Games /></Layout>} />
       <Route path="/game" element={<Layout><SimpleGame /></Layout>} />
       <Route path="/memory-game" element={<Layout><MemoryGame /></Layout>} />
@@ -313,8 +313,8 @@ const AppRoutes = () => {
       <Route path="/events/:id" element={<Layout><EventDetail /></Layout>} />
       
       {/* Mini Program Orders */}
-      <Route path="/mini-program-orders" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><MiniProgramOrders /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/mini-program-orders/:id" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><MiniProgramOrderDetail /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/mini-program-orders" element={<CombinedRouteGuard><Layout><MiniProgramOrders /></Layout></CombinedRouteGuard>} />
+      <Route path="/mini-program-orders/:id" element={<CombinedRouteGuard><Layout><MiniProgramOrderDetail /></Layout></CombinedRouteGuard>} />
       
       {/* Merchant Shop Routes */}
       <Route path="/shop/:merchantId" element={<MerchantShop />} />
