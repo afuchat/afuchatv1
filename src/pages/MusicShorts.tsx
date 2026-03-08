@@ -162,33 +162,6 @@ const MusicShorts = () => {
           </div>
         ))}
       </div>
-
-      {/* Top actions */}
-      <div className="fixed top-4 right-4 z-50 flex gap-2">
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => { setActiveIndex(0); fetchShorts(); }}
-          className="h-9 w-9 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20"
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => setShowDiscovery(true)}
-          className="h-9 w-9 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20"
-        >
-          <Music2 className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Dialogs */}
-      <MusicDiscovery
-        isOpen={showDiscovery}
-        onClose={() => setShowDiscovery(false)}
-        onTrackClick={() => setShowDiscovery(false)}
-      />
     </div>
   );
 };
