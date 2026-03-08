@@ -1715,7 +1715,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						<div className="flex gap-4 mt-3">
 							<div 
 								className="flex items-center cursor-pointer hover:underline"
-								onClick={() => navigate(`/${profile.handle}/following`)}
+								onClick={() => navigate(`/@${profile.handle}/following`)}
 							>
 								<span className="font-bold text-sm">{formatCount(followCount.following)}</span>
 								<span className="text-muted-foreground text-sm ml-1">{t('profile.following')}</span>
