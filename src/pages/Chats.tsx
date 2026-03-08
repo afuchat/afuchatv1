@@ -694,6 +694,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
         onNewChat={() => setIsNewChatDialogOpen(true)}
         onCreateGroup={() => setIsCreateGroupDialogOpen(true)}
         onCreateChannel={() => setIsCreateChannelDialogOpen(true)}
+        onCreateStory={() => setIsCreateStoryDialogOpen(true)}
         isVisible={showFab}
       />
 
