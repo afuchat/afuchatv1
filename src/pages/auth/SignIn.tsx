@@ -13,6 +13,7 @@ import { useIsTelegram } from '@/hooks/useIsTelegram';
 const SignIn = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const isTelegram = useIsTelegram();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
