@@ -475,6 +475,9 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const postRef = useRef<HTMLDivElement>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const [showViewsSheet, setShowViewsSheet] = useState(false);
+  const [commentActionId, setCommentActionId] = useState<string | null>(null);
+  const [showDeleteCommentConfirm, setShowDeleteCommentConfirm] = useState(false);
+  const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
 
   // Track post view when it becomes visible - optimized to prevent duplicates
   useEffect(() => {
