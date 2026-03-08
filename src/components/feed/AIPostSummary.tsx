@@ -40,7 +40,6 @@ const isWorthSummarizing = (content: string): boolean => {
 };
 
 export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
-  const { canUseAIPostAnalysis } = useSubscription();
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [shouldShow, setShouldShow] = useState(false);
@@ -48,8 +47,6 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
   const checkedRef = useRef(false);
   const mountedRef = useRef(true);
   const generatingRef = useRef(false);
-
-  const hasAccess = canUseAIPostAnalysis();
 
   useEffect(() => {
     mountedRef.current = true;
