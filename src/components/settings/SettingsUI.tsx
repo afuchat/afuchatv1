@@ -70,7 +70,7 @@ export const SettingsRow = ({
       >
         {Icon && (
           <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0", iconColor)}>
-            <Icon className={cn("h-3.5 w-3.5", destructive ? "text-white" : "text-white")} />
+            <Icon className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
         )}
         <div className="flex-1 min-w-0">
