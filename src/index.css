@@ -62,15 +62,16 @@ html.telegram-mini-app body {
   margin: 0 !important;
 }
 
-/* #root is a flex passthrough in Telegram — inner components manage scroll */
+/* #root is THE scroll container in Telegram Mini App */
 html.telegram-mini-app #root {
   padding-top: var(--tg-safe-top, 0px);
   padding-left: var(--tg-safe-left, 0px);
   padding-right: var(--tg-safe-right, 0px);
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* Ensure fixed headers account for combined safe area in Telegram */

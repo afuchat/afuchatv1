@@ -65,7 +65,7 @@ export const ProfileCompletionBanner = () => {
   if (!show) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-primary/15 via-primary/10 to-primary/15 border-b border-primary/30 backdrop-blur-sm">
+    <div className="fixed left-0 right-0 z-[100] bg-gradient-to-r from-primary/15 via-primary/10 to-primary/15 border-b border-primary/30 backdrop-blur-sm" style={{ top: 'var(--tg-safe-top, 0px)' }}>
       <div className="flex items-center justify-between px-4 py-2.5 max-w-7xl mx-auto">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/20 flex-shrink-0">
