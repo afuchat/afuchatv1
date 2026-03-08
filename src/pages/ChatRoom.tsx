@@ -1698,7 +1698,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full hover:bg-muted/50"
+              className="h-10 w-10 rounded-full hover:bg-muted/50 flex-shrink-0"
               onClick={handleBack}
             >
               <ArrowLeft className="h-5 w-5" />
@@ -1706,7 +1706,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           )}
           
           <div 
-            className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+            className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer active:opacity-80 transition-opacity"
             onClick={() => {
               if (chatInfo?.is_group) {
                 setIsGroupSettingsOpen(true);
@@ -1719,12 +1719,12 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
               userId={chatInfo?.is_group ? chatId! : (otherUser?.id || 'unknown')}
               avatarUrl={chatInfo?.is_group ? chatInfo.avatar_url : otherUser?.avatar_url} 
               name={chatInfo?.is_group ? (chatInfo.name || 'Group') : (otherUser?.display_name || 'Chat')} 
-              size={40}
+              size={42}
               enableLightbox={true}
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
-                <h2 className="font-bold text-base truncate">
+                <h2 className="font-semibold text-[16px] truncate leading-tight">
                   {chatInfo?.is_group ? (chatInfo.name || 'Group') : (otherUser?.display_name || 'Chat')}
                 </h2>
                 {otherUser && !chatInfo?.is_group && otherUser.is_warned && (
@@ -1739,13 +1739,13 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   />
                 )}
               </div>
-              {/* Last seen / Online status / Typing */}
+              {/* Status line */}
               {!chatInfo?.is_group && otherUser && (
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-[12px] text-muted-foreground truncate leading-tight mt-px">
                   {typingUsers.length > 0 ? (
-                    <span className="text-primary">typing...</span>
+                    <span className="text-primary font-medium">typing...</span>
                   ) : online ? (
-                    <span className="text-green-500">online</span>
+                    <span className="text-primary">online</span>
                   ) : otherUser.show_online_status !== false && otherUser.last_seen ? (
                     `last seen ${formatLastSeen(otherUser.last_seen)}`
                   ) : (
@@ -1754,9 +1754,9 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                 </p>
               )}
               {chatInfo?.is_group && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[12px] text-muted-foreground leading-tight mt-px">
                   {typingUsers.length > 0 ? (
-                    <span className="text-primary">{typingUsers[0]} is typing...</span>
+                    <span className="text-primary font-medium">{typingUsers[0]} is typing...</span>
                   ) : (
                     'Tap for group info'
                   )}
@@ -1765,85 +1765,80 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
             </div>
           </div>
 
-          {chatInfo?.is_group && isGroupAdmin && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full hover:bg-muted/50"
-              onClick={() => setIsGroupSettingsOpen(true)}
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-          )}
-          
-        {/* Dropdown menu for groups (leave) or 1-on-1 chats (delete) - Telegram style */}
-          {(chatInfo?.is_group && isMember) || (!chatInfo?.is_group && otherUser) ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-full hover:bg-muted/50"
-                >
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-1">
-                <DropdownMenuItem 
-                  className="gap-3 py-3 cursor-pointer"
-                  onClick={handleMuteChat}
-                >
-                  {isMuted ? (
-                    <Bell className="h-5 w-5 text-muted-foreground" />
-                  ) : (
-                    <BellOff className="h-5 w-5 text-muted-foreground" />
+          <div className="flex items-center flex-shrink-0">
+            {chatInfo?.is_group && isGroupAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full hover:bg-muted/50"
+                onClick={() => setIsGroupSettingsOpen(true)}
+              >
+                <Settings className="h-[18px] w-[18px]" />
+              </Button>
+            )}
+            
+            {(chatInfo?.is_group && isMember) || (!chatInfo?.is_group && otherUser) ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-full hover:bg-muted/50"
+                  >
+                    <MoreVertical className="h-[18px] w-[18px]" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 rounded-xl p-1">
+                  <DropdownMenuItem 
+                    className="gap-3 py-2.5 rounded-lg cursor-pointer text-[14px]"
+                    onClick={handleMuteChat}
+                  >
+                    {isMuted ? <Bell className="h-[18px] w-[18px] text-muted-foreground" /> : <BellOff className="h-[18px] w-[18px] text-muted-foreground" />}
+                    <span>{isMuted ? 'Unmute' : 'Mute'}</span>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem 
+                    className="gap-3 py-2.5 rounded-lg cursor-pointer text-[14px]"
+                    onClick={handleSearchMessages}
+                  >
+                    <Search className="h-[18px] w-[18px] text-muted-foreground" />
+                    <span>Search</span>
+                  </DropdownMenuItem>
+                  
+                  {canClearHistory && (
+                    <DropdownMenuItem 
+                      className="gap-3 py-2.5 rounded-lg cursor-pointer text-[14px]"
+                      onClick={() => setIsClearHistoryOpen(true)}
+                    >
+                      <svg className="h-[18px] w-[18px] text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
+                        <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                      </svg>
+                      <span>Clear History</span>
+                    </DropdownMenuItem>
                   )}
-                  <span>{isMuted ? 'Unmute' : 'Mute'}</span>
-                </DropdownMenuItem>
-                
-                
-                <DropdownMenuItem 
-                  className="gap-3 py-3 cursor-pointer"
-                  onClick={handleSearchMessages}
-                >
-                  <Search className="h-5 w-5 text-muted-foreground" />
-                  <span>Search</span>
-                </DropdownMenuItem>
-                
-                
-                {canClearHistory && (
-                  <DropdownMenuItem 
-                    className="gap-3 py-3 cursor-pointer"
-                    onClick={() => setIsClearHistoryOpen(true)}
-                  >
-                    <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
-                      <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                    </svg>
-                    <span>Clear History</span>
-                  </DropdownMenuItem>
-                )}
-                
-                {chatInfo?.is_group ? (
-                  <DropdownMenuItem 
-                    onClick={handleLeaveGroup}
-                    className="gap-3 py-3 cursor-pointer text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                    <span>Delete and Exit</span>
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem 
-                    onClick={handleDeleteChat}
-                    className="gap-3 py-3 cursor-pointer text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                    <span>Delete Chat</span>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
+                  
+                  {chatInfo?.is_group ? (
+                    <DropdownMenuItem 
+                      onClick={handleLeaveGroup}
+                      className="gap-3 py-2.5 rounded-lg cursor-pointer text-[14px] text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-[18px] w-[18px]" />
+                      <span>Delete and Exit</span>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem 
+                      onClick={handleDeleteChat}
+                      className="gap-3 py-2.5 rounded-lg cursor-pointer text-[14px] text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-[18px] w-[18px]" />
+                      <span>Delete Chat</span>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+          </div>
         </header>
 
         {/* Messages container - only this scrolls */}
