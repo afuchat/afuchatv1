@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Menu } from 'lucide-react';
+import { ArrowLeft, Menu, PenLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +23,7 @@ export default function AfuMail() {
 
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
   const [composing, setComposing] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [replyTo, setReplyTo] = useState<{ from: string; subject: string; body: string } | undefined>();
   const [forwardFrom, setForwardFrom] = useState<{ subject: string; body: string } | undefined>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -138,9 +139,14 @@ export default function AfuMail() {
               initialTo={replyTo ? [replyTo.from] : []}
               replyTo={replyTo}
               forwardFrom={forwardFrom}
-              onSend={sendEmail}
+              onSend={async (data) => {
+                setSendingEmail(true);
+                const result = await sendEmail(data);
+                setSendingEmail(false);
+                return result;
+              }}
               onDiscard={() => { setComposing(false); setReplyTo(undefined); setForwardFrom(undefined); }}
-              sending={loading}
+              sending={sendingEmail}
               senderEmail={mailboxEmail || undefined}
             />
           ) : selectedEmail ? (
@@ -154,11 +160,7 @@ export default function AfuMail() {
               onArchive={() => {}}
             />
           ) : (
-            <div className="flex-1 flex flex-col min-h-0">
-              {/* Mobile compose button */}
-              <div className="md:hidden p-3 border-b border-border">
-                <Button onClick={handleCompose} className="w-full gap-2">Compose</Button>
-              </div>
+            <div className="flex-1 flex flex-col min-h-0 relative">
               <div className="flex-1 overflow-y-auto">
                 <EmailList
                   emails={emails}
@@ -168,6 +170,13 @@ export default function AfuMail() {
                   loading={loading}
                 />
               </div>
+              {/* Floating compose pencil button */}
+              <button
+                onClick={handleCompose}
+                className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all md:bottom-8 md:right-8"
+              >
+                <PenLine className="h-6 w-6" />
+              </button>
             </div>
           )}
         </div>

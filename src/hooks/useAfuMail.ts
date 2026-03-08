@@ -79,22 +79,23 @@ export function useAfuMail() {
 
       const emailIds = userEmails.map(ue => ue.email_id);
 
-      const { data: emailData, error: emailErr } = await supabase
-        .from('afumail_emails')
-        .select('id, sender_email, subject, body_text, body_html, has_attachments, is_draft, sent_at, created_at')
-        .in('id', emailIds);
+      // Fetch email data and recipients in parallel
+      const [emailResult, recipientResult] = await Promise.all([
+        supabase
+          .from('afumail_emails')
+          .select('id, sender_email, subject, body_text, body_html, has_attachments, is_draft, sent_at, created_at')
+          .in('id', emailIds),
+        supabase
+          .from('afumail_recipients')
+          .select('email_id, recipient_email, recipient_type')
+          .in('email_id', emailIds),
+      ]);
 
-      if (emailErr) throw emailErr;
-
-      // Fetch recipients for these emails
-      const { data: recipients } = await supabase
-        .from('afumail_recipients')
-        .select('email_id, recipient_email, recipient_type')
-        .in('email_id', emailIds);
+      if (emailResult.error) throw emailResult.error;
 
       const combined: EmailMessage[] = userEmails.map(ue => {
-        const email = emailData?.find(e => e.id === ue.email_id);
-        const emailRecipients = recipients?.filter(r => r.email_id === ue.email_id) || [];
+        const email = emailResult.data?.find(e => e.id === ue.email_id);
+        const emailRecipients = recipientResult.data?.filter(r => r.email_id === ue.email_id) || [];
         return {
           id: email?.id || ue.email_id,
           sender_email: email?.sender_email || '',
