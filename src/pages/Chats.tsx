@@ -8,6 +8,7 @@ import NewChatDialog from '@/components/ui/NewChatDialog';
 import { CreateGroupDialog } from '@/components/chat/CreateGroupDialog';
 import { CreateChannelDialog } from '@/components/chat/CreateChannelDialog';
 import ChatFloatingActionButton from '@/components/chat/ChatFloatingActionButton';
+import { CreateStoryDialog } from '@/components/moments/CreateStoryDialog';
 
 import { toast } from 'sonner';
 import { ChatSettingsSheet } from '@/components/chat/ChatSettingsSheet';
@@ -80,6 +81,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const [isCreateChannelDialogOpen, setIsCreateChannelDialogOpen] = useState(false);
+  const [isCreateStoryDialogOpen, setIsCreateStoryDialogOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showFab, setShowFab] = useState(true);
   const [isStoriesExpanded, setIsStoriesExpanded] = useState(false);
@@ -692,6 +694,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
         onNewChat={() => setIsNewChatDialogOpen(true)}
         onCreateGroup={() => setIsCreateGroupDialogOpen(true)}
         onCreateChannel={() => setIsCreateChannelDialogOpen(true)}
+        onCreateStory={() => setIsCreateStoryDialogOpen(true)}
         isVisible={showFab}
       />
 
@@ -721,6 +724,12 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
       <ChatSettingsSheet 
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      <CreateStoryDialog
+        open={isCreateStoryDialogOpen}
+        onOpenChange={setIsCreateStoryDialogOpen}
+        onSuccess={() => {}}
       />
     </div>
   );
