@@ -242,7 +242,7 @@ const AppRoutes = () => {
       <Route path="/notifications" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Notifications /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/post/:postId" element={<Navigate to="/home" replace />} />
       <Route path="/admin" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/afuai" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AfuAI /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      
       
       <Route path="/onboarding" element={<Onboarding />} />
       
