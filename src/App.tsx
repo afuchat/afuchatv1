@@ -52,7 +52,7 @@ const DesktopChats = lazy(() => import("./pages/DesktopChats"));
 const SearchPage = lazy(() => import("./pages/Search"));
 const ShopPage = lazy(() => import("./pages/Shop"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
-const Profile = lazy(() => import("./pages/Profile"));
+import Profile from "./pages/Profile";
 const EditProfile = lazy(() => import("./pages/EditProfile"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const PostDetail = lazy(() => import("./pages/PostDetail"));
