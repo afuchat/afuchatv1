@@ -143,7 +143,7 @@ interface SettingsStatCardProps {
 export const SettingsStatCard = ({ icon: Icon, iconColor, label, value }: SettingsStatCardProps) => (
   <div className="rounded-2xl bg-card shadow-soft p-4 flex items-center gap-3">
     <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", iconColor)}>
-      <Icon className="h-5 w-5 text-white" />
+      <Icon className="h-5 w-5 text-primary-foreground" />
     </div>
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
