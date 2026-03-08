@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Search, Bell, MessageCircle, Music2 } from 'lucide-react';
+import { Home, Search, Bell, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,7 +12,6 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 
 const HomePage = lazy(() => import('@/pages/Home'));
 const SearchPage = lazy(() => import('@/pages/Search'));
-const MusicShorts = lazy(() => import('@/pages/MusicShorts'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const DesktopChats = lazy(() => import('@/pages/DesktopChats'));
 
@@ -22,25 +21,21 @@ interface MainTabsNavigationProps {
   chatScrollHide?: boolean;
 }
 
-type TabId = 'home' | 'search' | 'shorts' | 'notifications' | 'chats';
+type TabId = 'home' | 'search' | 'notifications' | 'chats';
 
-// Removed AI tab - it now opens as a full page with its own back button
 const TABS: { id: TabId; path: string; icon: any; label: string; requiresAuth: boolean }[] = [
   { id: 'home', path: '/home', icon: Home, label: 'Home', requiresAuth: false },
   { id: 'search', path: '/search', icon: Search, label: 'Search', requiresAuth: false },
-  { id: 'shorts', path: '/shorts', icon: Music2, label: 'Shorts', requiresAuth: false },
   { id: 'notifications', path: '/notifications', icon: Bell, label: 'Alerts', requiresAuth: true },
   { id: 'chats', path: '/chats', icon: MessageCircle, label: 'Chats', requiresAuth: true },
 ];
 
-// Map routes to tab indices - AI is removed from tabs (opens as full page)
 const getTabIndexFromPath = (pathname: string): number => {
   if (pathname === '/' || pathname === '/home' || pathname === '/feed') return 0;
   if (pathname === '/search') return 1;
-  if (pathname === '/shorts') return 2;
-  if (pathname === '/notifications') return 3;
-  if (pathname === '/chats') return 4;
-  return -1; // Not a main tab route
+  if (pathname === '/notifications') return 2;
+  if (pathname === '/chats') return 3;
+  return -1;
 };
 
 const isMainTabRoute = (pathname: string): boolean => {
@@ -143,10 +138,8 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
       case 1:
         return <SearchPage />;
       case 2:
-        return <MusicShorts />;
-      case 3:
         return user ? <Notifications /> : null;
-      case 4:
+      case 3:
         return user ? <DesktopChats /> : null;
       default:
         return null;
