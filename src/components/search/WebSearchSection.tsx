@@ -357,13 +357,13 @@ const FeaturedResultCard = ({ result, onClick }: { result: WebSearchResult; onCl
 
 // ─── YouTube Video Card ──────────────────────────────────
 const YouTubeVideoCard = ({ result, index, videoId }: { result: WebSearchResult; index: number; videoId: string }) => {
+  const [playing, setPlaying] = useState(false);
   const snippet = extractSnippet(result.description, result.markdown);
   const thumbnail = result.metadata?.ogImage || getYouTubeThumbnail(videoId);
   const isTelegram = typeof document !== 'undefined' && document.documentElement.classList.contains('telegram-mini-app');
 
   const handlePlay = () => {
     if (isTelegram) {
-      // In Telegram, iframes are blocked — open externally
       try {
         const WebApp = (window as any).Telegram?.WebApp;
         if (WebApp?.openLink) {
@@ -378,8 +378,6 @@ const YouTubeVideoCard = ({ result, index, videoId }: { result: WebSearchResult;
       setPlaying(true);
     }
   };
-
-  const [playing, setPlaying] = useState(false);
 
   return (
     <motion.div
