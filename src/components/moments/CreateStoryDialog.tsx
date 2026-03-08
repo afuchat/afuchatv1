@@ -17,23 +17,12 @@ interface CreateStoryDialogProps {
 
 export const CreateStoryDialog = ({ open, onOpenChange, onSuccess }: CreateStoryDialogProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { canCreateStories, tier } = useSubscription();
   const [caption, setCaption] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Check subscription when dialog opens
-  useEffect(() => {
-    if (open && !canCreateStories()) {
-      toast.error('Gold or Platinum subscription required to create stories');
-      onOpenChange(false);
-      navigate('/premium');
-    }
-  }, [open, canCreateStories, navigate, onOpenChange]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
