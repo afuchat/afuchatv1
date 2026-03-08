@@ -372,6 +372,9 @@ const Moments = () => {
         onOpenChange={setCreateDialogOpen}
         onSuccess={fetchStories}
       />
+
+      {/* FAB for quick actions */}
+      {user && <FloatingActionButton />}
     </div>
   );
 };
