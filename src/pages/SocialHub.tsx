@@ -277,7 +277,7 @@ const SocialHub = () => {
                       <div className="flex items-start gap-3">
                         <Avatar
                           className="h-12 w-12 cursor-pointer"
-                          onClick={() => navigate(`/${suggestedUser.id}`)}
+                          onClick={() => navigate(`/@${suggestedUser.id}`)}
                         >
                           <AvatarImage src={suggestedUser.avatar_url} />
                           <AvatarFallback>{suggestedUser.display_name[0]}</AvatarFallback>
