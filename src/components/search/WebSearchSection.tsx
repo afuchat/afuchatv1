@@ -344,8 +344,8 @@ const ResultCard = ({ result, index, onClick, onOpenUrl }: { result: WebSearchRe
       className="group cursor-pointer"
       onClick={onClick}
     >
-      <div className="flex gap-3 py-4 px-1">
-        <div className="flex-1 min-w-0">
+      <div className="flex gap-3 py-4">
+        <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-center gap-1.5 mb-1.5">
             <img src={getFaviconUrl(result.url)} alt="" className="h-4 w-4 rounded-sm flex-shrink-0" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
             <span className="text-[12px] text-muted-foreground truncate">{getPath(result.url)}</span>
@@ -366,14 +366,14 @@ const ResultCard = ({ result, index, onClick, onOpenUrl }: { result: WebSearchRe
                   onClick={(e) => { e.stopPropagation(); onOpenUrl(link.url, link.text); }}
                 >
                   <ChevronRight className="h-3 w-3" />
-                  {link.text}
+                  <span className="truncate max-w-[120px]">{link.text}</span>
                 </button>
               ))}
             </div>
           )}
         </div>
         {imageUrl && (
-          <div className="flex-shrink-0 w-[100px] h-[72px] rounded-xl overflow-hidden bg-muted">
+          <div className="flex-shrink-0 w-[88px] h-[66px] rounded-lg overflow-hidden bg-muted self-start mt-1">
             <img
               src={imageUrl}
               alt=""
