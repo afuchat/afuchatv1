@@ -144,7 +144,7 @@ const Settings = () => {
                             )}
                           >
                             <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0", item.color)}>
-                              <Icon className="h-4 w-4 text-white" />
+                              <Icon className="h-4 w-4 text-primary-foreground" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-semibold text-sm">{item.label}</p>
