@@ -1118,7 +1118,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                           className="text-[11px] text-muted-foreground hover:text-foreground font-semibold uppercase tracking-wide transition-colors"
                           onClick={() => {
                             setReplyingToReply({ id: reply.id, handle: reply.profiles.handle });
-                            setReplyText(`@${reply.profiles.handle} `);
+                            setReplyText('');
                             setTimeout(() => commentInputRef.current?.focus(), 100);
                           }}
                         >Reply</button>
