@@ -56,7 +56,7 @@ const EditProfile = lazy(() => import("./pages/EditProfile"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const PostDetail = lazy(() => import("./pages/PostDetail"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AfuAI = lazy(() => import("./pages/AfuAI"));
+
 const Support = lazy(() => import("./pages/Support"));
 
 const UnifiedLeaderboard = lazy(() => import("./pages/UnifiedLeaderboard"));
