@@ -49,6 +49,7 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const isDesktop = !isMobile;
+  const isTelegram = useIsTelegram();
   
   const currentTabIndex = getTabIndexFromPath(location.pathname);
   const isOnMainTab = currentTabIndex !== -1;
