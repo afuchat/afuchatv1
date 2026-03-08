@@ -2141,14 +2141,24 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                     />
                   )}
                   
-                  {/* Message input */}
-                  <div className="flex-1 min-w-0 bg-muted/50 rounded-2xl flex items-end px-3 py-2 min-h-[44px]">
+                  {/* Message input — Telegram-style rounded container */}
+                  <div className="flex-1 min-w-0 bg-muted/40 rounded-[22px] flex items-end px-1 min-h-[44px]">
+                    {/* Attachment button inside input */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-full hover:bg-transparent flex-shrink-0 mb-[2px]"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Paperclip className="h-[20px] w-[20px] text-muted-foreground" />
+                    </Button>
+
                     <textarea
                       ref={textareaRef}
                       value={newMessage}
                       onChange={(e) => {
                         handleInputChange(e.target.value);
-                        // Auto-resize textarea
                         e.target.style.height = 'auto';
                         e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
                       }}
@@ -2156,17 +2166,27 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
                           handleSend();
-                          // Reset height after sending
                           if (textareaRef.current) {
                             textareaRef.current.style.height = 'auto';
                           }
                         }
                       }}
                       placeholder={selectedFile ? 'Add a caption...' : 'Message'}
-                      className="flex-1 min-w-0 bg-transparent border-none text-[15px] placeholder:text-muted-foreground focus:outline-none focus:ring-0 resize-none min-h-[28px] max-h-[120px] py-1 leading-relaxed"
+                      className="flex-1 min-w-0 bg-transparent border-none text-[15px] placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0 resize-none min-h-[28px] max-h-[120px] py-[9px] leading-[20px]"
                       disabled={sending}
                       rows={1}
                     />
+
+                    {/* GIF button inside input */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-full hover:bg-transparent flex-shrink-0 mb-[2px]"
+                      onClick={() => setIsGifPickerOpen(true)}
+                    >
+                      <span className="text-[11px] font-bold text-muted-foreground">GIF</span>
+                    </Button>
                   </div>
                   
                   {/* Send or Mic button */}
