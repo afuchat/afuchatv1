@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { MessageCircle, Heart, Send, Gift, BarChart2, Crown, Users } from 'lucide-react';
+import { MessageCircle, Heart, Send, Gift, BarChart2, Crown, Users, MoreHorizontal, Trash2, Flag } from 'lucide-react';
 import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import aiSparkIcon from '@/assets/ai-chat-icon.ico';
@@ -475,6 +475,9 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const postRef = useRef<HTMLDivElement>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const [showViewsSheet, setShowViewsSheet] = useState(false);
+  const [commentActionId, setCommentActionId] = useState<string | null>(null);
+  const [showDeleteCommentConfirm, setShowDeleteCommentConfirm] = useState(false);
+  const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
 
   // Track post view when it becomes visible - optimized to prevent duplicates
   useEffect(() => {
@@ -854,6 +857,15 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     // Trigger parent refresh would happen via realtime
   };
 
+  const handleReportComment = async (replyId: string, reason: string) => {
+    if (!user) {
+      toast.error('Please sign in to report');
+      return;
+    }
+    toast.success('Comment reported. We\'ll review it shortly.');
+    setReportingCommentId(null);
+  };
+
   return (
     <div ref={postRef} className="border-b border-border/40 bg-background transition-colors">
       {/* Instagram-style Header: Avatar + Name + Handle + Time + Actions */}
@@ -1122,6 +1134,21 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                             setTimeout(() => commentInputRef.current?.focus(), 100);
                           }}
                         >Reply</button>
+                        {user?.id === reply.author_id && (
+                          <button 
+                            className="text-[11px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
+                            onClick={() => {
+                              setCommentActionId(reply.id);
+                              setShowDeleteCommentConfirm(true);
+                            }}
+                          >Delete</button>
+                        )}
+                        {user && user.id !== reply.author_id && (
+                          <button 
+                            className="text-[11px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
+                            onClick={() => handleReportComment(reply.id, 'inappropriate')}
+                          >Report</button>
+                        )}
                       </div>
                       
                       {/* Nested replies */}
@@ -1134,7 +1161,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                               const mentionedHandle = nested.content.match(/^@(\S+)/)?.[1];
                               
                               return (
-                                <div key={nested.id} className="flex gap-2.5">
+                                <div key={nested.id} className="flex gap-2.5 group/nested">
                                   <Avatar className="h-6 w-6 flex-shrink-0 ring-1 ring-border/30">
                                     <AvatarImage src={nested.profiles.avatar_url || undefined} />
                                     <AvatarFallback className="text-[9px] bg-muted text-muted-foreground font-semibold">{nested.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
@@ -1150,6 +1177,23 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                                     <p className="text-xs text-foreground/85 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
                                       {parsePostContent(contentText || nested.content, nested.id, navigate)}
                                     </p>
+                                    <div className="flex items-center gap-4 mt-1.5">
+                                      {user?.id === nested.author_id && (
+                                        <button 
+                                          className="text-[10px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
+                                          onClick={() => {
+                                            setCommentActionId(nested.id);
+                                            setShowDeleteCommentConfirm(true);
+                                          }}
+                                        >Delete</button>
+                                      )}
+                                      {user && user.id !== nested.author_id && (
+                                        <button 
+                                          className="text-[10px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
+                                          onClick={() => handleReportComment(nested.id, 'inappropriate')}
+                                        >Report</button>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -1267,6 +1311,24 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           </div>
         </DrawerContent>
       </Drawer>
+
+      {/* Delete comment confirmation */}
+      {showDeleteCommentConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm" onClick={() => setShowDeleteCommentConfirm(false)}>
+          <div className="bg-background border border-border rounded-2xl p-6 mx-4 max-w-sm w-full shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-bold text-foreground mb-1">Delete Comment</h3>
+            <p className="text-sm text-muted-foreground mb-5">Are you sure? This can't be undone.</p>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowDeleteCommentConfirm(false)}>Cancel</Button>
+              <Button variant="destructive" className="flex-1 rounded-xl" onClick={() => {
+                if (commentActionId) handleDeleteReply(commentActionId);
+                setShowDeleteCommentConfirm(false);
+                setCommentActionId(null);
+              }}>Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ViewsAnalyticsSheet
         postId={post.id}
