@@ -1642,12 +1642,12 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh' }}>
         {/* Search Overlay */}
         {isSearchOpen && (
-          <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3 pt-[env(safe-area-inset-top)]">
-            <div className="flex items-center gap-3">
+          <div className="absolute inset-x-0 top-0 z-20 bg-background px-3 py-3 pt-[env(safe-area-inset-top)]">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full hover:bg-muted/50"
+                className="h-10 w-10 rounded-full hover:bg-muted/50 flex-shrink-0"
                 onClick={handleCloseSearch}
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -1658,48 +1658,47 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Search messages..."
-                  className="h-10 pl-10 pr-4 rounded-full bg-muted border-0"
+                  className="h-10 pl-10 pr-4 rounded-full bg-muted/50 border-0 text-[15px]"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
             </div>
             {searchQuery && (
-              <div className="mt-3 max-h-64 overflow-y-auto">
+              <div className="mt-2 max-h-64 overflow-y-auto">
                 {searchResults.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {searchResults.map(msg => (
                       <div 
                         key={msg.id} 
-                        className="p-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80"
+                        className="px-3 py-2.5 rounded-xl cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors"
                         onClick={() => {
                           handleCloseSearch();
-                          // Scroll to message (would need message refs for exact scroll)
                           const msgElement = document.querySelector(`[data-message-id="${msg.id}"]`);
                           msgElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }}
                       >
-                        <p className="text-xs text-muted-foreground mb-1">
-                          {msg.profiles?.display_name} • {new Date(msg.sent_at).toLocaleDateString()}
+                        <p className="text-[12px] text-muted-foreground mb-0.5">
+                          {msg.profiles?.display_name} · {new Date(msg.sent_at).toLocaleDateString()}
                         </p>
-                        <p className="text-sm line-clamp-2">{msg.encrypted_content}</p>
+                        <p className="text-[14px] text-foreground line-clamp-2">{msg.encrypted_content}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No messages found</p>
+                  <p className="text-[13px] text-muted-foreground text-center py-6">No messages found</p>
                 )}
               </div>
             )}
           </div>
         )}
 
-        {/* X-style Header - Clean and minimal */}
-        <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10 pt-[env(safe-area-inset-top)]">
+        {/* Telegram-style Header — flat, clean, information-dense */}
+        <header className="flex-shrink-0 flex items-center gap-2 px-2 h-14 bg-background z-10 pt-[env(safe-area-inset-top)]">
           {!isEmbedded && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full hover:bg-muted/50"
+              className="h-10 w-10 rounded-full hover:bg-muted/50 flex-shrink-0"
               onClick={handleBack}
             >
               <ArrowLeft className="h-5 w-5" />
@@ -1707,7 +1706,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           )}
           
           <div 
-            className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+            className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer active:opacity-80 transition-opacity"
             onClick={() => {
               if (chatInfo?.is_group) {
                 setIsGroupSettingsOpen(true);
@@ -1720,12 +1719,12 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
               userId={chatInfo?.is_group ? chatId! : (otherUser?.id || 'unknown')}
               avatarUrl={chatInfo?.is_group ? chatInfo.avatar_url : otherUser?.avatar_url} 
               name={chatInfo?.is_group ? (chatInfo.name || 'Group') : (otherUser?.display_name || 'Chat')} 
-              size={40}
+              size={42}
               enableLightbox={true}
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
-                <h2 className="font-bold text-base truncate">
+                <h2 className="font-semibold text-[16px] truncate leading-tight">
                   {chatInfo?.is_group ? (chatInfo.name || 'Group') : (otherUser?.display_name || 'Chat')}
                 </h2>
                 {otherUser && !chatInfo?.is_group && otherUser.is_warned && (
@@ -1740,13 +1739,13 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   />
                 )}
               </div>
-              {/* Last seen / Online status / Typing */}
+              {/* Status line */}
               {!chatInfo?.is_group && otherUser && (
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-[12px] text-muted-foreground truncate leading-tight mt-px">
                   {typingUsers.length > 0 ? (
-                    <span className="text-primary">typing...</span>
+                    <span className="text-primary font-medium">typing...</span>
                   ) : online ? (
-                    <span className="text-green-500">online</span>
+                    <span className="text-primary">online</span>
                   ) : otherUser.show_online_status !== false && otherUser.last_seen ? (
                     `last seen ${formatLastSeen(otherUser.last_seen)}`
                   ) : (
@@ -1755,9 +1754,9 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                 </p>
               )}
               {chatInfo?.is_group && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[12px] text-muted-foreground leading-tight mt-px">
                   {typingUsers.length > 0 ? (
-                    <span className="text-primary">{typingUsers[0]} is typing...</span>
+                    <span className="text-primary font-medium">{typingUsers[0]} is typing...</span>
                   ) : (
                     'Tap for group info'
                   )}
@@ -1766,98 +1765,95 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
             </div>
           </div>
 
-          {chatInfo?.is_group && isGroupAdmin && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full hover:bg-muted/50"
-              onClick={() => setIsGroupSettingsOpen(true)}
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-          )}
-          
-        {/* Dropdown menu for groups (leave) or 1-on-1 chats (delete) - Telegram style */}
-          {(chatInfo?.is_group && isMember) || (!chatInfo?.is_group && otherUser) ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-full hover:bg-muted/50"
-                >
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-1">
-                <DropdownMenuItem 
-                  className="gap-3 py-3 cursor-pointer"
-                  onClick={handleMuteChat}
-                >
-                  {isMuted ? (
-                    <Bell className="h-5 w-5 text-muted-foreground" />
-                  ) : (
-                    <BellOff className="h-5 w-5 text-muted-foreground" />
+          <div className="flex items-center flex-shrink-0">
+            {chatInfo?.is_group && isGroupAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full hover:bg-muted/50"
+                onClick={() => setIsGroupSettingsOpen(true)}
+              >
+                <Settings className="h-[18px] w-[18px]" />
+              </Button>
+            )}
+            
+            {(chatInfo?.is_group && isMember) || (!chatInfo?.is_group && otherUser) ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-full hover:bg-muted/50"
+                  >
+                    <MoreVertical className="h-[18px] w-[18px]" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 rounded-xl p-1">
+                  <DropdownMenuItem 
+                    className="gap-3 py-2.5 rounded-lg cursor-pointer text-[14px]"
+                    onClick={handleMuteChat}
+                  >
+                    {isMuted ? <Bell className="h-[18px] w-[18px] text-muted-foreground" /> : <BellOff className="h-[18px] w-[18px] text-muted-foreground" />}
+                    <span>{isMuted ? 'Unmute' : 'Mute'}</span>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem 
+                    className="gap-3 py-2.5 rounded-lg cursor-pointer text-[14px]"
+                    onClick={handleSearchMessages}
+                  >
+                    <Search className="h-[18px] w-[18px] text-muted-foreground" />
+                    <span>Search</span>
+                  </DropdownMenuItem>
+                  
+                  {canClearHistory && (
+                    <DropdownMenuItem 
+                      className="gap-3 py-2.5 rounded-lg cursor-pointer text-[14px]"
+                      onClick={() => setIsClearHistoryOpen(true)}
+                    >
+                      <svg className="h-[18px] w-[18px] text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
+                        <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                      </svg>
+                      <span>Clear History</span>
+                    </DropdownMenuItem>
                   )}
-                  <span>{isMuted ? 'Unmute' : 'Mute'}</span>
-                </DropdownMenuItem>
-                
-                
-                <DropdownMenuItem 
-                  className="gap-3 py-3 cursor-pointer"
-                  onClick={handleSearchMessages}
-                >
-                  <Search className="h-5 w-5 text-muted-foreground" />
-                  <span>Search</span>
-                </DropdownMenuItem>
-                
-                
-                {canClearHistory && (
-                  <DropdownMenuItem 
-                    className="gap-3 py-3 cursor-pointer"
-                    onClick={() => setIsClearHistoryOpen(true)}
-                  >
-                    <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
-                      <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                    </svg>
-                    <span>Clear History</span>
-                  </DropdownMenuItem>
-                )}
-                
-                {chatInfo?.is_group ? (
-                  <DropdownMenuItem 
-                    onClick={handleLeaveGroup}
-                    className="gap-3 py-3 cursor-pointer text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                    <span>Delete and Exit</span>
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem 
-                    onClick={handleDeleteChat}
-                    className="gap-3 py-3 cursor-pointer text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                    <span>Delete Chat</span>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
+                  
+                  {chatInfo?.is_group ? (
+                    <DropdownMenuItem 
+                      onClick={handleLeaveGroup}
+                      className="gap-3 py-2.5 rounded-lg cursor-pointer text-[14px] text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-[18px] w-[18px]" />
+                      <span>Delete and Exit</span>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem 
+                      onClick={handleDeleteChat}
+                      className="gap-3 py-2.5 rounded-lg cursor-pointer text-[14px] text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-[18px] w-[18px]" />
+                      <span>Delete Chat</span>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+          </div>
         </header>
 
         {/* Messages container - only this scrolls */}
         <div 
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-4 bg-background" 
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-3 bg-background" 
           style={{ fontSize: `${chatPreferences.fontSize}px` }}
         >
           {messages.length === 0 && redEnvelopes.length === 0 && chatGifts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-3 px-4">
-              <MessageSquare className="h-14 w-14 text-muted-foreground/40" />
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 px-6">
+              <div className="h-16 w-16 rounded-full bg-muted/40 flex items-center justify-center">
+                <MessageSquare className="h-7 w-7 text-muted-foreground/30" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-foreground/80">No messages yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Start the conversation!</p>
+                <p className="text-[15px] font-medium text-foreground/70">No messages yet</p>
+                <p className="text-[13px] text-muted-foreground mt-1">Start the conversation!</p>
               </div>
             </div>
           ) : (
@@ -1975,24 +1971,24 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
         {/* Reply Preview - positioned above input */}
         {isMember && replyToMessage && !selectedFile && (
-          <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border px-4 py-2">
-            <div className="flex items-center gap-3">
-              <div className="w-1 h-10 bg-primary rounded-full flex-shrink-0" />
+          <div className="flex-shrink-0 bg-background px-4 py-2">
+            <div className="flex items-center gap-2.5 bg-muted/40 rounded-xl px-3 py-2">
+              <div className="w-[3px] h-8 bg-primary rounded-full flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-primary truncate">
+                <p className="text-[12px] font-semibold text-primary leading-tight">
                   Replying to {replyToMessage.profiles?.display_name || 'User'}
                 </p>
-                <p className="text-sm text-foreground/80 truncate mt-0.5">
+                <p className="text-[13px] text-foreground/70 truncate mt-0.5">
                   {replyToMessage.audio_url ? '🎤 Voice message' : replyToMessage.encrypted_content}
                 </p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full hover:bg-muted flex-shrink-0"
+                className="h-7 w-7 rounded-full hover:bg-muted flex-shrink-0"
                 onClick={() => setReplyToMessage(null)}
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
@@ -2022,7 +2018,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         {/* Input: X-style - Fixed at bottom */}
         {/* For channels, only admins can send messages */}
         {isMember && (!chatInfo?.is_channel || isGroupAdmin) && (
-          <div className="flex-shrink-0 bg-background border-t border-border px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]" style={{ position: 'sticky', bottom: 0, zIndex: 10 }}>
+          <div className="flex-shrink-0 bg-background px-2 py-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]" style={{ position: 'sticky', bottom: 0, zIndex: 10 }}>
             <input
               ref={fileInputRef}
               type="file"
@@ -2030,7 +2026,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
               accept="image/*,image/gif,.pdf,.doc,.docx,.txt"
               onChange={handleFileSelect}
             />
-            <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-1.5 w-full">
+            <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-end gap-1 w-full">
               {recording ? (
                 <div className="flex-1 flex items-center gap-2 px-4 py-2.5 bg-destructive/10 rounded-full border border-destructive/20">
                   <div className="w-2.5 h-2.5 bg-destructive rounded-full animate-pulse" />
@@ -2094,29 +2090,6 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                 </div>
               ) : (
                 <>
-                  {/* Plus button for attachments */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-full hover:bg-muted/50 flex-shrink-0"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Paperclip className="h-5 w-5 text-foreground" />
-                  </Button>
-
-                  {/* GIF button */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-full hover:bg-muted/50 flex-shrink-0"
-                    onClick={() => setIsGifPickerOpen(true)}
-                  >
-                    <span className="text-xs font-bold text-foreground">GIF</span>
-                  </Button>
-
-
                   {/* Gift button - only for 1-on-1 chats */}
                   {!chatInfo?.is_group && !chatInfo?.is_channel && otherUser && (
                     <SendGiftDialog
@@ -2145,14 +2118,24 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                     />
                   )}
                   
-                  {/* Message input */}
-                  <div className="flex-1 min-w-0 bg-muted/50 rounded-2xl flex items-end px-3 py-2 min-h-[44px]">
+                  {/* Message input — Telegram-style rounded container */}
+                  <div className="flex-1 min-w-0 bg-muted/40 rounded-[22px] flex items-end px-1 min-h-[44px]">
+                    {/* Attachment button inside input */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-full hover:bg-transparent flex-shrink-0 mb-[2px]"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Paperclip className="h-[20px] w-[20px] text-muted-foreground" />
+                    </Button>
+
                     <textarea
                       ref={textareaRef}
                       value={newMessage}
                       onChange={(e) => {
                         handleInputChange(e.target.value);
-                        // Auto-resize textarea
                         e.target.style.height = 'auto';
                         e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
                       }}
@@ -2160,17 +2143,27 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
                           handleSend();
-                          // Reset height after sending
                           if (textareaRef.current) {
                             textareaRef.current.style.height = 'auto';
                           }
                         }
                       }}
                       placeholder={selectedFile ? 'Add a caption...' : 'Message'}
-                      className="flex-1 min-w-0 bg-transparent border-none text-[15px] placeholder:text-muted-foreground focus:outline-none focus:ring-0 resize-none min-h-[28px] max-h-[120px] py-1 leading-relaxed"
+                      className="flex-1 min-w-0 bg-transparent border-none text-[15px] placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0 resize-none min-h-[28px] max-h-[120px] py-[9px] leading-[20px]"
                       disabled={sending}
                       rows={1}
                     />
+
+                    {/* GIF button inside input */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-full hover:bg-transparent flex-shrink-0 mb-[2px]"
+                      onClick={() => setIsGifPickerOpen(true)}
+                    >
+                      <span className="text-[11px] font-bold text-muted-foreground">GIF</span>
+                    </Button>
                   </div>
                   
                   {/* Send or Mic button */}

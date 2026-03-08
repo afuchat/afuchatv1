@@ -549,16 +549,16 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
         onSearch={(query) => setSearchQuery(query)}
       />
 
-      {/* Filter Tabs */}
-      <div className="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-background border-b border-border overflow-x-auto scrollbar-hide">
+      {/* Filter Tabs — Telegram pill style */}
+      <div className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 bg-background overflow-x-auto scrollbar-hide">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`px-4 py-[6px] rounded-full text-[13px] font-semibold transition-all whitespace-nowrap ${
               activeTab === tab.key
-                ? 'bg-foreground text-background'
-                : 'bg-transparent border border-border text-foreground hover:bg-muted/50'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted/60 text-muted-foreground hover:bg-muted'
             }`}
           >
             {tab.label}
@@ -573,13 +573,15 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {filteredChats.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-            <Search className="h-12 w-12 text-muted-foreground/50 mb-3" />
-            <p className="text-muted-foreground font-medium">
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+              <Search className="h-7 w-7 text-muted-foreground/40" />
+            </div>
+            <p className="text-[15px] font-semibold text-foreground">
               {searchQuery ? 'No chats found' : activeTab === 'requests' ? 'No message requests' : 'No chats yet'}
             </p>
-            <p className="text-sm text-muted-foreground/70 mt-1">
-              {searchQuery ? 'Try searching with different keywords' : 'Start a conversation!'}
+            <p className="text-[13px] text-muted-foreground mt-1.5 max-w-[240px]">
+              {searchQuery ? 'Try different keywords' : 'Start a new conversation to begin messaging.'}
             </p>
           </div>
         ) : (
@@ -588,17 +590,18 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
               ? (chat.name || 'Group Chat')
               : (chat.other_user?.display_name || 'User');
             const handle = chat.is_group ? null : chat.other_user?.handle;
+            const hasUnread = chat.unread_count && chat.unread_count > 0;
             
             return (
               <div
                 key={chat.id}
                 onClick={() => navigate(`/chat/${chat.id}`)}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 active:bg-muted/50 cursor-pointer transition-colors border-b border-border/50"
+                className="flex items-center gap-3 px-4 py-[10px] hover:bg-muted/20 active:bg-muted/40 cursor-pointer transition-colors"
               >
                 {/* Avatar */}
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 relative">
                   {chat.is_group ? (
-                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                    <div className="h-[52px] w-[52px] rounded-full bg-muted flex items-center justify-center overflow-hidden">
                       {chat.avatar_url ? (
                         <img 
                           src={chat.avatar_url} 
@@ -614,7 +617,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
                       userId={chat.other_user?.id || chat.id}
                       avatarUrl={chat.other_user?.avatar_url}
                       name={chatName}
-                      size={48}
+                      size={52}
                       isBusiness={chat.other_user?.is_business_mode}
                       enableLightbox={true}
                     />
@@ -622,59 +625,52 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
                 </div>
 
                 {/* Chat info */}
-                <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                    <span className="font-bold text-foreground truncate max-w-[120px]" title={chatName}>
-                      {chatName.length > 12 ? `${chatName.slice(0, 10)}...` : chatName}
-                    </span>
-                    {/* Show warning badge for 1-on-1 chats with warned users */}
-                    {!chat.is_group && chat.other_user?.is_warned && (
-                      <WarningBadge size="sm" reason={chat.other_user?.warning_reason} variant="post" />
-                    )}
-                    {/* Show verified badge for groups/channels */}
-                    {chat.is_group && chat.is_verified && (
-                      <VerifiedBadge 
-                        isVerified={true}
-                        size="sm"
-                      />
-                    )}
-                    {/* Show verified badge for 1-on-1 chats */}
-                    {!chat.is_group && (chat.other_user?.is_organization_verified || chat.other_user?.is_verified) && (
-                      <VerifiedBadge 
-                        isOrgVerified={chat.other_user?.is_organization_verified || false}
-                        isVerified={chat.other_user?.is_verified || false}
-                        size="sm"
-                      />
-                    )}
-                    {handle && (
-                      <span className="text-muted-foreground text-sm truncate">
-                        @{handle}
+                <div className="flex-1 min-w-0 py-0.5">
+                  <div className="flex items-center justify-between gap-2 mb-[3px]">
+                    <div className="flex items-center gap-1 min-w-0 flex-1">
+                      <span className={`font-semibold text-[15px] truncate ${hasUnread ? 'text-foreground' : 'text-foreground'}`}>
+                        {chatName}
                       </span>
-                    )}
-                  </div>
-                  <p className={`text-sm truncate mt-0.5 ${chat.unread_count && chat.unread_count > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                    {chat.last_message_content || 'No messages yet'}
-                  </p>
-                </div>
-
-                {/* Right side - Date & Unread count */}
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span className="text-xs text-muted-foreground">
-                    {formatTime(chat.updated_at)}
-                  </span>
-                  {chat.unread_count && chat.unread_count > 0 ? (
-                    <div className="min-w-5 h-5 px-1.5 rounded-full bg-primary flex items-center justify-center">
-                      <span className="text-[11px] font-bold text-primary-foreground">
-                        {chat.unread_count > 99 ? '99+' : chat.unread_count}
+                      {!chat.is_group && chat.other_user?.is_warned && (
+                        <WarningBadge size="sm" reason={chat.other_user?.warning_reason} variant="post" />
+                      )}
+                      {chat.is_group && chat.is_verified && (
+                        <VerifiedBadge isVerified={true} size="sm" />
+                      )}
+                      {!chat.is_group && (chat.other_user?.is_organization_verified || chat.other_user?.is_verified) && (
+                        <VerifiedBadge 
+                          isOrgVerified={chat.other_user?.is_organization_verified || false}
+                          isVerified={chat.other_user?.is_verified || false}
+                          size="sm"
+                        />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {/* Read status tick for sent messages */}
+                      {!hasUnread && chat.last_message_sent_by_me && (
+                        chat.last_message_read_by_receiver ? (
+                          <CheckCheck className="h-[15px] w-[15px] text-primary" />
+                        ) : (
+                          <Check className="h-[15px] w-[15px] text-muted-foreground" />
+                        )
+                      )}
+                      <span className={`text-[12px] ${hasUnread ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
+                        {formatTime(chat.updated_at)}
                       </span>
                     </div>
-                  ) : chat.last_message_sent_by_me ? (
-                    chat.last_message_read_by_receiver ? (
-                      <CheckCheck className="h-4 w-4 text-primary" />
-                    ) : (
-                      <Check className="h-4 w-4 text-muted-foreground" />
-                    )
-                  ) : null}
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`text-[14px] truncate flex-1 ${hasUnread ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                      {chat.last_message_content || 'No messages yet'}
+                    </p>
+                    {hasUnread && (
+                      <div className="min-w-[20px] h-5 px-[6px] rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <span className="text-[11px] font-bold text-primary-foreground leading-none">
+                          {chat.unread_count! > 99 ? '99+' : chat.unread_count}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
