@@ -621,8 +621,6 @@ const Search = () => {
     }
 
     setLoading(true);
-    addToSearchHistory(trimmedQuery);
-    setHistoryKey(prev => prev + 1);
     navigate(`?q=${encodeURIComponent(trimmedQuery)}`, { replace: true });
 
     const searchConfig = 'english'; 
