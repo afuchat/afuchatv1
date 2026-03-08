@@ -1145,13 +1145,12 @@ html.telegram-mini-app * {
   scrollbar-width: none;
 }
 
-/* Touch optimization for Telegram */
-html.telegram-mini-app * {
+/* Touch optimization for Telegram — exclude inputs & textareas */
+html.telegram-mini-app *:not(input):not(textarea):not([contenteditable="true"]) {
   -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
 }
 
-/* Prevent text selection in interactive elements */
+/* Prevent text selection in interactive elements (not text inputs) */
 html.telegram-mini-app button,
 html.telegram-mini-app a,
 html.telegram-mini-app [role="button"],
@@ -1159,6 +1158,23 @@ html.telegram-mini-app input[type="button"],
 html.telegram-mini-app input[type="submit"] {
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Ensure text inputs are fully interactive */
+html.telegram-mini-app input[type="text"],
+html.telegram-mini-app input[type="search"],
+html.telegram-mini-app input[type="email"],
+html.telegram-mini-app input[type="password"],
+html.telegram-mini-app input[type="number"],
+html.telegram-mini-app input[type="tel"],
+html.telegram-mini-app input[type="url"],
+html.telegram-mini-app input:not([type]),
+html.telegram-mini-app textarea,
+html.telegram-mini-app [contenteditable="true"] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
+  touch-action: manipulation !important;
 }
 
 /* Telegram-specific: softer active state for nav items (matches native feel) */
