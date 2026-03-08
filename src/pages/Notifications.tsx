@@ -198,7 +198,7 @@ const NotificationRow = ({
               className="h-8 text-xs"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/profile/${actor.handle}`);
+                navigate(`/${actor.handle}`);
               }}
             >
               <Eye className="h-3.5 w-3.5 mr-1" />
