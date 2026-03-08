@@ -328,11 +328,14 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
 
       {/* Mobile Bottom Navigation - Solid bar with liquid glass on active tabs */}
       {!shouldHideNav && (
-        <div className={cn(
-          "lg:hidden fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
-          (isNavHidden || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
-        )}>
-          <nav className="bg-background">
+        <div
+          className={cn(
+            "lg:hidden fixed left-0 right-0 z-50 transition-all duration-300 ease-out",
+            (isNavHidden || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
+          )}
+          style={{ bottom: 'var(--tg-safe-bottom, 0px)' }}
+        >
+          <nav className="bg-background border-t border-border/40">
             <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
               {/* Home */}
               <Link
@@ -380,8 +383,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                 />
               </Link>
               
-              
-              {/* Notifications - Auth required */}
+              {/* Notifications */}
               {user ? (
                 <Link
                   to="/notifications"
@@ -417,7 +419,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                 </Link>
               )}
               
-              {/* Chats - Auth required */}
+              {/* Chats */}
               {user ? (
                 <Link
                   to="/chats"
@@ -454,9 +456,14 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
               )}
             </div>
           </nav>
-          {/* Safe area padding for devices with home indicator */}
-          <div className="bg-background h-[env(safe-area-inset-bottom)]" />
         </div>
+      )}
+      {/* Bottom safe area background fill */}
+      {!shouldHideNav && (
+        <div
+          className="lg:hidden fixed bottom-0 left-0 right-0 bg-background z-40"
+          style={{ height: 'var(--tg-safe-bottom, env(safe-area-inset-bottom, 0px))' }}
+        />
       )}
     </div>
   );
