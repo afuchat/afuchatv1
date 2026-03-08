@@ -129,9 +129,9 @@ export const PostShortPlayer = ({
     setLocalLikes(prev => wasLiked ? prev - 1 : prev + 1);
 
     if (wasLiked) {
-      await supabase.from('post_likes').delete().eq('post_id', post.id).eq('user_id', user.id);
+      await supabase.from('post_acknowledgments').delete().eq('post_id', post.id).eq('user_id', user.id);
     } else {
-      await supabase.from('post_likes').insert({ post_id: post.id, user_id: user.id });
+      await supabase.from('post_acknowledgments').insert({ post_id: post.id, user_id: user.id });
     }
   };
 
