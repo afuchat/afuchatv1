@@ -227,10 +227,11 @@ const AppRoutes = () => {
 
   return (
     <>
+      <ScrollToTop />
       <LoadingBar />
       <Suspense fallback={
         <motion.div 
-          className="flex items-center justify-center min-h-screen"
+          className="flex items-center justify-center h-full min-h-[50vh]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
