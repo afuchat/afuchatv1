@@ -217,13 +217,13 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsScrollingDown(true);
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        setIsNavHidden(true);
       } else {
-        setIsScrollingDown(false);
+        setIsNavHidden(false);
       }
       
-      setLastScrollY(currentScrollY);
+      lastScrollY.current = currentScrollY;
     };
 
     const handleChatScroll = (e: CustomEvent) => {
@@ -237,7 +237,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('chat-scroll-state' as any, handleChatScroll as any);
     };
-  }, [lastScrollY, isMobile]);
+  }, [isMobile]);
 
   // Show desktop-friendly layout instead of blocking
   const isDesktop = !isMobile;
