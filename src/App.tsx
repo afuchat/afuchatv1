@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AccountModeProvider } from "./contexts/AccountModeContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -136,14 +136,32 @@ const ProfileRedirect = () => {
   return <Navigate to={`/@${userId}`} replace />;
 };
 
-// Referral redirect: afuchat.com/username -> signup with ref
 // Smart catch-all: renders Profile for @handle, or does referral redirect for bare usernames
+// Also handles sub-routes like /@handle/edit, /@handle/followers, /@handle/following
 const UsernameOrReferral = () => {
   const { username } = useParams();
-  const navigate = useNavigate();
+  const location = useLocation();
 
-  // If path is /@handle, render profile directly (no redirect needed)
+  // If path starts with @, it's a profile route
   if (username?.startsWith('@')) {
+    const subPath = location.pathname.split('/').slice(2).join('/'); // e.g. "edit", "followers", "following"
+    
+    if (subPath === 'edit') {
+      return (
+        <RequireBanCheck><RequireCountry><RequireDateOfBirth>
+          <Layout><EditProfile /></Layout>
+        </RequireDateOfBirth></RequireCountry></RequireBanCheck>
+      );
+    }
+    
+    if (subPath === 'followers') {
+      return <Layout><Followers /></Layout>;
+    }
+    
+    if (subPath === 'following') {
+      return <Layout><Following /></Layout>;
+    }
+
     return (
       <Layout>
         <Profile mustExist={true} />
@@ -314,13 +332,8 @@ const AppRoutes = () => {
 
       <Route path="/profile/:userId" element={<ProfileRedirect />} />
 
-      {/* Profile routes with @ prefix - these will show user not found if user doesn't exist */}
-      <Route path="/@:userId/edit" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><EditProfile /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/@:userId/followers" element={<Layout><Followers /></Layout>} />
-      <Route path="/@:userId/following" element={<Layout><Following /></Layout>} />
-      <Route path="/@:userId" element={<Layout><Profile mustExist={true} /></Layout>} />
-
-      {/* Referral route: afuchat.com/username redirects to signup with referral code */}
+      {/* Catch-all: /@handle, /@handle/edit, /@handle/followers, /@handle/following, or /username for referrals */}
+      <Route path="/:username/*" element={<UsernameOrReferral />} />
       <Route path="/:username" element={<UsernameOrReferral />} />
 
       <Route path="/user-not-found" element={<UserNotFound />} />
