@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Home, Search, Bell, MessageCircle } from 'lucide-react';
@@ -42,7 +42,7 @@ const isMainTabRoute = (pathname: string): boolean => {
   return getTabIndexFromPath(pathname) !== -1;
 };
 
-export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScrollHide = false }: MainTabsNavigationProps) => {
+export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTabsNavigationProps) => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,6 +53,11 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
   const isOnMainTab = currentTabIndex !== -1;
   
   const [activeTab, setActiveTab] = useState<number>(Math.max(0, currentTabIndex));
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadChats, setUnreadChats] = useState(0);
+  const [isNavHidden, setIsNavHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
   
