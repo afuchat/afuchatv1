@@ -490,6 +490,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionResults, setMentionResults] = useState<Array<{ id: string; handle: string; display_name: string; avatar_url: string | null }>>([]);
+  const [showOtherReasonInput, setShowOtherReasonInput] = useState(false);
+  const [otherReasonText, setOtherReasonText] = useState('');
 
   const EMOJI_CATEGORIES = {
     'Smileys': ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🫢', '🤫', '🤔'],
@@ -539,6 +541,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const openReportCard = (commentId: string) => {
     setReportTargetId(commentId);
     setShowReportCard(true);
+    setShowOtherReasonInput(false);
+    setOtherReasonText('');
   };
 
   const handleReplyTextChange = async (value: string) => {
@@ -1204,20 +1208,22 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <span 
-                            className="font-semibold text-[13px] text-foreground cursor-pointer hover:underline" 
-                            onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}
-                          >
-                            {reply.profiles.display_name}
-                          </span>
-                          <VerifiedBadge 
-                            isVerified={reply.profiles.is_verified || reply.is_developer}
-                            isOrgVerified={reply.profiles.is_organization_verified}
-                            isAffiliate={reply.profiles.is_affiliate}
-                            isDeveloper={reply.is_developer}
-                            size="sm"
-                            userId={reply.author_id}
-                          />
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span 
+                              className="font-semibold text-[13px] text-foreground cursor-pointer hover:underline" 
+                              onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}
+                            >
+                              {reply.profiles.display_name}
+                            </span>
+                            <VerifiedBadge 
+                              isVerified={reply.profiles.is_verified || reply.is_developer}
+                              isOrgVerified={reply.profiles.is_organization_verified}
+                              isAffiliate={reply.profiles.is_affiliate}
+                              isDeveloper={reply.is_developer}
+                              size="sm"
+                              userId={reply.author_id}
+                            />
+                          </div>
                           <p className="text-[13px] text-foreground/90 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
                             {parsePostContent(reply.content, reply.id, navigate)}
                           </p>
@@ -1596,7 +1602,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                       { key: 'harassment', label: 'Harassment', icon: '😤' },
                       { key: 'hate_speech', label: 'Hate speech', icon: '🛑' },
                       { key: 'inappropriate', label: 'Inappropriate', icon: '⚠️' },
-                      { key: 'other', label: 'Something else', icon: '📝' },
                     ].map((reason) => (
                       <button
                         key={reason.key}
@@ -1607,14 +1612,49 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         <span className="text-[13px] text-foreground">{reason.label}</span>
                       </button>
                     ))}
-                  </div>
-                  <div className="border-t border-border">
-                    <button 
-                      className="w-full py-2 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
-                      onClick={() => { setShowReportCard(false); setReportTargetId(null); }}
-                    >
-                      Cancel
-                    </button>
+                    {/* Something else — with text input */}
+                    {!showOtherReasonInput ? (
+                      <button
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-muted/50 transition-colors active:bg-muted"
+                        onClick={() => setShowOtherReasonInput(true)}
+                      >
+                        <span className="text-sm">📝</span>
+                        <span className="text-[13px] text-foreground">Something else</span>
+                      </button>
+                    ) : (
+                      <div className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={otherReasonText}
+                            onChange={(e) => setOtherReasonText(e.target.value)}
+                            placeholder="Describe the issue..."
+                            autoFocus
+                            className="flex-1 text-[13px] bg-muted/50 border border-border/50 rounded-lg px-3 py-1.5 text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/40 min-w-0"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && otherReasonText.trim() && reportTargetId) {
+                                handleReportComment(reportTargetId, `other: ${otherReasonText.trim()}`);
+                                setOtherReasonText('');
+                                setShowOtherReasonInput(false);
+                              }
+                            }}
+                          />
+                          <button
+                            disabled={!otherReasonText.trim()}
+                            onClick={() => {
+                              if (reportTargetId && otherReasonText.trim()) {
+                                handleReportComment(reportTargetId, `other: ${otherReasonText.trim()}`);
+                                setOtherReasonText('');
+                                setShowOtherReasonInput(false);
+                              }
+                            }}
+                            className={cn("text-xs font-bold transition-all", otherReasonText.trim() ? "text-primary" : "text-primary/30")}
+                          >
+                            Send
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
