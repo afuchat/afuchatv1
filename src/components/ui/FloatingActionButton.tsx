@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Feather, X, Send, FileEdit, MessageSquare } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -26,8 +26,8 @@ interface FloatingActionButtonProps {
 const FloatingActionButton = ({ wallPostAction, profileActions }: FloatingActionButtonProps) => {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
-  const [isScrollingDown, setIsScrollingDown] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isHidden, setIsHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,23 +39,32 @@ const FloatingActionButton = ({ wallPostAction, profileActions }: FloatingAction
     setIsOpen(false);
   }, [location.pathname]);
 
-  // Handle scroll to hide/show FAB
+  // Handle scroll to hide/show FAB - listen to both window scroll and container scroll events
   useEffect(() => {
-    const handleScroll = () => {
+    const handleWindowScroll = () => {
       const currentScrollY = window.scrollY;
       
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsScrollingDown(true);
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        setIsHidden(true);
       } else {
-        setIsScrollingDown(false);
+        setIsHidden(false);
       }
       
-      setLastScrollY(currentScrollY);
+      lastScrollY.current = currentScrollY;
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+    // Listen for nav-scroll-state from MainTabsNavigation container scroll
+    const handleNavScroll = (e: CustomEvent) => {
+      setIsHidden(e.detail.hidden);
+    };
+
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    window.addEventListener('nav-scroll-state' as any, handleNavScroll as any);
+    return () => {
+      window.removeEventListener('scroll', handleWindowScroll);
+      window.removeEventListener('nav-scroll-state' as any, handleNavScroll as any);
+    };
+  }, []);
 
   const handleActionClick = (action: () => void) => {
     setIsOpen(false);
