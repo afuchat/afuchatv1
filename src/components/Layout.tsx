@@ -302,7 +302,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
 
   if (onMainTab && !shouldHideNav) {
     return (
-      <div className="h-[100dvh] overflow-hidden bg-background select-none touch-pan-y">
+      <div className={cn(
+        "h-[100dvh] overflow-hidden bg-background select-none touch-pan-y",
+        isTelegram && "h-full"
+      )}>
         <MainTabsNavigation chatScrollHide={chatScrollHide}>
           {children}
         </MainTabsNavigation>
@@ -314,11 +317,15 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     <div
       className={cn(
         "min-h-screen bg-background select-none touch-pan-y overflow-y-auto",
-        isDesktop && "desktop-scrollbar"
+        isDesktop && "desktop-scrollbar",
+        isTelegram && "h-full tg-page-scroll min-h-0"
       )}
     >
       {/* Main Content */}
-      <main className={shouldHideUI ? "min-h-screen" : "pb-20 min-h-screen"}>
+      <main className={cn(
+        shouldHideUI ? "min-h-screen" : "pb-20 min-h-screen",
+        isTelegram && "min-h-0"
+      )}>
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

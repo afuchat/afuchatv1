@@ -129,7 +129,7 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!telegram.isTelegram || !telegram.isReady) return;
     
-    const isHomePage = location.pathname === '/' || location.pathname === '/home';
+    const isRootPage = ['/', '/home', '/auth/welcome'].includes(location.pathname);
     
     const handleBackClick = () => {
       telegram.hapticFeedback.impactOccurred('light');
@@ -137,11 +137,11 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
       if (window.history.length > 1) {
         navigate(-1);
       } else {
-        navigate('/');
+        navigate('/home');
       }
     };
     
-    if (isHomePage) {
+    if (isRootPage) {
       telegram.backButton.hide();
     } else {
       telegram.backButton.show();

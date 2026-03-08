@@ -62,11 +62,12 @@ html.telegram-mini-app body {
 /* Global safe area for all content in Telegram Mini App */
 html.telegram-mini-app #root {
   padding-top: var(--tg-safe-top, 0px);
-  padding-bottom: var(--tg-safe-bottom, 0px);
   padding-left: var(--tg-safe-left, 0px);
   padding-right: var(--tg-safe-right, 0px);
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Ensure fixed headers account for combined safe area in Telegram */
@@ -78,6 +79,32 @@ html.telegram-mini-app .sticky.top-0 {
 /* Ensure fixed bottom bars account for combined safe area in Telegram */
 html.telegram-mini-app .fixed.bottom-0 {
   bottom: var(--tg-safe-bottom, 0px) !important;
+}
+
+/* ====== Telegram: Hide ALL in-app back buttons ====== */
+/* Telegram provides its own native back button via BackButton API.
+   Hide any ArrowLeft / ChevronLeft icon buttons rendered by pages. */
+html.telegram-mini-app button:has(> .lucide-arrow-left),
+html.telegram-mini-app button:has(> .lucide-chevron-left),
+html.telegram-mini-app a:has(> .lucide-arrow-left),
+html.telegram-mini-app a:has(> .lucide-chevron-left) {
+  display: none !important;
+}
+
+/* Also hide Button components (rendered as <button>) wrapping the icon */
+html.telegram-mini-app [role="button"]:has(> .lucide-arrow-left),
+html.telegram-mini-app [role="button"]:has(> .lucide-chevron-left) {
+  display: none !important;
+}
+
+/* ====== Telegram: Proper page containment ====== */
+/* Sub-pages (non-main-tab) need to scroll internally, not body */
+html.telegram-mini-app .tg-page-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 @tailwind components;
