@@ -450,7 +450,7 @@ export const MessageBubble = ({
     >
       {/* Sender avatar in group chats only */}
       {isGroup && !isOwn && isLastInGroup && (
-        <Link to={`/${message.profiles.handle}`} className="flex-shrink-0 mb-0.5" onClick={(e) => e.stopPropagation()}>
+        <Link to={`/@${message.profiles.handle}`} className="flex-shrink-0 mb-0.5" onClick={(e) => e.stopPropagation()}>
           <UIAvatar className="h-7 w-7">
             <AvatarImage src={message.profiles.avatar_url || undefined} alt={message.profiles.display_name} />
             <AvatarFallback className="text-[10px]">
