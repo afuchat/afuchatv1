@@ -11,6 +11,8 @@ import { StoryViewer } from '@/components/moments/StoryViewer';
 import { CreateStoryDialog } from '@/components/moments/CreateStoryDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNowStrict } from 'date-fns';
+import FloatingActionButton from '@/components/ui/FloatingActionButton';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 
 interface Story {
   id: string;
@@ -47,6 +49,7 @@ const Moments = () => {
   const [myStories, setMyStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const isTelegram = useIsTelegram();
 
   // Story viewer state — now supports multi-story navigation
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -200,8 +203,11 @@ const Moments = () => {
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <div className="max-w-2xl mx-auto">
-        {/* Clean Header */}
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/40">
+        {/* Header — respects Telegram safe area */}
+        <div 
+          className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/40"
+          style={{ paddingTop: isTelegram ? 'var(--tg-safe-top, 0px)' : undefined }}
+        >
           <div className="flex items-center justify-between px-4 py-3">
             <h1 className="text-xl font-bold text-foreground">Moments</h1>
             <Button onClick={handleCreateStory} size="sm" variant="ghost" className="gap-1.5 text-primary font-semibold">
@@ -366,6 +372,9 @@ const Moments = () => {
         onOpenChange={setCreateDialogOpen}
         onSuccess={fetchStories}
       />
+
+      {/* FAB for quick actions */}
+      {user && <FloatingActionButton />}
     </div>
   );
 };
