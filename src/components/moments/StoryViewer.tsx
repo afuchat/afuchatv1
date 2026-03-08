@@ -1,8 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { X, Trash2, Eye, Pause, Play } from 'lucide-react';
+import { X, Trash2, Eye, Pause, Play, ChevronUp } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNowStrict } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { StoryViewersSheet } from './StoryViewersSheet';
 
 interface Story {
   id: string;
@@ -30,7 +33,7 @@ interface StoryViewerProps {
   canDelete: boolean;
 }
 
-const STORY_DURATION = 5000; // 5 seconds per image
+const STORY_DURATION = 5000;
 const VIDEO_DURATION = 15000;
 const TICK_INTERVAL = 50;
 
@@ -43,17 +46,73 @@ export const StoryViewer = ({
   onDelete,
   canDelete,
 }: StoryViewerProps) => {
+  const { user } = useAuth();
   const story = stories[currentIndex];
   const duration = story.media_type === 'video' ? VIDEO_DURATION : STORY_DURATION;
 
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
   const [showPauseIcon, setShowPauseIcon] = useState(false);
+  const [viewCount, setViewCount] = useState(story.view_count);
+  const [viewersOpen, setViewersOpen] = useState(false);
   const pausedRef = useRef(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPress = useRef(false);
   const progressRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const viewRecordedRef = useRef<Set<string>>(new Set());
+
+  // Record view for the current story
+  useEffect(() => {
+    if (!user || story.user_id === user.id) return;
+    if (viewRecordedRef.current.has(story.id)) return;
+    
+    viewRecordedRef.current.add(story.id);
+    
+    const recordView = async () => {
+      try {
+        // Use upsert to prevent duplicates
+        const { error } = await supabase
+          .from('story_views')
+          .upsert(
+            { story_id: story.id, viewer_id: user.id },
+            { onConflict: 'story_id,viewer_id', ignoreDuplicates: true }
+          );
+        
+        if (!error) {
+          // Fetch the real unique view count
+          const { count } = await supabase
+            .from('story_views')
+            .select('*', { count: 'exact', head: true })
+            .eq('story_id', story.id);
+          
+          if (count !== null) {
+            setViewCount(count);
+            // Update the stories table with the real count
+            await supabase
+              .from('stories')
+              .update({ view_count: count })
+              .eq('id', story.id);
+          }
+        }
+      } catch {}
+    };
+    
+    recordView();
+  }, [story.id, user]);
+
+  // Update view count when story changes
+  useEffect(() => {
+    const fetchViewCount = async () => {
+      const { count } = await supabase
+        .from('story_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('story_id', story.id);
+      if (count !== null) setViewCount(count);
+      else setViewCount(story.view_count);
+    };
+    fetchViewCount();
+  }, [story.id]);
 
   // Reset progress when story changes
   useEffect(() => {
@@ -61,6 +120,7 @@ export const StoryViewer = ({
     progressRef.current = 0;
     setPaused(false);
     pausedRef.current = false;
+    setViewersOpen(false);
   }, [currentIndex, story.id]);
 
   // Progress timer
@@ -97,6 +157,7 @@ export const StoryViewer = ({
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (viewersOpen) return;
       if (e.key === 'ArrowRight') onNext();
       else if (e.key === 'ArrowLeft') onPrevious();
       else if (e.key === 'Escape') onClose();
@@ -107,7 +168,7 @@ export const StoryViewer = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onNext, onPrevious, onClose]);
+  }, [onNext, onPrevious, onClose, viewersOpen]);
 
   const togglePause = useCallback(() => {
     const next = !pausedRef.current;
@@ -117,8 +178,14 @@ export const StoryViewer = ({
     setTimeout(() => setShowPauseIcon(false), 600);
   }, []);
 
-  // Long press handlers — prevent all default behavior (context menu, image save, etc.)
+  const handleSheetPause = useCallback((shouldPause: boolean) => {
+    pausedRef.current = shouldPause;
+    setPaused(shouldPause);
+  }, []);
+
+  // Long press handlers
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (viewersOpen) return;
     e.preventDefault();
     isLongPress.current = false;
     longPressTimer.current = setTimeout(() => {
@@ -126,9 +193,10 @@ export const StoryViewer = ({
       pausedRef.current = true;
       setPaused(true);
     }, 200);
-  }, []);
+  }, [viewersOpen]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (viewersOpen) return;
     e.preventDefault();
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
@@ -142,7 +210,6 @@ export const StoryViewer = ({
       return;
     }
 
-    // Short tap — navigate
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const x = e.clientX - rect.left;
     const third = rect.width / 3;
@@ -152,7 +219,7 @@ export const StoryViewer = ({
     } else if (x > third * 2) {
       onNext();
     }
-  }, [onPrevious, onNext]);
+  }, [onPrevious, onNext, viewersOpen]);
 
   const handlePointerLeave = useCallback(() => {
     if (longPressTimer.current) {
@@ -166,7 +233,6 @@ export const StoryViewer = ({
     }
   }, []);
 
-  // Block context menu (long-press "Save Image" on mobile)
   const handleContextMenu = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -294,11 +360,36 @@ export const StoryViewer = ({
         {story.caption && (
           <p className="text-white text-sm mb-3 leading-relaxed max-w-[90%]">{story.caption}</p>
         )}
-        <div className="flex items-center gap-1.5 text-white/40">
-          <Eye className="h-3.5 w-3.5" />
-          <span className="text-xs font-medium">{story.view_count} views</span>
-        </div>
+        {/* Clickable views — opens viewers sheet for own stories */}
+        {canDelete ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setViewersOpen(true);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 text-white/60 hover:text-white/90 transition-colors py-1"
+          >
+            <Eye className="h-4 w-4" />
+            <span className="text-xs font-medium">{viewCount} {viewCount === 1 ? 'view' : 'views'}</span>
+            <ChevronUp className="h-3.5 w-3.5 ml-0.5" />
+          </button>
+        ) : (
+          <div className="flex items-center gap-1.5 text-white/40">
+            <Eye className="h-3.5 w-3.5" />
+            <span className="text-xs font-medium">{viewCount} {viewCount === 1 ? 'view' : 'views'}</span>
+          </div>
+        )}
       </div>
+
+      {/* Viewers Sheet */}
+      <StoryViewersSheet
+        storyId={story.id}
+        isOpen={viewersOpen}
+        onClose={() => setViewersOpen(false)}
+        onPauseStory={handleSheetPause}
+      />
     </motion.div>
   );
 };
