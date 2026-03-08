@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageCirclePlus, Users, X, Pencil, Radio, Camera } from 'lucide-react';
+import { MessageCirclePlus, Users, X, Pencil, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,7 +14,6 @@ interface ChatFloatingActionButtonProps {
   onNewChat: () => void;
   onCreateGroup: () => void;
   onCreateChannel?: () => void;
-  onCreateStory?: () => void;
   isVisible?: boolean;
 }
 
@@ -22,7 +21,6 @@ const ChatFloatingActionButton = ({
   onNewChat, 
   onCreateGroup,
   onCreateChannel,
-  onCreateStory,
   isVisible = true 
 }: ChatFloatingActionButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -47,11 +45,6 @@ const ChatFloatingActionButton = ({
       icon: <Radio className="h-5 w-5" />,
       label: 'New Channel',
       onClick: () => handleActionClick(onCreateChannel),
-    }] : []),
-    ...(onCreateStory ? [{
-      icon: <Camera className="h-5 w-5" />,
-      label: 'New Story',
-      onClick: () => handleActionClick(onCreateStory),
     }] : []),
   ];
 
