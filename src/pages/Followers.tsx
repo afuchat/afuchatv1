@@ -236,7 +236,7 @@ export default function Followers() {
   };
 
   const handleUserClick = (userHandle: string) => {
-    navigate(`/${userHandle}`);
+    navigate(`/@${userHandle}`);
   };
 
   if (isPrivate && !isOwnProfile) {

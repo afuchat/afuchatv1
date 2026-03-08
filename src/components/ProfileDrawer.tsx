@@ -441,7 +441,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
                   <span className="text-muted-foreground ml-1">Following</span>
                 </button>
                 <button 
-                  onClick={() => handleNavigate(`/${profile.handle}/followers`)}
+                  onClick={() => handleNavigate(`/@${profile.handle}/followers`)}
                   className="hover:underline"
                 >
                   <span className="font-bold">{followCounts.followers}</span>
