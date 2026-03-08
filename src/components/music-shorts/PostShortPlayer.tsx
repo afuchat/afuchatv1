@@ -173,7 +173,7 @@ export const PostShortPlayer = ({
 
       {/* Audio element */}
       {post.music_track?.audio_url && (
-        <audio ref={audioRef} src={post.music_track.audio_url} loop muted={isMuted} preload="auto" />
+        <audio ref={audioRef} src={post.music_track.audio_url} loop preload="auto" />
       )}
 
       {/* Bottom: Author + Music info */}
