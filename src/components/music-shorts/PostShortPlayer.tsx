@@ -79,9 +79,10 @@ export const PostShortPlayer = ({
       .then(({ data }) => setIsLiked(!!data));
   }, [post.id, user]);
 
-  // Play/pause audio
+  // Play/pause audio - always unmuted
   useEffect(() => {
     if (!audioRef.current || !post.music_track?.audio_url) return;
+    audioRef.current.muted = false;
     if (isActive) {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
@@ -89,10 +90,6 @@ export const PostShortPlayer = ({
       audioRef.current.pause();
     }
   }, [isActive, post.music_track?.audio_url]);
-
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.muted = isMuted;
-  }, [isMuted]);
 
   // Cycle images only if multiple
   useEffect(() => {
