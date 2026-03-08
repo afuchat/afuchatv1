@@ -62,19 +62,29 @@ html.telegram-mini-app body {
   margin: 0 !important;
 }
 
-/* #root fills viewport in Telegram — individual pages manage their own scroll */
+/*
+ * TMA Scroll Architecture:
+ * - #root is the ONLY scroll container (overflow-y: auto)
+ * - Main-tab pages (home/search) are self-contained viewport boxes
+ *   (h-full + overflow:hidden) so they never push #root to scroll.
+ *   They manage their own internal scroll via MainTabsNavigation.
+ * - Non-tab pages (profile, settings, gifts…) flow naturally
+ *   and #root scrolls their content.
+ */
 html.telegram-mini-app #root {
   padding-top: var(--tg-safe-top, 0px);
   padding-left: var(--tg-safe-left, 0px);
   padding-right: var(--tg-safe-right, 0px);
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
-/* Ensure the App wrapper div propagates height in TMA */
+/* App wrapper — must fill viewport but NOT clip non-tab content */
 html.telegram-mini-app #root > div {
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
 }
 
 /* Ensure fixed headers account for combined safe area in Telegram */
