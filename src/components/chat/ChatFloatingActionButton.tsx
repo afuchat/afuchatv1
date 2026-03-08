@@ -48,6 +48,11 @@ const ChatFloatingActionButton = ({
       label: 'New Channel',
       onClick: () => handleActionClick(onCreateChannel),
     }] : []),
+    ...(onCreateStory ? [{
+      icon: <Camera className="h-5 w-5" />,
+      label: 'New Story',
+      onClick: () => handleActionClick(onCreateStory),
+    }] : []),
   ];
 
   return (
