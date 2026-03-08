@@ -434,7 +434,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
 
               <div className="flex items-center gap-4 mt-3">
                 <button 
-                  onClick={() => handleNavigate(`/${profile.handle}/following`)}
+                  onClick={() => handleNavigate(`/@${profile.handle}/following`)}
                   className="hover:underline"
                 >
                   <span className="font-bold">{followCounts.following}</span>
