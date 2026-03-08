@@ -18,6 +18,7 @@ interface PageHeaderProps {
 export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const isTelegram = useIsTelegram();
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
 
