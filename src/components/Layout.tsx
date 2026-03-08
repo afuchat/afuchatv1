@@ -47,9 +47,6 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
   const { isDeveloper } = useDeveloperStatus();
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [unreadChats, setUnreadChats] = useState(0);
-  const { isDeveloper } = useDeveloperStatus();
   
   // Detect if running in iframe (embedded mini program)
   const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
