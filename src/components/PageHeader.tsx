@@ -1,9 +1,11 @@
+import { useState, useEffect, useRef } from 'react';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface PageHeaderProps {
   title: string;
@@ -15,6 +17,8 @@ interface PageHeaderProps {
 export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const [isHidden, setIsHidden] = useState(false);
+  const lastScrollY = useRef(0);
 
   const { data: userProfile } = useQuery({
     queryKey: ['user-profile-header', user?.id],
@@ -31,8 +35,32 @@ export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderPr
     staleTime: 1000 * 60 * 5,
   });
 
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleWindowScroll = () => {
+      const currentScrollY = window.scrollY;
+      setIsHidden(currentScrollY > lastScrollY.current && currentScrollY > 80);
+      lastScrollY.current = currentScrollY;
+    };
+
+    const handleNavScroll = (e: CustomEvent) => {
+      setIsHidden(e.detail.hidden);
+    };
+
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    window.addEventListener('nav-scroll-state' as any, handleNavScroll as any);
+    return () => {
+      window.removeEventListener('scroll', handleWindowScroll);
+      window.removeEventListener('nav-scroll-state' as any, handleNavScroll as any);
+    };
+  }, [isMobile]);
+
   return (
-    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
+    <div className={cn(
+      "sticky z-10 bg-background/95 backdrop-blur border-b border-border transition-all duration-300 ease-out",
+      isMobile && isHidden ? "-top-16" : "top-0"
+    )}>
       <div className="max-w-6xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
