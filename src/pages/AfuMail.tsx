@@ -109,7 +109,7 @@ export default function AfuMail() {
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
-      {!isInIframe && (
+      {
         <header className="border-b border-border px-4 py-3 flex items-center gap-3 shrink-0">
           {!isTelegram && (
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
