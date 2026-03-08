@@ -1363,7 +1363,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						<Button 
 							variant="outline" 
 							className="rounded-full px-6 py-2 font-bold bg-background hover:bg-muted border-2 h-auto"
-							onClick={() => navigate(`/${urlParam}/edit`)}
+							onClick={() => navigate(`/@${urlParam}/edit`)}
 							aria-label="Edit your profile"
 						>
 							{t('profile.editProfile')}
