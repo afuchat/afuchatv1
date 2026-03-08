@@ -61,7 +61,8 @@ export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderPr
 
   return (
     <div className={cn(
-      "sticky z-10 bg-background/95 backdrop-blur border-b border-border transition-all duration-300 ease-out",
+      "sticky z-10 bg-background/95 backdrop-blur transition-all duration-300 ease-out",
+      !isTelegram && "border-b border-border",
       isMobile && isHidden ? "-top-16" : "top-0"
     )}>
       <div className="max-w-6xl mx-auto px-4 py-3">
