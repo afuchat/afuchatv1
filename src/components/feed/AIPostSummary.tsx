@@ -54,7 +54,7 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
   }, []);
 
   useEffect(() => {
-    if (!hasAccess || checkedRef.current) return;
+    if (checkedRef.current) return;
     checkedRef.current = true;
     
     const worthSummarizing = isWorthSummarizing(postContent);
