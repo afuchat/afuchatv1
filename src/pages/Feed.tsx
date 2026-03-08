@@ -240,20 +240,37 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
     } else {
       // It's a URL (either with http/https or a plain domain)
       const url = matchText.startsWith('http') ? matchText : `https://${matchText}`;
-      parts.push(
-        <a
-          key={`url-${idx}`}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          {matchText.length > 50 ? matchText.substring(0, 50) + '...' : matchText}
-        </a>
-      );
+      
+      // Check if it's an image URL
+      const isImageUrl = /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(url);
+      
+      if (isImageUrl) {
+        parts.push(
+          <img
+            key={`img-${idx}`}
+            src={url}
+            alt="Shared image"
+            loading="lazy"
+            className="w-full max-h-[300px] object-cover rounded-lg mt-2 mb-1"
+            onClick={(e) => e.stopPropagation()}
+          />
+        );
+      } else {
+        parts.push(
+          <a
+            key={`url-${idx}`}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {matchText.length > 50 ? matchText.substring(0, 50) + '...' : matchText}
+          </a>
+        );
+      }
     }
     
     lastIndex = index + matchText.length;
