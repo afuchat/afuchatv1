@@ -141,8 +141,23 @@ interface ChatRoomProps {
   isEmbedded?: boolean;
 }
 
+// Compute Telegram safe area padding directly
+const getTelegramSafeArea = () => {
+  const isTelegram = typeof document !== 'undefined' && document.documentElement.classList.contains('telegram-mini-app');
+  if (!isTelegram) return { top: 0, bottom: 0 };
+  const wa = (window as any).Telegram?.WebApp;
+  const sa = wa?.safeAreaInset || { top: 0, bottom: 0 };
+  const csa = wa?.contentSafeAreaInset || { top: 0, bottom: 0 };
+  let top = (sa.top || 0) + (csa.top || 0);
+  const bottom = (sa.bottom || 0) + (csa.bottom || 0);
+  // Android reports 0 but status bar still overlaps
+  if (/Android/.test(navigator.userAgent) && top === 0) top = 36;
+  return { top, bottom };
+};
+
 // ChatRoom component
 const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
+  const tgSafe = isEmbedded ? { top: 0, bottom: 0 } : getTelegramSafeArea();
   const { chatId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -1639,10 +1654,10 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0 tg-safe-area-container'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh' }}>
+      <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh', paddingTop: tgSafe.top > 0 ? tgSafe.top : undefined, paddingBottom: tgSafe.bottom > 0 ? tgSafe.bottom : undefined }}>
         {/* Search Overlay */}
         {isSearchOpen && (
-          <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3 pt-[env(safe-area-inset-top)]">
+          <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3" style={{ paddingTop: tgSafe.top > 0 ? tgSafe.top : 'env(safe-area-inset-top)' }}>
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -1694,7 +1709,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         )}
 
         {/* X-style Header - Clean and minimal */}
-        <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10 pt-[env(safe-area-inset-top)]">
+        <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10">
           {!isEmbedded && (
             <Button
               variant="ghost"
