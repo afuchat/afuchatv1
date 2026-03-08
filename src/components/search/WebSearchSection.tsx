@@ -6,6 +6,7 @@ import {
   ExternalLink, Globe, Search, RefreshCw, ChevronRight,
   Sparkles, ArrowUpRight, Zap, AlertCircle, BookOpen, User,
   MapPin, Calendar, Building2, GraduationCap, ChevronDown, ChevronUp,
+  Play, X as XIcon,
 } from 'lucide-react';
 import { firecrawlApi } from '@/lib/api/firecrawl';
 import { cn } from '@/lib/utils';
