@@ -7,7 +7,7 @@ const PrivacyPolicy = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background select-none">
+    <div className="bg-background select-none">
       <SEO 
         title="Privacy Policy — AfuChat"
         description="Learn how AfuChat protects your privacy. We're committed to data security, transparency, and your rights under GDPR and other regulations."
