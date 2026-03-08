@@ -399,7 +399,7 @@ const EditProfile: React.FC = () => {
       // Check for profile completion reward
       await checkProfileCompletion();
       
-      navigate(`/${user.id}`);
+      navigate(`/@${user.id}`);
     } catch (error: any) {
       console.error('Update error:', error);
       if (error.code === '23505' || error.message.includes('already taken')) { 
