@@ -18,7 +18,7 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   if (authLoading) return <PageSkeleton variant="centered" />;
-  if (user) return <Navigate to="/onboarding" replace />;
+  if (user) return <Navigate to="/home" replace />;
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
