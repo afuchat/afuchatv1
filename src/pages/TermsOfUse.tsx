@@ -7,7 +7,7 @@ const TermsOfUse = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background select-none">
+    <div className="bg-background select-none">
       <SEO 
         title="Terms of Use — AfuChat"
         description="Read AfuChat's Terms of Use. Learn about user rights, content policies, virtual currency, Creator Earnings program, and account guidelines."
