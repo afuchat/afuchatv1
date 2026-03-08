@@ -25,21 +25,23 @@ export const CreateStoryDialog = ({ open, onOpenChange, onSuccess }: CreateStory
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [uploading, setUploading] = useState(false);
   const [dailyLimitReached, setDailyLimitReached] = useState(false);
-  const [checkingLimit, setCheckingLimit] = useState(true);
+  const [checkingLimit, setCheckingLimit] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Check daily story limit for non-premium users
   useEffect(() => {
-    if (!open || !user) return;
+    if (!open) return;
     
-    const checkDailyLimit = async () => {
-      if (isPremium) {
-        setDailyLimitReached(false);
-        setCheckingLimit(false);
-        return;
-      }
+    // If no user or premium, no limit
+    if (!user || isPremium) {
+      setDailyLimitReached(false);
+      setCheckingLimit(false);
+      return;
+    }
 
+    const checkDailyLimit = async () => {
+      setCheckingLimit(true);
       try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -54,12 +56,12 @@ export const CreateStoryDialog = ({ open, onOpenChange, onSuccess }: CreateStory
         setDailyLimitReached((count || 0) >= 1);
       } catch (error) {
         console.error('Error checking daily limit:', error);
+        setDailyLimitReached(false);
       } finally {
         setCheckingLimit(false);
       }
     };
 
-    setCheckingLimit(true);
     checkDailyLimit();
   }, [open, user, isPremium]);
 
