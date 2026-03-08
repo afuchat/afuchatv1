@@ -38,7 +38,7 @@ export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderPr
   });
 
   useEffect(() => {
-    // Never hide header in Telegram
+    // Never hide header in Telegram — it stays visible always
     if (!isMobile || isTelegram) return;
 
     const handleWindowScroll = () => {
