@@ -365,7 +365,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
               <div className="flex items-center justify-between mb-3">
                 {/* Main avatar */}
                 <button 
-                  onClick={() => handleNavigate(`/${profile.handle}`)}
+                  onClick={() => handleNavigate(`/@${profile.handle}`)}
                   className="flex-shrink-0"
                 >
                   <Avatar className="h-12 w-12">
