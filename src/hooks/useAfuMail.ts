@@ -1,457 +1,234 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const AFUMAIL_API_BASE = 'https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api';
-
 export interface MailboxInfo {
   email_address: string;
-  storage_used: number;
-  storage_limit: number;
-}
-
-export interface EmailFolder {
-  id: string;
-  name: string;
-  unread_count: number;
-  total_count: number;
 }
 
 export interface EmailMessage {
   id: string;
-  from: string;
-  to: string[];
+  sender_email: string;
   subject: string;
-  preview: string;
-  timestamp: string;
-  read_status: boolean;
-  starred: boolean;
-  has_attachments: boolean;
-}
-
-export interface EmailDetail {
-  id: string;
-  from: string;
-  to: string[];
-  cc?: string[];
-  bcc?: string[];
-  subject: string;
-  body_html: string;
   body_text: string;
-  attachments: Attachment[];
-  timestamp: string;
-  read_status: boolean;
-  starred: boolean;
+  body_html: string | null;
+  has_attachments: boolean;
+  is_draft: boolean;
+  sent_at: string | null;
+  created_at: string;
+  // from user_emails join
+  is_read: boolean;
+  is_starred: boolean;
+  folder: string;
+  user_email_id: string;
+  // recipients
+  recipients?: { recipient_email: string; recipient_type: string }[];
 }
 
-export interface Attachment {
-  id: string;
-  filename: string;
-  size: number;
-  content_type: string;
-  url: string;
-}
-
-export interface ComposeEmail {
+export interface ComposeEmailData {
   to: string[];
   cc?: string[];
   bcc?: string[];
   subject: string;
   body_text: string;
   body_html?: string;
-  attachments?: string[];
-}
-
-export interface SearchParams {
-  keyword?: string;
-  sender?: string;
-  date_from?: string;
-  date_to?: string;
-}
-
-interface TokenResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
 }
 
 export function useAfuMail() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(() => {
-    // Initialize from localStorage if available
-    return localStorage.getItem('afumail_access_token');
-  });
-  const [refreshToken, setRefreshToken] = useState<string | null>(() => {
-    return localStorage.getItem('afumail_refresh_token');
-  });
-  const [tokenExpiry, setTokenExpiry] = useState<number | null>(() => {
-    const stored = localStorage.getItem('afumail_token_expiry');
-    return stored ? parseInt(stored, 10) : null;
-  });
+  const [mailboxEmail, setMailboxEmail] = useState<string | null>(null);
+  const [emails, setEmails] = useState<EmailMessage[]>([]);
+  const [currentFolder, setCurrentFolder] = useState('inbox');
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Save tokens to localStorage when they change
-  const saveTokens = useCallback((access: string, refresh: string, expiry: number) => {
-    localStorage.setItem('afumail_access_token', access);
-    localStorage.setItem('afumail_refresh_token', refresh);
-    localStorage.setItem('afumail_token_expiry', expiry.toString());
-    setAccessToken(access);
-    setRefreshToken(refresh);
-    setTokenExpiry(expiry);
+  // Initialize mailbox
+  const initMailbox = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.rpc('get_or_create_mailbox', { p_user_id: user.id });
+      if (!error && data) setMailboxEmail(data);
+    } catch (err) {
+      console.error('Mailbox init error:', err);
+    }
+  }, [user]);
+
+  useEffect(() => { initMailbox(); }, [initMailbox]);
+
+  // Fetch emails for a folder
+  const fetchEmails = useCallback(async (folder: string = 'inbox') => {
+    if (!user) return;
+    setLoading(true);
+    setCurrentFolder(folder);
+    try {
+      const { data: userEmails, error } = await supabase
+        .from('afumail_user_emails')
+        .select('id, email_id, folder, is_read, is_starred, is_trashed')
+        .eq('user_id', user.id)
+        .eq('folder', folder)
+        .eq('is_trashed', false)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      if (!userEmails || userEmails.length === 0) {
+        setEmails([]);
+        return;
+      }
+
+      const emailIds = userEmails.map(ue => ue.email_id);
+
+      const { data: emailData, error: emailErr } = await supabase
+        .from('afumail_emails')
+        .select('id, sender_email, subject, body_text, body_html, has_attachments, is_draft, sent_at, created_at')
+        .in('id', emailIds);
+
+      if (emailErr) throw emailErr;
+
+      // Fetch recipients for these emails
+      const { data: recipients } = await supabase
+        .from('afumail_recipients')
+        .select('email_id, recipient_email, recipient_type')
+        .in('email_id', emailIds);
+
+      const combined: EmailMessage[] = userEmails.map(ue => {
+        const email = emailData?.find(e => e.id === ue.email_id);
+        const emailRecipients = recipients?.filter(r => r.email_id === ue.email_id) || [];
+        return {
+          id: email?.id || ue.email_id,
+          sender_email: email?.sender_email || '',
+          subject: email?.subject || '',
+          body_text: email?.body_text || '',
+          body_html: email?.body_html || null,
+          has_attachments: email?.has_attachments || false,
+          is_draft: email?.is_draft || false,
+          sent_at: email?.sent_at || null,
+          created_at: email?.created_at || '',
+          is_read: ue.is_read,
+          is_starred: ue.is_starred,
+          folder: ue.folder,
+          user_email_id: ue.id,
+          recipients: emailRecipients.map(r => ({
+            recipient_email: r.recipient_email,
+            recipient_type: r.recipient_type,
+          })),
+        };
+      }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setEmails(combined);
+    } catch (err) {
+      console.error('Fetch emails error:', err);
+      toast.error('Failed to load emails');
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Get unread count
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user) return;
+    const { count } = await supabase
+      .from('afumail_user_emails')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('folder', 'inbox')
+      .eq('is_read', false)
+      .eq('is_trashed', false);
+    setUnreadCount(count || 0);
+  }, [user]);
+
+  useEffect(() => { fetchUnreadCount(); }, [fetchUnreadCount]);
+
+  // Send email
+  const sendEmail = useCallback(async (emailData: ComposeEmailData) => {
+    if (!user) return false;
+    setLoading(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) throw new Error('Not authenticated');
+
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/afumail-send`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailData),
+        }
+      );
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Send failed');
+
+      toast.success('Email sent!');
+      await fetchEmails(currentFolder);
+      await fetchUnreadCount();
+      return true;
+    } catch (err: any) {
+      console.error('Send email error:', err);
+      toast.error(err.message || 'Failed to send email');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user, currentFolder, fetchEmails, fetchUnreadCount]);
+
+  // Mark as read
+  const markAsRead = useCallback(async (userEmailId: string) => {
+    await supabase
+      .from('afumail_user_emails')
+      .update({ is_read: true })
+      .eq('id', userEmailId);
+    setEmails(prev => prev.map(e => e.user_email_id === userEmailId ? { ...e, is_read: true } : e));
+    fetchUnreadCount();
+  }, [fetchUnreadCount]);
+
+  // Toggle star
+  const toggleStar = useCallback(async (userEmailId: string, starred: boolean) => {
+    await supabase
+      .from('afumail_user_emails')
+      .update({ is_starred: !starred })
+      .eq('id', userEmailId);
+    setEmails(prev => prev.map(e => e.user_email_id === userEmailId ? { ...e, is_starred: !starred } : e));
   }, []);
 
-  // Check if token needs refresh (5 min buffer)
-  const isTokenExpired = useCallback(() => {
-    if (!tokenExpiry) return true;
-    return Date.now() >= tokenExpiry - 5 * 60 * 1000;
-  }, [tokenExpiry]);
+  // Move to trash
+  const moveToTrash = useCallback(async (userEmailId: string) => {
+    await supabase
+      .from('afumail_user_emails')
+      .update({ is_trashed: true })
+      .eq('id', userEmailId);
+    setEmails(prev => prev.filter(e => e.user_email_id !== userEmailId));
+    toast.success('Moved to trash');
+  }, []);
 
-  const getHeaders = useCallback(() => {
-    // Always read directly from localStorage to get the most up-to-date token
-    const currentToken = localStorage.getItem('afumail_access_token');
-    const storedExpiry = localStorage.getItem('afumail_token_expiry');
-    const expiry = storedExpiry ? parseInt(storedExpiry, 10) : 0;
-    const isValid = currentToken && Date.now() < expiry - 5 * 60 * 1000;
-    
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    
-    if (isValid && currentToken) {
-      headers['Authorization'] = `Bearer ${currentToken}`;
-    }
-    
-    if (user?.id) {
-      headers['X-User-Id'] = user.id;
-    }
-    return headers;
-  }, [user?.id]);
-
-  // Refresh the access token via our secure edge function
-  const refreshAccessTokenFn = useCallback(async (): Promise<boolean> => {
-    const currentRefreshToken = refreshToken || localStorage.getItem('afumail_refresh_token');
-    if (!currentRefreshToken || !user?.id) return false;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('afumail-auth', {
-        body: {
-          grant_type: 'refresh_token',
-          refresh_token: currentRefreshToken,
-          user_id: user.id,
-        },
-      });
-
-      if (error) {
-        console.error('Token refresh failed:', error);
-        return false;
-      }
-
-      const tokenData = data as TokenResponse;
-      const expiry = Date.now() + tokenData.expires_in * 1000;
-      saveTokens(tokenData.access_token, tokenData.refresh_token, expiry);
-      return true;
-    } catch (err) {
-      console.error('Token refresh error:', err);
-      return false;
-    }
-  }, [refreshToken, user?.id, saveTokens]);
-
-  // Ensure valid token before API calls
-  const ensureValidToken = useCallback(async (): Promise<boolean> => {
-    // Check localStorage again in case tokens were set by callback page
-    const storedToken = localStorage.getItem('afumail_access_token');
-    const storedExpiry = localStorage.getItem('afumail_token_expiry');
-    
-    if (storedToken && storedExpiry) {
-      const expiry = parseInt(storedExpiry, 10);
-      if (Date.now() < expiry - 5 * 60 * 1000) {
-        // Token is still valid
-        if (!accessToken) {
-          setAccessToken(storedToken);
-          setRefreshToken(localStorage.getItem('afumail_refresh_token'));
-          setTokenExpiry(expiry);
-        }
-        return true;
-      }
-    }
-    
-    if (accessToken && !isTokenExpired()) return true;
-    
-    // Try refresh if we have a refresh token
-    const currentRefreshToken = refreshToken || localStorage.getItem('afumail_refresh_token');
-    if (currentRefreshToken) {
-      const refreshed = await refreshAccessTokenFn();
-      if (refreshed) return true;
-    }
-    
-    // No valid token and can't refresh - user needs to re-authenticate via OAuth
-    return false;
-  }, [accessToken, isTokenExpired, refreshToken, refreshAccessTokenFn]);
-
-  const authenticate = useCallback(async () => {
-    if (!user?.id) {
-      toast.error('Please sign in to access AfuMail');
-      return false;
-    }
-
-    try {
-      setLoading(true);
-      
-      const success = await ensureValidToken();
-      if (!success) {
-        throw new Error('Failed to obtain access token');
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('AfuMail auth error:', error);
-      toast.error('Failed to connect to AfuMail');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id, ensureValidToken]);
-
-  const getMailboxInfo = useCallback(async (): Promise<MailboxInfo | null> => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${AFUMAIL_API_BASE}/mailbox`, {
-        headers: getHeaders(),
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch mailbox info');
-      return await response.json();
-    } catch (error) {
-      console.error('Get mailbox error:', error);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [getHeaders]);
-
-  const getFolders = useCallback(async (): Promise<EmailFolder[]> => {
-    try {
-      const response = await fetch(`${AFUMAIL_API_BASE}/mail/folders`, {
-        headers: getHeaders(),
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch folders');
-      const data = await response.json();
-      return data.folders || [];
-    } catch (error) {
-      console.error('Get folders error:', error);
-      return [];
-    }
-  }, [getHeaders]);
-
-  const getMessages = useCallback(async (
-    folder: string = 'inbox',
-    page: number = 1,
-    limit: number = 20
-  ): Promise<{ messages: EmailMessage[]; total: number; has_more: boolean }> => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        folder,
-        page: page.toString(),
-        limit: limit.toString(),
-      });
-
-      const response = await fetch(`${AFUMAIL_API_BASE}/mail/messages?${params}`, {
-        headers: getHeaders(),
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch messages');
-      return await response.json();
-    } catch (error) {
-      console.error('Get messages error:', error);
-      return { messages: [], total: 0, has_more: false };
-    } finally {
-      setLoading(false);
-    }
-  }, [getHeaders]);
-
-  const getMessage = useCallback(async (messageId: string): Promise<EmailDetail | null> => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${AFUMAIL_API_BASE}/mail/message/${messageId}`, {
-        headers: getHeaders(),
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch message');
-      return await response.json();
-    } catch (error) {
-      console.error('Get message error:', error);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [getHeaders]);
-
-  const sendEmail = useCallback(async (email: ComposeEmail): Promise<{ success: boolean; message_id?: string }> => {
-    try {
-      setLoading(true);
-      
-      // Ensure valid token before API call
-      const hasValidToken = await ensureValidToken();
-      if (!hasValidToken) {
-        throw new Error('Not authenticated. Please reconnect to AfuMail.');
-      }
-      
-      const response = await fetch(`${AFUMAIL_API_BASE}/mail/send`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(email),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to send email');
-      }
-
-      const data = await response.json();
-      toast.success('Email sent successfully');
-      return { success: true, message_id: data.message_id };
-    } catch (error: any) {
-      console.error('Send email error:', error);
-      toast.error(error.message || 'Failed to send email');
-      return { success: false };
-    } finally {
-      setLoading(false);
-    }
-  }, [getHeaders, ensureValidToken]);
-
-  const saveDraft = useCallback(async (email: ComposeEmail, draftId?: string): Promise<{ success: boolean; draft_id?: string }> => {
-    try {
-      setLoading(true);
-      const url = draftId 
-        ? `${AFUMAIL_API_BASE}/mail/draft/${draftId}`
-        : `${AFUMAIL_API_BASE}/mail/draft`;
-      
-      const response = await fetch(url, {
-        method: draftId ? 'PUT' : 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(email),
-      });
-
-      if (!response.ok) throw new Error('Failed to save draft');
-      
-      const data = await response.json();
-      toast.success('Draft saved');
-      return { success: true, draft_id: data.draft_id };
-    } catch (error) {
-      console.error('Save draft error:', error);
-      toast.error('Failed to save draft');
-      return { success: false };
-    } finally {
-      setLoading(false);
-    }
-  }, [getHeaders]);
-
-  const deleteDraft = useCallback(async (draftId: string): Promise<boolean> => {
-    try {
-      const response = await fetch(`${AFUMAIL_API_BASE}/mail/draft/${draftId}`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-      });
-
-      return response.ok;
-    } catch (error) {
-      console.error('Delete draft error:', error);
-      return false;
-    }
-  }, [getHeaders]);
-
-  const performAction = useCallback(async (
-    messageId: string,
-    action: 'read' | 'unread' | 'move' | 'delete' | 'star' | 'unstar' | 'restore',
-    targetFolder?: string
-  ): Promise<boolean> => {
-    try {
-      const response = await fetch(`${AFUMAIL_API_BASE}/mail/action`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          message_id: messageId,
-          action,
-          target_folder: targetFolder,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Action failed');
-      return true;
-    } catch (error) {
-      console.error('Perform action error:', error);
-      return false;
-    }
-  }, [getHeaders]);
-
-  const searchEmails = useCallback(async (params: SearchParams): Promise<EmailMessage[]> => {
-    try {
-      setLoading(true);
-      const searchParams = new URLSearchParams();
-      if (params.keyword) searchParams.set('keyword', params.keyword);
-      if (params.sender) searchParams.set('sender', params.sender);
-      if (params.date_from) searchParams.set('date_from', params.date_from);
-      if (params.date_to) searchParams.set('date_to', params.date_to);
-
-      const response = await fetch(`${AFUMAIL_API_BASE}/mail/search?${searchParams}`, {
-        headers: getHeaders(),
-      });
-
-      if (!response.ok) throw new Error('Search failed');
-      const data = await response.json();
-      return data.messages || [];
-    } catch (error) {
-      console.error('Search error:', error);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, [getHeaders]);
-
-  const uploadAttachment = useCallback(async (file: File): Promise<{ id: string; url: string } | null> => {
-    try {
-      await ensureValidToken();
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Read token directly from localStorage for most up-to-date value
-      const currentToken = localStorage.getItem('afumail_access_token');
-
-      const response = await fetch(`${AFUMAIL_API_BASE}/mail/attachment/upload`, {
-        method: 'POST',
-        headers: {
-          ...(currentToken ? { 'Authorization': `Bearer ${currentToken}` } : {}),
-          ...(user?.id ? { 'X-User-Id': user.id } : {}),
-        },
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error('Upload failed');
-      return await response.json();
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload attachment');
-      return null;
-    }
-  }, [ensureValidToken, user?.id]);
+  // Delete permanently
+  const deletePermanently = useCallback(async (userEmailId: string) => {
+    await supabase
+      .from('afumail_user_emails')
+      .delete()
+      .eq('id', userEmailId);
+    setEmails(prev => prev.filter(e => e.user_email_id !== userEmailId));
+    toast.success('Deleted permanently');
+  }, []);
 
   return {
     loading,
-    accessToken,
-    authenticate,
-    getMailboxInfo,
-    getFolders,
-    getMessages,
-    getMessage,
+    mailboxEmail,
+    emails,
+    currentFolder,
+    unreadCount,
+    fetchEmails,
     sendEmail,
-    saveDraft,
-    deleteDraft,
-    performAction,
-    searchEmails,
-    uploadAttachment,
+    markAsRead,
+    toggleStar,
+    moveToTrash,
+    deletePermanently,
+    fetchUnreadCount,
   };
 }
