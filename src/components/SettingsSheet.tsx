@@ -178,7 +178,7 @@ export const SettingsSheet = () => {
                 </Button>
                 {activeItem && (
                   <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center", activeItem.color)}>
-                    <activeItem.icon className="h-3.5 w-3.5 text-white" />
+                    <activeItem.icon className="h-3.5 w-3.5 text-primary-foreground" />
                   </div>
                 )}
                 <h2 className="text-lg font-bold">{activeContent?.title}</h2>
