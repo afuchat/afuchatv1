@@ -541,6 +541,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const openReportCard = (commentId: string) => {
     setReportTargetId(commentId);
     setShowReportCard(true);
+    setShowOtherReasonInput(false);
+    setOtherReasonText('');
   };
 
   const handleReplyTextChange = async (value: string) => {
