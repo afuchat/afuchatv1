@@ -10,6 +10,7 @@ import {
 import { firecrawlApi } from '@/lib/api/firecrawl';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { InAppBrowser } from './InAppBrowser';
 
 interface WebSearchResult {
   url: string;
