@@ -119,7 +119,7 @@ const EditProfile: React.FC = () => {
         // Verify route matches current user (check both ID and handle)
         if (userId && data && userId !== user.id && userId !== data.handle) {
           toast.error('Access denied: Can only edit your own profile');
-          navigate(`/${data.handle}`);
+          navigate(`/@${data.handle}`);
           return;
         }
 
