@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Heart, MessageCircle, Share2, Music } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -30,18 +30,7 @@ interface PostShort {
   } | null;
 }
 
-const BACKGROUND_GRADIENTS = [
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-  'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-  'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-  'linear-gradient(135deg, #0f3460 0%, #533483 100%)',
-];
-
-// Global audio element - shared across all shorts
+// Global audio element - shared across all shorts for seamless playback
 let globalAudio: HTMLAudioElement | null = null;
 
 const getGlobalAudio = () => {
@@ -58,28 +47,43 @@ export const PostShortPlayer = ({
   isActive,
   onUserInteracted,
   hasUserInteracted,
+  clipDuration = 6000,
+  onMusicTap,
 }: {
   post: PostShort;
   isActive: boolean;
   onUserInteracted: () => void;
   hasUserInteracted: boolean;
+  clipDuration?: number;
+  onMusicTap?: (trackId: string) => void;
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(post.like_count);
   const [imageIndex, setImageIndex] = useState(0);
-  const [audioProgress, setAudioProgress] = useState(0);
+  const [clipProgress, setClipProgress] = useState(0);
+  const [animationKey, setAnimationKey] = useState(0);
 
   const hasMultipleImages = post.post_images && post.post_images.length > 1;
   const images = post.post_images?.sort((a, b) => a.display_order - b.display_order).map(i => i.image_url) 
     || (post.image_url ? [post.image_url] : []);
-  const hasImages = images.length > 0;
 
-  const bgGradient = useMemo(() => {
+  // Ken Burns animation direction based on post id hash
+  const kenBurnsDirection = useMemo(() => {
     const hash = post.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    return BACKGROUND_GRADIENTS[hash % BACKGROUND_GRADIENTS.length];
+    return hash % 4; // 0: zoom-in, 1: zoom-out, 2: pan-left, 3: pan-right
   }, [post.id]);
+
+  const kenBurnsClass = useMemo(() => {
+    const classes = [
+      'animate-kenburns-zoom-in',
+      'animate-kenburns-zoom-out',
+      'animate-kenburns-pan-left',
+      'animate-kenburns-pan-right',
+    ];
+    return classes[kenBurnsDirection];
+  }, [kenBurnsDirection]);
 
   // Check if liked
   useEffect(() => {
@@ -98,41 +102,45 @@ export const PostShortPlayer = ({
     if (!isActive || !post.music_track?.audio_url) return;
 
     const audio = getGlobalAudio();
-    
-    // Change source and play
-    if (audio.src !== post.music_track.audio_url) {
-      audio.src = post.music_track.audio_url;
-    }
+    audio.src = post.music_track.audio_url;
     audio.currentTime = 0;
     audio.muted = !hasUserInteracted;
     audio.play().catch((err) => {
       console.warn('Audio play blocked:', err.message);
     });
 
-    // Track progress
-    const handleTimeUpdate = () => {
-      if (audio.duration && audio.src === post.music_track?.audio_url) {
-        setAudioProgress((audio.currentTime / audio.duration) * 100);
-      }
-    };
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      if (!isActive) {
-        audio.pause();
-      }
+      // Don't pause here — let the next active short take over
     };
   }, [isActive, post.music_track?.audio_url, hasUserInteracted]);
 
-  // Cycle images only if multiple
+  // 6-second clip progress timer
+  useEffect(() => {
+    if (!isActive) {
+      setClipProgress(0);
+      setAnimationKey(prev => prev + 1);
+      return;
+    }
+    
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min((elapsed / clipDuration) * 100, 100);
+      setClipProgress(progress);
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [isActive, clipDuration]);
+
+  // Cycle images for multi-image posts within the 6s clip
   useEffect(() => {
     if (!isActive || !hasMultipleImages) return;
+    const perImage = clipDuration / images.length;
     const timer = setInterval(() => {
       setImageIndex(prev => (prev + 1) % images.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [isActive, images.length, hasMultipleImages]);
+    }, perImage);
+    return () => { clearInterval(timer); setImageIndex(0); };
+  }, [isActive, images.length, hasMultipleImages, clipDuration]);
 
   const handleLike = async () => {
     if (!user) { toast.error('Sign in to like'); return; }
@@ -166,40 +174,38 @@ export const PostShortPlayer = ({
     const audio = getGlobalAudio();
     audio.muted = false;
     if (post.music_track?.audio_url) {
-      if (audio.src !== post.music_track.audio_url) {
+      if (!audio.src || audio.src !== post.music_track.audio_url) {
         audio.src = post.music_track.audio_url;
       }
       audio.play().catch(() => {});
     }
   };
 
+  const handleMusicTap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (post.music_track && onMusicTap) {
+      onMusicTap(post.music_track.id);
+    }
+  };
+
   return (
     <div className="relative h-full w-full snap-start snap-always overflow-hidden" onClick={handleTap}>
-      {/* Background */}
-      {hasImages ? (
-        <div className="absolute inset-0">
-          <img src={images[imageIndex]} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
-        </div>
-      ) : (
-        <>
-          <div className="absolute inset-0" style={{ background: bgGradient }} />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50" />
-          {/* Quote-style centered text for text-only posts */}
-          <div className="absolute inset-0 flex items-center justify-center px-8 z-10">
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 max-w-[90%]">
-              <div className="text-white/40 text-4xl font-serif mb-2">"</div>
-              <p className="text-white text-xl md:text-2xl font-semibold leading-relaxed"
-                style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
-                {post.content?.length > 250 ? post.content.slice(0, 250) + '...' : post.content}
-              </p>
-              <div className="text-white/40 text-4xl font-serif text-right mt-2">"</div>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Ken Burns animated image background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <img
+          key={`${post.id}-${imageIndex}-${animationKey}`}
+          src={images[imageIndex]}
+          alt=""
+          className={cn(
+            "w-full h-full object-cover",
+            isActive ? kenBurnsClass : ""
+          )}
+          style={{ willChange: 'transform' }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
+      </div>
 
-      {/* Image carousel dots */}
+      {/* Image carousel dots for multi-image */}
       {hasMultipleImages && (
         <div className="absolute top-1/2 right-3 z-20 flex flex-col gap-1.5">
           {images.map((_, i) => (
@@ -214,6 +220,14 @@ export const PostShortPlayer = ({
           <span className="text-white text-xs">🔇 Tap to unmute</span>
         </div>
       )}
+
+      {/* 6s clip progress bar at top */}
+      <div className="absolute top-0 left-0 right-0 z-40 h-[3px] bg-white/10">
+        <div 
+          className="h-full bg-white/80 transition-none"
+          style={{ width: `${clipProgress}%` }} 
+        />
+      </div>
 
       {/* Bottom section: Author + Caption */}
       <div className="absolute bottom-[108px] left-4 right-4 z-30">
@@ -233,8 +247,8 @@ export const PostShortPlayer = ({
           </span>
         </button>
 
-        {/* Caption */}
-        {hasImages && post.content && (
+        {/* Caption text overlay */}
+        {post.content && (
           <p className="text-white text-sm leading-snug mb-1 drop-shadow-md"
             style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
             {post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content}
@@ -244,18 +258,14 @@ export const PostShortPlayer = ({
 
       {/* Bottom bar: Music metadata + Actions on the same row */}
       <div className="absolute bottom-[72px] left-0 right-0 z-30">
-        {/* Progress bar */}
-        {post.music_track && (
-          <div className="h-[2px] bg-white/10 mb-1">
-            <div className="h-full bg-white/60 transition-all duration-300" style={{ width: `${audioProgress}%` }} />
-          </div>
-        )}
-
         {/* Music + Actions row */}
         <div className="flex items-center justify-between px-4 py-2">
-          {/* Music metadata */}
+          {/* Music metadata - tappable */}
           {post.music_track ? (
-            <div className="flex items-center gap-2 overflow-hidden flex-1 mr-3">
+            <button 
+              onClick={handleMusicTap}
+              className="flex items-center gap-2 overflow-hidden flex-1 mr-3"
+            >
               <div className="w-7 h-7 rounded-full border border-white/30 bg-black/40 shrink-0 flex items-center justify-center animate-spin-slow overflow-hidden">
                 {post.profiles?.avatar_url ? (
                   <img src={post.profiles.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
@@ -263,17 +273,17 @@ export const PostShortPlayer = ({
                   <Music className="h-3 w-3 text-white/70" />
                 )}
               </div>
-              <div className="overflow-hidden flex-1">
+              <div className="overflow-hidden flex-1 text-left">
                 <p className="text-white text-xs font-medium whitespace-nowrap animate-marquee">
                   ♫ {post.music_track.title} — {post.music_track.artist}
                 </p>
               </div>
-            </div>
+            </button>
           ) : (
             <div className="flex-1" />
           )}
 
-          {/* Action buttons row */}
+          {/* Action buttons */}
           <div className="flex items-center gap-4 shrink-0">
             <button onClick={(e) => { e.stopPropagation(); handleLike(); }} className="flex items-center gap-1">
               <Heart className={cn("h-5 w-5", isLiked ? "text-red-500 fill-red-500" : "text-white")} />
