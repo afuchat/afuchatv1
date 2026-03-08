@@ -337,7 +337,7 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
         </div>
         <h3 className="text-base font-semibold mb-1">Search Failed</h3>
         <p className="text-[13px] text-muted-foreground max-w-[260px] mb-4">{error}</p>
-        <Button onClick={performSearch} variant="outline" size="sm" className="rounded-full gap-2">
+        <Button onClick={() => performSearch(query)} variant="outline" size="sm" className="rounded-full gap-2">
           <RefreshCw className="h-3.5 w-3.5" /> Try again
         </Button>
       </div>
