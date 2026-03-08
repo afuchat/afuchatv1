@@ -11,7 +11,6 @@ export const ImageCarousel = memo(({ images, className }: ImageCarouselProps) =>
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const slideRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchDelta = useRef(0);
 
@@ -47,43 +46,6 @@ export const ImageCarousel = memo(({ images, className }: ImageCarouselProps) =>
 
   if (!images || images.length === 0) return null;
 
-  const imageUrls = images.map(img => typeof img === 'string' ? img : img.url);
-  const imageAlts = images.map(img => typeof img === 'string' ? 'Post image' : (img.alt || 'Post image'));
-
-  const handleImageClick = (e: React.MouseEvent, index: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLightboxIndex(index);
-    setLightboxOpen(true);
-  };
-
-  const imageObjects = images.map(img => typeof img === 'string' ? { url: img, alt: 'Post image' } : img);
-
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const slideRef = useRef<HTMLDivElement>(null);
-  const touchStartX = useRef(0);
-  const touchDelta = useRef(0);
-
-  const handleSlideSwipe = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  }, []);
-
-  const handleSlideMove = useCallback((e: React.TouchEvent) => {
-    touchDelta.current = e.touches[0].clientX - touchStartX.current;
-  }, []);
-
-  const handleSlideEnd = useCallback(() => {
-    if (Math.abs(touchDelta.current) > 50) {
-      if (touchDelta.current < 0 && currentSlide < imageUrls.length - 1) {
-        setCurrentSlide(prev => prev + 1);
-      } else if (touchDelta.current > 0 && currentSlide > 0) {
-        setCurrentSlide(prev => prev - 1);
-      }
-    }
-    touchDelta.current = 0;
-  }, [currentSlide, imageUrls.length]);
-
-  // Image layouts
   return (
     <>
       <div className={cn('relative', className)}>
@@ -128,7 +90,6 @@ export const ImageCarousel = memo(({ images, className }: ImageCarouselProps) =>
         {imageUrls.length >= 3 && (
           <div className="relative rounded-2xl overflow-hidden border border-border">
             <div
-              ref={slideRef}
               className="flex transition-transform duration-300 ease-out"
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
               onTouchStart={handleSlideSwipe}
