@@ -126,7 +126,7 @@ export const ReferralSystem = () => {
         {/* Referral Link Section */}
         <div className="flex gap-2">
           <Input
-            value={`${window.location.origin}/auth/signup?ref=${referralCode}`}
+            value={getReferralLink()}
             readOnly
             className="flex-1 text-xs"
           />
