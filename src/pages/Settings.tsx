@@ -115,17 +115,15 @@ const Settings = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <PageHeader 
-                title="Settings"
-                rightContent={
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon-sm" onClick={() => navigate('/whats-new')}>
-                      <Sparkles className="h-4 w-4" />
-                    </Button>
-                  </div>
-                }
-              />
-              <div className="px-4 pb-32">
+              <div className="fixed top-0 left-0 right-0 z-20 bg-background/95 backdrop-blur border-b border-border">
+                <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+                  <h1 className="text-xl font-bold">Settings</h1>
+                  <Button variant="ghost" size="icon-sm" onClick={() => navigate('/whats-new')}>
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="pt-14 px-4 pb-32">
                 {settingsSections.map((section) => (
                   <div key={section.group} className="mb-6">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">
