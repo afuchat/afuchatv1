@@ -52,39 +52,35 @@ html.telegram-mini-app {
 html.telegram-mini-app body {
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
-  /* Prevent body scroll in Telegram - #root manages scroll */
+  /* Prevent native body bounce — #root handles scroll */
   overflow: hidden;
   position: fixed;
   width: 100%;
   height: 100%;
-  /* Remove any native safe area from body - we use TG variables */
   padding: 0 !important;
   margin: 0 !important;
 }
 
-/* #root is THE scroll container in Telegram Mini App */
+/* #root is the scroll container in Telegram.
+   padding-top creates space for the branded safe-area bar. */
 html.telegram-mini-app #root {
-  padding-top: var(--tg-safe-top, 0px);
-  padding-left: var(--tg-safe-left, 0px);
-  padding-right: var(--tg-safe-right, 0px);
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  padding-top: var(--tg-safe-top, 0px);
+  padding-bottom: var(--tg-safe-bottom, 0px);
+  padding-left: var(--tg-safe-left, 0px);
+  padding-right: var(--tg-safe-right, 0px);
 }
 
-/* Ensure fixed headers account for combined safe area in Telegram */
-html.telegram-mini-app .sticky.top-0 {
-  top: 0 !important;
-}
-
-/* Ensure fixed bottom bars account for combined safe area in Telegram */
+/* Fixed bottom elements respect Telegram safe area */
 html.telegram-mini-app .fixed.bottom-0 {
   bottom: var(--tg-safe-bottom, 0px) !important;
 }
 
-/* ====== Telegram: Hide ALL in-app back buttons ====== */
+/* ====== Telegram: Hide in-app back buttons (native Back Button is used) ====== */
 html.telegram-mini-app button:has(> .lucide-arrow-left),
 html.telegram-mini-app button:has(> .lucide-chevron-left),
 html.telegram-mini-app a:has(> .lucide-arrow-left),
