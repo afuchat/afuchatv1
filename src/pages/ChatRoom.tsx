@@ -1642,12 +1642,12 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh' }}>
         {/* Search Overlay */}
         {isSearchOpen && (
-          <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3 pt-[env(safe-area-inset-top)]">
-            <div className="flex items-center gap-3">
+          <div className="absolute inset-x-0 top-0 z-20 bg-background px-3 py-3 pt-[env(safe-area-inset-top)]">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full hover:bg-muted/50"
+                className="h-10 w-10 rounded-full hover:bg-muted/50 flex-shrink-0"
                 onClick={handleCloseSearch}
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -1658,43 +1658,42 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Search messages..."
-                  className="h-10 pl-10 pr-4 rounded-full bg-muted border-0"
+                  className="h-10 pl-10 pr-4 rounded-full bg-muted/50 border-0 text-[15px]"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
             </div>
             {searchQuery && (
-              <div className="mt-3 max-h-64 overflow-y-auto">
+              <div className="mt-2 max-h-64 overflow-y-auto">
                 {searchResults.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {searchResults.map(msg => (
                       <div 
                         key={msg.id} 
-                        className="p-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80"
+                        className="px-3 py-2.5 rounded-xl cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors"
                         onClick={() => {
                           handleCloseSearch();
-                          // Scroll to message (would need message refs for exact scroll)
                           const msgElement = document.querySelector(`[data-message-id="${msg.id}"]`);
                           msgElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }}
                       >
-                        <p className="text-xs text-muted-foreground mb-1">
-                          {msg.profiles?.display_name} • {new Date(msg.sent_at).toLocaleDateString()}
+                        <p className="text-[12px] text-muted-foreground mb-0.5">
+                          {msg.profiles?.display_name} · {new Date(msg.sent_at).toLocaleDateString()}
                         </p>
-                        <p className="text-sm line-clamp-2">{msg.encrypted_content}</p>
+                        <p className="text-[14px] text-foreground line-clamp-2">{msg.encrypted_content}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No messages found</p>
+                  <p className="text-[13px] text-muted-foreground text-center py-6">No messages found</p>
                 )}
               </div>
             )}
           </div>
         )}
 
-        {/* X-style Header - Clean and minimal */}
-        <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10 pt-[env(safe-area-inset-top)]">
+        {/* Telegram-style Header — flat, clean, information-dense */}
+        <header className="flex-shrink-0 flex items-center gap-2 px-2 h-14 bg-background z-10 pt-[env(safe-area-inset-top)]">
           {!isEmbedded && (
             <Button
               variant="ghost"
