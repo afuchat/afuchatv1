@@ -52,7 +52,7 @@ html.telegram-mini-app {
 html.telegram-mini-app body {
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
-  /* Prevent body scroll in Telegram - pages manage their own scroll */
+  /* Prevent body scroll in Telegram - #root manages scroll */
   overflow: hidden;
   position: fixed;
   width: 100%;
@@ -62,16 +62,16 @@ html.telegram-mini-app body {
   margin: 0 !important;
 }
 
-/* Global safe area for all content in Telegram Mini App */
+/* #root is THE scroll container in Telegram Mini App */
 html.telegram-mini-app #root {
   padding-top: var(--tg-safe-top, 0px);
   padding-left: var(--tg-safe-left, 0px);
   padding-right: var(--tg-safe-right, 0px);
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  display: flex;
-  flex-direction: column;
+  overscroll-behavior-y: contain;
 }
 
 /* Ensure fixed headers account for combined safe area in Telegram */
@@ -85,41 +85,15 @@ html.telegram-mini-app .fixed.bottom-0 {
 }
 
 /* ====== Telegram: Hide ALL in-app back buttons ====== */
-/* Telegram provides its own native back button via BackButton API.
-   Hide any ArrowLeft / ChevronLeft icon buttons rendered by pages. */
 html.telegram-mini-app button:has(> .lucide-arrow-left),
 html.telegram-mini-app button:has(> .lucide-chevron-left),
 html.telegram-mini-app a:has(> .lucide-arrow-left),
 html.telegram-mini-app a:has(> .lucide-chevron-left) {
   display: none !important;
 }
-
-/* Also hide Button components (rendered as <button>) wrapping the icon */
 html.telegram-mini-app [role="button"]:has(> .lucide-arrow-left),
 html.telegram-mini-app [role="button"]:has(> .lucide-chevron-left) {
   display: none !important;
-}
-
-/* ====== Telegram: Proper page containment ====== */
-/* Sub-pages (non-main-tab) need to scroll internally, not body */
-html.telegram-mini-app .tg-page-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-}
-
-/* Override min-h-screen inside Telegram to prevent overflow issues */
-html.telegram-mini-app .tg-page-scroll .min-h-screen,
-html.telegram-mini-app .min-h-screen.tg-page-scroll {
-  min-height: auto;
-}
-
-/* All direct page wrappers inside Telegram flex containers should shrink properly */
-html.telegram-mini-app .flex-1.min-h-0 .min-h-screen {
-  min-height: auto;
 }
 
 @tailwind components;
