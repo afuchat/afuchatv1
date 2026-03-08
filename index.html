@@ -166,8 +166,14 @@
           el.style.setProperty('--tg-safe-area-right', sa.right + 'px');
           el.style.setProperty('--tg-content-safe-area-top', csa.top + 'px');
           el.style.setProperty('--tg-content-safe-area-bottom', csa.bottom + 'px');
-          el.style.setProperty('--tg-safe-top', (sa.top + csa.top) + 'px');
-          el.style.setProperty('--tg-safe-bottom', (sa.bottom + csa.bottom) + 'px');
+          // Android Telegram reports 0 for safe areas but status bar still overlaps
+          var isAndroid = /Android/.test(navigator.userAgent);
+          var combinedTop = sa.top + csa.top;
+          var combinedBottom = sa.bottom + csa.bottom;
+          if (isAndroid && combinedTop === 0) combinedTop = 32;
+          if (isAndroid && combinedBottom === 0) combinedBottom = 0;
+          el.style.setProperty('--tg-safe-top', combinedTop + 'px');
+          el.style.setProperty('--tg-safe-bottom', combinedBottom + 'px');
           el.style.setProperty('--tg-safe-left', (sa.left + csa.left) + 'px');
           el.style.setProperty('--tg-safe-right', (sa.right + csa.right) + 'px');
         } else {
