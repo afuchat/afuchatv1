@@ -10,6 +10,7 @@ import {
 import { firecrawlApi } from '@/lib/api/firecrawl';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { InAppBrowser } from './InAppBrowser';
 
 interface WebSearchResult {
   url: string;
@@ -184,7 +185,7 @@ function extractWikiProfile(results: WebSearchResult[]): WikiProfile | null {
 }
 
 // ─── Wikipedia Knowledge Panel ───────────────────────────
-const WikiKnowledgePanel = ({ profile }: { profile: WikiProfile }) => {
+const WikiKnowledgePanel = ({ profile, onOpenUrl }: { profile: WikiProfile; onOpenUrl: (url: string, title?: string) => void }) => {
   const [expanded, setExpanded] = useState(false);
   const visibleFacts = expanded ? profile.facts : profile.facts.slice(0, 4);
 
@@ -245,7 +246,7 @@ const WikiKnowledgePanel = ({ profile }: { profile: WikiProfile }) => {
           {profile.wikiUrl && (
             <button
               className="text-[12px] text-primary font-medium mt-1 hover:underline inline-flex items-center gap-0.5"
-              onClick={() => window.open(profile.wikiUrl, '_blank', 'noopener')}
+              onClick={() => onOpenUrl(profile.wikiUrl!, profile.name + ' - Wikipedia')}
             >
               Wikipedia <ArrowUpRight className="h-3 w-3" />
             </button>
@@ -330,7 +331,7 @@ const FeaturedResultCard = ({ result, onClick }: { result: WebSearchResult; onCl
 };
 
 // ─── Standard Result Card ────────────────────────────────
-const ResultCard = ({ result, index, onClick }: { result: WebSearchResult; index: number; onClick: () => void }) => {
+const ResultCard = ({ result, index, onClick, onOpenUrl }: { result: WebSearchResult; index: number; onClick: () => void; onOpenUrl: (url: string, title?: string) => void }) => {
   const imageUrl = result.metadata?.ogImage || extractFirstImage(result.markdown);
   const snippet = extractSnippet(result.description, result.markdown);
   const siteLinks = getRelatedLinks(result.markdown);
@@ -362,7 +363,7 @@ const ResultCard = ({ result, index, onClick }: { result: WebSearchResult; index
                 <button
                   key={i}
                   className="text-[12px] text-primary/80 hover:text-primary hover:underline flex items-center gap-0.5"
-                  onClick={(e) => { e.stopPropagation(); window.open(link.url, '_blank', 'noopener'); }}
+                  onClick={(e) => { e.stopPropagation(); onOpenUrl(link.url, link.text); }}
                 >
                   <ChevronRight className="h-3 w-3" />
                   {link.text}
@@ -520,7 +521,13 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
     return results.filter(r => !r.url?.includes('wikipedia.org'));
   }, [results, wikiProfile]);
 
-  const openUrl = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
+  const [browserUrl, setBrowserUrl] = useState<string | null>(null);
+  const [browserTitle, setBrowserTitle] = useState<string | undefined>();
+
+  const openUrl = (url: string, title?: string) => {
+    setBrowserUrl(url);
+    setBrowserTitle(title);
+  };
 
   if (!query.trim()) return <EmptyState />;
   if (loading) return <SearchSkeleton query={query} />;
@@ -557,46 +564,59 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
   const [featured, ...rest] = displayResults;
 
   return (
-    <ScrollArea className="h-full">
-      <div className="px-4 pt-3 pb-6">
-        {/* Search meta */}
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-[12px] text-muted-foreground">
-            About {results.length} results ({searchTime.toFixed(2)}s)
-          </p>
-          <Button
-            onClick={() => {
-              lastQueryRef.current = '';
-              performSearch(query);
-            }}
-            variant="ghost"
-            size="sm"
-            className="h-7 text-[12px] gap-1 text-muted-foreground"
-          >
-            <RefreshCw className="h-3 w-3" /> Refresh
-          </Button>
-        </div>
-
-        {/* Wikipedia Knowledge Panel */}
-        {wikiProfile && <WikiKnowledgePanel profile={wikiProfile} />}
-
-        {/* Quick answer from first result */}
-        {!wikiProfile && featured && <QuickAnswerBox query={query} markdown={featured.markdown} />}
-
-        {/* Featured result */}
-        {featured && (
-          <div className="mb-4">
-            <FeaturedResultCard result={featured} onClick={() => openUrl(featured.url)} />
+    <>
+      <ScrollArea className="h-full">
+        <div className="px-4 pt-3 pb-6">
+          {/* Search meta */}
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[12px] text-muted-foreground">
+              About {results.length} results ({searchTime.toFixed(2)}s)
+            </p>
+            <Button
+              onClick={() => {
+                lastQueryRef.current = '';
+                performSearch(query);
+              }}
+              variant="ghost"
+              size="sm"
+              className="h-7 text-[12px] gap-1 text-muted-foreground"
+            >
+              <RefreshCw className="h-3 w-3" /> Refresh
+            </Button>
           </div>
-        )}
 
-        {/* Remaining results */}
-        <div className="divide-y divide-border/60">
-          {rest.map((result, i) => (
-            <ResultCard key={result.url + i} result={result} index={i} onClick={() => openUrl(result.url)} />
-          ))}
+          {/* Wikipedia Knowledge Panel */}
+          {wikiProfile && <WikiKnowledgePanel profile={wikiProfile} onOpenUrl={openUrl} />}
+
+          {/* Quick answer from first result */}
+          {!wikiProfile && featured && <QuickAnswerBox query={query} markdown={featured.markdown} />}
+
+          {/* Featured result */}
+          {featured && (
+            <div className="mb-4">
+              <FeaturedResultCard result={featured} onClick={() => openUrl(featured.url, featured.title)} />
+            </div>
+          )}
+
+          {/* Remaining results */}
+          <div className="divide-y divide-border/60">
+            {rest.map((result, i) => (
+              <ResultCard key={result.url + i} result={result} index={i} onClick={() => openUrl(result.url, result.title)} onOpenUrl={openUrl} />
+            ))}
+          </div>
         </div>
-      </div>
-    </ScrollArea>
+      </ScrollArea>
+
+      {/* In-App Browser Overlay */}
+      <AnimatePresence>
+        {browserUrl && (
+          <InAppBrowser
+            url={browserUrl}
+            title={browserTitle}
+            onClose={() => setBrowserUrl(null)}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 };
