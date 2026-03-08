@@ -1694,7 +1694,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         )}
 
         {/* X-style Header - Clean and minimal */}
-        <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10" style={{ paddingTop: 'max(0.75rem, var(--tg-safe-top, env(safe-area-inset-top)))' }}>
+        <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10 pt-[env(safe-area-inset-top)]">
           {!isEmbedded && (
             <Button
               variant="ghost"
