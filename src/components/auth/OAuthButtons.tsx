@@ -13,7 +13,7 @@ export const OAuthButtons = ({ loading: parentLoading, isSignUp }: OAuthButtonsP
   const isDisabled = parentLoading || loading;
   const isTelegram = useIsTelegram();
 
-  const handleOAuth = async (provider: 'google' | 'apple') => {
+  const handleOAuth = async (provider: 'google' | 'apple' | 'github') => {
     if (isDisabled) return;
 
     if (isSignUp) {
