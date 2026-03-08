@@ -380,34 +380,6 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                 />
               </Link>
               
-              {/* AfuAI Center Button - Auth required */}
-              {user ? (
-                <button
-                  onClick={openAfuAI}
-                  className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group"
-                >
-                  <img 
-                    src={aiChatIcon} 
-                    alt="AfuAI" 
-                    className="h-7 w-7 object-contain select-none opacity-70 group-hover:opacity-90 transition-opacity duration-200"
-                    draggable={false}
-                    onContextMenu={(e) => e.preventDefault()}
-                  />
-                </button>
-              ) : (
-                <Link
-                  to="/auth/signin"
-                  className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group"
-                >
-                  <img 
-                    src={aiChatIcon} 
-                    alt="AfuAI" 
-                    className="h-7 w-7 object-contain opacity-40 select-none group-hover:opacity-60 transition-opacity duration-200"
-                    draggable={false} 
-                    onContextMenu={(e) => e.preventDefault()} 
-                  />
-                </Link>
-              )}
               
               {/* Notifications - Auth required */}
               {user ? (
