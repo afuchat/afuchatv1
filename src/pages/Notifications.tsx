@@ -314,7 +314,7 @@ const FollowRequestRow = ({ request, onApprove, onReject, isProcessing }: Follow
 
   return (
     <div className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border-b border-border bg-primary/5">
-      <Link to={`/profile/${requester.handle}`} onClick={(e) => e.stopPropagation()}>
+      <Link to={`/${requester.handle}`} onClick={(e) => e.stopPropagation()}>
         <Avatar className="h-10 w-10 flex-shrink-0">
           <AvatarImage src={requester.avatar_url} alt={requester.display_name} />
           <AvatarFallback>{requester.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
