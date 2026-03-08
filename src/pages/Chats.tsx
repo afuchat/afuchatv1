@@ -81,6 +81,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const [isCreateChannelDialogOpen, setIsCreateChannelDialogOpen] = useState(false);
+  const [isCreateStoryDialogOpen, setIsCreateStoryDialogOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showFab, setShowFab] = useState(true);
   const [isStoriesExpanded, setIsStoriesExpanded] = useState(false);
