@@ -140,7 +140,7 @@ const FloatingActionButton = ({ wallPostAction, profileActions }: FloatingAction
       {/* FAB Container */}
       <div className={cn(
         "fixed bottom-20 right-4 z-50 transition-all duration-300",
-        isScrollingDown ? "translate-y-32 opacity-0" : "translate-y-0 opacity-100"
+        isHidden ? "translate-y-32 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
       )}>
         <AnimatePresence mode="wait">
           {!isOpen ? (
