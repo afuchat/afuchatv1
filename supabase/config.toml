@@ -93,3 +93,9 @@ verify_jwt = false
 [functions.fetch-music-tracks]
 verify_jwt = false
 
+[functions.afumail-send]
+verify_jwt = false
+
+[functions.afumail-inbound]
+verify_jwt = false
+
