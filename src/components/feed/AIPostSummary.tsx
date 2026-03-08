@@ -167,12 +167,29 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
       transition={{ duration: 0.3 }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex items-start gap-2 px-3 py-2.5 bg-gradient-to-r from-amber-500/10 via-primary/5 to-transparent rounded-lg border border-amber-500/20">
-        <Lightbulb className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-foreground/90 leading-relaxed font-medium">
-          {summary}
-        </p>
+      <div
+        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500/10 via-primary/5 to-transparent rounded-lg border border-amber-500/20 cursor-pointer"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <Lightbulb className="h-4 w-4 text-amber-500 flex-shrink-0" />
+        <span className="text-xs font-medium text-foreground/80 flex-1">AI Insight</span>
+        {expanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
       </div>
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <p className="text-xs text-foreground/90 leading-relaxed font-medium px-3 py-2">
+              {summary}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
