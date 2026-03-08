@@ -84,8 +84,8 @@ export const DataPrivacySettings = () => {
       <SettingsSection title="Export Data">
         <div className="p-4 space-y-4">
           <div className="flex items-center gap-3 mb-1">
-            <div className="h-10 w-10 rounded-xl bg-blue-500 flex items-center justify-center">
-              <FileDown className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+              <FileDown className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
               <p className="font-semibold text-sm">Download Your Data</p>

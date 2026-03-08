@@ -150,8 +150,8 @@ export const TwoFactorAuthSettings = () => {
       <SettingsSection title="Authenticator App">
         <div className="p-4 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-amber-500 flex items-center justify-center">
-              <Smartphone className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+              <Smartphone className="h-5 w-5 text-primary-foreground" />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-sm">Authenticator App</p>
