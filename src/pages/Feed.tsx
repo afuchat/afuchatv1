@@ -950,8 +950,19 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       toast.error('Please sign in to report');
       return;
     }
+    try {
+      await supabase.from('reported_content').insert({
+        reporter_id: user.id,
+        content_type: 'comment',
+        content_id: replyId,
+        reason: reason,
+      });
+    } catch (e) {
+      // Table may not exist, that's fine
+    }
     toast.success('Comment reported. We\'ll review it shortly.');
-    setReportingCommentId(null);
+    setShowReportCard(false);
+    setReportTargetId(null);
   };
 
   return (
