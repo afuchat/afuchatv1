@@ -5,6 +5,7 @@ import { Home, Search, Bell, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 
 // Lazy load tab content
 import { lazy, Suspense } from 'react';
