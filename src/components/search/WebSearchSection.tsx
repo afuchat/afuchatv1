@@ -283,15 +283,17 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
   const [searchTime, setSearchTime] = useState<number>(0);
   const abortRef = useRef<AbortController | null>(null);
 
-  const performSearch = useCallback(async () => {
-    if (!query.trim()) return;
+  const lastQueryRef = useRef('');
+
+  const performSearch = useCallback(async (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
 
     setLoading(true);
     setError(null);
     const start = Date.now();
 
     try {
-      const response = await firecrawlApi.search(query, {
+      const response = await firecrawlApi.search(searchQuery, {
         limit: 12,
         scrapeOptions: { formats: ['markdown'] },
       });
@@ -309,14 +311,16 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, []);
 
   useEffect(() => {
-    if (query.trim()) {
-      performSearch();
-    } else {
+    if (query.trim() && query !== lastQueryRef.current) {
+      lastQueryRef.current = query;
+      performSearch(query);
+    } else if (!query.trim()) {
       setResults([]);
       setHasSearched(false);
+      lastQueryRef.current = '';
     }
   }, [query, performSearch]);
 
