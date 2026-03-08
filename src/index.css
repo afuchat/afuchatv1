@@ -49,6 +49,12 @@ html.telegram-mini-app {
   --tg-safe-right: 0px;
 }
 
+/* Android Telegram returns 0 for safeAreaInset but the status bar still overlaps.
+   Provide a sensible fallback so headers don't sit under the status bar. */
+html.telegram-mini-app.android-device {
+  --tg-safe-top: max(var(--tg-safe-top, 0px), 32px);
+}
+
 html.telegram-mini-app body {
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
