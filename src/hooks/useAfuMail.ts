@@ -70,7 +70,8 @@ export function useAfuMail() {
         .eq('folder', folder)
         .eq('is_trashed', false)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(50)
+        .abortSignal(AbortSignal.timeout(10000));
 
       if (error) throw error;
       if (!userEmails || userEmails.length === 0) {
