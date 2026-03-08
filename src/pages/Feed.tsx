@@ -1334,10 +1334,17 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       }
     };
 
+    // Listen for container scroll events from MainTabsNavigation
+    const handleNavScroll = (e: CustomEvent) => {
+      setIsScrollingDown(e.detail.hidden);
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('nav-scroll-state' as any, handleNavScroll as any);
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('nav-scroll-state' as any, handleNavScroll as any);
     };
   }, [lastScrollY]);
 
