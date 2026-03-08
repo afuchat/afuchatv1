@@ -2686,6 +2686,162 @@ export type Database = {
           },
         ]
       }
+      music_short_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          short_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          short_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          short_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_short_comments_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "music_shorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      music_short_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          short_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          short_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          short_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_short_likes_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "music_shorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      music_shorts: {
+        Row: {
+          background_config: Json | null
+          background_style: string | null
+          comments_count: number | null
+          created_at: string | null
+          font_style: string | null
+          id: string
+          likes_count: number | null
+          music_track_id: string | null
+          shares_count: number | null
+          text_color: string | null
+          text_content: string
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          background_config?: Json | null
+          background_style?: string | null
+          comments_count?: number | null
+          created_at?: string | null
+          font_style?: string | null
+          id?: string
+          likes_count?: number | null
+          music_track_id?: string | null
+          shares_count?: number | null
+          text_color?: string | null
+          text_content: string
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          background_config?: Json | null
+          background_style?: string | null
+          comments_count?: number | null
+          created_at?: string | null
+          font_style?: string | null
+          id?: string
+          likes_count?: number | null
+          music_track_id?: string | null
+          shares_count?: number | null
+          text_color?: string | null
+          text_content?: string
+          user_id?: string
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_shorts_music_track_id_fkey"
+            columns: ["music_track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      music_tracks: {
+        Row: {
+          artist: string | null
+          audio_url: string
+          created_at: string | null
+          duration_seconds: number | null
+          genre: string | null
+          id: string
+          is_featured: boolean | null
+          title: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          artist?: string | null
+          audio_url: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          genre?: string | null
+          id?: string
+          is_featured?: boolean | null
+          title: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          artist?: string | null
+          audio_url?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          genre?: string | null
+          id?: string
+          is_featured?: boolean | null
+          title?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string | null
