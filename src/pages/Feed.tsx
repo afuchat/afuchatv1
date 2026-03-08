@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { MessageCircle, Heart, Send, Gift, BarChart2, Crown, Users, MoreHorizontal, Trash2, Flag } from 'lucide-react';
+import { MessageCircle, Heart, Send, Gift, BarChart2, Crown, Users, MoreHorizontal, Trash2, Flag, Image as ImageIcon, Smile, AtSign, X, ChevronDown } from 'lucide-react';
 import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import aiSparkIcon from '@/assets/ai-chat-icon.ico';
