@@ -855,6 +855,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     // Update local state by removing the reply
     const updatedReplies = post.replies.filter(r => r.id !== replyId);
     // Trigger parent refresh would happen via realtime
+  };
 
   const handleReportComment = async (replyId: string, reason: string) => {
     if (!user) {
