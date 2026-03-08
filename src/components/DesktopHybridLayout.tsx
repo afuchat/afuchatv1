@@ -12,7 +12,7 @@ import {
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import { ContextualRightSidebar } from '@/components/desktop/ContextualRightSidebar';
 import { DesktopAccountSwitcher } from '@/components/desktop/DesktopAccountSwitcher';
-import { useAfuAI } from '@/contexts/AfuAIContext';
+
 import { supabase } from '@/integrations/supabase/client';
 import NewPostModal from '@/components/ui/NewPostModal';
 import { cn } from '@/lib/utils';
