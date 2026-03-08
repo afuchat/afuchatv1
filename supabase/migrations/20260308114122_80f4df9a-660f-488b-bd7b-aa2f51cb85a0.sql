@@ -1,0 +1,1 @@
+DELETE FROM post_ai_summaries;
