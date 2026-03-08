@@ -659,47 +659,45 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
 
   return (
     <>
-      <ScrollArea className="h-full w-full">
-        <div className="px-4 pt-3 pb-6 overflow-hidden">
-          {/* Search meta */}
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-[12px] text-muted-foreground">
-              About {results.length} results ({searchTime.toFixed(2)}s)
-            </p>
-            <Button
-              onClick={() => {
-                lastQueryRef.current = '';
-                performSearch(query);
-              }}
-              variant="ghost"
-              size="sm"
-              className="h-7 text-[12px] gap-1 text-muted-foreground"
-            >
-              <RefreshCw className="h-3 w-3" /> Refresh
-            </Button>
-          </div>
-
-          {/* Wikipedia Knowledge Panel */}
-          {wikiProfile && <WikiKnowledgePanel profile={wikiProfile} onOpenUrl={openUrl} />}
-
-          {/* Quick answer from first result */}
-          {!wikiProfile && featured && <QuickAnswerBox query={query} markdown={featured.markdown} />}
-
-          {/* Featured result */}
-          {featured && (
-            <div className="mb-4">
-              <FeaturedResultCard result={featured} onClick={() => openUrl(featured.url, featured.title)} />
-            </div>
-          )}
-
-          {/* Remaining results */}
-          <div className="divide-y divide-border/60">
-            {rest.map((result, i) => (
-              <ResultCard key={result.url + i} result={result} index={i} onClick={() => openUrl(result.url, result.title)} onOpenUrl={openUrl} />
-            ))}
-          </div>
+      <div className="px-4 pt-3 pb-6">
+        {/* Search meta */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-[12px] text-muted-foreground">
+            About {results.length} results ({searchTime.toFixed(2)}s)
+          </p>
+          <Button
+            onClick={() => {
+              lastQueryRef.current = '';
+              performSearch(query);
+            }}
+            variant="ghost"
+            size="sm"
+            className="h-7 text-[12px] gap-1 text-muted-foreground"
+          >
+            <RefreshCw className="h-3 w-3" /> Refresh
+          </Button>
         </div>
-      </ScrollArea>
+
+        {/* Wikipedia Knowledge Panel */}
+        {wikiProfile && <WikiKnowledgePanel profile={wikiProfile} onOpenUrl={openUrl} />}
+
+        {/* Quick answer from first result */}
+        {!wikiProfile && featured && <QuickAnswerBox query={query} markdown={featured.markdown} />}
+
+        {/* Featured result */}
+        {featured && (
+          <div className="mb-4">
+            <FeaturedResultCard result={featured} onClick={() => openUrl(featured.url, featured.title)} />
+          </div>
+        )}
+
+        {/* Remaining results */}
+        <div className="divide-y divide-border/60">
+          {rest.map((result, i) => (
+            <ResultCard key={result.url + i} result={result} index={i} onClick={() => openUrl(result.url, result.title)} onOpenUrl={openUrl} />
+          ))}
+        </div>
+      </div>
 
       {/* In-App Browser Overlay */}
       <AnimatePresence>
