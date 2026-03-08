@@ -84,17 +84,17 @@ const MusicShorts = () => {
 
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
-    // Fetch like counts and reply counts
+    // Fetch like counts and reply counts using RPC functions
     const postIds = posts.map((p: any) => p.id);
     const [likesRes, repliesRes] = await Promise.all([
-      supabase.from('likes').select('post_id').in('post_id', postIds),
-      supabase.from('replies').select('post_id').in('post_id', postIds),
+      supabase.rpc('get_post_like_counts', { post_ids: postIds }),
+      supabase.rpc('get_post_reply_counts', { post_ids: postIds }),
     ]);
 
     const likeCounts = new Map<string, number>();
     const replyCounts = new Map<string, number>();
-    (likesRes.data || []).forEach((l: any) => likeCounts.set(l.post_id, (likeCounts.get(l.post_id) || 0) + 1));
-    (repliesRes.data || []).forEach((r: any) => replyCounts.set(r.post_id, (replyCounts.get(r.post_id) || 0) + 1));
+    (likesRes.data || []).forEach((l: any) => likeCounts.set(l.post_id, l.like_count));
+    (repliesRes.data || []).forEach((r: any) => replyCounts.set(r.post_id, r.reply_count));
 
     // Assign a random music track to each post
     const enriched: PostShort[] = posts.map((p: any) => ({
