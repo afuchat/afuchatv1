@@ -34,7 +34,7 @@ const parseMessageContent = (content: string): React.ReactNode => {
       parts.push(
         <Link 
           key={`mention-${idx}`} 
-          to={`/${handle}`} 
+          to={`/@${handle}`} 
           className="text-blue-300 hover:underline font-medium"
           onClick={(e) => e.stopPropagation()}
         >
