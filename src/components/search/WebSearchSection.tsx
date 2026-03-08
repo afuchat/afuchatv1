@@ -684,9 +684,14 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
       <div className="px-4 pt-3 pb-6">
         {/* Search meta */}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-[12px] text-muted-foreground">
-            About {results.length} results ({searchTime.toFixed(2)}s)
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-[12px] text-muted-foreground">
+              About {results.length} results ({searchTime.toFixed(2)}s)
+            </p>
+            {loading && (
+              <div className="h-3 w-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            )}
+          </div>
           <Button
             onClick={() => {
               lastQueryRef.current = '';
@@ -695,8 +700,9 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
             variant="ghost"
             size="sm"
             className="h-7 text-[12px] gap-1 text-muted-foreground"
+            disabled={loading}
           >
-            <RefreshCw className="h-3 w-3" /> Refresh
+            <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} /> Refresh
           </Button>
         </div>
 
