@@ -258,29 +258,35 @@ serve(async (req) => {
         const displayName = [firstName, lastName].filter(Boolean).join(' ') || `User ${telegramId}`;
         const handle = username || `tg_${telegramId}`;
 
-        const { data: existingUsers } = await supabase.auth.admin.listUsers();
-        const existingAuth = existingUsers?.users?.find(u => u.email === email);
-
-        if (existingAuth) {
-          userId = existingAuth.id;
-          console.log('[TG Auth] Reusing existing auth user:', userId);
-        } else {
-          const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-            email,
-            password: crypto.randomUUID(),
-            email_confirm: true,
-            user_metadata: {
-              telegram_id: telegramId,
-              display_name: displayName,
-              avatar_url: photoUrl,
-            }
-          });
-
-          if (createError) {
-            console.error('[TG Auth] Create user error:', createError.message);
-            throw createError;
+        // Try to create user first; if email already exists, fetch via generateLink
+        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+          email,
+          password: crypto.randomUUID(),
+          email_confirm: true,
+          user_metadata: {
+            telegram_id: telegramId,
+            display_name: displayName,
+            avatar_url: photoUrl,
           }
-          userId = newUser.user!.id;
+        });
+
+        if (createError && createError.message?.includes('already been registered')) {
+          // User exists — get their ID via generateLink
+          const { data: linkCheck } = await supabase.auth.admin.generateLink({
+            type: 'magiclink',
+            email,
+          });
+          if (linkCheck?.user?.id) {
+            userId = linkCheck.user.id;
+            console.log('[TG Auth] Reusing existing auth user:', userId);
+          } else {
+            throw new Error('Could not find existing user');
+          }
+        } else if (createError) {
+          console.error('[TG Auth] Create user error:', createError.message);
+          throw createError;
+        } else {
+          userId = newUser!.user!.id;
           console.log('[TG Auth] Created new auth user:', userId);
         }
 
