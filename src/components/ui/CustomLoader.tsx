@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import logoIcon from '@/assets/logo-icon.jpg';
+import logoIcon from '@/assets/logo-icon.svg';
 
 interface CustomLoaderProps {
   size?: 'sm' | 'md' | 'lg';
@@ -19,7 +19,7 @@ export const CustomLoader = ({ size = 'md', className, text }: CustomLoaderProps
       <img
         src={logoIcon}
         alt="Loading"
-        className={cn(sizeMap[size], 'object-contain animate-spin rounded-full')}
+        className={cn(sizeMap[size], 'object-contain animate-spin')}
         style={{ animationDuration: '1.2s' }}
       />
       {text && (
@@ -58,7 +58,7 @@ export const ButtonLoader = ({ className }: { className?: string }) => (
     <img
       src={logoIcon}
       alt=""
-      className="h-4 w-4 object-contain animate-spin rounded-full"
+      className="h-4 w-4 object-contain animate-spin"
       style={{ animationDuration: '1.2s' }}
     />
   </div>
