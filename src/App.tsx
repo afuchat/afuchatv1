@@ -154,12 +154,14 @@ const UsernameOrReferral = () => {
       );
     }
     
+    const handle = username.slice(1); // Remove @ prefix
+    
     if (subPath === 'followers') {
-      return <Layout><Followers /></Layout>;
+      return <Layout><Followers handleOverride={handle} /></Layout>;
     }
     
     if (subPath === 'following') {
-      return <Layout><Following /></Layout>;
+      return <Layout><Following handleOverride={handle} /></Layout>;
     }
 
     return (
