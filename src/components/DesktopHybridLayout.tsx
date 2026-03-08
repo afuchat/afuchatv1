@@ -239,18 +239,6 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* AfuAI Toggle */}
-            {user && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={openAfuAI}
-                title="Open AfuAI"
-              >
-                <img src={aiChatIcon} alt="AfuAI" className="h-5 w-5 object-contain select-none" draggable={false} />
-              </Button>
-            )}
 
             <Link to="/notifications">
               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full relative">
