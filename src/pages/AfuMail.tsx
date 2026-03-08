@@ -23,6 +23,7 @@ export default function AfuMail() {
 
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
   const [composing, setComposing] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [replyTo, setReplyTo] = useState<{ from: string; subject: string; body: string } | undefined>();
   const [forwardFrom, setForwardFrom] = useState<{ subject: string; body: string } | undefined>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
