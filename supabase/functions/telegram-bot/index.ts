@@ -2264,6 +2264,18 @@ async function handleCallback(callbackQuery: any) {
         });
         break;
       }
+
+      // Check if user has @afuchat.com email
+      const { data: { user: afumailAuthUser } } = await supabase.auth.admin.getUserById(tgUser.user_id);
+      const afumailUserEmail = afumailAuthUser?.email || '';
+      if (!afumailUserEmail.endsWith('@afuchat.com')) {
+        await editMessage(chatId, messageId, `📧 <b>AfuMail</b>\n\nAfuMail is only available to users registered with an <b>@afuchat.com</b> email address.\n\nYour current email (${afumailUserEmail}) is not eligible.`, {
+          inline_keyboard: [
+            [{ text: t('back', lang), callback_data: 'menu_mini_apps' }],
+          ]
+        });
+        break;
+      }
       
       // Get mailbox
       const { data: mailbox } = await supabase
@@ -2272,25 +2284,40 @@ async function handleCallback(callbackQuery: any) {
         .eq('user_id', tgUser.user_id)
         .single();
       
-      // Get recent inbox
-      const { data: recentEmails } = await supabase
-        .from('afumail_user_emails')
-        .select(`
-          id, is_read, is_starred, folder,
-          afumail_emails(id, sender_email, subject, body_text, sent_at, created_at)
-        `)
-        .eq('user_id', tgUser.user_id)
-        .eq('folder', 'inbox')
-        .eq('is_trashed', false)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Get recent inbox & sent in parallel
+      const [inboxResult, sentResult, unreadResult] = await Promise.all([
+        supabase
+          .from('afumail_user_emails')
+          .select(`id, is_read, is_starred, folder, afumail_emails(id, sender_email, subject, body_text, sent_at, created_at)`)
+          .eq('user_id', tgUser.user_id)
+          .eq('folder', 'inbox')
+          .eq('is_trashed', false)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('afumail_user_emails')
+          .select(`id, is_read, is_starred, folder, afumail_emails(id, sender_email, subject, body_text, sent_at, created_at)`)
+          .eq('user_id', tgUser.user_id)
+          .eq('folder', 'sent')
+          .eq('is_trashed', false)
+          .order('created_at', { ascending: false })
+          .limit(3),
+        supabase
+          .from('afumail_user_emails')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', tgUser.user_id)
+          .eq('folder', 'inbox')
+          .eq('is_read', false)
+          .eq('is_trashed', false),
+      ]);
       
       const emailAddr = mailbox?.email_address || 'Not set up yet';
-      let mailText = `📧 <b>AfuMail</b>\n\n<b>Your address:</b> ${emailAddr}\n\n`;
+      let mailText = `📧 <b>AfuMail</b>\n\n<b>Your address:</b> <code>${emailAddr}</code>\n\n`;
       
+      const recentEmails = inboxResult.data;
       if (recentEmails && recentEmails.length > 0) {
-        mailText += '<b>Recent Inbox:</b>\n\n';
-        recentEmails.forEach((ue: any, i: number) => {
+        mailText += '<b>📥 Recent Inbox:</b>\n\n';
+        recentEmails.forEach((ue: any) => {
           const email = ue.afumail_emails;
           if (!email) return;
           const unread = !ue.is_read ? '🔵 ' : '';
@@ -2301,24 +2328,28 @@ async function handleCallback(callbackQuery: any) {
           mailText += `${unread}${starred}<b>${from}</b> · ${time}\n${subject.slice(0, 60)}\n\n`;
         });
       } else {
-        mailText += 'No emails in your inbox yet.\n\n';
+        mailText += '📥 No emails in your inbox yet.\n\n';
+      }
+
+      const sentEmails = sentResult.data;
+      if (sentEmails && sentEmails.length > 0) {
+        mailText += '<b>📤 Recently Sent:</b>\n\n';
+        sentEmails.forEach((ue: any) => {
+          const email = ue.afumail_emails;
+          if (!email) return;
+          const subject = email.subject || '(No subject)';
+          const time = getTimeAgo(email.sent_at || email.created_at);
+          mailText += `📤 ${subject.slice(0, 60)} · ${time}\n\n`;
+        });
       }
       
       mailText += 'Open AfuMail for the full experience.';
       
-      const { count: unreadCount } = await supabase
-        .from('afumail_user_emails')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', tgUser.user_id)
-        .eq('folder', 'inbox')
-        .eq('is_read', false)
-        .eq('is_trashed', false);
-      
-      const unreadBadge = unreadCount ? ` (${unreadCount})` : '';
+      const unreadBadge = unreadResult.count ? ` (${unreadResult.count})` : '';
       
       await editMessage(chatId, messageId, mailText, {
         inline_keyboard: [
-          [{ text: `📥 Open AfuMail${unreadBadge}`, url: 'https://afuchat.com/afumail' }],
+          [{ text: `📥 Inbox${unreadBadge}`, url: 'https://afuchat.com/afumail' }, { text: '✏️ Compose', url: 'https://afuchat.com/afumail' }],
           [{ text: '🔄 Refresh', callback_data: 'menu_afumail' }],
           [{ text: t('backToMiniApps', lang), callback_data: 'menu_mini_apps' }],
         ]
