@@ -1722,7 +1722,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							</div>
 							<div 
 								className="flex items-center cursor-pointer hover:underline"
-								onClick={() => navigate(`/${profile.handle}/followers`)}
+								onClick={() => navigate(`/@${profile.handle}/followers`)}
 							>
 								<span className="font-bold text-sm">{formatCount(followCount.followers)}</span>
 								<span className="text-muted-foreground text-sm ml-1">{t('profile.followers')}</span>
