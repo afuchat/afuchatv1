@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageCirclePlus, Users, X, Pencil, Radio } from 'lucide-react';
+import { MessageCirclePlus, Users, X, Pencil, Radio, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
