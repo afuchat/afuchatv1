@@ -157,6 +157,7 @@ const getTelegramSafeArea = () => {
 
 // ChatRoom component
 const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
+  const tgSafe = isEmbedded ? { top: 0, bottom: 0 } : getTelegramSafeArea();
   const { chatId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
