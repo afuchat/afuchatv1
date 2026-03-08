@@ -25,8 +25,9 @@ interface UserProfile {
   verification_source?: 'manual' | 'premium' | null;
 }
 
-export default function Followers() {
-  const { userId: handleOrId } = useParams<{ userId: string }>();
+export default function Followers({ handleOverride }: { handleOverride?: string } = {}) {
+  const { userId: paramHandleOrId } = useParams<{ userId: string }>();
+  const handleOrId = handleOverride || paramHandleOrId;
   const { user } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
