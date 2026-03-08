@@ -30,15 +30,14 @@ interface PostShort {
 
 const MusicShorts = () => {
   const [shorts, setShorts] = useState<PostShort[]>([]);
-  const [musicTracks, setMusicTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const fetchShorts = useCallback(async () => {
     setLoading(true);
 
-    // Fetch posts and music tracks in parallel
     const [postsRes, tracksRes] = await Promise.all([
       supabase
         .from('posts')
@@ -63,7 +62,6 @@ const MusicShorts = () => {
 
     const posts = postsRes.data || [];
     const tracks = tracksRes.data || [];
-    setMusicTracks(tracks);
 
     if (posts.length === 0) {
       setShorts([]);
@@ -71,7 +69,6 @@ const MusicShorts = () => {
       return;
     }
 
-    // Fetch profiles
     const userIds = [...new Set(posts.map((p: any) => p.author_id))];
     const { data: profiles } = await supabase
       .from('profiles')
@@ -80,7 +77,6 @@ const MusicShorts = () => {
 
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
-    // Fetch like counts and reply counts using RPC functions
     const postIds = posts.map((p: any) => p.id);
     const [likesRes, repliesRes] = await Promise.all([
       supabase.rpc('get_post_like_counts', { post_ids: postIds }),
@@ -92,7 +88,6 @@ const MusicShorts = () => {
     (likesRes.data || []).forEach((l: any) => likeCounts.set(l.post_id, l.like_count));
     (repliesRes.data || []).forEach((r: any) => replyCounts.set(r.post_id, r.reply_count));
 
-    // Assign a random music track to each post
     const enriched: PostShort[] = posts.map((p: any) => ({
       ...p,
       profiles: profileMap.get(p.author_id) || null,
@@ -101,14 +96,12 @@ const MusicShorts = () => {
       music_track: tracks.length > 0 ? tracks[Math.floor(Math.random() * tracks.length)] : null,
     }));
 
-    // Shuffle for variety
     setShorts(enriched.sort(() => Math.random() - 0.5));
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchShorts(); }, [fetchShorts]);
 
-  // Intersection observer for active detection
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new IntersectionObserver(
@@ -140,14 +133,12 @@ const MusicShorts = () => {
       <div className="h-screen bg-black flex flex-col items-center justify-center text-white gap-4">
         <Music2 className="h-12 w-12 text-muted-foreground" />
         <p className="text-muted-foreground text-sm">No posts yet</p>
-        <p className="text-muted-foreground text-xs">Posts from the feed will appear here as shorts!</p>
       </div>
     );
   }
 
   return (
     <div className="relative h-screen bg-black">
-      {/* Feed */}
       <div
         ref={containerRef}
         className="h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide overscroll-none"
@@ -158,6 +149,8 @@ const MusicShorts = () => {
             <PostShortPlayer
               post={short}
               isActive={index === activeIndex}
+              onUserInteracted={() => setHasUserInteracted(true)}
+              hasUserInteracted={hasUserInteracted}
             />
           </div>
         ))}
