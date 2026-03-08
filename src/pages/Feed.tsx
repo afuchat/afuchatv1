@@ -1552,111 +1552,116 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             {/* Inline Delete Confirmation — compact popover style */}
             <AnimatePresence>
               {showDeleteCommentConfirm && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: 4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 4 }}
-                  transition={{ duration: 0.12, ease: 'easeOut' }}
-                  className="absolute bottom-full right-4 mb-2 w-56 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-10"
-                >
-                  <div className="p-3">
-                    <p className="text-[13px] font-semibold text-foreground">Delete comment?</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">This can't be undone.</p>
-                  </div>
-                  <div className="border-t border-border flex">
-                    <button 
-                      className="flex-1 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
-                      onClick={() => { setShowDeleteCommentConfirm(false); setCommentActionId(null); }}
-                    >
-                      Cancel
-                    </button>
-                    <div className="w-px bg-border" />
-                    <button 
-                      className="flex-1 py-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors"
-                      onClick={() => {
-                        if (commentActionId) handleDeleteReply(commentActionId);
-                        setShowDeleteCommentConfirm(false);
-                        setCommentActionId(null);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </motion.div>
+                <>
+                  <div className="fixed inset-0 z-[9]" onClick={() => { setShowDeleteCommentConfirm(false); setCommentActionId(null); }} />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: 4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 4 }}
+                    transition={{ duration: 0.12, ease: 'easeOut' }}
+                    className="absolute bottom-full right-4 mb-2 w-56 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-10"
+                  >
+                    <div className="p-3">
+                      <p className="text-[13px] font-semibold text-foreground">Delete comment?</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">This can't be undone.</p>
+                    </div>
+                    <div className="border-t border-border flex">
+                      <button 
+                        className="flex-1 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+                        onClick={() => { setShowDeleteCommentConfirm(false); setCommentActionId(null); }}
+                      >
+                        Cancel
+                      </button>
+                      <div className="w-px bg-border" />
+                      <button 
+                        className="flex-1 py-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors"
+                        onClick={() => {
+                          if (commentActionId) handleDeleteReply(commentActionId);
+                          setShowDeleteCommentConfirm(false);
+                          setCommentActionId(null);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </motion.div>
+                </>
               )}
             </AnimatePresence>
 
             {/* Inline Report Card — compact popover style */}
             <AnimatePresence>
               {showReportCard && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: 4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 4 }}
-                  transition={{ duration: 0.12, ease: 'easeOut' }}
-                  className="absolute bottom-full right-4 mb-2 w-52 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-10"
-                >
-                  <div className="py-1.5">
-                    {[
-                      { key: 'spam', label: 'Spam or misleading', icon: '🚫' },
-                      { key: 'harassment', label: 'Harassment', icon: '😤' },
-                      { key: 'hate_speech', label: 'Hate speech', icon: '🛑' },
-                      { key: 'inappropriate', label: 'Inappropriate', icon: '⚠️' },
-                    ].map((reason) => (
-                      <button
-                        key={reason.key}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-muted/50 transition-colors active:bg-muted"
-                        onClick={() => reportTargetId && handleReportComment(reportTargetId, reason.key)}
-                      >
-                        <span className="text-sm">{reason.icon}</span>
-                        <span className="text-[13px] text-foreground">{reason.label}</span>
-                      </button>
-                    ))}
-                    {/* Something else — with text input */}
-                    {!showOtherReasonInput ? (
-                      <button
-                        className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-muted/50 transition-colors active:bg-muted"
-                        onClick={() => setShowOtherReasonInput(true)}
-                      >
-                        <span className="text-sm">📝</span>
-                        <span className="text-[13px] text-foreground">Something else</span>
-                      </button>
-                    ) : (
-                      <div className="px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={otherReasonText}
-                            onChange={(e) => setOtherReasonText(e.target.value)}
-                            placeholder="Describe the issue..."
-                            autoFocus
-                            className="flex-1 text-[13px] bg-muted/50 border border-border/50 rounded-lg px-3 py-1.5 text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/40 min-w-0"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && otherReasonText.trim() && reportTargetId) {
-                                handleReportComment(reportTargetId, `other: ${otherReasonText.trim()}`);
-                                setOtherReasonText('');
-                                setShowOtherReasonInput(false);
-                              }
-                            }}
-                          />
-                          <button
-                            disabled={!otherReasonText.trim()}
-                            onClick={() => {
-                              if (reportTargetId && otherReasonText.trim()) {
-                                handleReportComment(reportTargetId, `other: ${otherReasonText.trim()}`);
-                                setOtherReasonText('');
-                                setShowOtherReasonInput(false);
-                              }
-                            }}
-                            className={cn("text-xs font-bold transition-all", otherReasonText.trim() ? "text-primary" : "text-primary/30")}
-                          >
-                            Send
-                          </button>
+                <>
+                  <div className="fixed inset-0 z-[9]" onClick={() => { setShowReportCard(false); setReportTargetId(null); setShowOtherReasonInput(false); setOtherReasonText(''); }} />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: 4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 4 }}
+                    transition={{ duration: 0.12, ease: 'easeOut' }}
+                    className="absolute bottom-full right-4 mb-2 w-52 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-10"
+                  >
+                    <div className="py-1.5">
+                      {[
+                        { key: 'spam', label: 'Spam or misleading', icon: '🚫' },
+                        { key: 'harassment', label: 'Harassment', icon: '😤' },
+                        { key: 'hate_speech', label: 'Hate speech', icon: '🛑' },
+                        { key: 'inappropriate', label: 'Inappropriate', icon: '⚠️' },
+                      ].map((reason) => (
+                        <button
+                          key={reason.key}
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-muted/50 transition-colors active:bg-muted"
+                          onClick={() => reportTargetId && handleReportComment(reportTargetId, reason.key)}
+                        >
+                          <span className="text-sm">{reason.icon}</span>
+                          <span className="text-[13px] text-foreground">{reason.label}</span>
+                        </button>
+                      ))}
+                      {!showOtherReasonInput ? (
+                        <button
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-muted/50 transition-colors active:bg-muted"
+                          onClick={() => setShowOtherReasonInput(true)}
+                        >
+                          <span className="text-sm">📝</span>
+                          <span className="text-[13px] text-foreground">Something else</span>
+                        </button>
+                      ) : (
+                        <div className="px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={otherReasonText}
+                              onChange={(e) => setOtherReasonText(e.target.value)}
+                              placeholder="Describe the issue..."
+                              autoFocus
+                              className="flex-1 text-[13px] bg-muted/50 border border-border/50 rounded-lg px-3 py-1.5 text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/40 min-w-0"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && otherReasonText.trim() && reportTargetId) {
+                                  handleReportComment(reportTargetId, `other: ${otherReasonText.trim()}`);
+                                  setOtherReasonText('');
+                                  setShowOtherReasonInput(false);
+                                }
+                              }}
+                            />
+                            <button
+                              disabled={!otherReasonText.trim()}
+                              onClick={() => {
+                                if (reportTargetId && otherReasonText.trim()) {
+                                  handleReportComment(reportTargetId, `other: ${otherReasonText.trim()}`);
+                                  setOtherReasonText('');
+                                  setShowOtherReasonInput(false);
+                                }
+                              }}
+                              className={cn("text-xs font-bold transition-all", otherReasonText.trim() ? "text-primary" : "text-primary/30")}
+                            >
+                              Send
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
+                      )}
+                    </div>
+                  </motion.div>
+                </>
               )}
             </AnimatePresence>
           </div>
