@@ -2090,29 +2090,6 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                 </div>
               ) : (
                 <>
-                  {/* Plus button for attachments */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-full hover:bg-muted/50 flex-shrink-0"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Paperclip className="h-5 w-5 text-foreground" />
-                  </Button>
-
-                  {/* GIF button */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-full hover:bg-muted/50 flex-shrink-0"
-                    onClick={() => setIsGifPickerOpen(true)}
-                  >
-                    <span className="text-xs font-bold text-foreground">GIF</span>
-                  </Button>
-
-
                   {/* Gift button - only for 1-on-1 chats */}
                   {!chatInfo?.is_group && !chatInfo?.is_channel && otherUser && (
                     <SendGiftDialog
