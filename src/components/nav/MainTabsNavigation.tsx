@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Search, Bell, MessageCircle, Film } from 'lucide-react';
+import { Home, Search, Bell, MessageCircle, Music2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,7 +12,7 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 
 const HomePage = lazy(() => import('@/pages/Home'));
 const SearchPage = lazy(() => import('@/pages/Search'));
-const Shorts = lazy(() => import('@/pages/Shorts'));
+const MusicShorts = lazy(() => import('@/pages/MusicShorts'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const DesktopChats = lazy(() => import('@/pages/DesktopChats'));
 
@@ -28,7 +28,7 @@ type TabId = 'home' | 'search' | 'shorts' | 'notifications' | 'chats';
 const TABS: { id: TabId; path: string; icon: any; label: string; requiresAuth: boolean }[] = [
   { id: 'home', path: '/home', icon: Home, label: 'Home', requiresAuth: false },
   { id: 'search', path: '/search', icon: Search, label: 'Search', requiresAuth: false },
-  { id: 'shorts', path: '/shorts', icon: Film, label: 'Shorts', requiresAuth: false },
+  { id: 'shorts', path: '/shorts', icon: Music2, label: 'Shorts', requiresAuth: false },
   { id: 'notifications', path: '/notifications', icon: Bell, label: 'Alerts', requiresAuth: true },
   { id: 'chats', path: '/chats', icon: MessageCircle, label: 'Chats', requiresAuth: true },
 ];
@@ -143,7 +143,7 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
       case 1:
         return <SearchPage />;
       case 2:
-        return <Shorts />;
+        return <MusicShorts />;
       case 3:
         return user ? <Notifications /> : null;
       case 4:
