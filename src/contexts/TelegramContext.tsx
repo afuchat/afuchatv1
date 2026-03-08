@@ -73,15 +73,54 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
 
   // Update viewport height and safe area CSS variables for proper sizing
   useEffect(() => {
-    if (telegram.isTelegram) {
-      document.documentElement.style.setProperty('--tg-viewport-height', `${telegram.viewportHeight}px`);
-      document.documentElement.style.setProperty('--tg-viewport-stable-height', `${telegram.viewportStableHeight}px`);
+    if (!telegram.isTelegram) return;
+    
+    const root = document.documentElement;
+    root.style.setProperty('--tg-viewport-height', `${telegram.viewportHeight}px`);
+    root.style.setProperty('--tg-viewport-stable-height', `${telegram.viewportStableHeight}px`);
+    
+    const updateSafeAreas = () => {
+      const webApp = window.Telegram?.WebApp;
+      if (!webApp) return;
       
-      // Get safe area from Telegram WebApp if available
-      const webApp = (window as any).Telegram?.WebApp;
-      const safeAreaTop = webApp?.safeAreaInset?.top || webApp?.headerColor ? 0 : 56;
-      document.documentElement.style.setProperty('--tg-safe-area-top', `${safeAreaTop}px`);
+      // Device safe area (notch, status bar, home indicator)
+      const sa = webApp.safeAreaInset || { top: 0, bottom: 0, left: 0, right: 0 };
+      root.style.setProperty('--tg-safe-area-top', `${sa.top}px`);
+      root.style.setProperty('--tg-safe-area-bottom', `${sa.bottom}px`);
+      root.style.setProperty('--tg-safe-area-left', `${sa.left}px`);
+      root.style.setProperty('--tg-safe-area-right', `${sa.right}px`);
+      
+      // Content safe area (Telegram header/bottom bar)
+      const csa = webApp.contentSafeAreaInset || { top: 0, bottom: 0, left: 0, right: 0 };
+      root.style.setProperty('--tg-content-safe-area-top', `${csa.top}px`);
+      root.style.setProperty('--tg-content-safe-area-bottom', `${csa.bottom}px`);
+      root.style.setProperty('--tg-content-safe-area-left', `${csa.left}px`);
+      root.style.setProperty('--tg-content-safe-area-right', `${csa.right}px`);
+      
+      // Combined safe area (device + content) for easy use
+      root.style.setProperty('--tg-safe-top', `${sa.top + csa.top}px`);
+      root.style.setProperty('--tg-safe-bottom', `${sa.bottom + csa.bottom}px`);
+      root.style.setProperty('--tg-safe-left', `${sa.left + csa.left}px`);
+      root.style.setProperty('--tg-safe-right', `${sa.right + csa.right}px`);
+      
+      console.log('[Telegram] Safe areas updated:', { device: sa, content: csa });
+    };
+    
+    updateSafeAreas();
+    
+    // Listen for safe area changes (Bot API 7.7+)
+    const webApp = window.Telegram?.WebApp;
+    if (webApp) {
+      webApp.onEvent('safeAreaChanged', updateSafeAreas);
+      webApp.onEvent('contentSafeAreaChanged', updateSafeAreas);
     }
+    
+    return () => {
+      if (webApp) {
+        webApp.offEvent('safeAreaChanged', updateSafeAreas);
+        webApp.offEvent('contentSafeAreaChanged', updateSafeAreas);
+      }
+    };
   }, [telegram.isTelegram, telegram.viewportHeight, telegram.viewportStableHeight]);
 
   // Manage Telegram Back Button based on route
