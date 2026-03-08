@@ -367,7 +367,7 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
         <p className="text-[12px] text-muted-foreground">
           About {results.length} results ({searchTime.toFixed(2)}s)
         </p>
-        <Button onClick={performSearch} variant="ghost" size="sm" className="h-7 text-[12px] gap-1 text-muted-foreground">
+        <Button onClick={() => performSearch(query)} variant="ghost" size="sm" className="h-7 text-[12px] gap-1 text-muted-foreground">
           <RefreshCw className="h-3 w-3" /> Refresh
         </Button>
       </div>
