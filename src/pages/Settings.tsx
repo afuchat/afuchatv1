@@ -180,7 +180,7 @@ const Settings = () => {
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
+              <div className="fixed top-0 left-0 right-0 z-20 bg-background/95 backdrop-blur border-b border-border">
                 <div className="px-4 py-3 flex items-center gap-3">
                   <Button variant="ghost" size="icon-sm" onClick={handleBack}>
                     <ArrowLeft className="h-5 w-5" />
@@ -188,14 +188,14 @@ const Settings = () => {
                   <div className="flex items-center gap-2.5">
                     {activeItem && (
                       <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center", activeItem.color)}>
-                        <activeItem.icon className="h-3.5 w-3.5 text-white" />
+                        <activeItem.icon className="h-3.5 w-3.5 text-primary-foreground" />
                       </div>
                     )}
                     <h1 className="text-lg font-bold">{activeContent?.title}</h1>
                   </div>
                 </div>
               </div>
-              <div className="px-4 py-6 pb-32">
+              <div className="pt-14 px-4 py-6 pb-32">
                 {activeContent && <activeContent.Component />}
               </div>
             </motion.div>
