@@ -2,77 +2,111 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { Button } from '@/components/ui/button';
-import { Plus, Music2, RefreshCw } from 'lucide-react';
-import { MusicShortPlayer } from '@/components/music-shorts/MusicShortPlayer';
-import { MusicShortsComposer } from '@/components/music-shorts/MusicShortsComposer';
+import { Music2, RefreshCw } from 'lucide-react';
 import { MusicDiscovery } from '@/components/music-shorts/MusicDiscovery';
-import { MusicTrackPage } from '@/components/music-shorts/MusicTrackPage';
+import { PostShortPlayer } from '@/components/music-shorts/PostShortPlayer';
 import { toast } from 'sonner';
 
-interface MusicShort {
+interface PostShort {
   id: string;
-  text_content: string;
-  background_style: string;
-  background_config: any;
-  text_color: string;
-  font_style: string;
-  likes_count: number;
-  comments_count: number;
-  shares_count: number;
-  views_count: number;
-  user_id: string;
+  content: string;
+  image_url: string | null;
   created_at: string;
+  author_id: string;
+  post_images?: Array<{ image_url: string; display_order: number; alt_text?: string }>;
+  profiles?: {
+    display_name: string;
+    handle: string;
+    avatar_url: string | null;
+    is_verified: boolean;
+  } | null;
+  like_count: number;
+  reply_count: number;
   music_track?: {
     id: string;
     title: string;
     artist: string;
     audio_url: string;
   } | null;
-  profiles?: {
-    username: string;
-    display_name: string;
-    avatar_url: string;
-  } | null;
 }
 
 const MusicShorts = () => {
-  const [shorts, setShorts] = useState<MusicShort[]>([]);
+  const [shorts, setShorts] = useState<PostShort[]>([]);
+  const [musicTracks, setMusicTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
-  const [showComposer, setShowComposer] = useState(false);
   const [showDiscovery, setShowDiscovery] = useState(false);
-  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
-  const [showTrackPage, setShowTrackPage] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const fetchShorts = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('music_shorts')
-      .select('*, music_track:music_track_id(id, title, artist, audio_url)')
-      .order('created_at', { ascending: false })
-      .limit(30);
 
-    if (error) {
+    // Fetch posts and music tracks in parallel
+    const [postsRes, tracksRes] = await Promise.all([
+      supabase
+        .from('posts')
+        .select(`
+          id, content, image_url, created_at, author_id,
+          post_images(image_url, display_order, alt_text)
+        `)
+        .eq('is_blocked', false)
+        .order('created_at', { ascending: false })
+        .limit(50),
+      supabase
+        .from('music_tracks')
+        .select('id, title, artist, audio_url')
+        .limit(50),
+    ]);
+
+    if (postsRes.error) {
       toast.error('Failed to load');
-    } else if (data && data.length > 0) {
-      // Fetch profiles separately
-      const userIds = [...new Set(data.map((d: any) => d.user_id))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, username, display_name, avatar_url')
-        .in('id', userIds);
-
-      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-      const enriched = data.map((d: any) => ({
-        ...d,
-        profiles: profileMap.get(d.user_id) || null,
-      }));
-      setShorts(enriched.sort(() => Math.random() - 0.5) as any);
-    } else {
-      setShorts([]);
+      setLoading(false);
+      return;
     }
+
+    const posts = postsRes.data || [];
+    const tracks = tracksRes.data || [];
+    setMusicTracks(tracks);
+
+    if (posts.length === 0) {
+      setShorts([]);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch profiles
+    const userIds = [...new Set(posts.map((p: any) => p.author_id))];
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, display_name, handle, avatar_url, is_verified')
+      .in('id', userIds);
+
+    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+
+    // Fetch like counts and reply counts using RPC functions
+    const postIds = posts.map((p: any) => p.id);
+    const [likesRes, repliesRes] = await Promise.all([
+      supabase.rpc('get_post_like_counts', { post_ids: postIds }),
+      supabase.rpc('get_post_reply_counts', { post_ids: postIds }),
+    ]);
+
+    const likeCounts = new Map<string, number>();
+    const replyCounts = new Map<string, number>();
+    (likesRes.data || []).forEach((l: any) => likeCounts.set(l.post_id, l.like_count));
+    (repliesRes.data || []).forEach((r: any) => replyCounts.set(r.post_id, r.reply_count));
+
+    // Assign a random music track to each post
+    const enriched: PostShort[] = posts.map((p: any) => ({
+      ...p,
+      profiles: profileMap.get(p.author_id) || null,
+      like_count: likeCounts.get(p.id) || 0,
+      reply_count: replyCounts.get(p.id) || 0,
+      music_track: tracks.length > 0 ? tracks[Math.floor(Math.random() * tracks.length)] : null,
+    }));
+
+    // Shuffle for variety
+    setShorts(enriched.sort(() => Math.random() - 0.5));
     setLoading(false);
   }, []);
 
@@ -97,11 +131,6 @@ const MusicShorts = () => {
     return () => observer.disconnect();
   }, [shorts]);
 
-  const handleTrackClick = (trackId: string) => {
-    setSelectedTrackId(trackId);
-    setShowTrackPage(true);
-  };
-
   if (loading) {
     return (
       <div className="h-screen bg-black flex items-center justify-center">
@@ -110,32 +139,12 @@ const MusicShorts = () => {
     );
   }
 
-  const seedMusic = async () => {
-    toast.info('Loading real music tracks...');
-    const { error } = await supabase.functions.invoke('fetch-music-tracks');
-    if (error) {
-      toast.error('Failed to load music');
-    } else {
-      toast.success('Real music tracks loaded!');
-      fetchShorts();
-    }
-  };
-
   if (shorts.length === 0) {
     return (
       <div className="h-screen bg-black flex flex-col items-center justify-center text-white gap-4">
         <Music2 className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground text-sm">No music shorts yet</p>
-        <p className="text-muted-foreground text-xs">Be the first to create one!</p>
-        <div className="flex gap-2">
-          <Button onClick={seedMusic} variant="outline" className="gap-2">
-            <RefreshCw className="h-4 w-4" /> Load Music
-          </Button>
-          <Button onClick={() => setShowComposer(true)} className="gap-2">
-            <Plus className="h-4 w-4" /> Create Short
-          </Button>
-        </div>
-        <MusicShortsComposer isOpen={showComposer} onClose={() => { setShowComposer(false); fetchShorts(); }} />
+        <p className="text-muted-foreground text-sm">No posts yet</p>
+        <p className="text-muted-foreground text-xs">Posts from the feed will appear here as shorts!</p>
       </div>
     );
   }
@@ -150,12 +159,11 @@ const MusicShorts = () => {
       >
         {shorts.map((short, index) => (
           <div key={short.id} data-index={index} className="h-screen w-full">
-            <MusicShortPlayer
-              short={short}
+            <PostShortPlayer
+              post={short}
               isActive={index === activeIndex}
               isMuted={isMuted}
               onToggleMute={() => setIsMuted(!isMuted)}
-              onTrackClick={handleTrackClick}
             />
           </div>
         ))}
@@ -181,34 +189,11 @@ const MusicShorts = () => {
         </Button>
       </div>
 
-      {/* Create FAB */}
-      <Button
-        onClick={() => setShowComposer(true)}
-        size="icon"
-        className="fixed bottom-24 right-4 z-50 h-12 w-12 rounded-full shadow-lg"
-      >
-        <Plus className="h-5 w-5" />
-      </Button>
-
       {/* Dialogs */}
-      <MusicShortsComposer
-        isOpen={showComposer}
-        onClose={() => { setShowComposer(false); fetchShorts(); }}
-      />
       <MusicDiscovery
         isOpen={showDiscovery}
         onClose={() => setShowDiscovery(false)}
-        onTrackClick={handleTrackClick}
-      />
-      <MusicTrackPage
-        trackId={selectedTrackId}
-        isOpen={showTrackPage}
-        onClose={() => setShowTrackPage(false)}
-        onShortClick={(id) => {
-          setShowTrackPage(false);
-          const idx = shorts.findIndex(s => s.id === id);
-          if (idx >= 0) setActiveIndex(idx);
-        }}
+        onTrackClick={() => setShowDiscovery(false)}
       />
     </div>
   );
