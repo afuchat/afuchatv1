@@ -2955,7 +2955,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           isMobile 
             ? cn(
                 "fixed left-0 right-0",
-                telegram?.isTelegram ? "top-[var(--tg-safe-area-top,0px)]" : "top-0",
+                telegram?.isTelegram ? "top-[var(--tg-safe-top,0px)]" : "top-0",
                 isScrollingDown ? "-translate-y-full" : "translate-y-0"
               )
             : "sticky top-0"
