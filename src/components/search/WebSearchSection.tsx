@@ -360,6 +360,24 @@ const YouTubeVideoCard = ({ result, index, videoId }: { result: WebSearchResult;
   const [playing, setPlaying] = useState(false);
   const snippet = extractSnippet(result.description, result.markdown);
   const thumbnail = result.metadata?.ogImage || getYouTubeThumbnail(videoId);
+  const isTelegram = typeof document !== 'undefined' && document.documentElement.classList.contains('telegram-mini-app');
+
+  const handlePlay = () => {
+    if (isTelegram) {
+      try {
+        const WebApp = (window as any).Telegram?.WebApp;
+        if (WebApp?.openLink) {
+          WebApp.openLink(result.url, { try_instant_view: false });
+        } else {
+          window.open(result.url, '_blank');
+        }
+      } catch {
+        window.open(result.url, '_blank');
+      }
+    } else {
+      setPlaying(true);
+    }
+  };
 
   return (
     <motion.div
@@ -370,7 +388,7 @@ const YouTubeVideoCard = ({ result, index, videoId }: { result: WebSearchResult;
     >
       {/* Video player / thumbnail */}
       <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-muted mb-2.5">
-        {playing ? (
+        {playing && !isTelegram ? (
           <iframe
             src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
             className="absolute inset-0 w-full h-full border-0"
@@ -381,7 +399,7 @@ const YouTubeVideoCard = ({ result, index, videoId }: { result: WebSearchResult;
         ) : (
           <button
             className="w-full h-full relative group"
-            onClick={() => setPlaying(true)}
+            onClick={handlePlay}
           >
             <img
               src={thumbnail}
@@ -394,7 +412,6 @@ const YouTubeVideoCard = ({ result, index, videoId }: { result: WebSearchResult;
                 <Play className="h-6 w-6 text-white ml-1" fill="white" />
               </div>
             </div>
-            {/* Duration badge placeholder */}
             <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-medium px-1.5 py-0.5 rounded">
               YouTube
             </div>
@@ -681,7 +698,7 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
 
   return (
     <>
-      <div className="px-4 pt-3 pb-6">
+      <div className="px-4 pt-3 pb-6 overflow-x-hidden max-w-full">
         {/* Search meta */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">

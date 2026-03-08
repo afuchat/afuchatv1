@@ -85,6 +85,8 @@ html.telegram-mini-app #root {
 /* App wrapper — must fill viewport but NOT clip non-tab content */
 html.telegram-mini-app #root > div {
   min-height: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* In Telegram, let page content flow naturally so #root handles all scrolling.
