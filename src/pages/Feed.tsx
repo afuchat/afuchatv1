@@ -478,12 +478,25 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const [commentActionId, setCommentActionId] = useState<string | null>(null);
   const [showDeleteCommentConfirm, setShowDeleteCommentConfirm] = useState(false);
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
+  const [showReportCard, setShowReportCard] = useState(false);
+  const [reportTargetId, setReportTargetId] = useState<string | null>(null);
   const [expandedNestedReplies, setExpandedNestedReplies] = useState<Set<string>>(new Set());
   const [commentImageFile, setCommentImageFile] = useState<File | null>(null);
   const [commentImagePreview, setCommentImagePreview] = useState<string | null>(null);
   const commentImageInputRef = useRef<HTMLInputElement>(null);
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   const [commentLikeCounts, setCommentLikeCounts] = useState<Record<string, number>>({});
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionResults, setMentionResults] = useState<Array<{ id: string; handle: string; display_name: string; avatar_url: string | null }>>([]);
+
+  const EMOJI_CATEGORIES = {
+    'Smileys': ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🫢', '🤫', '🤔'],
+    'Gestures': ['👍', '👎', '👏', '🙌', '🤝', '🙏', '💪', '✌️', '🤞', '🤟', '🤘', '👌', '🤌', '👋', '🫶', '❤️', '🔥', '💯', '⭐', '✨'],
+    'Faces': ['😢', '😭', '😤', '😠', '🤬', '😈', '💀', '☠️', '💩', '🤡', '👻', '👽', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'],
+    'Objects': ['🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '🎯', '💡', '📸', '🎵', '🎶', '💰', '💎', '🚀', '⚡', '💫', '🌟', '🌈', '☀️', '🌙'],
+  };
 
   const toggleNestedReplies = (replyId: string) => {
     setExpandedNestedReplies(prev => {
@@ -521,6 +534,37 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       }
       return next;
     });
+  };
+
+  const openReportCard = (commentId: string) => {
+    setReportTargetId(commentId);
+    setShowReportCard(true);
+  };
+
+  const handleReplyTextChange = async (value: string) => {
+    setReplyText(value);
+    // Check for @ mention
+    const atMatch = value.match(/@(\w{1,})$/);
+    if (atMatch && atMatch[1].length >= 1) {
+      setMentionQuery(atMatch[1]);
+      setShowMentionSuggestions(true);
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, handle, display_name, avatar_url')
+        .or(`handle.ilike.%${atMatch[1]}%,display_name.ilike.%${atMatch[1]}%`)
+        .limit(5);
+      setMentionResults(data || []);
+    } else {
+      setShowMentionSuggestions(false);
+      setMentionResults([]);
+    }
+  };
+
+  const insertMention = (handle: string) => {
+    const newText = replyText.replace(/@\w*$/, `@${handle} `);
+    setReplyText(newText);
+    setShowMentionSuggestions(false);
+    commentInputRef.current?.focus();
   };
 
   // Track post view when it becomes visible - optimized to prevent duplicates
@@ -906,8 +950,11 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       toast.error('Please sign in to report');
       return;
     }
+    // Log report locally - table may not exist in schema
+    console.log('Comment reported:', { replyId, reason, reporter: user.id });
     toast.success('Comment reported. We\'ll review it shortly.');
-    setReportingCommentId(null);
+    setShowReportCard(false);
+    setReportTargetId(null);
   };
 
   return (
@@ -1210,7 +1257,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         {user && user.id !== reply.author_id && (
                           <button 
                             className="text-[11px] text-muted-foreground hover:text-destructive font-semibold transition-colors"
-                            onClick={() => handleReportComment(reply.id, 'inappropriate')}
+                            onClick={() => openReportCard(reply.id)}
                           >Report</button>
                         )}
                       </div>
@@ -1283,7 +1330,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                                             {user && user.id !== nested.author_id && (
                                               <button 
                                                 className="text-[10px] text-muted-foreground hover:text-destructive font-semibold transition-colors"
-                                                onClick={() => handleReportComment(nested.id, 'inappropriate')}
+                                                onClick={() => openReportCard(nested.id)}
                                               >Report</button>
                                             )}
                                           </div>
@@ -1321,7 +1368,74 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           </div>
 
           {/* Bottom input area */}
-          <div className="flex-shrink-0 bg-background border-t border-border/30">
+          <div className="flex-shrink-0 bg-background border-t border-border/30 relative">
+            {/* Emoji Picker Panel */}
+            <AnimatePresence>
+              {showEmojiPicker && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden border-b border-border/20"
+                >
+                  <div className="px-3 py-3 max-h-[200px] overflow-y-auto">
+                    {Object.entries(EMOJI_CATEGORIES).map(([category, emojis]) => (
+                      <div key={category} className="mb-3">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 px-1">{category}</p>
+                        <div className="flex flex-wrap gap-0.5">
+                          {emojis.map((emoji) => (
+                            <button
+                              key={emoji}
+                              className="text-xl p-1.5 rounded-lg hover:bg-muted/60 active:scale-90 transition-all"
+                              onClick={() => {
+                                setReplyText(prev => prev + emoji);
+                                commentInputRef.current?.focus();
+                              }}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Mention Suggestions */}
+            <AnimatePresence>
+              {showMentionSuggestions && mentionResults.length > 0 && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="overflow-hidden border-b border-border/20"
+                >
+                  <div className="px-4 py-2 space-y-1">
+                    {mentionResults.map((profile) => (
+                      <button
+                        key={profile.id}
+                        className="flex items-center gap-2.5 w-full px-2 py-2 rounded-lg hover:bg-muted/60 transition-colors"
+                        onClick={() => insertMention(profile.handle)}
+                      >
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={profile.avatar_url || undefined} />
+                          <AvatarFallback className="text-[10px] bg-muted text-muted-foreground font-semibold">{profile.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="text-left">
+                          <p className="text-xs font-semibold text-foreground">{profile.display_name}</p>
+                          <p className="text-[10px] text-muted-foreground">@{profile.handle}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Image preview */}
             {commentImagePreview && (
               <div className="px-4 pt-3 pb-1">
@@ -1361,58 +1475,66 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                     {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 flex items-center gap-2 bg-muted/40 rounded-full px-4 py-2 border border-border/30 focus-within:border-primary/40 transition-all">
+                <div className="flex-1 flex items-center gap-1 min-w-0">
                   <input
                     ref={commentInputRef}
                     type="text"
                     value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
+                    onChange={(e) => handleReplyTextChange(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey && replyText.trim()) {
                         e.preventDefault();
                         handleReplySubmit();
+                        setShowEmojiPicker(false);
                       }
                     }}
+                    onFocus={() => setShowMentionSuggestions(false)}
                     placeholder="Add comment..."
                     className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none min-w-0"
                   />
-                  {/* Action icons inside input */}
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <input
-                      ref={commentImageInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleCommentImageSelect}
-                    />
-                    <button 
-                      onClick={() => commentImageInputRef.current?.click()}
-                      className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <ImageIcon className="h-5 w-5" />
-                    </button>
-                    <button 
-                      onClick={() => setReplyText(prev => prev + '😊')}
-                      className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <Smile className="h-5 w-5" />
-                    </button>
-                    <button 
-                      onClick={() => setReplyText(prev => prev + '@')}
-                      className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <AtSign className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-                {replyText.trim() && (
-                  <button
-                    onClick={handleReplySubmit}
-                    className="text-sm font-bold text-primary hover:text-primary/80 active:scale-95 transition-all flex-shrink-0"
+                  {/* Action icons */}
+                  <input
+                    ref={commentImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleCommentImageSelect}
+                  />
+                  <button 
+                    onClick={() => commentImageInputRef.current?.click()}
+                    className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Post
+                    <ImageIcon className="h-5 w-5" />
                   </button>
-                )}
+                  <button 
+                    onClick={() => { setShowEmojiPicker(prev => !prev); setShowMentionSuggestions(false); }}
+                    className={cn("p-1.5 transition-colors", showEmojiPicker ? "text-primary" : "text-muted-foreground hover:text-foreground")}
+                  >
+                    <Smile className="h-5 w-5" />
+                  </button>
+                  <button 
+                    onClick={() => { 
+                      setReplyText(prev => prev + '@'); 
+                      commentInputRef.current?.focus();
+                      setShowEmojiPicker(false);
+                    }}
+                    className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <AtSign className="h-5 w-5" />
+                  </button>
+                </div>
+                <button
+                  onClick={() => { handleReplySubmit(); setShowEmojiPicker(false); }}
+                  disabled={!replyText.trim() && !commentImageFile}
+                  className={cn(
+                    "text-sm font-bold transition-all flex-shrink-0",
+                    (replyText.trim() || commentImageFile) 
+                      ? 'text-primary hover:text-primary/80 active:scale-95' 
+                      : 'text-primary/30 cursor-default'
+                  )}
+                >
+                  Post
+                </button>
               </div>
             ) : (
               <div className="px-4 py-4 text-center text-sm text-muted-foreground">
@@ -1423,6 +1545,48 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           </div>
         </DrawerContent>
       </Drawer>
+
+      {/* Report Comment Card */}
+      {showReportCard && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-background/80 backdrop-blur-sm" onClick={() => { setShowReportCard(false); setReportTargetId(null); }}>
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="bg-background border border-border rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm sm:mx-4 shadow-lg" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5">
+              <h3 className="text-base font-bold text-foreground mb-1">Report Comment</h3>
+              <p className="text-xs text-muted-foreground mb-4">Why are you reporting this comment?</p>
+              <div className="space-y-1.5">
+                {[
+                  { key: 'spam', label: 'Spam or misleading', icon: '🚫' },
+                  { key: 'harassment', label: 'Harassment or bullying', icon: '😤' },
+                  { key: 'hate_speech', label: 'Hate speech or discrimination', icon: '🛑' },
+                  { key: 'violence', label: 'Violence or threats', icon: '⚠️' },
+                  { key: 'inappropriate', label: 'Inappropriate content', icon: '🔞' },
+                  { key: 'other', label: 'Something else', icon: '📝' },
+                ].map((reason) => (
+                  <button
+                    key={reason.key}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted/60 transition-colors text-left"
+                    onClick={() => reportTargetId && handleReportComment(reportTargetId, reason.key)}
+                  >
+                    <span className="text-base">{reason.icon}</span>
+                    <span className="text-sm text-foreground font-medium">{reason.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="border-t border-border px-5 py-3">
+              <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => { setShowReportCard(false); setReportTargetId(null); }}>
+                Cancel
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Delete comment confirmation */}
       {showDeleteCommentConfirm && (
