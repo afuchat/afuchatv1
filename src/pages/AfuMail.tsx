@@ -89,9 +89,12 @@ export default function AfuMail() {
       {/* Header */}
       {!isInIframe && (
         <header className="border-b border-border px-4 py-3 flex items-center gap-3 shrink-0">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          {/* In Telegram, back button is native — hide the in-app one */}
+          {!isTelegram && (
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
           <img src={afumailLogo} alt="AfuMail" className="h-7 w-7 rounded-lg" />
           <div className="flex-1">
             <h1 className="text-lg font-bold text-primary">AfuMail</h1>
