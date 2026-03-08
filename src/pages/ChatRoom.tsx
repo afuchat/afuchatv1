@@ -1199,69 +1199,6 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           return [...prev, newMsg];
         });
         
-        // Check if @AfuAI was mentioned in groups/channels (premium feature)
-        const afuAIMentioned = /@afuai/i.test(newMessage);
-        if (afuAIMentioned && (chatInfo?.is_group || chatInfo?.is_channel)) {
-          triggerAfuAIReply(newMessage);
-        }
-        
-        setNewMessage('');
-        setSelectedFile(null);
-        setReplyToMessage(null);
-        removeTypingIndicator();
-      }
-    } catch (error) {
-      toast.error('Failed to send message');
-    }
-    
-    setSending(false);
-  };
-
-  // Trigger AfuAI reply in groups/channels
-  const triggerAfuAIReply = async (userMessage: string) => {
-    if (!chatId || !user) return;
-    
-    setAfuAIProcessing(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('afuai-group-reply', {
-        body: {
-          message: userMessage,
-          chatId: chatId,
-        }
-      });
-
-      if (error) {
-        // Check for premium requirement
-        if (error.message?.includes('Premium') || error.message?.includes('403')) {
-          toast.error('Premium subscription required to use @AfuAI in groups/channels');
-          return;
-        }
-        throw error;
-      }
-
-      if (data?.reply) {
-        // Insert AfuAI's reply as a message
-        // We need an AfuAI system user ID - for now we'll use a special format
-        const { error: insertError } = await supabase
-          .from('messages')
-          .insert({
-            chat_id: chatId,
-            sender_id: user.id, // The user who triggered it
-            encrypted_content: `🤖 **AfuAI:** ${data.reply}`,
-          });
-
-        if (insertError) {
-          console.error('Failed to insert AfuAI reply:', insertError);
-        }
-      }
-    } catch (error) {
-      console.error('AfuAI reply error:', error);
-      toast.error('Failed to get AfuAI response');
-    } finally {
-      setAfuAIProcessing(false);
-    }
-  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
