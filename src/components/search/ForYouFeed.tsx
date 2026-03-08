@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,13 +7,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { 
   TrendingUp, 
   Newspaper, 
-   
   Heart,
   MessageCircle,
   Clock,
   User,
   Sparkles,
-  Eye,
   Loader2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -60,7 +57,6 @@ interface NewsItem {
   publishedAt?: string;
 }
 
-
 const FAVICON_SIZE = 32;
 
 const getFaviconUrl = (url: string) => {
@@ -72,22 +68,21 @@ const getFaviconUrl = (url: string) => {
   }
 };
 
+const NEWS_CATEGORIES = ['general', 'technology', 'business', 'science', 'health', 'sports', 'entertainment'];
+
 async function fetchTrendingPosts(pageNum: number): Promise<TrendingPost[]> {
-  // Fetch posts sorted by view_count
   const { data: posts, error } = await (supabase as any)
     .from('posts')
     .select('id, content, created_at, image_url, view_count, author_id')
     .eq('is_deleted', false)
     .order('view_count', { ascending: false })
     .order('created_at', { ascending: false })
-    .range(pageNum * 5, (pageNum + 1) * 5 - 1);
+    .range(pageNum * 3, (pageNum + 1) * 3 - 1);
 
   if (error || !posts || posts.length === 0) return [];
 
-  // Get unique author IDs
-  const authorIds = [...new Set(posts.map(p => p.author_id).filter(Boolean))] as string[];
+  const authorIds = [...new Set(posts.map((p: any) => p.author_id).filter(Boolean))] as string[];
   
-  // Fetch profiles
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, display_name, handle, avatar_url, is_verified, is_organization_verified')
@@ -95,8 +90,7 @@ async function fetchTrendingPosts(pageNum: number): Promise<TrendingPost[]> {
 
   const profileMap = new Map((profiles || []).map(p => [p.id, p]));
 
-  // Fetch post images
-  const postIds = posts.map(p => p.id);
+  const postIds = posts.map((p: any) => p.id);
   const { data: images } = await supabase
     .from('post_images')
     .select('id, post_id, image_url, display_order')
@@ -109,7 +103,6 @@ async function fetchTrendingPosts(pageNum: number): Promise<TrendingPost[]> {
     imagesMap.set(img.post_id, existing);
   });
 
-  // Fetch acknowledgment (like) counts
   const { data: acks } = await supabase
     .from('post_acknowledgments')
     .select('post_id')
@@ -120,7 +113,6 @@ async function fetchTrendingPosts(pageNum: number): Promise<TrendingPost[]> {
     likeCountMap.set(ack.post_id, (likeCountMap.get(ack.post_id) || 0) + 1);
   });
 
-  // Fetch reply counts
   const { data: replies } = await supabase
     .from('post_replies')
     .select('post_id')
@@ -131,9 +123,8 @@ async function fetchTrendingPosts(pageNum: number): Promise<TrendingPost[]> {
     replyCountMap.set(reply.post_id, (replyCountMap.get(reply.post_id) || 0) + 1);
   });
 
-  // Build result
   const result: TrendingPost[] = [];
-  posts.forEach(post => {
+  posts.forEach((post: any) => {
     const author = profileMap.get(post.author_id);
     if (author) {
       result.push({
@@ -182,8 +173,19 @@ export const ForYouFeed = ({ onPostClick }: { onPostClick: (postId: string) => v
     try {
       const items: FeedItem[] = [];
 
-      // Fetch trending posts
-      const trendingPosts = await fetchTrendingPosts(pageNum);
+      // Pick a rotating category for variety
+      const category = NEWS_CATEGORIES[pageNum % NEWS_CATEGORIES.length];
+
+      // Fetch news on EVERY page for endless news
+      const [trendingPosts, newsResult] = await Promise.all([
+        // Only fetch posts every 3rd page to keep it news-heavy
+        pageNum % 3 === 0 ? fetchTrendingPosts(Math.floor(pageNum / 3)) : Promise.resolve([]),
+        supabase.functions.invoke('fetch-news', {
+          body: { category, pageSize: 10, page: Math.floor(pageNum / NEWS_CATEGORIES.length) + 1 }
+        }).catch(() => ({ data: null }))
+      ]);
+
+      // Add trending posts
       trendingPosts.forEach(post => {
         items.push({
           id: `post-${post.id}`,
@@ -194,38 +196,41 @@ export const ForYouFeed = ({ onPostClick }: { onPostClick: (postId: string) => v
         });
       });
 
-      // Fetch news (only on first page or every 3rd page)
-      if (pageNum % 3 === 0) {
-        try {
-          const { data: newsData } = await supabase.functions.invoke('fetch-news', {
-            body: { category: 'general', pageSize: 3, page: Math.floor(pageNum / 3) + 1 }
-          });
-          
-          (newsData?.articles || []).forEach((article: NewsItem, idx: number) => {
-            items.push({
-              id: `news-${article.id || idx}-${pageNum}`,
-              type: 'news',
-              data: article,
-              priority: 100 - idx,
-              createdAt: article.publishedAt ? new Date(article.publishedAt) : new Date()
-            });
-          });
-        } catch (e) {
-          console.log('News fetch error:', e);
+      // Add news articles
+      const newsData = newsResult?.data;
+      (newsData?.articles || []).forEach((article: NewsItem, idx: number) => {
+        items.push({
+          id: `news-${pageNum}-${idx}-${Date.now()}`,
+          type: 'news',
+          data: article,
+          priority: 100 - idx,
+          createdAt: article.publishedAt ? new Date(article.publishedAt) : new Date()
+        });
+      });
+
+      // Interleave: news first, posts sprinkled in
+      const newsItems = items.filter(i => i.type === 'news');
+      const postItems = items.filter(i => i.type === 'post');
+      const interleaved: FeedItem[] = [];
+      
+      let ni = 0, pi = 0;
+      while (ni < newsItems.length || pi < postItems.length) {
+        // Add 3 news, then 1 post
+        for (let i = 0; i < 3 && ni < newsItems.length; i++) {
+          interleaved.push(newsItems[ni++]);
+        }
+        if (pi < postItems.length) {
+          interleaved.push(postItems[pi++]);
         }
       }
 
-
-      // Shuffle items for variety
-      const shuffled = items.sort(() => Math.random() - 0.5);
-
       if (append) {
-        setFeedItems(prev => [...prev, ...shuffled]);
+        setFeedItems(prev => [...prev, ...interleaved]);
       } else {
-        setFeedItems(shuffled);
+        setFeedItems(interleaved);
       }
 
-      setHasMore(items.length >= 3);
+      setHasMore(interleaved.length >= 3);
       setPage(pageNum);
     } catch (error) {
       console.error('Error fetching mixed content:', error);
