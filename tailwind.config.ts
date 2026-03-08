@@ -168,6 +168,14 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-4px)" },
         },
+        "marquee": {
+          "0%": { transform: "translateX(0%)" },
+          "100%": { transform: "translateX(-100%)" },
+        },
+        "music-progress": {
+          "0%": { width: "0%" },
+          "100%": { width: "100%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.25s ease-out",
