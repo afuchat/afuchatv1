@@ -195,7 +195,28 @@ export const PostShortPlayer = ({
             <span className="text-white/70 text-xs">@{post.profiles?.handle || 'user'}</span>
           </div>
         </button>
+        {post.music_track && (
+          <div className="flex items-center gap-2 mt-2 overflow-hidden">
+            <div className="w-4 h-4 shrink-0">
+              <Music className="h-4 w-4 text-white" />
+            </div>
+            <div className="overflow-hidden flex-1">
+              <p className="text-white text-xs font-medium whitespace-nowrap animate-marquee">
+                ♫ {post.music_track.title} — {post.music_track.artist}
+              </p>
+            </div>
+            <div className="w-8 h-8 rounded-full border-2 border-white/30 bg-black/40 shrink-0 flex items-center justify-center animate-spin-slow">
+              <div className="w-2.5 h-2.5 rounded-full bg-white/60" />
+            </div>
+          </div>
+        )}
       </div>
+      {/* Music progress bar */}
+      {post.music_track && (
+        <div className="absolute bottom-[76px] left-0 right-0 z-30 h-[2px] bg-white/10">
+          <div className="h-full bg-white/60 animate-music-progress" />
+        </div>
+      )}
 
       {/* Right side actions */}
       <div className="absolute right-3 bottom-32 flex flex-col items-center gap-5 z-30">
