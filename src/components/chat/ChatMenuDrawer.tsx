@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ChatSettingsSheet } from './ChatSettingsSheet';
