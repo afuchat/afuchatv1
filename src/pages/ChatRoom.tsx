@@ -1848,10 +1848,12 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         >
           {messages.length === 0 && redEnvelopes.length === 0 && chatGifts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-4 px-6">
-              <MessageSquare className="h-14 w-14 text-muted-foreground/40" />
+              <div className="h-16 w-16 rounded-full bg-muted/40 flex items-center justify-center">
+                <MessageSquare className="h-7 w-7 text-muted-foreground/30" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-foreground/80">No messages yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Start the conversation!</p>
+                <p className="text-[15px] font-medium text-foreground/70">No messages yet</p>
+                <p className="text-[13px] text-muted-foreground mt-1">Start the conversation!</p>
               </div>
             </div>
           ) : (
