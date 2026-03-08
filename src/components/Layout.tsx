@@ -318,13 +318,13 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
       className={cn(
         "min-h-screen bg-background select-none touch-pan-y overflow-y-auto",
         isDesktop && "desktop-scrollbar",
-        isTelegram && "h-full tg-page-scroll min-h-0"
+        isTelegram && "tg-page-scroll"
       )}
     >
       {/* Main Content */}
       <main className={cn(
-        shouldHideUI ? "min-h-screen" : "pb-20 min-h-screen",
-        isTelegram && "min-h-0"
+        shouldHideUI ? "" : "pb-20",
+        !isTelegram && "min-h-screen"
       )}>
         <motion.div 
           initial={{ opacity: 0 }}
