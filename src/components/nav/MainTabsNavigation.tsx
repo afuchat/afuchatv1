@@ -58,9 +58,7 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
   const [isNavHidden, setIsNavHidden] = useState(false);
   const lastScrollY = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [unreadChats, setUnreadChats] = useState(0);
-  
+
   // Sync tab with route changes
   useEffect(() => {
     const newIndex = getTabIndexFromPath(location.pathname);
@@ -68,6 +66,27 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
       setActiveTab(newIndex);
     }
   }, [location.pathname]);
+
+  // Scroll-to-hide navigation
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !isMobile) return;
+
+    const handleScroll = () => {
+      const currentScrollY = container.scrollTop;
+      
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        setIsNavHidden(true);
+      } else {
+        setIsNavHidden(false);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [isMobile]);
 
   // Fetch notification counts
   useEffect(() => {
