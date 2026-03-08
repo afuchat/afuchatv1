@@ -258,29 +258,33 @@ serve(async (req) => {
         const displayName = [firstName, lastName].filter(Boolean).join(' ') || `User ${telegramId}`;
         const handle = username || `tg_${telegramId}`;
 
-        // Try to find existing auth user by email efficiently
-        const { data: existingAuthList } = await supabase.auth.admin.listUsers({
-          page: 1,
-          perPage: 1,
-        });
-        
-        // Use generateLink to check if user exists (creates session for existing user)
-        let existingAuth: any = null;
-        try {
-          const { data: userByEmail } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', (await supabase.auth.admin.generateLink({ type: 'magiclink', email })).data?.user?.id || '')
-            .maybeSingle();
-          if (userByEmail) {
-            existingAuth = { id: userByEmail.id };
+        // Try to create user first; if email already exists, fetch via generateLink
+        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+          email,
+          password: crypto.randomUUID(),
+          email_confirm: true,
+          user_metadata: {
+            telegram_id: telegramId,
+            display_name: displayName,
+            avatar_url: photoUrl,
           }
-        } catch {}
-        
-        // Fallback: try createUser, if it fails with "already registered", get existing user
-        if (existingAuth) {
-          userId = existingAuth.id;
-          console.log('[TG Auth] Reusing existing auth user:', userId);
+        });
+
+        if (createError && createError.message?.includes('already been registered')) {
+          // User exists — get their ID via generateLink
+          const { data: linkCheck } = await supabase.auth.admin.generateLink({
+            type: 'magiclink',
+            email,
+          });
+          if (linkCheck?.user?.id) {
+            userId = linkCheck.user.id;
+            console.log('[TG Auth] Reusing existing auth user:', userId);
+          } else {
+            throw new Error('Could not find existing user');
+          }
+        } else if (createError) {
+          console.error('[TG Auth] Create user error:', createError.message);
+          throw createError;
         } else {
           const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
             email,
