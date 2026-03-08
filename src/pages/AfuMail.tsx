@@ -148,7 +148,7 @@ export default function AfuMail() {
             unreadCount={unreadCount}
             onSelectFolder={handleFolderSelect}
             onCompose={handleCompose}
-            onManageAliases={() => setShowAliases(true)}
+            
           />
         </div>
 
