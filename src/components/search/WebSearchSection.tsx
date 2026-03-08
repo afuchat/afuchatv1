@@ -681,7 +681,7 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
 
   return (
     <>
-      <div className="px-4 pt-3 pb-6">
+      <div className="px-4 pt-3 pb-6 overflow-x-hidden max-w-full">
         {/* Search meta */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">

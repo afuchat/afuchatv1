@@ -1108,7 +1108,7 @@ const Search = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden max-w-full">
         {/* Web Search Tab - always show when Web tab is active */}
         {activeTab === 'Web' ? (
           <WebSearchSection query={query} />
