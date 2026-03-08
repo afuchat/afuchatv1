@@ -561,8 +561,9 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
   const [searchTime, setSearchTime] = useState<number>(0);
   const lastQueryRef = useRef('');
   const searchingRef = useRef(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Stable search function - no deps so reference never changes
+  // Stable search function
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim() || searchingRef.current) return;
     searchingRef.current = true;
@@ -595,14 +596,34 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
 
   useEffect(() => {
     const trimmed = query.trim();
-    if (trimmed && trimmed !== lastQueryRef.current) {
-      lastQueryRef.current = trimmed;
-      performSearch(trimmed);
-    } else if (!trimmed) {
+    
+    // Clear any pending debounce
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+
+    if (!trimmed) {
       setResults([]);
       setHasSearched(false);
       lastQueryRef.current = '';
+      return;
     }
+
+    // Skip if same query
+    if (trimmed === lastQueryRef.current) return;
+
+    // Debounce: wait 600ms after user stops typing
+    debounceRef.current = setTimeout(() => {
+      lastQueryRef.current = trimmed;
+      performSearch(trimmed);
+    }, 600);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
