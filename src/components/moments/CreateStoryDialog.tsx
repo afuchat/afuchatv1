@@ -6,10 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Image, Video, Upload, Crown } from 'lucide-react';
+import { Image, Video, Upload } from 'lucide-react';
 import { compressImage } from '@/lib/imageCompression';
-import { useSubscription } from '@/hooks/useSubscription';
-import { useNavigate } from 'react-router-dom';
 
 interface CreateStoryDialogProps {
   open: boolean;
