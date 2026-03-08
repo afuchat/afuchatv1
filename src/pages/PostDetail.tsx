@@ -629,7 +629,7 @@ const PostDetail = () => {
         <div className="p-4 border-b border-border">
             {/* AUTHOR BLOCK */}
             <div className="flex items-center gap-3 mb-4">
-              <Link to={`/${post.author.handle}`}>
+              <Link to={`/@${post.author.handle}`}>
                 <Avatar className="h-12 w-12 border border-border">
                   <AvatarImage src={post.author.avatar_url || undefined} />
                   <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
