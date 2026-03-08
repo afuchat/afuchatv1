@@ -2022,7 +2022,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         {/* Input: X-style - Fixed at bottom */}
         {/* For channels, only admins can send messages */}
         {isMember && (!chatInfo?.is_channel || isGroupAdmin) && (
-          <div className="flex-shrink-0 bg-background border-t border-border px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]" style={{ position: 'sticky', bottom: 0, zIndex: 10 }}>
+          <div className="flex-shrink-0 bg-background border-t border-border px-3 py-2" style={{ paddingBottom: 'max(0.5rem, var(--tg-safe-bottom, env(safe-area-inset-bottom)))', position: 'sticky', bottom: 0, zIndex: 10 }}>
             <input
               ref={fileInputRef}
               type="file"
