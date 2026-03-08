@@ -139,9 +139,14 @@ export default function AfuMail() {
               initialTo={replyTo ? [replyTo.from] : []}
               replyTo={replyTo}
               forwardFrom={forwardFrom}
-              onSend={sendEmail}
+              onSend={async (data) => {
+                setSendingEmail(true);
+                const result = await sendEmail(data);
+                setSendingEmail(false);
+                return result;
+              }}
               onDiscard={() => { setComposing(false); setReplyTo(undefined); setForwardFrom(undefined); }}
-              sending={loading}
+              sending={sendingEmail}
               senderEmail={mailboxEmail || undefined}
             />
           ) : selectedEmail ? (
