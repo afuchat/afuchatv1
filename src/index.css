@@ -62,11 +62,12 @@ html.telegram-mini-app body {
 /* Global safe area for all content in Telegram Mini App */
 html.telegram-mini-app #root {
   padding-top: var(--tg-safe-top, 0px);
-  padding-bottom: var(--tg-safe-bottom, 0px);
   padding-left: var(--tg-safe-left, 0px);
   padding-right: var(--tg-safe-right, 0px);
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Ensure fixed headers account for combined safe area in Telegram */
