@@ -11,6 +11,8 @@ import { StoryViewer } from '@/components/moments/StoryViewer';
 import { CreateStoryDialog } from '@/components/moments/CreateStoryDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNowStrict } from 'date-fns';
+import FloatingActionButton from '@/components/ui/FloatingActionButton';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 
 interface Story {
   id: string;
