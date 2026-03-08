@@ -65,8 +65,7 @@ html.telegram-mini-app #root {
   padding-left: var(--tg-safe-left, 0px);
   padding-right: var(--tg-safe-right, 0px);
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   -webkit-overflow-scrolling: touch;
 }
 

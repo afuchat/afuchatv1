@@ -173,7 +173,10 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] overflow-hidden touch-pan-y">
+    <div className={cn(
+      "flex flex-col overflow-hidden touch-pan-y",
+      isTelegram ? "h-full" : "h-[100dvh]"
+    )}>
       {/* Tab Content Area - Scrollable */}
       <div
         ref={scrollContainerRef}

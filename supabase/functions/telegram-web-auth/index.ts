@@ -106,8 +106,32 @@ serve(async (req) => {
       const firstName = user.first_name || '';
       const lastName = user.last_name || '';
       const username = user.username || '';
-      const photoUrl = user.photo_url || '';
+      let photoUrl = user.photo_url || '';
       const languageCode = user.language_code || 'en';
+
+      // Telegram Mini App initData often doesn't include photo_url
+      // Fetch it from Bot API if missing
+      if (!photoUrl && telegramId) {
+        try {
+          const photosRes = await fetch(
+            `https://api.telegram.org/bot${botToken}/getUserProfilePhotos?user_id=${telegramId}&limit=1`
+          );
+          const photosData = await photosRes.json();
+          if (photosData.ok && photosData.result?.total_count > 0) {
+            const fileId = photosData.result.photos[0][0].file_id;
+            const fileRes = await fetch(
+              `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`
+            );
+            const fileData = await fileRes.json();
+            if (fileData.ok && fileData.result?.file_path) {
+              photoUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
+            }
+          }
+          console.log('[TG Auth] Bot API photo fetch:', photoUrl ? 'found' : 'none');
+        } catch (e) {
+          console.log('[TG Auth] Could not fetch profile photo:', e);
+        }
+      }
 
       if (!telegramId) {
         return new Response(
