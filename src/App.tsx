@@ -141,17 +141,17 @@ const UsernameOrReferral = () => {
 
   // If path starts with @, it's a profile route
   if (username?.startsWith('@')) {
-    const subPath = location.pathname.split('/').slice(2).join('/'); // e.g. "edit", "followers", "following"
+    const subPath = location.pathname.split('/').slice(2).join('/');
     
     if (subPath === 'edit') {
       return (
-        <RequireBanCheck><RequireCountry><RequireDateOfBirth>
+        <CombinedRouteGuard>
           <Layout><EditProfile /></Layout>
-        </RequireDateOfBirth></RequireCountry></RequireBanCheck>
+        </CombinedRouteGuard>
       );
     }
     
-    const handle = username.slice(1); // Remove @ prefix
+    const handle = username.slice(1);
     
     if (subPath === 'followers') {
       return <Layout><Followers handleOverride={handle} /></Layout>;
