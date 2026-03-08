@@ -9,11 +9,13 @@ import { FolderSidebar } from '@/components/afumail/FolderSidebar';
 import { EmailList } from '@/components/afumail/EmailList';
 import { EmailView } from '@/components/afumail/EmailView';
 import { ComposeEmail } from '@/components/afumail/ComposeEmail';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
 
 export default function AfuMail() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isTelegram = useIsTelegram();
   const {
     loading, mailboxEmail, emails, currentFolder, unreadCount,
     fetchEmails, sendEmail, markAsRead, toggleStar, moveToTrash, fetchUnreadCount,
