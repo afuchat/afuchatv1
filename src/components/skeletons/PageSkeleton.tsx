@@ -1,4 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton';
+import { CustomLoader } from '@/components/ui/CustomLoader';
 
 interface PageSkeletonProps {
   variant?: 'default' | 'centered' | 'full';
@@ -8,10 +9,7 @@ export const PageSkeleton = ({ variant = 'default' }: PageSkeletonProps) => {
   if (variant === 'centered') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <Skeleton className="h-4 w-32" />
-        </div>
+        <CustomLoader size="lg" />
       </div>
     );
   }
@@ -31,8 +29,7 @@ export const PageSkeleton = ({ variant = 'default' }: PageSkeletonProps) => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[200px] p-4">
-      <Skeleton className="h-8 w-8 rounded-full mb-3" />
-      <Skeleton className="h-3 w-24" />
+      <CustomLoader size="sm" />
     </div>
   );
 };
@@ -40,14 +37,7 @@ export const PageSkeleton = ({ variant = 'default' }: PageSkeletonProps) => {
 export const InlineSkeleton = ({ className }: { className?: string }) => {
   return (
     <div className={`flex items-center justify-center py-8 ${className || ''}`}>
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex gap-1">
-          <Skeleton className="h-2 w-2 rounded-full" />
-          <Skeleton className="h-2 w-2 rounded-full" />
-          <Skeleton className="h-2 w-2 rounded-full" />
-        </div>
-        <Skeleton className="h-3 w-20" />
-      </div>
+      <CustomLoader size="sm" />
     </div>
   );
 };
