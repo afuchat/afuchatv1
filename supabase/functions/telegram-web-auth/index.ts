@@ -7,7 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// HMAC-SHA256 using Web Crypto API (Deno-compatible)
 async function hmacSha256(key: Uint8Array | string, data: string): Promise<Uint8Array> {
   const keyData = typeof key === 'string' ? new TextEncoder().encode(key) : key;
   const cryptoKey = await crypto.subtle.importKey(
@@ -32,9 +31,7 @@ async function validateInitData(initData: string, botToken: string): Promise<{ v
     entries.sort(([a], [b]) => a.localeCompare(b));
     const dataCheckString = entries.map(([k, v]) => `${k}=${v}`).join('\n');
 
-    // Step 1: HMAC-SHA256 of bot token with "WebAppData" as key
     const secretKey = await hmacSha256('WebAppData', botToken);
-    // Step 2: HMAC-SHA256 of data string with secret key
     const checkHashBytes = await hmacSha256(secretKey, dataCheckString);
     const checkHash = bytesToHex(checkHashBytes);
 
@@ -55,9 +52,9 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { initData, telegramIdentifier } = body;
+    const { initData, telegramIdentifier, linkToUserId } = body;
 
-    console.log('[TG Auth] Request received:', { hasInitData: !!initData, hasTelegramIdentifier: !!telegramIdentifier });
+    console.log('[TG Auth] Request received:', { hasInitData: !!initData, hasTelegramIdentifier: !!telegramIdentifier, hasLinkToUserId: !!linkToUserId });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -75,7 +72,7 @@ serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    // ===== MODE 1: Telegram Mini App initData (primary for TMA) =====
+    // ===== MODE 1: Telegram Mini App initData =====
     if (initData) {
       console.log('[TG Auth] initData mode - validating...');
 
@@ -109,8 +106,7 @@ serve(async (req) => {
       let photoUrl = user.photo_url || '';
       const languageCode = user.language_code || 'en';
 
-      // Telegram Mini App initData often doesn't include photo_url
-      // Fetch it from Bot API if missing
+      // Fetch photo from Bot API if missing
       if (!photoUrl && telegramId) {
         try {
           const photosRes = await fetch(
@@ -127,7 +123,6 @@ serve(async (req) => {
               photoUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
             }
           }
-          console.log('[TG Auth] Bot API photo fetch:', photoUrl ? 'found' : 'none');
         } catch (e) {
           console.log('[TG Auth] Could not fetch profile photo:', e);
         }
@@ -142,7 +137,88 @@ serve(async (req) => {
 
       console.log('[TG Auth] Telegram user:', { telegramId, username, firstName });
 
-      // Check if telegram_users row exists
+      // ===== LINK MODE: Link existing account to Telegram =====
+      if (linkToUserId) {
+        console.log('[TG Auth] Link mode — linking Telegram to user:', linkToUserId);
+
+        // Verify the user exists
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', linkToUserId)
+          .maybeSingle();
+
+        if (!profile) {
+          return new Response(
+            JSON.stringify({ error: 'User not found' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+          );
+        }
+
+        // Check if this Telegram is already linked to another user
+        const { data: existingTgUser } = await supabase
+          .from('telegram_users')
+          .select('user_id, is_linked')
+          .eq('telegram_id', telegramId)
+          .maybeSingle();
+
+        if (existingTgUser?.is_linked && existingTgUser.user_id !== linkToUserId) {
+          return new Response(
+            JSON.stringify({ error: 'This Telegram account is already linked to another user' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
+          );
+        }
+
+        // Upsert telegram_users link
+        if (existingTgUser) {
+          await supabase
+            .from('telegram_users')
+            .update({
+              user_id: linkToUserId,
+              is_linked: true,
+              telegram_username: username || existingTgUser.user_id,
+              telegram_first_name: firstName,
+              telegram_last_name: lastName,
+              preferred_language: languageCode,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('telegram_id', telegramId);
+        } else {
+          await supabase.from('telegram_users').insert({
+            telegram_id: telegramId,
+            user_id: linkToUserId,
+            is_linked: true,
+            telegram_username: username,
+            telegram_first_name: firstName,
+            telegram_last_name: lastName,
+            preferred_language: languageCode,
+          });
+        }
+
+        // Update avatar if missing
+        if (photoUrl) {
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('id', linkToUserId)
+            .maybeSingle();
+          
+          if (userProfile && !userProfile.avatar_url) {
+            await supabase
+              .from('profiles')
+              .update({ avatar_url: photoUrl })
+              .eq('id', linkToUserId);
+          }
+        }
+
+        console.log('[TG Auth] Successfully linked Telegram to existing user');
+        return new Response(
+          JSON.stringify({ success: true, linked: true, user_id: linkToUserId }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // ===== NORMAL LOGIN/SIGNUP MODE =====
       const { data: existingTgUser } = await supabase
         .from('telegram_users')
         .select('*, profiles:user_id (id, display_name, handle, avatar_url)')
@@ -157,7 +233,6 @@ serve(async (req) => {
         userId = existingTgUser.user_id;
         console.log('[TG Auth] Existing linked user:', userId);
 
-        // Update telegram user info
         await supabase
           .from('telegram_users')
           .update({
@@ -169,7 +244,6 @@ serve(async (req) => {
           })
           .eq('telegram_id', telegramId);
 
-        // Update profile avatar if they don't have one and Telegram provides one
         if (photoUrl) {
           const profile = existingTgUser.profiles as any;
           if (profile && !profile.avatar_url) {
@@ -184,7 +258,6 @@ serve(async (req) => {
         const displayName = [firstName, lastName].filter(Boolean).join(' ') || `User ${telegramId}`;
         const handle = username || `tg_${telegramId}`;
 
-        // Check if email already exists (from previous signup)
         const { data: existingUsers } = await supabase.auth.admin.listUsers();
         const existingAuth = existingUsers?.users?.find(u => u.email === email);
 
@@ -192,7 +265,6 @@ serve(async (req) => {
           userId = existingAuth.id;
           console.log('[TG Auth] Reusing existing auth user:', userId);
         } else {
-          // Create new auth user
           const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
             email,
             password: crypto.randomUUID(),
@@ -212,7 +284,6 @@ serve(async (req) => {
           console.log('[TG Auth] Created new auth user:', userId);
         }
 
-        // Ensure profile exists
         const { data: existingProfile } = await supabase
           .from('profiles')
           .select('id')
@@ -220,7 +291,6 @@ serve(async (req) => {
           .maybeSingle();
 
         if (!existingProfile) {
-          // Check handle uniqueness
           let finalHandle = handle;
           const { data: handleCheck } = await supabase
             .from('profiles')
@@ -243,7 +313,6 @@ serve(async (req) => {
           console.log('[TG Auth] Created profile:', finalHandle);
         }
 
-        // Upsert telegram_users link
         if (existingTgUser) {
           await supabase
             .from('telegram_users')
@@ -272,7 +341,7 @@ serve(async (req) => {
         console.log('[TG Auth] Linked telegram user');
       }
 
-      // Generate session by creating a magic link and verifying it server-side
+      // Generate session
       const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
         type: 'magiclink',
         email,
@@ -283,11 +352,8 @@ serve(async (req) => {
         throw linkError;
       }
 
-      // Extract token from magic link URL
       const magicUrl = new URL(linkData.properties.action_link);
       const token = magicUrl.searchParams.get('token');
-
-      console.log('[TG Auth] Generated magic link token');
 
       return new Response(
         JSON.stringify({
@@ -301,7 +367,7 @@ serve(async (req) => {
       );
     }
 
-    // ===== MODE 2: Legacy telegramIdentifier lookup (non-TMA) =====
+    // ===== MODE 2: Legacy telegramIdentifier lookup =====
     if (telegramIdentifier) {
       console.log('[TG Auth] Legacy identifier mode');
 

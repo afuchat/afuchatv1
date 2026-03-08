@@ -51,17 +51,39 @@ const SignIn = () => {
     );
   }
 
+  // After email sign-in succeeds inside TMA, link Telegram identity
+  const linkTelegramAfterSignIn = async (userId: string) => {
+    if (!isTelegram || !window.Telegram?.WebApp?.initData) return;
+
+    try {
+      await supabase.functions.invoke('telegram-web-auth', {
+        body: {
+          initData: window.Telegram.WebApp.initData,
+          linkToUserId: userId,
+        },
+      });
+      console.log('[SignIn] Telegram account linked to existing user');
+    } catch (err) {
+      console.error('[SignIn] Telegram link error:', err);
+      // Non-blocking — user is already signed in
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email || !password) { toast.error('Please enter email and password'); return; }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         if (error.message.includes('Email not confirmed')) toast.error('Please confirm your email first.');
         else if (error.message.includes('Invalid login credentials')) toast.error('Invalid email or password.');
         else throw error;
       } else {
+        // Link Telegram account if inside TMA
+        if (signInData.user) {
+          await linkTelegramAfterSignIn(signInData.user.id);
+        }
         toast.success('Welcome back!');
         navigate('/home', { replace: true });
       }
@@ -82,7 +104,11 @@ const SignIn = () => {
 
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
-            <p className="text-sm text-muted-foreground">Sign in to your account</p>
+            <p className="text-sm text-muted-foreground">
+              {isTelegram
+                ? 'Sign in with your existing account to link it with Telegram'
+                : 'Sign in to your account'}
+            </p>
           </div>
 
           <OAuthButtons loading={loading} />
@@ -91,7 +117,7 @@ const SignIn = () => {
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border/50" /></div>
             <div className="relative flex justify-center">
               <span className="bg-background px-3 text-xs text-muted-foreground">
-                {isTelegram ? 'or use email' : 'or continue with email'}
+                {isTelegram ? 'or use email to link account' : 'or continue with email'}
               </span>
             </div>
           </div>
@@ -114,9 +140,17 @@ const SignIn = () => {
               </div>
             </div>
             <button type="submit" disabled={loading} className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50">
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading
+                ? (isTelegram ? 'Linking account...' : 'Signing in...')
+                : (isTelegram ? 'Sign In & Link Telegram' : 'Sign In')}
             </button>
           </form>
+
+          {isTelegram && (
+            <p className="text-xs text-center text-muted-foreground bg-muted/30 rounded-lg p-3">
+              Sign in with your existing AfuChat account to connect it with your Telegram. After linking, you can use Telegram to log in instantly.
+            </p>
+          )}
 
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account?{' '}
