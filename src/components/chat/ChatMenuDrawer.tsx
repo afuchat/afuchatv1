@@ -195,18 +195,20 @@ export const ChatMenuDrawer = ({ isOpen, onClose }: ChatMenuDrawerProps) => {
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </div>
 
-          {/* Theme Toggle */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 -mx-3">
-            <div className="flex items-center gap-3">
-              {theme === 'dark' ? (
-                <Moon className="h-5 w-5 text-foreground" />
-              ) : (
-                <Sun className="h-5 w-5 text-foreground" />
-              )}
-              <span className="font-medium">Dark Mode</span>
+          {/* Theme Toggle - hidden in Telegram as it uses its own theme */}
+          {!useIsTelegram() && (
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 -mx-3">
+              <div className="flex items-center gap-3">
+                {theme === 'dark' ? (
+                  <Moon className="h-5 w-5 text-foreground" />
+                ) : (
+                  <Sun className="h-5 w-5 text-foreground" />
+                )}
+                <span className="font-medium">Dark Mode</span>
+              </div>
+              <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
             </div>
-            <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
-          </div>
+          )}
         </SheetHeader>
 
         <div className="px-6 pb-6 space-y-6">

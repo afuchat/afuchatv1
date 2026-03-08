@@ -473,23 +473,25 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Theme Toggle */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleTheme();
-            }}
-            className="flex items-center gap-4 w-full px-4 py-3 hover:bg-muted/50 transition-colors rounded-lg mt-2"
-          >
-            {resolvedTheme === 'dark' ? (
-              <Sun className="h-6 w-6" />
-            ) : (
-              <Moon className="h-6 w-6" />
-            )}
-            <span className="text-lg font-medium">
-              {resolvedTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </span>
-          </button>
+          {/* Theme Toggle - hidden in Telegram as it uses its own theme */}
+          {!useIsTelegram() && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleTheme();
+              }}
+              className="flex items-center gap-4 w-full px-4 py-3 hover:bg-muted/50 transition-colors rounded-lg mt-2"
+            >
+              {resolvedTheme === 'dark' ? (
+                <Sun className="h-6 w-6" />
+              ) : (
+                <Moon className="h-6 w-6" />
+              )}
+              <span className="text-lg font-medium">
+                {resolvedTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </span>
+            </button>
+          )}
 
 
           {/* Sign In for guests */}
