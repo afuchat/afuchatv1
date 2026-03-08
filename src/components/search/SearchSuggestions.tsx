@@ -58,9 +58,9 @@ export const SearchSuggestions = memo(function SearchSuggestions({
     const fetchSuggestions = async () => {
       const trimmedQuery = debouncedQuery.trim().toLowerCase();
       
-      // If no query, show full recent search history (not partial matches)
+      // If no query, show recent searches
       if (!trimmedQuery) {
-        const recentSuggestions: Suggestion[] = recentSearches.map((search, idx) => ({
+        const recentSuggestions: Suggestion[] = recentSearches.slice(0, 5).map((search, idx) => ({
           type: 'recent',
           id: `recent-${idx}`,
           text: search,
