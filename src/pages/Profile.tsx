@@ -250,7 +250,7 @@ const ProfileAvatarDisplay = ({ profileId, profile }: { profileId: string | null
 
 	const handleClick = () => {
 		if (isOwnProfile) {
-			navigate(`/${profileId}/edit`);
+			navigate(`/@${profileId}/edit`);
 		}
 	};
 
