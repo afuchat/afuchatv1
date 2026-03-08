@@ -32,7 +32,21 @@ html {
 /* Disable native pull-to-refresh in Telegram Mini App */
 html.telegram-mini-app {
   overscroll-behavior-y: contain;
+  /* Device safe area insets (notch, status bar, home indicator) */
   --tg-safe-area-top: 0px;
+  --tg-safe-area-bottom: 0px;
+  --tg-safe-area-left: 0px;
+  --tg-safe-area-right: 0px;
+  /* Content safe area insets (Telegram header, bottom bar) */
+  --tg-content-safe-area-top: 0px;
+  --tg-content-safe-area-bottom: 0px;
+  --tg-content-safe-area-left: 0px;
+  --tg-content-safe-area-right: 0px;
+  /* Combined safe area (device + content) for convenience */
+  --tg-safe-top: 0px;
+  --tg-safe-bottom: 0px;
+  --tg-safe-left: 0px;
+  --tg-safe-right: 0px;
 }
 
 html.telegram-mini-app body {
@@ -42,16 +56,21 @@ html.telegram-mini-app body {
 
 /* Global safe area for all content in Telegram Mini App */
 html.telegram-mini-app #root {
-  padding-top: var(--tg-safe-area-top, 0px);
+  padding-top: var(--tg-safe-top, 0px);
+  padding-bottom: var(--tg-safe-bottom, 0px);
+  padding-left: var(--tg-safe-left, 0px);
+  padding-right: var(--tg-safe-right, 0px);
 }
 
-/* Ensure fixed headers account for safe area in Telegram */
-html.telegram-mini-app .fixed[class*="top-"] {
-  top: var(--tg-safe-area-top, 0px) !important;
-}
-
+/* Ensure fixed headers account for combined safe area in Telegram */
+html.telegram-mini-app .fixed[class*="top-"],
 html.telegram-mini-app .sticky.top-0 {
-  top: var(--tg-safe-area-top, 0px) !important;
+  top: var(--tg-safe-top, 0px) !important;
+}
+
+/* Ensure fixed bottom bars account for combined safe area in Telegram */
+html.telegram-mini-app .fixed.bottom-0 {
+  bottom: var(--tg-safe-bottom, 0px) !important;
 }
 
 @tailwind components;
