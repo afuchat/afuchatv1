@@ -69,10 +69,10 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
     }
   }, [location.pathname]);
 
-  // Scroll-to-hide navigation
+  // Scroll-to-hide navigation (disabled in Telegram for always-visible nav)
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container || !isMobile) return;
+    if (!container || !isMobile || isTelegram) return;
 
     const handleScroll = () => {
       const currentScrollY = container.scrollTop;
@@ -88,7 +88,7 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
 
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
+  }, [isMobile, isTelegram]);
 
   // Fetch notification counts
   useEffect(() => {

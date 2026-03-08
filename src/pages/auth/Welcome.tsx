@@ -110,11 +110,11 @@ const Welcome = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background">
-      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
+      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full overflow-hidden">
         
         {/* Image area */}
-        <div className="relative w-full aspect-[4/3] overflow-hidden bg-muted">
+        <div className="relative w-full aspect-[4/3] overflow-hidden bg-muted flex-shrink-0">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={slide.id}
@@ -137,10 +137,10 @@ const Welcome = () => {
         </div>
 
         {/* Content area */}
-        <div className="flex-1 flex flex-col px-6 pt-6 pb-8">
+        <div className="flex-1 flex flex-col px-6 pt-6 pb-8 min-h-0">
           
           {/* Dots */}
-          <div className="flex items-center justify-center gap-1.5 mb-6">
+          <div className="flex items-center justify-center gap-1.5 mb-6 flex-shrink-0">
             {slides.map((_, index) => (
               <button
                 key={index}
@@ -166,7 +166,7 @@ const Welcome = () => {
               animate="center"
               exit="exit"
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="text-center space-y-2 mb-8"
+              className="text-center space-y-2 mb-6 flex-shrink-0"
             >
               <h1 className="text-2xl font-black tracking-tight text-foreground">
                 {slide.title}
@@ -178,22 +178,22 @@ const Welcome = () => {
           </AnimatePresence>
 
           {/* Spacer */}
-          <div className="flex-1" />
+          <div className="flex-1 min-h-0" />
 
           {/* Actions */}
-          <div className="space-y-3">
+          <div className="space-y-3 flex-shrink-0">
             {isLastSlide ? (
               <>
                 <button
                   onClick={() => navigate('/auth/signup')}
-                  className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
+                  className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all"
                 >
                   Get Started
                   <ArrowRight className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => navigate('/auth/signin')}
-                  className="w-full h-12 rounded-xl border border-border text-foreground font-medium text-sm hover:bg-muted/50 transition-colors"
+                  className="w-full h-12 rounded-xl bg-secondary text-foreground font-medium text-sm hover:bg-secondary/80 active:scale-[0.98] transition-all"
                 >
                   I already have an account
                 </button>
@@ -202,14 +202,14 @@ const Welcome = () => {
               <>
                 <button
                   onClick={goNext}
-                  className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
+                  className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all"
                 >
                   Next
                   <ArrowRight className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => navigate('/auth/signup')}
-                  className="w-full h-12 rounded-xl text-muted-foreground font-medium text-sm hover:text-foreground transition-colors"
+                  className="w-full h-12 rounded-xl text-muted-foreground font-medium text-sm hover:text-foreground active:scale-[0.98] transition-all"
                 >
                   Skip
                 </button>
@@ -219,7 +219,7 @@ const Welcome = () => {
 
           {/* Legal - only on last slide */}
           {isLastSlide && (
-            <p className="text-[11px] text-muted-foreground text-center leading-relaxed mt-4">
+            <p className="text-[11px] text-muted-foreground text-center leading-relaxed mt-4 flex-shrink-0">
               By continuing, you agree to our{' '}
               <a href="/terms" className="underline">Terms</a> and{' '}
               <a href="/privacy" className="underline">Privacy Policy</a>
