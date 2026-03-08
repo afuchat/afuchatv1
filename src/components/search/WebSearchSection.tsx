@@ -283,15 +283,17 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
   const [searchTime, setSearchTime] = useState<number>(0);
   const abortRef = useRef<AbortController | null>(null);
 
-  const performSearch = useCallback(async () => {
-    if (!query.trim()) return;
+  const lastQueryRef = useRef('');
+
+  const performSearch = useCallback(async (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
 
     setLoading(true);
     setError(null);
     const start = Date.now();
 
     try {
-      const response = await firecrawlApi.search(query, {
+      const response = await firecrawlApi.search(searchQuery, {
         limit: 12,
         scrapeOptions: { formats: ['markdown'] },
       });
@@ -309,14 +311,16 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, []);
 
   useEffect(() => {
-    if (query.trim()) {
-      performSearch();
-    } else {
+    if (query.trim() && query !== lastQueryRef.current) {
+      lastQueryRef.current = query;
+      performSearch(query);
+    } else if (!query.trim()) {
       setResults([]);
       setHasSearched(false);
+      lastQueryRef.current = '';
     }
   }, [query, performSearch]);
 
@@ -333,7 +337,7 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
         </div>
         <h3 className="text-base font-semibold mb-1">Search Failed</h3>
         <p className="text-[13px] text-muted-foreground max-w-[260px] mb-4">{error}</p>
-        <Button onClick={performSearch} variant="outline" size="sm" className="rounded-full gap-2">
+        <Button onClick={() => performSearch(query)} variant="outline" size="sm" className="rounded-full gap-2">
           <RefreshCw className="h-3.5 w-3.5" /> Try again
         </Button>
       </div>
@@ -363,7 +367,7 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
         <p className="text-[12px] text-muted-foreground">
           About {results.length} results ({searchTime.toFixed(2)}s)
         </p>
-        <Button onClick={performSearch} variant="ghost" size="sm" className="h-7 text-[12px] gap-1 text-muted-foreground">
+        <Button onClick={() => performSearch(query)} variant="ghost" size="sm" className="h-7 text-[12px] gap-1 text-muted-foreground">
           <RefreshCw className="h-3 w-3" /> Refresh
         </Button>
       </div>
@@ -385,20 +389,6 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
         ))}
       </div>
 
-      {/* Footer: search on Google */}
-      <div className="pt-6 pb-2 flex flex-col items-center gap-3">
-        <div className="h-px w-full bg-border/50" />
-        <p className="text-[11px] text-muted-foreground">Need more results?</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="rounded-full gap-2 text-[13px]"
-          onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank')}
-        >
-          <img src="https://www.google.com/favicon.ico" alt="Google" className="w-3.5 h-3.5" />
-          Continue on Google
-        </Button>
-      </div>
     </div>
   );
 };
