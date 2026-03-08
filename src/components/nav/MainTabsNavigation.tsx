@@ -74,12 +74,12 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
 
     const handleScroll = () => {
       const currentScrollY = container.scrollTop;
+      const hiding = currentScrollY > lastScrollY.current && currentScrollY > 80;
       
-      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
-        setIsNavHidden(true);
-      } else {
-        setIsNavHidden(false);
-      }
+      setIsNavHidden(hiding);
+      
+      // Broadcast nav-hide state so FAB and other components can sync
+      window.dispatchEvent(new CustomEvent('nav-scroll-state', { detail: { hidden: hiding } }));
       
       lastScrollY.current = currentScrollY;
     };
