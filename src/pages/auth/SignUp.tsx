@@ -9,6 +9,7 @@ import { PageSkeleton } from '@/components/skeletons';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 
 const SignUp = () => {
   const navigate = useNavigate();
