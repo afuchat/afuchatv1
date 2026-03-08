@@ -87,6 +87,17 @@ html.telegram-mini-app #root > div {
   min-height: 100%;
 }
 
+/* In Telegram, disable nested overflow containers so #root handles all scrolling */
+html.telegram-mini-app .h-full.flex.flex-col {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+html.telegram-mini-app .flex-1.min-h-0.overflow-y-auto {
+  overflow: visible !important;
+  flex: none !important;
+}
+
 /* Ensure fixed headers account for combined safe area in Telegram */
 html.telegram-mini-app .sticky.top-0 {
   top: 0 !important;
