@@ -292,7 +292,7 @@ const AppRoutes = () => {
       <Route path="/ads" element={<CombinedRouteGuard><Layout><AdManager /></Layout></CombinedRouteGuard>} />
       <Route path="/afumail" element={<CombinedRouteGuard><AfuMail /></CombinedRouteGuard>} />
       <Route path="/moments" element={<CombinedRouteGuard requireAuth><Layout><Moments /></Layout></CombinedRouteGuard>} />
-      <Route path="/mini-programs" element={<CombinedRouteGuard><Layout><MiniPrograms /></Layout></CombinedRouteGuard>} />
+      <Route path="/mini-programs" element={<Layout><MiniPrograms /></Layout>} />
       <Route path="/transfer" element={<CombinedRouteGuard><Layout><Transfer /></Layout></CombinedRouteGuard>} />
       <Route path="/red-envelope" element={<CombinedRouteGuard><Layout><RedEnvelope /></Layout></CombinedRouteGuard>} />
       <Route path="/developer-sdk" element={<CombinedRouteGuard><Layout><DeveloperSDK /></Layout></CombinedRouteGuard>} />

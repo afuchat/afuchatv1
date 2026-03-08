@@ -148,21 +148,13 @@ const MiniPrograms = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!user) {
-        navigate('/home', { replace: true });
-        return;
-      }
+      if (!user) return;
       
       // Check admin via secure RPC
       const { data: hasAdminRole } = await supabase
         .rpc('has_role', { _user_id: user.id, _role: 'admin' });
       
-      if (!hasAdminRole) {
-        navigate('/home', { replace: true });
-        return;
-      }
-      
-      setIsAdmin(true);
+      setIsAdmin(!!hasAdminRole);
       
       const { data } = await supabase
         .from('profiles')
@@ -174,7 +166,7 @@ const MiniPrograms = () => {
       }
     };
     fetchUserData();
-  }, [user, navigate]);
+  }, [user]);
 
   // Check if app is available in user's country
   const isAppAvailableInCountry = (app: MiniProgram): boolean => {
