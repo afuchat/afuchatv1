@@ -321,7 +321,7 @@ const AppRoutes = () => {
       <Route path="/@:userId/following" element={<Layout><Following /></Layout>} />
 
       {/* Referral route: afuchat.com/username redirects to signup with referral code */}
-      <Route path="/:username" element={<ReferralRedirect />} />
+      <Route path="/:username" element={<UsernameOrReferral />} />
 
       <Route path="/user-not-found" element={<UserNotFound />} />
       <Route path="/page-not-found" element={<NotFound />} />
