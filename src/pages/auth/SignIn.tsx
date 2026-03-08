@@ -18,7 +18,7 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   if (authLoading) return <PageSkeleton variant="centered" />;
-  if (user) return <Navigate to="/onboarding" replace />;
+  if (user) return <Navigate to="/home" replace />;
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -32,7 +32,7 @@ const SignIn = () => {
         else throw error;
       } else {
         toast.success('Welcome back!');
-        navigate('/onboarding', { replace: true });
+        navigate('/home', { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message || 'An error occurred.');
