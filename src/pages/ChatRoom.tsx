@@ -141,6 +141,20 @@ interface ChatRoomProps {
   isEmbedded?: boolean;
 }
 
+// Compute Telegram safe area padding directly
+const getTelegramSafeArea = () => {
+  const isTelegram = typeof document !== 'undefined' && document.documentElement.classList.contains('telegram-mini-app');
+  if (!isTelegram) return { top: 0, bottom: 0 };
+  const wa = (window as any).Telegram?.WebApp;
+  const sa = wa?.safeAreaInset || { top: 0, bottom: 0 };
+  const csa = wa?.contentSafeAreaInset || { top: 0, bottom: 0 };
+  let top = (sa.top || 0) + (csa.top || 0);
+  const bottom = (sa.bottom || 0) + (csa.bottom || 0);
+  // Android reports 0 but status bar still overlaps
+  if (/Android/.test(navigator.userAgent) && top === 0) top = 36;
+  return { top, bottom };
+};
+
 // ChatRoom component
 const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   const { chatId } = useParams();
