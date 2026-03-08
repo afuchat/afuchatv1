@@ -1,15 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { X, ArrowLeft } from 'lucide-react';
-import Logo from '@/components/Logo';
+import { ArrowLeft, Mail } from 'lucide-react';
 import { emailSchema } from '@/lib/validation';
-
-import passwordBg from '@/assets/auth/password-bg.jpg';
+import { motion } from 'framer-motion';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -17,24 +13,16 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
 
-  const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleReset = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      // Validate email
       emailSchema.parse(email);
-
-      // Generate the reset link using Supabase with production redirect
-      const redirectUrl = 'https://afuchat.com/auth/reset-password';
-      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
+        redirectTo: 'https://afuchat.com/auth/reset-password',
       });
-
       if (error) throw error;
-
-      toast.success('Password reset email sent! Check your inbox.');
+      toast.success('Reset link sent!');
       setEmailSent(true);
     } catch (error: any) {
       toast.error(error.errors?.[0]?.message || error.message || 'Failed to send reset email.');
@@ -44,101 +32,80 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden animate-fade-in">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <img 
-          src={passwordBg} 
-          alt="" 
-          className="w-full h-full object-cover opacity-15"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/90 to-background" />
-      </div>
-      
-      <div className="w-full max-w-md relative z-10">
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/auth/signin')}
-            className="mb-4"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-          <Logo size="md" className="mb-6" />
-          <h1 className="text-3xl font-bold mb-2">Reset your password</h1>
-          <p className="text-muted-foreground">
-            {emailSent
-              ? 'We sent you an email with a link to reset your password.'
-              : "Enter your email address and we'll send you a link to reset your password."}
-          </p>
-        </div>
+    <div className="min-h-[100dvh] flex flex-col bg-background">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 max-w-sm mx-auto w-full">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full space-y-8"
+        >
+          {/* Back */}
+          <button onClick={() => navigate('/auth/signin')} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
 
-        {emailSent ? (
-          <div className="space-y-6 animate-scale-in">
-            <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
-              <p className="text-sm text-foreground">
-                Check your email ({email}) for a password reset link. If you don't see it, check
-                your spam folder.
-              </p>
-            </div>
+          {/* Header */}
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-foreground">Reset password</h1>
+            <p className="text-sm text-muted-foreground">
+              {emailSent
+                ? "We've sent you a reset link. Check your inbox."
+                : "Enter your email and we'll send you a reset link."}
+            </p>
+          </div>
 
-            <Button
-              onClick={() => navigate('/auth/signin')}
-              variant="outline"
-              className="w-full h-12 text-base"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to sign in
-            </Button>
+          {emailSent ? (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                <Mail className="h-5 w-5 text-primary shrink-0" />
+                <p className="text-sm text-foreground">
+                  Check <span className="font-medium">{email}</span> for the reset link. Don't forget to check spam.
+                </p>
+              </div>
 
-            <div className="text-center">
               <button
-                type="button"
+                onClick={() => navigate('/auth/signin')}
+                className="w-full h-11 rounded-xl border border-border text-foreground font-medium text-sm hover:bg-muted/50 transition-colors"
+              >
+                Back to sign in
+              </button>
+
+              <button
                 onClick={() => setEmailSent(false)}
-                className="text-sm text-primary hover:underline"
+                className="w-full text-sm text-primary hover:underline"
               >
                 Try a different email
               </button>
             </div>
-          </div>
-        ) : (
-          <form onSubmit={handleResetPassword} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12"
-              />
-            </div>
+          ) : (
+            <form onSubmit={handleReset} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Email</label>
+                <Input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                  className="h-11 rounded-xl bg-muted/30 border-transparent focus:border-primary focus:bg-background transition-all"
+                />
+              </div>
 
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-semibold"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  Sending...
-                </>
-              ) : (
-                'Send reset link'
-              )}
-            </Button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Sending...' : 'Send reset link'}
+              </button>
 
-            <div className="text-center">
-              <Link to="/auth/signin" className="text-sm text-primary hover:underline">
-                <ArrowLeft className="inline mr-1 h-3 w-3" />
-                Back to sign in
-              </Link>
-            </div>
-          </form>
-        )}
+              <p className="text-sm text-center">
+                <Link to="/auth/signin" className="text-primary hover:underline">Back to sign in</Link>
+              </p>
+            </form>
+          )}
+        </motion.div>
       </div>
     </div>
   );

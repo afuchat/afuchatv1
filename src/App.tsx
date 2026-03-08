@@ -196,6 +196,7 @@ const AppRoutes = () => {
         <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/welcome" element={<Welcome />} />
+      <Route path="/auth/welcome" element={<Welcome />} />
       <Route path="/banned" element={<Banned />} />
       <Route path="/complete-profile" element={<Onboarding />} />
       <Route path="/feed" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Home /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
