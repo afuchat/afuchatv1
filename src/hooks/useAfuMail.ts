@@ -33,6 +33,7 @@ export interface ComposeEmailData {
   subject: string;
   body_text: string;
   body_html?: string;
+  from_alias?: string;
 }
 
 export function useAfuMail() {
