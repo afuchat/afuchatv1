@@ -207,7 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 // If on landing/auth pages
                 if (currentPath === '/' || currentPath.startsWith('/auth')) {
-                  window.location.href = hasEssentialFields ? '/home' : '/onboarding';
+                  window.location.href = '/home';
                 }
               });
           }

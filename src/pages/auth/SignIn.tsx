@@ -32,7 +32,7 @@ const SignIn = () => {
         else throw error;
       } else {
         toast.success('Welcome back!');
-        navigate('/onboarding', { replace: true });
+        navigate('/home', { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message || 'An error occurred.');
