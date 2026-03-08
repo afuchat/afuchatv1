@@ -1257,7 +1257,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         {user && user.id !== reply.author_id && (
                           <button 
                             className="text-[11px] text-muted-foreground hover:text-destructive font-semibold transition-colors"
-                            onClick={() => handleReportComment(reply.id, 'inappropriate')}
+                            onClick={() => openReportCard(reply.id)}
                           >Report</button>
                         )}
                       </div>
