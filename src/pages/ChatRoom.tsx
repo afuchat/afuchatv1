@@ -1639,7 +1639,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh' }}>
+      <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh', paddingTop: isEmbedded ? undefined : 'var(--tg-safe-top, 0px)', paddingBottom: isEmbedded ? undefined : 'var(--tg-safe-bottom, 0px)' }}>
         {/* Search Overlay */}
         {isSearchOpen && (
           <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3 pt-[env(safe-area-inset-top)]">
