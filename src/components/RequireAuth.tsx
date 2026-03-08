@@ -15,7 +15,7 @@ export const RequireAuth = ({ children }: RequireAuthProps) => {
   }
 
   if (!user) {
-    return <Navigate to="/welcome" replace />;
+    return <Navigate to="/auth/welcome" replace />;
   }
 
   return <>{children}</>;

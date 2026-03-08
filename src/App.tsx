@@ -280,9 +280,9 @@ const AppRoutes = () => {
       <Route path="/settings" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Settings /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
       <Route path="/security" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SecurityDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/change-password" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><ChangePassword /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/terms" element={<TermsOfUse />} />
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/whats-new" element={<WhatsNew />} />
+      <Route path="/terms" element={<Layout><TermsOfUse /></Layout>} />
+      <Route path="/privacy" element={<Layout><PrivacyPolicy /></Layout>} />
+      <Route path="/whats-new" element={<Layout><WhatsNew /></Layout>} />
       <Route path="/trending" element={<Navigate to="/search" replace />} />
       <Route path="/admin/affiliate-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminAffiliateRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/admin/creator-withdrawals" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminCreatorWithdrawals /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
