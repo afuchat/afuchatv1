@@ -253,7 +253,7 @@ const Settings = () => {
                             "h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
                             isActive ? item.color : "bg-muted"
                           )}>
-                            <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-muted-foreground")} />
+                            <Icon className={cn("h-4 w-4", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
                           </div>
                           <div className="min-w-0">
                             <p className={cn("text-sm font-semibold", isActive && "text-primary")}>{item.label}</p>
