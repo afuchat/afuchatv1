@@ -193,6 +193,8 @@ export default {
         "shimmer": "shimmer 2s linear infinite",
         "spin-slow": "spin-slow 8s linear infinite",
         "bounce-soft": "bounce-soft 1s ease-in-out infinite",
+        "marquee": "marquee 8s linear infinite",
+        "music-progress": "music-progress 30s linear infinite",
         "enter": "fade-in 0.3s ease-out, scale-in 0.2s ease-out",
         "exit": "fade-out 0.2s ease-in, scale-out 0.15s ease-in",
       },
