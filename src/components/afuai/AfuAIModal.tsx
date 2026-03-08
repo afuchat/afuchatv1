@@ -318,10 +318,17 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  if (!isOpen) return null;
+  // For page mode (mobile), always render. For modal mode (desktop), check isOpen.
+  const shouldRender = isPage || isOpen;
+  if (!shouldRender) return null;
 
-  return (
-    <>
+  const handleClose = () => {
+    if (isPage) {
+      navigate(-1);
+    } else {
+      closeAfuAI();
+    }
+  };
       <AnimatePresence>
         {isOpen && (
           <>
