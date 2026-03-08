@@ -1543,84 +1543,78 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               </div>
             )}
 
-            {/* Inline Delete Confirmation */}
+            {/* Inline Delete Confirmation — compact popover style */}
             <AnimatePresence>
               {showDeleteCommentConfirm && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 8 }}
-                  transition={{ duration: 0.15 }}
-                  className="px-4 py-3 bg-destructive/5 border-t border-destructive/20"
+                  initial={{ opacity: 0, scale: 0.95, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 4 }}
+                  transition={{ duration: 0.12, ease: 'easeOut' }}
+                  className="absolute bottom-full right-4 mb-2 w-56 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-10"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[13px] font-semibold text-foreground">Delete this comment?</p>
-                      <p className="text-[11px] text-muted-foreground">This can't be undone.</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 px-3 text-xs rounded-lg"
-                        onClick={() => { setShowDeleteCommentConfirm(false); setCommentActionId(null); }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        className="h-8 px-3 text-xs rounded-lg"
-                        onClick={() => {
-                          if (commentActionId) handleDeleteReply(commentActionId);
-                          setShowDeleteCommentConfirm(false);
-                          setCommentActionId(null);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </div>
+                  <div className="p-3">
+                    <p className="text-[13px] font-semibold text-foreground">Delete comment?</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">This can't be undone.</p>
+                  </div>
+                  <div className="border-t border-border flex">
+                    <button 
+                      className="flex-1 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+                      onClick={() => { setShowDeleteCommentConfirm(false); setCommentActionId(null); }}
+                    >
+                      Cancel
+                    </button>
+                    <div className="w-px bg-border" />
+                    <button 
+                      className="flex-1 py-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors"
+                      onClick={() => {
+                        if (commentActionId) handleDeleteReply(commentActionId);
+                        setShowDeleteCommentConfirm(false);
+                        setCommentActionId(null);
+                      }}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Inline Report Card */}
+            {/* Inline Report Card — compact popover style */}
             <AnimatePresence>
               {showReportCard && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 8 }}
-                  transition={{ duration: 0.15 }}
-                  className="px-4 py-3 bg-muted/30 border-t border-border/30"
+                  initial={{ opacity: 0, scale: 0.95, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 4 }}
+                  transition={{ duration: 0.12, ease: 'easeOut' }}
+                  className="absolute bottom-full right-4 mb-2 w-52 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-10"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[13px] font-semibold text-foreground">Report</p>
+                  <div className="py-1.5">
+                    {[
+                      { key: 'spam', label: 'Spam or misleading', icon: '🚫' },
+                      { key: 'harassment', label: 'Harassment', icon: '😤' },
+                      { key: 'hate_speech', label: 'Hate speech', icon: '🛑' },
+                      { key: 'inappropriate', label: 'Inappropriate', icon: '⚠️' },
+                      { key: 'other', label: 'Something else', icon: '📝' },
+                    ].map((reason) => (
+                      <button
+                        key={reason.key}
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-muted/50 transition-colors active:bg-muted"
+                        onClick={() => reportTargetId && handleReportComment(reportTargetId, reason.key)}
+                      >
+                        <span className="text-sm">{reason.icon}</span>
+                        <span className="text-[13px] text-foreground">{reason.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-border">
                     <button 
-                      className="text-[11px] text-muted-foreground hover:text-foreground font-medium transition-colors"
+                      className="w-full py-2 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
                       onClick={() => { setShowReportCard(false); setReportTargetId(null); }}
                     >
                       Cancel
                     </button>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { key: 'spam', label: 'Spam' },
-                      { key: 'harassment', label: 'Harassment' },
-                      { key: 'hate_speech', label: 'Hate speech' },
-                      { key: 'violence', label: 'Violence' },
-                      { key: 'inappropriate', label: 'Inappropriate' },
-                      { key: 'other', label: 'Other' },
-                    ].map((reason) => (
-                      <button
-                        key={reason.key}
-                        className="px-3 py-1.5 rounded-full bg-background border border-border text-[11px] font-medium text-foreground hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-all active:scale-95"
-                        onClick={() => reportTargetId && handleReportComment(reportTargetId, reason.key)}
-                      >
-                        {reason.label}
-                      </button>
-                    ))}
                   </div>
                 </motion.div>
               )}
