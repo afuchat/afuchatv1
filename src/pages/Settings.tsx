@@ -165,7 +165,7 @@ const Settings = () => {
                     className="w-full rounded-2xl bg-card shadow-soft px-4 py-3.5 flex items-center gap-3.5 text-left hover:bg-muted/50 active:bg-muted transition-colors"
                   >
                     <div className="h-8 w-8 rounded-lg bg-destructive flex items-center justify-center flex-shrink-0">
-                      <LogOut className="h-4 w-4 text-white" />
+                      <LogOut className="h-4 w-4 text-destructive-foreground" />
                     </div>
                     <p className="font-semibold text-sm text-destructive">Log Out</p>
                   </button>
