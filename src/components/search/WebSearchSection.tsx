@@ -331,7 +331,7 @@ const FeaturedResultCard = ({ result, onClick }: { result: WebSearchResult; onCl
 };
 
 // ─── Standard Result Card ────────────────────────────────
-const ResultCard = ({ result, index, onClick }: { result: WebSearchResult; index: number; onClick: () => void }) => {
+const ResultCard = ({ result, index, onClick, onOpenUrl }: { result: WebSearchResult; index: number; onClick: () => void; onOpenUrl: (url: string, title?: string) => void }) => {
   const imageUrl = result.metadata?.ogImage || extractFirstImage(result.markdown);
   const snippet = extractSnippet(result.description, result.markdown);
   const siteLinks = getRelatedLinks(result.markdown);
