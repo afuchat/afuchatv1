@@ -236,7 +236,7 @@ export const CreateStoryDialog = ({ open, onOpenChange, onSuccess }: CreateStory
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="relative aspect-[9/16] max-h-[55vh] mx-auto rounded-2xl overflow-hidden bg-muted"
+                className="relative aspect-[9/16] max-h-[40vh] mx-auto rounded-2xl overflow-hidden bg-muted"
               >
                 {mediaType === 'image' ? (
                   <img src={mediaPreview} alt="Preview" className="w-full h-full object-cover" />
@@ -374,7 +374,7 @@ export const CreateStoryDialog = ({ open, onOpenChange, onSuccess }: CreateStory
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background"
+            className="fixed inset-0 z-[100] bg-background"
           >
             {content}
           </motion.div>
