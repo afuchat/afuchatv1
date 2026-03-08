@@ -45,13 +45,9 @@ const BACKGROUND_GRADIENTS = [
 export const PostShortPlayer = ({
   post,
   isActive,
-  isMuted,
-  onToggleMute,
 }: {
   post: PostShort;
   isActive: boolean;
-  isMuted: boolean;
-  onToggleMute: () => void;
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
