@@ -8,6 +8,14 @@ const corsHeaders = {
 // Stock symbols to fetch
 const STOCK_SYMBOLS = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA', 'JPM'];
 
+// Index ETFs as proxies for market indices
+const INDEX_SYMBOLS = [
+  { symbol: 'SPY', name: 'S&P 500' },
+  { symbol: 'DIA', name: 'Dow Jones' },
+  { symbol: 'QQQ', name: 'NASDAQ' },
+  { symbol: 'IWM', name: 'Russell 2000' },
+];
+
 interface StockQuote {
   c: number;  // Current price
   d: number;  // Change
@@ -29,8 +37,10 @@ serve(async (req) => {
       throw new Error('Finnhub API key not configured');
     }
 
+    const allSymbols = [...STOCK_SYMBOLS, ...INDEX_SYMBOLS.map(i => i.symbol)];
+
     // Fetch quotes for all symbols in parallel
-    const quotePromises = STOCK_SYMBOLS.map(async (symbol) => {
+    const quotePromises = allSymbols.map(async (symbol) => {
       const response = await fetch(
         `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`
       );
@@ -42,7 +52,6 @@ serve(async (req) => {
 
       const data: StockQuote = await response.json();
       
-      // Check if we got valid data
       if (data.c === 0 && data.pc === 0) {
         console.log(`No data for ${symbol}`);
         return null;
@@ -61,14 +70,26 @@ serve(async (req) => {
     });
 
     const results = await Promise.all(quotePromises);
-    const stocks = results.filter(Boolean);
+    const allQuotes = results.filter(Boolean);
 
-    console.log(`Fetched ${stocks.length} stock quotes`);
+    const stocks = allQuotes.filter(q => q && STOCK_SYMBOLS.includes(q.symbol));
+    const indices = allQuotes
+      .filter(q => q && INDEX_SYMBOLS.some(i => i.symbol === q!.symbol))
+      .map(q => {
+        const indexInfo = INDEX_SYMBOLS.find(i => i.symbol === q!.symbol);
+        return {
+          ...q,
+          indexName: indexInfo?.name || q!.symbol,
+        };
+      });
+
+    console.log(`Fetched ${stocks.length} stocks, ${indices.length} indices`);
 
     return new Response(
       JSON.stringify({
         success: true,
         stocks,
+        indices,
         timestamp: new Date().toISOString(),
       }),
       {

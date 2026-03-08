@@ -23,6 +23,14 @@ interface StockData {
   changePercent: number;
 }
 
+interface IndexData {
+  symbol: string;
+  indexName: string;
+  price: number;
+  change: number;
+  changePercent: number;
+}
+
 const stockNames: Record<string, string> = {
   AAPL: 'Apple Inc.',
   GOOGL: 'Alphabet Inc.',
@@ -148,11 +156,11 @@ export const FinanceSection = () => {
   const [userCurrencyCode, setUserCurrencyCode] = useState<string>('USD');
   const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
   const [stocks, setStocks] = useState<StockData[]>([]);
+  const [indices, setIndices] = useState<IndexData[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Update clock every second
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -233,15 +241,29 @@ export const FinanceSection = () => {
 
       if (error) throw error;
 
-      if (data?.success && data?.stocks) {
-        const formattedStocks: StockData[] = data.stocks.map((stock: any) => ({
-          symbol: stock.symbol,
-          name: stockNames[stock.symbol] || stock.symbol,
-          price: stock.price,
-          change: stock.change,
-          changePercent: stock.changePercent,
-        }));
-        setStocks(formattedStocks);
+      if (data?.success) {
+        if (data.stocks) {
+          const formattedStocks: StockData[] = data.stocks.map((stock: any) => ({
+            symbol: stock.symbol,
+            name: stockNames[stock.symbol] || stock.symbol,
+            price: stock.price,
+            change: stock.change,
+            changePercent: stock.changePercent,
+          }));
+          setStocks(formattedStocks);
+        }
+
+        if (data.indices) {
+          const formattedIndices: IndexData[] = data.indices.map((idx: any) => ({
+            symbol: idx.symbol,
+            indexName: idx.indexName,
+            price: idx.price,
+            change: idx.change,
+            changePercent: idx.changePercent,
+          }));
+          setIndices(formattedIndices);
+        }
+
         setLastUpdate(new Date());
       }
     } catch (error) {
@@ -427,34 +449,42 @@ export const FinanceSection = () => {
         )}
       </section>
 
-      {/* Indices Section */}
+      {/* Market Indices Section - Real Data */}
       <section className="mt-6 px-4">
         <div className="mb-3">
           <h2 className="text-base font-bold text-foreground">Market Indices</h2>
         </div>
-        <div className="space-y-2">
-          {[
-            { name: 'S&P 500', value: 4783.45, change: 0.82 },
-            { name: 'Dow Jones', value: 37545.33, change: 0.56 },
-            { name: 'NASDAQ', value: 14972.76, change: 1.24 },
-            { name: 'Russell 2000', value: 1987.23, change: -0.34 },
-          ].map((index) => (
-            <Card key={index.name} className="p-3 flex items-center justify-between border-border/60">
-              <span className="font-semibold text-sm text-foreground">{index.name}</span>
-              <div className="flex items-center gap-4">
-                <span className="font-mono text-sm font-medium text-foreground">
-                  {index.value.toLocaleString()}
-                </span>
-                <span className={`flex items-center gap-1 text-xs font-semibold ${
-                  index.change >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-                }`}>
-                  {index.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                  {index.change >= 0 ? '+' : ''}{index.change}%
-                </span>
-              </div>
-            </Card>
-          ))}
-        </div>
+        {stocksLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 rounded-lg" />
+            ))}
+          </div>
+        ) : indices.length > 0 ? (
+          <div className="space-y-2">
+            {indices.map((idx) => (
+              <Card key={idx.symbol} className="p-3 flex items-center justify-between border-border/60">
+                <div>
+                  <span className="font-semibold text-sm text-foreground">{idx.indexName}</span>
+                  <p className="text-[11px] text-muted-foreground">{idx.symbol}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="font-mono text-sm font-medium text-foreground">
+                    ${idx.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`flex items-center gap-1 text-xs font-semibold ${
+                    idx.changePercent >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {idx.changePercent >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                    {idx.changePercent >= 0 ? '+' : ''}{idx.changePercent.toFixed(2)}%
+                  </span>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Market data unavailable</p>
+        )}
       </section>
     </div>
   );
