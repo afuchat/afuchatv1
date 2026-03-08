@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomLoader } from '@/components/ui/CustomLoader';
-import { Button } from '@/components/ui/button';
-import { Music2, RefreshCw } from 'lucide-react';
-import { MusicDiscovery } from '@/components/music-shorts/MusicDiscovery';
+import { Music2 } from 'lucide-react';
 import { PostShortPlayer } from '@/components/music-shorts/PostShortPlayer';
 import { toast } from 'sonner';
 
@@ -35,8 +33,6 @@ const MusicShorts = () => {
   const [musicTracks, setMusicTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [showDiscovery, setShowDiscovery] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const fetchShorts = useCallback(async () => {
@@ -162,39 +158,10 @@ const MusicShorts = () => {
             <PostShortPlayer
               post={short}
               isActive={index === activeIndex}
-              isMuted={isMuted}
-              onToggleMute={() => setIsMuted(!isMuted)}
             />
           </div>
         ))}
       </div>
-
-      {/* Top actions */}
-      <div className="fixed top-4 right-4 z-50 flex gap-2">
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => { setActiveIndex(0); fetchShorts(); }}
-          className="h-9 w-9 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20"
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => setShowDiscovery(true)}
-          className="h-9 w-9 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20"
-        >
-          <Music2 className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Dialogs */}
-      <MusicDiscovery
-        isOpen={showDiscovery}
-        onClose={() => setShowDiscovery(false)}
-        onTrackClick={() => setShowDiscovery(false)}
-      />
     </div>
   );
 };

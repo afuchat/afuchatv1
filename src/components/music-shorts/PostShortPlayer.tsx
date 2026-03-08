@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Heart, MessageCircle, Share2, Volume2, VolumeX, Music } from 'lucide-react';
+import { Heart, MessageCircle, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,13 +45,9 @@ const BACKGROUND_GRADIENTS = [
 export const PostShortPlayer = ({
   post,
   isActive,
-  isMuted,
-  onToggleMute,
 }: {
   post: PostShort;
   isActive: boolean;
-  isMuted: boolean;
-  onToggleMute: () => void;
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -83,9 +79,10 @@ export const PostShortPlayer = ({
       .then(({ data }) => setIsLiked(!!data));
   }, [post.id, user]);
 
-  // Play/pause audio
+  // Play/pause audio - always unmuted
   useEffect(() => {
     if (!audioRef.current || !post.music_track?.audio_url) return;
+    audioRef.current.muted = false;
     if (isActive) {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
@@ -93,10 +90,6 @@ export const PostShortPlayer = ({
       audioRef.current.pause();
     }
   }, [isActive, post.music_track?.audio_url]);
-
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.muted = isMuted;
-  }, [isMuted]);
 
   // Cycle images only if multiple
   useEffect(() => {
@@ -180,7 +173,7 @@ export const PostShortPlayer = ({
 
       {/* Audio element */}
       {post.music_track?.audio_url && (
-        <audio ref={audioRef} src={post.music_track.audio_url} loop muted={isMuted} preload="auto" />
+        <audio ref={audioRef} src={post.music_track.audio_url} loop preload="auto" />
       )}
 
       {/* Bottom: Author + Music info */}
@@ -202,14 +195,6 @@ export const PostShortPlayer = ({
             <span className="text-white/70 text-xs">@{post.profiles?.handle || 'user'}</span>
           </div>
         </button>
-        {post.music_track && (
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit">
-            <Music className="h-3.5 w-3.5 text-white" />
-            <span className="text-white text-xs font-medium truncate max-w-[180px]">
-              {post.music_track.title} • {post.music_track.artist}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Right side actions */}
@@ -236,16 +221,6 @@ export const PostShortPlayer = ({
             <Share2 className="h-5 w-5 text-white" />
           </div>
           <span className="text-white text-[10px] font-medium">Share</span>
-        </button>
-
-        <button onClick={onToggleMute} className="flex flex-col items-center gap-1">
-          <div className={cn(
-            "w-11 h-11 rounded-full backdrop-blur-sm flex items-center justify-center",
-            isMuted ? "bg-white/10" : "bg-primary/30"
-          )}>
-            {isMuted ? <VolumeX className="h-5 w-5 text-white" /> : <Volume2 className="h-5 w-5 text-white" />}
-          </div>
-          <span className="text-white text-[10px] font-medium">{isMuted ? 'Muted' : 'Sound'}</span>
         </button>
       </div>
     </div>
