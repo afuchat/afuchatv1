@@ -76,16 +76,20 @@ export const ReferralSystem = () => {
     }
   };
 
+  const getReferralLink = () => {
+    if (userHandle) return `${window.location.origin}/${userHandle}`;
+    return `${window.location.origin}/auth/signup?ref=${referralCode}`;
+  };
+
   const copyReferralLink = () => {
-    const link = `${window.location.origin}/auth/signup?ref=${referralCode}`;
-    navigator.clipboard.writeText(link);
+    navigator.clipboard.writeText(getReferralLink());
     toast.success('Referral link copied!', {
       description: 'Your friend gets 1 week free Premium and you earn 500 Nexa!',
     });
   };
 
   const shareReferralLink = async () => {
-    const link = `${window.location.origin}/auth/signup?ref=${referralCode}`;
+    const link = getReferralLink();
     if (navigator.share) {
       try {
         await navigator.share({
