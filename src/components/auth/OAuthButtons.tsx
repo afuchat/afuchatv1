@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 
 interface OAuthButtonsProps {
   loading?: boolean;
@@ -10,6 +11,7 @@ interface OAuthButtonsProps {
 export const OAuthButtons = ({ loading: parentLoading, isSignUp }: OAuthButtonsProps) => {
   const [loading, setLoading] = useState(false);
   const isDisabled = parentLoading || loading;
+  const isTelegram = useIsTelegram();
 
   const handleOAuth = async (provider: 'google' | 'apple') => {
     if (isDisabled) return;
@@ -48,16 +50,67 @@ export const OAuthButtons = ({ loading: parentLoading, isSignUp }: OAuthButtonsP
       );
     }
 
-    // Open Telegram OAuth in a popup or redirect
-    const botId = '8171589498'; // AfuChat bot ID
+    // If inside Telegram Mini App, use the native WebApp auth
+    if (isTelegram && window.Telegram?.WebApp) {
+      // The user is already authenticated via Telegram — use initData
+      const initData = window.Telegram.WebApp.initData;
+      if (initData) {
+        setLoading(true);
+        // Call the telegram-web-auth edge function with initData
+        supabase.functions.invoke('telegram-web-auth', {
+          body: { initData },
+        }).then(({ data, error }) => {
+          if (error) {
+            toast.error('Telegram login failed');
+            setLoading(false);
+            return;
+          }
+          if (data?.access_token) {
+            supabase.auth.setSession({
+              access_token: data.access_token,
+              refresh_token: data.refresh_token,
+            }).then(() => {
+              toast.success('Welcome!');
+              window.location.href = '/home';
+            });
+          } else {
+            toast.error('Telegram login failed');
+            setLoading(false);
+          }
+        });
+        return;
+      }
+    }
+
+    // Fallback: Open Telegram OAuth in browser
+    const botId = '8171589498';
     const redirectUri = encodeURIComponent(`${window.location.origin}/auth/telegram-callback`);
     const telegramAuthUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(window.location.origin)}&request_access=write&return_to=${redirectUri}`;
     
     window.location.href = telegramAuthUrl;
   };
 
-  const buttonClass = "w-12 h-12 rounded-xl border border-border bg-background hover:bg-muted/50 transition-colors flex items-center justify-center disabled:opacity-50";
+  const buttonClass = "w-12 h-12 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors flex items-center justify-center disabled:opacity-50";
 
+  // In Telegram: show only Telegram button
+  if (isTelegram) {
+    return (
+      <div className="flex flex-col gap-3">
+        <button
+          onClick={handleTelegramLogin}
+          disabled={isDisabled}
+          className="w-full h-12 rounded-xl bg-[#229ED9] text-white font-semibold text-sm flex items-center justify-center gap-2.5 hover:bg-[#1e8ec4] active:scale-[0.98] transition-all disabled:opacity-50"
+        >
+          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+          </svg>
+          {isDisabled ? 'Connecting...' : 'Continue with Telegram'}
+        </button>
+      </div>
+    );
+  }
+
+  // Outside Telegram: show all providers
   return (
     <div className="flex items-center justify-center gap-4">
       {/* Google */}

@@ -8,10 +8,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PageSkeleton } from '@/components/skeletons';
 import { motion } from 'framer-motion';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 
 const SignIn = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const isTelegram = useIsTelegram();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,10 +68,12 @@ const SignIn = () => {
           {/* Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
+              <div className="w-full border-t border-border/50" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-background px-3 text-xs text-muted-foreground">or continue with email</span>
+              <span className="bg-background px-3 text-xs text-muted-foreground">
+                {isTelegram ? 'or use email' : 'or continue with email'}
+              </span>
             </div>
           </div>
 
