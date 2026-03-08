@@ -1121,7 +1121,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       )}
 
       {/* Comments Bottom Sheet */}
-      <Drawer open={showComments} onOpenChange={setShowComments}>
+      <Drawer open={showComments} onOpenChange={(open) => { setShowComments(open); if (!open) clearCommentImage(); }}>
         <DrawerContent className="max-h-[85vh] flex flex-col rounded-t-3xl">
           {/* Handle bar */}
           <div className="flex justify-center pt-2 pb-1 flex-shrink-0">
@@ -1129,49 +1129,72 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           </div>
           
           <DrawerHeader className="border-b border-border/30 py-2.5 px-4 flex-shrink-0">
-            <DrawerTitle className="text-center text-sm font-bold tracking-tight">
-              Comments
-              {post.replies && post.replies.length > 0 && (
-                <span className="text-muted-foreground font-normal ml-1.5">· {post.reply_count || post.replies.length}</span>
-              )}
-            </DrawerTitle>
+            <div className="flex items-center justify-between">
+              <div className="w-8" />
+              <DrawerTitle className="text-sm font-bold tracking-tight">
+                {post.reply_count || post.replies?.length || 0} comments
+              </DrawerTitle>
+              <button onClick={() => setShowComments(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
           </DrawerHeader>
           
           <div className="flex-1 overflow-y-auto px-4 py-3 min-h-0">
             {post.replies && post.replies.length > 0 ? (
-              <div className="space-y-5">
+              <div className="space-y-4">
                 {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
-                  <div key={reply.id} className="flex gap-3 group">
+                  <div key={reply.id} className="flex gap-3">
+                    {/* Avatar */}
                     <div className="flex-shrink-0 cursor-pointer" onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}>
-                      <Avatar className="h-9 w-9 ring-1 ring-border/50">
+                      <Avatar className="h-9 w-9">
                         <AvatarImage src={reply.profiles.avatar_url || undefined} />
                         <AvatarFallback className="text-xs bg-muted text-muted-foreground font-semibold">{reply.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
                       </Avatar>
                     </div>
+                    
+                    {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-1.5 flex-wrap">
-                        <span 
-                          className="font-semibold text-[13px] text-foreground cursor-pointer hover:underline leading-tight" 
-                          onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}
-                        >
-                          {reply.profiles.display_name}
-                        </span>
-                        <VerifiedBadge 
-                          isVerified={reply.profiles.is_verified || reply.is_developer}
-                          isOrgVerified={reply.profiles.is_organization_verified}
-                          isAffiliate={reply.profiles.is_affiliate}
-                          isDeveloper={reply.is_developer}
-                          size="sm"
-                          userId={reply.author_id}
-                        />
-                        <span className="text-[11px] text-muted-foreground/70 leading-tight">{formatTime(reply.created_at)}</span>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <span 
+                            className="font-semibold text-[13px] text-foreground cursor-pointer hover:underline" 
+                            onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}
+                          >
+                            {reply.profiles.display_name}
+                          </span>
+                          <VerifiedBadge 
+                            isVerified={reply.profiles.is_verified || reply.is_developer}
+                            isOrgVerified={reply.profiles.is_organization_verified}
+                            isAffiliate={reply.profiles.is_affiliate}
+                            isDeveloper={reply.is_developer}
+                            size="sm"
+                            userId={reply.author_id}
+                          />
+                          <p className="text-[13px] text-foreground/90 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
+                            {parsePostContent(reply.content, reply.id, navigate)}
+                          </p>
+                        </div>
+                        
+                        {/* Like button on the right */}
+                        <div className="flex flex-col items-center gap-0.5 flex-shrink-0 pt-1">
+                          <button onClick={() => toggleCommentLike(reply.id)} className="p-1">
+                            <Heart 
+                              className={cn("h-3.5 w-3.5 transition-colors", likedComments.has(reply.id) ? "fill-red-500 text-red-500" : "text-muted-foreground")} 
+                              strokeWidth={1.5} 
+                            />
+                          </button>
+                          {(commentLikeCounts[reply.id] || 0) > 0 && (
+                            <span className="text-[10px] text-muted-foreground font-medium">{commentLikeCounts[reply.id]}</span>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-[13px] text-foreground/90 mt-1 whitespace-pre-wrap break-words leading-relaxed">
-                        {parsePostContent(reply.content, reply.id, navigate)}
-                      </p>
-                      <div className="flex items-center gap-5 mt-2">
+                      
+                      {/* Meta row: time, Reply, Delete/Report */}
+                      <div className="flex items-center gap-4 mt-1.5">
+                        <span className="text-[11px] text-muted-foreground">{formatTime(reply.created_at)}</span>
                         <button 
-                          className="text-[11px] text-muted-foreground hover:text-foreground font-semibold uppercase tracking-wide transition-colors"
+                          className="text-[11px] text-muted-foreground font-semibold hover:text-foreground transition-colors"
                           onClick={() => {
                             setReplyingToReply({ id: reply.id, handle: reply.profiles.handle });
                             setReplyText('');
@@ -1180,75 +1203,100 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         >Reply</button>
                         {user?.id === reply.author_id && (
                           <button 
-                            className="text-[11px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
-                            onClick={() => {
-                              setCommentActionId(reply.id);
-                              setShowDeleteCommentConfirm(true);
-                            }}
+                            className="text-[11px] text-muted-foreground hover:text-destructive font-semibold transition-colors"
+                            onClick={() => { setCommentActionId(reply.id); setShowDeleteCommentConfirm(true); }}
                           >Delete</button>
                         )}
                         {user && user.id !== reply.author_id && (
                           <button 
-                            className="text-[11px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
+                            className="text-[11px] text-muted-foreground hover:text-destructive font-semibold transition-colors"
                             onClick={() => handleReportComment(reply.id, 'inappropriate')}
                           >Report</button>
                         )}
                       </div>
                       
-                      {/* Nested replies */}
+                      {/* View X replies toggle */}
                       {reply.nested_replies && reply.nested_replies.length > 0 && (
-                        <div className="mt-3 ml-1">
-                          <div className="border-l-[1.5px] border-border/40 pl-3 space-y-3">
-                            {reply.nested_replies.map((nested) => {
-                              // Strip leading @mention from display for cleaner look
-                              const contentText = nested.content.replace(/^@\S+\s*/, '');
-                              const mentionedHandle = nested.content.match(/^@(\S+)/)?.[1];
-                              
-                              return (
-                                <div key={nested.id} className="flex gap-2.5 group/nested">
-                                  <Avatar className="h-6 w-6 flex-shrink-0 ring-1 ring-border/30">
-                                    <AvatarImage src={nested.profiles.avatar_url || undefined} />
-                                    <AvatarFallback className="text-[9px] bg-muted text-muted-foreground font-semibold">{nested.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-baseline gap-1.5">
-                                      <span className="font-semibold text-xs text-foreground">{nested.profiles.display_name}</span>
-                                      {mentionedHandle && (
-                                        <span className="text-[10px] text-primary/60 font-medium">→ @{mentionedHandle}</span>
-                                      )}
-                                      <span className="text-[10px] text-muted-foreground/60">{formatTime(nested.created_at)}</span>
-                                    </div>
-                                    <p className="text-xs text-foreground/85 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
-                                      {parsePostContent(contentText || nested.content, nested.id, navigate)}
-                                    </p>
-                                    <div className="flex items-center gap-4 mt-1.5">
-                                      {user?.id === nested.author_id && (
-                                        <button 
-                                          className="text-[10px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
-                                          onClick={() => {
-                                            setCommentActionId(nested.id);
-                                            setShowDeleteCommentConfirm(true);
-                                          }}
-                                        >Delete</button>
-                                      )}
-                                      {user && user.id !== nested.author_id && (
-                                        <button 
-                                          className="text-[10px] text-muted-foreground hover:text-destructive font-semibold uppercase tracking-wide transition-colors"
-                                          onClick={() => handleReportComment(nested.id, 'inappropriate')}
-                                        >Report</button>
-                                      )}
-                                    </div>
-                                  </div>
+                        <div className="mt-2">
+                          <button 
+                            className="flex items-center gap-1.5 text-[12px] text-muted-foreground font-semibold hover:text-foreground transition-colors"
+                            onClick={() => toggleNestedReplies(reply.id)}
+                          >
+                            <div className="w-6 h-[1px] bg-muted-foreground/30" />
+                            {expandedNestedReplies.has(reply.id) 
+                              ? `Hide replies` 
+                              : `View ${reply.nested_replies.length} ${reply.nested_replies.length === 1 ? 'reply' : 'replies'}`}
+                            <ChevronDown className={cn("h-3 w-3 transition-transform", expandedNestedReplies.has(reply.id) && "rotate-180")} />
+                          </button>
+                          
+                          {/* Nested replies - collapsible */}
+                          <AnimatePresence>
+                            {expandedNestedReplies.has(reply.id) && (
+                              <motion.div 
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="mt-2 ml-1 space-y-3">
+                                  {reply.nested_replies.map((nested) => {
+                                    const contentText = nested.content.replace(/^@\S+\s*/, '');
+                                    const mentionedHandle = nested.content.match(/^@(\S+)/)?.[1];
+                                    
+                                    return (
+                                      <div key={nested.id} className="flex gap-2.5">
+                                        <Avatar className="h-7 w-7 flex-shrink-0">
+                                          <AvatarImage src={nested.profiles.avatar_url || undefined} />
+                                          <AvatarFallback className="text-[9px] bg-muted text-muted-foreground font-semibold">{nested.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1 min-w-0">
+                                              <span className="font-semibold text-xs text-foreground">{nested.profiles.display_name}</span>
+                                              {mentionedHandle && (
+                                                <span className="text-[10px] text-primary/60 font-medium ml-1">→ @{mentionedHandle}</span>
+                                              )}
+                                              <p className="text-xs text-foreground/85 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
+                                                {parsePostContent(contentText || nested.content, nested.id, navigate)}
+                                              </p>
+                                            </div>
+                                            {/* Nested like */}
+                                            <button onClick={() => toggleCommentLike(nested.id)} className="p-1 flex-shrink-0 pt-0.5">
+                                              <Heart 
+                                                className={cn("h-3 w-3 transition-colors", likedComments.has(nested.id) ? "fill-red-500 text-red-500" : "text-muted-foreground")} 
+                                                strokeWidth={1.5} 
+                                              />
+                                            </button>
+                                          </div>
+                                          <div className="flex items-center gap-3 mt-1">
+                                            <span className="text-[10px] text-muted-foreground">{formatTime(nested.created_at)}</span>
+                                            {(commentLikeCounts[nested.id] || 0) > 0 && (
+                                              <span className="text-[10px] text-muted-foreground font-medium">{commentLikeCounts[nested.id]} likes</span>
+                                            )}
+                                            {user?.id === nested.author_id && (
+                                              <button 
+                                                className="text-[10px] text-muted-foreground hover:text-destructive font-semibold transition-colors"
+                                                onClick={() => { setCommentActionId(nested.id); setShowDeleteCommentConfirm(true); }}
+                                              >Delete</button>
+                                            )}
+                                            {user && user.id !== nested.author_id && (
+                                              <button 
+                                                className="text-[10px] text-muted-foreground hover:text-destructive font-semibold transition-colors"
+                                                onClick={() => handleReportComment(nested.id, 'inappropriate')}
+                                              >Report</button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              );
-                            })}
-                          </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       )}
-                    </div>
-                    {/* Like button */}
-                    <div className="flex flex-col items-center gap-0.5 flex-shrink-0 pt-2 opacity-70 group-hover:opacity-100 transition-opacity">
-                      <Heart className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500 cursor-pointer transition-colors" strokeWidth={1.5} />
                     </div>
                   </div>
                 ))}
@@ -1274,29 +1322,24 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
           {/* Bottom input area */}
           <div className="flex-shrink-0 bg-background border-t border-border/30">
-            {/* Quick emoji row */}
-            <div className="flex items-center gap-1 px-4 py-2">
-              {['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'].map((emoji) => (
-                <button
-                  key={emoji}
-                  className="text-xl p-1.5 rounded-full hover:bg-muted/60 active:scale-90 transition-all flex-shrink-0"
-                  onClick={() => {
-                    if (!user) {
-                      toast.info('Sign in to comment');
-                      return;
-                    }
-                    setReplyText(prev => prev + emoji);
-                    commentInputRef.current?.focus();
-                  }}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
+            {/* Image preview */}
+            {commentImagePreview && (
+              <div className="px-4 pt-3 pb-1">
+                <div className="relative inline-block">
+                  <img src={commentImagePreview} alt="Upload preview" className="h-16 w-16 rounded-lg object-cover border border-border" />
+                  <button 
+                    onClick={clearCommentImage}
+                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-foreground/80 flex items-center justify-center"
+                  >
+                    <X className="h-3 w-3 text-background" />
+                  </button>
+                </div>
+              </div>
+            )}
             
             {/* Reply context banner */}
             {replyingToReply && user && (
-              <div className="flex items-center justify-between px-4 py-2 bg-muted/40">
+              <div className="flex items-center justify-between px-4 py-2 bg-muted/40 border-b border-border/20">
                 <span className="text-xs text-muted-foreground">
                   Replying to <span className="font-semibold text-foreground">@{replyingToReply.handle}</span>
                 </span>
@@ -1311,14 +1354,14 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
             {/* Input row */}
             {user ? (
-              <div className="flex items-center gap-3 px-4 py-3">
-                <Avatar className="h-8 w-8 flex-shrink-0 ring-1 ring-border/30">
+              <div className="flex items-center gap-2.5 px-4 py-3">
+                <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarImage src={userProfile?.avatar_url || undefined} />
                   <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
                     {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 flex items-center bg-muted/40 rounded-full px-4 py-2 border border-border/30 focus-within:border-primary/40 focus-within:bg-muted/60 transition-all">
+                <div className="flex-1 flex items-center gap-2 bg-muted/40 rounded-full px-4 py-2 border border-border/30 focus-within:border-primary/40 transition-all">
                   <input
                     ref={commentInputRef}
                     type="text"
@@ -1330,21 +1373,46 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         handleReplySubmit();
                       }
                     }}
-                    placeholder={replyingToReply ? `Reply to @${replyingToReply.handle}...` : 'Add a comment...'}
+                    placeholder="Add comment..."
                     className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none min-w-0"
                   />
+                  {/* Action icons inside input */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <input
+                      ref={commentImageInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleCommentImageSelect}
+                    />
+                    <button 
+                      onClick={() => commentImageInputRef.current?.click()}
+                      className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ImageIcon className="h-5 w-5" />
+                    </button>
+                    <button 
+                      onClick={() => setReplyText(prev => prev + '😊')}
+                      className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Smile className="h-5 w-5" />
+                    </button>
+                    <button 
+                      onClick={() => setReplyText(prev => prev + '@')}
+                      className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <AtSign className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={handleReplySubmit}
-                  disabled={!replyText.trim()}
-                  className={`text-sm font-bold transition-all flex-shrink-0 ${
-                    replyText.trim() 
-                      ? 'text-primary hover:text-primary/80 active:scale-95' 
-                      : 'text-primary/30 cursor-default'
-                  }`}
-                >
-                  Post
-                </button>
+                {replyText.trim() && (
+                  <button
+                    onClick={handleReplySubmit}
+                    className="text-sm font-bold text-primary hover:text-primary/80 active:scale-95 transition-all flex-shrink-0"
+                  >
+                    Post
+                  </button>
+                )}
               </div>
             ) : (
               <div className="px-4 py-4 text-center text-sm text-muted-foreground">
