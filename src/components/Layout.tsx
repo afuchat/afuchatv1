@@ -310,7 +310,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   return (
     <div
       className={cn(
-        "min-h-[100dvh] bg-background select-none touch-pan-y",
+        "min-h-[100dvh] bg-background select-none touch-pan-y overflow-y-auto",
         isDesktop && "desktop-scrollbar"
       )}
       style={{
