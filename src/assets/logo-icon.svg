@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00E5D0"/>
+      <stop offset="50%" stop-color="#00C2CB"/>
+      <stop offset="100%" stop-color="#009BA0"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="200" y1="0" x2="0" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00E5D0"/>
+      <stop offset="50%" stop-color="#00B8C4"/>
+      <stop offset="100%" stop-color="#008A90"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer circle (open arc, stylized) -->
+  <path d="M100 16 C148 16 184 52 184 100 C184 148 148 184 100 184 C52 184 16 148 16 100 C16 52 52 16 100 16Z" stroke="url(#g1)" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <!-- X slash top-right to bottom-left -->
+  <path d="M145 35 L55 165" stroke="url(#g2)" stroke-width="14" stroke-linecap="round"/>
+  <!-- X slash top-left to bottom-right -->
+  <path d="M55 35 L145 165" stroke="url(#g1)" stroke-width="14" stroke-linecap="round"/>
+  <!-- Center diamond accent -->
+  <path d="M100 80 L112 100 L100 120 L88 100Z" fill="url(#g2)"/>
+</svg>
