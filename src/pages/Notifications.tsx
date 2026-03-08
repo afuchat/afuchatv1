@@ -247,7 +247,7 @@ const NotificationRow = ({
         </button>
       )}
       <Link 
-        to={`/profile/${actor.handle}`} 
+        to={`/${actor.handle}`} 
         onClick={(e) => {
           if (isSelectionMode) {
             e.preventDefault();
