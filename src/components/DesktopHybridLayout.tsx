@@ -49,7 +49,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [isNewPostOpen, setIsNewPostOpen] = useState(false);
   const { isDeveloper } = useDeveloperStatus();
-  const { openAfuAI } = useAfuAI();
+  
   const { theme, setTheme } = useTheme();
 
   // Hide right sidebar on certain pages (active chat rooms, settings, admin, etc.)
