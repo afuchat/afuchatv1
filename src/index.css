@@ -113,6 +113,17 @@ html.telegram-mini-app .fixed.bottom-0 {
   bottom: var(--tg-safe-bottom, 0px) !important;
 }
 
+/* Telegram safe area for fixed full-screen containers (e.g. ChatRoom) */
+html.telegram-mini-app .tg-safe-area-container {
+  padding-top: var(--tg-safe-top) !important;
+  padding-bottom: var(--tg-safe-bottom) !important;
+}
+
+/* Header inside safe-area container already has container padding above it, reset its own */
+html.telegram-mini-app .tg-safe-area-container > header {
+  padding-top: 0.75rem !important;
+}
+
 /* ====== Telegram: Hide ALL in-app back buttons ====== */
 html.telegram-mini-app button:has(> .lucide-arrow-left),
 html.telegram-mini-app button:has(> .lucide-chevron-left),

@@ -1639,10 +1639,10 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh', paddingTop: isEmbedded ? undefined : 'var(--tg-safe-top, env(safe-area-inset-top, 0px))', paddingBottom: isEmbedded ? undefined : 'var(--tg-safe-bottom, env(safe-area-inset-bottom, 0px))' }}>
+      <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0 tg-safe-area-container'}`} style={{ overflow: 'hidden', height: isEmbedded ? undefined : '100dvh' }}>
         {/* Search Overlay */}
         {isSearchOpen && (
-          <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3" style={{ paddingTop: 'max(0.75rem, var(--tg-safe-top, env(safe-area-inset-top)))' }}>
+          <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3 pt-[env(safe-area-inset-top)]">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -1694,7 +1694,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         )}
 
         {/* X-style Header - Clean and minimal */}
-        <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10" style={{ paddingTop: 'max(0.75rem, var(--tg-safe-top, env(safe-area-inset-top)))' }}>
+        <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10 pt-[env(safe-area-inset-top)]">
           {!isEmbedded && (
             <Button
               variant="ghost"
