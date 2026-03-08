@@ -195,14 +195,6 @@ export const PostShortPlayer = ({
             <span className="text-white/70 text-xs">@{post.profiles?.handle || 'user'}</span>
           </div>
         </button>
-        {post.music_track && (
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit">
-            <Music className="h-3.5 w-3.5 text-white" />
-            <span className="text-white text-xs font-medium truncate max-w-[180px]">
-              {post.music_track.title} • {post.music_track.artist}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Right side actions */}
