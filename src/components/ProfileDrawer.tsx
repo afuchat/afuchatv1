@@ -418,7 +418,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
               </div>
               
               <button 
-                onClick={() => handleNavigate(`/${profile.handle}`)}
+                onClick={() => handleNavigate(`/@${profile.handle}`)}
                 className="text-left"
               >
                 <div className="flex items-center gap-1">
