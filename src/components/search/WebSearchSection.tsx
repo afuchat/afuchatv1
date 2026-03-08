@@ -246,7 +246,7 @@ const WikiKnowledgePanel = ({ profile, onOpenUrl }: { profile: WikiProfile; onOp
           {profile.wikiUrl && (
             <button
               className="text-[12px] text-primary font-medium mt-1 hover:underline inline-flex items-center gap-0.5"
-              onClick={() => window.open(profile.wikiUrl, '_blank', 'noopener')}
+              onClick={() => onOpenUrl(profile.wikiUrl!, profile.name + ' - Wikipedia')}
             >
               Wikipedia <ArrowUpRight className="h-3 w-3" />
             </button>
