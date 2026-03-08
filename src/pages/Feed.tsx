@@ -1206,20 +1206,22 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <span 
-                            className="font-semibold text-[13px] text-foreground cursor-pointer hover:underline" 
-                            onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}
-                          >
-                            {reply.profiles.display_name}
-                          </span>
-                          <VerifiedBadge 
-                            isVerified={reply.profiles.is_verified || reply.is_developer}
-                            isOrgVerified={reply.profiles.is_organization_verified}
-                            isAffiliate={reply.profiles.is_affiliate}
-                            isDeveloper={reply.is_developer}
-                            size="sm"
-                            userId={reply.author_id}
-                          />
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span 
+                              className="font-semibold text-[13px] text-foreground cursor-pointer hover:underline" 
+                              onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}
+                            >
+                              {reply.profiles.display_name}
+                            </span>
+                            <VerifiedBadge 
+                              isVerified={reply.profiles.is_verified || reply.is_developer}
+                              isOrgVerified={reply.profiles.is_organization_verified}
+                              isAffiliate={reply.profiles.is_affiliate}
+                              isDeveloper={reply.is_developer}
+                              size="sm"
+                              userId={reply.author_id}
+                            />
+                          </div>
                           <p className="text-[13px] text-foreground/90 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
                             {parsePostContent(reply.content, reply.id, navigate)}
                           </p>
