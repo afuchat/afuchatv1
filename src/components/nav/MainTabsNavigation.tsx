@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Home, Search, Bell, MessageCircle } from 'lucide-react';
@@ -42,7 +42,7 @@ const isMainTabRoute = (pathname: string): boolean => {
   return getTabIndexFromPath(pathname) !== -1;
 };
 
-export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScrollHide = false }: MainTabsNavigationProps) => {
+export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTabsNavigationProps) => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -55,7 +55,10 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
   const [activeTab, setActiveTab] = useState<number>(Math.max(0, currentTabIndex));
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
-  
+  const [isNavHidden, setIsNavHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   // Sync tab with route changes
   useEffect(() => {
     const newIndex = getTabIndexFromPath(location.pathname);
@@ -63,6 +66,27 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
       setActiveTab(newIndex);
     }
   }, [location.pathname]);
+
+  // Scroll-to-hide navigation
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !isMobile) return;
+
+    const handleScroll = () => {
+      const currentScrollY = container.scrollTop;
+      
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        setIsNavHidden(true);
+      } else {
+        setIsNavHidden(false);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [isMobile]);
 
   // Fetch notification counts
   useEffect(() => {
@@ -150,6 +174,7 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
     <div className="flex flex-col h-[100dvh] overflow-hidden touch-pan-y">
       {/* Tab Content Area - Scrollable */}
       <div
+        ref={scrollContainerRef}
         className={cn(
           "flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-20",
           isDesktop && "desktop-scrollbar"
@@ -173,7 +198,7 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
       {/* Bottom Tab Bar */}
       <div className={cn(
         "fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
-        (isScrollingDown || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
+        (isNavHidden || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
       )}>
         <nav className="bg-background">
           <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">

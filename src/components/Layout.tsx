@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccountMode } from '@/contexts/AccountModeContext';
@@ -41,8 +41,8 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isBusinessMode, setIsBusinessMode] = useState(false);
   const [isAffiliate, setIsAffiliate] = useState(false);
-  const [isScrollingDown, setIsScrollingDown] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isNavHidden, setIsNavHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const [chatScrollHide, setChatScrollHide] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
@@ -214,13 +214,13 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsScrollingDown(true);
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        setIsNavHidden(true);
       } else {
-        setIsScrollingDown(false);
+        setIsNavHidden(false);
       }
       
-      setLastScrollY(currentScrollY);
+      lastScrollY.current = currentScrollY;
     };
 
     const handleChatScroll = (e: CustomEvent) => {
@@ -234,7 +234,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('chat-scroll-state' as any, handleChatScroll as any);
     };
-  }, [lastScrollY, isMobile]);
+  }, [isMobile]);
 
   // Show desktop-friendly layout instead of blocking
   const isDesktop = !isMobile;
@@ -300,7 +300,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   if (onMainTab && !shouldHideNav) {
     return (
       <div className="h-[100dvh] overflow-hidden bg-background select-none touch-pan-y">
-        <MainTabsNavigation isScrollingDown={isScrollingDown} chatScrollHide={chatScrollHide}>
+        <MainTabsNavigation chatScrollHide={chatScrollHide}>
           {children}
         </MainTabsNavigation>
       </div>
@@ -330,7 +330,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
       {!shouldHideNav && (
         <div className={cn(
           "lg:hidden fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
-          (isScrollingDown || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
+          (isNavHidden || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
         )}>
           <nav className="bg-background">
             <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
