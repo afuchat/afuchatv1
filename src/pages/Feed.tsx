@@ -478,12 +478,25 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const [commentActionId, setCommentActionId] = useState<string | null>(null);
   const [showDeleteCommentConfirm, setShowDeleteCommentConfirm] = useState(false);
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
+  const [showReportCard, setShowReportCard] = useState(false);
+  const [reportTargetId, setReportTargetId] = useState<string | null>(null);
   const [expandedNestedReplies, setExpandedNestedReplies] = useState<Set<string>>(new Set());
   const [commentImageFile, setCommentImageFile] = useState<File | null>(null);
   const [commentImagePreview, setCommentImagePreview] = useState<string | null>(null);
   const commentImageInputRef = useRef<HTMLInputElement>(null);
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   const [commentLikeCounts, setCommentLikeCounts] = useState<Record<string, number>>({});
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionResults, setMentionResults] = useState<Array<{ id: string; handle: string; display_name: string; avatar_url: string | null }>>([]);
+
+  const EMOJI_CATEGORIES = {
+    'Smileys': ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🫢', '🤫', '🤔'],
+    'Gestures': ['👍', '👎', '👏', '🙌', '🤝', '🙏', '💪', '✌️', '🤞', '🤟', '🤘', '👌', '🤌', '👋', '🫶', '❤️', '🔥', '💯', '⭐', '✨'],
+    'Faces': ['😢', '😭', '😤', '😠', '🤬', '😈', '💀', '☠️', '💩', '🤡', '👻', '👽', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'],
+    'Objects': ['🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '🎯', '💡', '📸', '🎵', '🎶', '💰', '💎', '🚀', '⚡', '💫', '🌟', '🌈', '☀️', '🌙'],
+  };
 
   const toggleNestedReplies = (replyId: string) => {
     setExpandedNestedReplies(prev => {
@@ -521,6 +534,37 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       }
       return next;
     });
+  };
+
+  const openReportCard = (commentId: string) => {
+    setReportTargetId(commentId);
+    setShowReportCard(true);
+  };
+
+  const handleReplyTextChange = async (value: string) => {
+    setReplyText(value);
+    // Check for @ mention
+    const atMatch = value.match(/@(\w{1,})$/);
+    if (atMatch && atMatch[1].length >= 1) {
+      setMentionQuery(atMatch[1]);
+      setShowMentionSuggestions(true);
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, handle, display_name, avatar_url')
+        .or(`handle.ilike.%${atMatch[1]}%,display_name.ilike.%${atMatch[1]}%`)
+        .limit(5);
+      setMentionResults(data || []);
+    } else {
+      setShowMentionSuggestions(false);
+      setMentionResults([]);
+    }
+  };
+
+  const insertMention = (handle: string) => {
+    const newText = replyText.replace(/@\w*$/, `@${handle} `);
+    setReplyText(newText);
+    setShowMentionSuggestions(false);
+    commentInputRef.current?.focus();
   };
 
   // Track post view when it becomes visible - optimized to prevent duplicates
