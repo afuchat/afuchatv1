@@ -33,7 +33,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   const { user } = useAuth();
   const { mode, canUseBusiness } = useAccountMode();
   const { openSettings } = useSettings();
-  const { openAfuAI } = useAfuAI();
+  
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
