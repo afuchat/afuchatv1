@@ -465,7 +465,7 @@ export const MessageBubble = ({
       <div className="flex flex-col max-w-[85%]">
         {/* Sender name in group chats */}
         {isGroup && !isOwn && !isGrouped && (
-          <Link to={`/${message.profiles.handle}`} className="text-[11px] font-semibold text-primary ml-1 mb-0.5 hover:underline" onClick={(e) => e.stopPropagation()}>
+          <Link to={`/@${message.profiles.handle}`} className="text-[11px] font-semibold text-primary ml-1 mb-0.5 hover:underline" onClick={(e) => e.stopPropagation()}>
             {message.profiles.display_name}
           </Link>
         )}

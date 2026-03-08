@@ -176,7 +176,7 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 			parts.push(
 				<Link
 					key={`mention-${idx}`}
-					to={`/${handle}`} 
+					to={`/@${handle}`} 
 					className="text-blue-500 hover:text-blue-400 font-medium transition-colors"
 					onClick={(e) => e.stopPropagation()}
 				>

@@ -156,7 +156,7 @@ export const NestedReplyItem = ({
           {/* Header */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <Link 
-              to={`/${reply.author.handle}`} 
+              to={`/@${reply.author.handle}`} 
               className="font-bold text-foreground hover:underline"
             >
               {reply.author.display_name}
