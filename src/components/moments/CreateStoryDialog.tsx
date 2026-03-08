@@ -374,7 +374,7 @@ export const CreateStoryDialog = ({ open, onOpenChange, onSuccess }: CreateStory
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background"
+            className="fixed inset-0 z-[100] bg-background"
           >
             {content}
           </motion.div>
