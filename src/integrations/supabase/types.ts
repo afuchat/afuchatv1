@@ -367,6 +367,142 @@ export type Database = {
           },
         ]
       }
+      afumail_emails: {
+        Row: {
+          body_html: string | null
+          body_text: string
+          created_at: string
+          has_attachments: boolean
+          id: string
+          is_draft: boolean
+          sender_email: string
+          sender_id: string | null
+          sent_at: string | null
+          subject: string
+        }
+        Insert: {
+          body_html?: string | null
+          body_text?: string
+          created_at?: string
+          has_attachments?: boolean
+          id?: string
+          is_draft?: boolean
+          sender_email: string
+          sender_id?: string | null
+          sent_at?: string | null
+          subject?: string
+        }
+        Update: {
+          body_html?: string | null
+          body_text?: string
+          created_at?: string
+          has_attachments?: boolean
+          id?: string
+          is_draft?: boolean
+          sender_email?: string
+          sender_id?: string | null
+          sent_at?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
+      afumail_mailboxes: {
+        Row: {
+          created_at: string
+          email_address: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_address: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_address?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      afumail_recipients: {
+        Row: {
+          created_at: string
+          email_id: string
+          id: string
+          recipient_email: string
+          recipient_id: string | null
+          recipient_type: string
+        }
+        Insert: {
+          created_at?: string
+          email_id: string
+          id?: string
+          recipient_email: string
+          recipient_id?: string | null
+          recipient_type?: string
+        }
+        Update: {
+          created_at?: string
+          email_id?: string
+          id?: string
+          recipient_email?: string
+          recipient_id?: string | null
+          recipient_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afumail_recipients_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "afumail_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afumail_user_emails: {
+        Row: {
+          created_at: string
+          email_id: string
+          folder: string
+          id: string
+          is_read: boolean
+          is_starred: boolean
+          is_trashed: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_id: string
+          folder?: string
+          id?: string
+          is_read?: boolean
+          is_starred?: boolean
+          is_trashed?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_id?: string
+          folder?: string
+          id?: string
+          is_read?: boolean
+          is_starred?: boolean
+          is_trashed?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afumail_user_emails_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "afumail_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_chat_messages: {
         Row: {
           attachments: Json | null
@@ -4989,6 +5125,7 @@ export type Database = {
       }
       get_gift_price: { Args: { p_gift_id: string }; Returns: number }
       get_or_create_chat: { Args: { other_user_id: string }; Returns: string }
+      get_or_create_mailbox: { Args: { p_user_id: string }; Returns: string }
       get_pending_withdrawals: {
         Args: never
         Returns: {

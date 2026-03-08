@@ -1,11 +1,10 @@
-import React, { useState, useCallback } from 'react';
-import { X, Paperclip, Send, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { ComposeEmail as ComposeEmailType } from '@/hooks/useAfuMail';
+import { ComposeEmailData } from '@/hooks/useAfuMail';
 
 interface ComposeEmailProps {
   initialTo?: string[];
@@ -13,18 +12,10 @@ interface ComposeEmailProps {
   initialBody?: string;
   replyTo?: { from: string; subject: string; body: string };
   forwardFrom?: { subject: string; body: string };
-  onSend: (email: ComposeEmailType) => Promise<void>;
-  onSaveDraft: (email: ComposeEmailType) => Promise<void>;
+  onSend: (email: ComposeEmailData) => Promise<boolean>;
   onDiscard: () => void;
-  onUploadAttachment: (file: File) => Promise<{ id: string; url: string } | null>;
   sending?: boolean;
   senderEmail?: string;
-}
-
-interface AttachmentPreview {
-  id: string;
-  filename: string;
-  size: number;
 }
 
 export function ComposeEmail({
@@ -34,9 +25,7 @@ export function ComposeEmail({
   replyTo,
   forwardFrom,
   onSend,
-  onSaveDraft,
   onDiscard,
-  onUploadAttachment,
   sending,
   senderEmail,
 }: ComposeEmailProps) {
@@ -44,29 +33,23 @@ export function ComposeEmail({
   const [cc, setCc] = useState<string[]>([]);
   const [bcc, setBcc] = useState<string[]>([]);
   const [subject, setSubject] = useState(
-    replyTo ? `Re: ${replyTo.subject}` : 
-    forwardFrom ? `Fwd: ${forwardFrom.subject}` : 
+    replyTo ? `Re: ${replyTo.subject}` :
+    forwardFrom ? `Fwd: ${forwardFrom.subject}` :
     initialSubject
   );
   const [body, setBody] = useState(
-    forwardFrom ? `\n\n---------- Forwarded message ----------\n${forwardFrom.body}` : 
+    forwardFrom ? `\n\n---------- Forwarded message ----------\n${forwardFrom.body}` :
     replyTo ? `\n\n> ${replyTo.body.split('\n').join('\n> ')}` :
     initialBody
   );
   const [showCcBcc, setShowCcBcc] = useState(false);
-  const [attachments, setAttachments] = useState<AttachmentPreview[]>([]);
   const [toInput, setToInput] = useState('');
   const [ccInput, setCcInput] = useState('');
   const [bccInput, setBccInput] = useState('');
 
-  const addRecipient = (
-    input: string,
-    setInput: (v: string) => void,
-    list: string[],
-    setList: (v: string[]) => void
-  ) => {
+  const addRecipient = (input: string, setInput: (v: string) => void, list: string[], setList: (v: string[]) => void) => {
     const email = input.trim();
-    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !list.includes(email)) {
+    if (email && !list.includes(email)) {
       setList([...list, email]);
       setInput('');
     }
@@ -76,239 +59,104 @@ export function ComposeEmail({
     setList(list.filter(e => e !== email));
   };
 
-  const handleKeyDown = (
-    e: React.KeyboardEvent,
-    input: string,
-    setInput: (v: string) => void,
-    list: string[],
-    setList: (v: string[]) => void
-  ) => {
+  const handleKeyDown = (e: React.KeyboardEvent, input: string, setInput: (v: string) => void, list: string[], setList: (v: string[]) => void) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
       addRecipient(input, setInput, list, setList);
     }
   };
 
-  const handleAttachmentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    for (const file of Array.from(files)) {
-      const result = await onUploadAttachment(file);
-      if (result) {
-        setAttachments(prev => [...prev, {
-          id: result.id,
-          filename: file.name,
-          size: file.size,
-        }]);
-      }
-    }
-    e.target.value = '';
-  };
-
   const handleSend = async () => {
     if (to.length === 0) return;
-    
-    await onSend({
-      to,
-      cc: cc.length > 0 ? cc : undefined,
-      bcc: bcc.length > 0 ? bcc : undefined,
-      subject,
-      body_text: body,
-      attachments: attachments.map(a => a.id),
+    const success = await onSend({
+      to, cc: cc.length > 0 ? cc : undefined, bcc: bcc.length > 0 ? bcc : undefined,
+      subject, body_text: body,
     });
-  };
-
-  const handleSaveDraft = async () => {
-    await onSaveDraft({
-      to,
-      cc: cc.length > 0 ? cc : undefined,
-      bcc: bcc.length > 0 ? bcc : undefined,
-      subject,
-      body_text: body,
-      attachments: attachments.map(a => a.id),
-    });
+    if (success) onDiscard();
   };
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div>
           <h2 className="text-lg font-semibold">
             {replyTo ? 'Reply' : forwardFrom ? 'Forward' : 'New Message'}
           </h2>
-          {senderEmail && (
-            <p className="text-xs text-muted-foreground">From: {senderEmail}</p>
-          )}
+          {senderEmail && <p className="text-xs text-muted-foreground">From: {senderEmail}</p>}
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onDiscard}>
-            <Trash2 className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onDiscard}>
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
+        <Button variant="ghost" size="icon" onClick={onDiscard}><X className="h-5 w-5" /></Button>
       </div>
 
-      {/* Form */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-4 space-y-4">
-          {/* To */}
-          <div className="flex items-start gap-2">
-            <label className="text-sm text-muted-foreground w-12 pt-2">To</label>
-            <div className="flex-1">
-              <div className="flex flex-wrap gap-2 p-2 border border-border rounded-lg min-h-[40px]">
-                {to.map(email => (
-                  <Badge key={email} variant="secondary" className="gap-1">
-                    {email}
-                    <button onClick={() => removeRecipient(email, to, setTo)}>
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-                <Input
-                  type="email"
-                  value={toInput}
-                  onChange={(e) => setToInput(e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(e, toInput, setToInput, to, setTo)}
-                  onBlur={() => addRecipient(toInput, setToInput, to, setTo)}
-                  placeholder="Add recipient"
-                  className="flex-1 min-w-[150px] border-0 p-0 h-6 focus-visible:ring-0"
-                />
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowCcBcc(!showCcBcc)}
-              className="text-xs text-muted-foreground"
-            >
-              Cc/Bcc
-              {showCcBcc ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
-            </Button>
-          </div>
-
-          {/* Cc/Bcc */}
-          {showCcBcc && (
-            <>
-              <div className="flex items-start gap-2">
-                <label className="text-sm text-muted-foreground w-12 pt-2">Cc</label>
-                <div className="flex-1">
-                  <div className="flex flex-wrap gap-2 p-2 border border-border rounded-lg min-h-[40px]">
-                    {cc.map(email => (
-                      <Badge key={email} variant="secondary" className="gap-1">
-                        {email}
-                        <button onClick={() => removeRecipient(email, cc, setCc)}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                    <Input
-                      type="email"
-                      value={ccInput}
-                      onChange={(e) => setCcInput(e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(e, ccInput, setCcInput, cc, setCc)}
-                      onBlur={() => addRecipient(ccInput, setCcInput, cc, setCc)}
-                      placeholder="Add Cc"
-                      className="flex-1 min-w-[150px] border-0 p-0 h-6 focus-visible:ring-0"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2">
-                <label className="text-sm text-muted-foreground w-12 pt-2">Bcc</label>
-                <div className="flex-1">
-                  <div className="flex flex-wrap gap-2 p-2 border border-border rounded-lg min-h-[40px]">
-                    {bcc.map(email => (
-                      <Badge key={email} variant="secondary" className="gap-1">
-                        {email}
-                        <button onClick={() => removeRecipient(email, bcc, setBcc)}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                    <Input
-                      type="email"
-                      value={bccInput}
-                      onChange={(e) => setBccInput(e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(e, bccInput, setBccInput, bcc, setBcc)}
-                      onBlur={() => addRecipient(bccInput, setBccInput, bcc, setBcc)}
-                      placeholder="Add Bcc"
-                      className="flex-1 min-w-[150px] border-0 p-0 h-6 focus-visible:ring-0"
-                    />
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Subject */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-muted-foreground w-12">Subject</label>
-            <Input
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Subject"
-              className="flex-1"
-            />
-          </div>
-
-          {/* Body */}
-          <Textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Compose email..."
-            className="min-h-[300px] resize-none"
-          />
-
-          {/* Attachments */}
-          {attachments.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {attachments.map(attachment => (
-                <Badge key={attachment.id} variant="outline" className="gap-2 py-1.5">
-                  <Paperclip className="h-3 w-3" />
-                  {attachment.filename}
-                  <button onClick={() => setAttachments(prev => prev.filter(a => a.id !== attachment.id))}>
-                    <X className="h-3 w-3" />
-                  </button>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex items-start gap-2">
+          <label className="text-sm text-muted-foreground w-12 pt-2">To</label>
+          <div className="flex-1">
+            <div className="flex flex-wrap gap-2 p-2 border border-border rounded-lg min-h-[40px]">
+              {to.map(email => (
+                <Badge key={email} variant="secondary" className="gap-1">
+                  {email}
+                  <button onClick={() => removeRecipient(email, to, setTo)}><X className="h-3 w-3" /></button>
                 </Badge>
               ))}
+              <Input
+                type="text" value={toInput} onChange={(e) => setToInput(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, toInput, setToInput, to, setTo)}
+                onBlur={() => addRecipient(toInput, setToInput, to, setTo)}
+                placeholder="user@afuchat.com or external email"
+                className="flex-1 min-w-[150px] border-0 p-0 h-6 focus-visible:ring-0"
+              />
             </div>
-          )}
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setShowCcBcc(!showCcBcc)} className="text-xs text-muted-foreground">
+            Cc/Bcc {showCcBcc ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+          </Button>
         </div>
+
+        {showCcBcc && (
+          <>
+            <div className="flex items-start gap-2">
+              <label className="text-sm text-muted-foreground w-12 pt-2">Cc</label>
+              <div className="flex-1">
+                <div className="flex flex-wrap gap-2 p-2 border border-border rounded-lg min-h-[40px]">
+                  {cc.map(email => (
+                    <Badge key={email} variant="secondary" className="gap-1">{email}<button onClick={() => removeRecipient(email, cc, setCc)}><X className="h-3 w-3" /></button></Badge>
+                  ))}
+                  <Input type="text" value={ccInput} onChange={(e) => setCcInput(e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, ccInput, setCcInput, cc, setCc)}
+                    onBlur={() => addRecipient(ccInput, setCcInput, cc, setCc)}
+                    placeholder="Add Cc" className="flex-1 min-w-[150px] border-0 p-0 h-6 focus-visible:ring-0" />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <label className="text-sm text-muted-foreground w-12 pt-2">Bcc</label>
+              <div className="flex-1">
+                <div className="flex flex-wrap gap-2 p-2 border border-border rounded-lg min-h-[40px]">
+                  {bcc.map(email => (
+                    <Badge key={email} variant="secondary" className="gap-1">{email}<button onClick={() => removeRecipient(email, bcc, setBcc)}><X className="h-3 w-3" /></button></Badge>
+                  ))}
+                  <Input type="text" value={bccInput} onChange={(e) => setBccInput(e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, bccInput, setBccInput, bcc, setBcc)}
+                    onBlur={() => addRecipient(bccInput, setBccInput, bcc, setBcc)}
+                    placeholder="Add Bcc" className="flex-1 min-w-[150px] border-0 p-0 h-6 focus-visible:ring-0" />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-muted-foreground w-12">Subject</label>
+          <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" className="flex-1" />
+        </div>
+
+        <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Compose email..." className="min-h-[300px] resize-none" />
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-border p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <input
-            type="file"
-            id="attachment-input"
-            multiple
-            className="hidden"
-            onChange={handleAttachmentUpload}
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => document.getElementById('attachment-input')?.click()}
-          >
-            <Paperclip className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleSaveDraft}>
-            Save Draft
-          </Button>
-          <Button onClick={handleSend} disabled={to.length === 0 || sending}>
-            <Send className="h-4 w-4 mr-2" />
-            {sending ? 'Sending...' : 'Send'}
-          </Button>
-        </div>
+      <div className="border-t border-border p-4 flex items-center justify-end">
+        <Button onClick={handleSend} disabled={to.length === 0 || sending}>
+          <Send className="h-4 w-4 mr-2" />{sending ? 'Sending...' : 'Send'}
+        </Button>
       </div>
     </div>
   );

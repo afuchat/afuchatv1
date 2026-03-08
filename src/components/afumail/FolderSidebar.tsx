@@ -1,65 +1,33 @@
 import React from 'react';
-import { 
-  Inbox, 
-  Send, 
-  FileText, 
-  AlertTriangle, 
-  Trash2, 
-  Star,
-  Plus
-} from 'lucide-react';
+import { Inbox, Send, FileText, Trash2, Star, Archive, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { EmailFolder } from '@/hooks/useAfuMail';
 
 interface FolderSidebarProps {
-  folders: EmailFolder[];
   selectedFolder: string;
+  unreadCount: number;
   onSelectFolder: (folder: string) => void;
   onCompose: () => void;
 }
 
-const FOLDER_ICONS: Record<string, React.ReactNode> = {
-  inbox: <Inbox className="h-4 w-4" />,
-  sent: <Send className="h-4 w-4" />,
-  drafts: <FileText className="h-4 w-4" />,
-  spam: <AlertTriangle className="h-4 w-4" />,
-  trash: <Trash2 className="h-4 w-4" />,
-  starred: <Star className="h-4 w-4" />,
-};
-
-const DEFAULT_FOLDERS: EmailFolder[] = [
-  { id: 'inbox', name: 'Inbox', unread_count: 0, total_count: 0 },
-  { id: 'starred', name: 'Starred', unread_count: 0, total_count: 0 },
-  { id: 'sent', name: 'Sent', unread_count: 0, total_count: 0 },
-  { id: 'drafts', name: 'Drafts', unread_count: 0, total_count: 0 },
-  { id: 'spam', name: 'Spam', unread_count: 0, total_count: 0 },
-  { id: 'trash', name: 'Trash', unread_count: 0, total_count: 0 },
+const FOLDERS = [
+  { id: 'inbox', name: 'Inbox', icon: <Inbox className="h-4 w-4" /> },
+  { id: 'starred', name: 'Starred', icon: <Star className="h-4 w-4" /> },
+  { id: 'sent', name: 'Sent', icon: <Send className="h-4 w-4" /> },
+  { id: 'drafts', name: 'Drafts', icon: <FileText className="h-4 w-4" /> },
+  { id: 'archive', name: 'Archive', icon: <Archive className="h-4 w-4" /> },
+  { id: 'trash', name: 'Trash', icon: <Trash2 className="h-4 w-4" /> },
 ];
 
-export function FolderSidebar({ 
-  folders, 
-  selectedFolder, 
-  onSelectFolder, 
-  onCompose 
-}: FolderSidebarProps) {
-  // Merge API folders with defaults
-  const displayFolders = DEFAULT_FOLDERS.map(defaultFolder => {
-    const apiFolder = folders.find(f => f.id.toLowerCase() === defaultFolder.id);
-    return apiFolder || defaultFolder;
-  });
-
+export function FolderSidebar({ selectedFolder, unreadCount, onSelectFolder, onCompose }: FolderSidebarProps) {
   return (
     <div className="w-full md:w-56 shrink-0 border-r border-border bg-muted/30 p-4">
-      {/* Compose button */}
       <Button onClick={onCompose} className="w-full mb-4 gap-2">
         <Plus className="h-4 w-4" />
         Compose
       </Button>
-
-      {/* Folders */}
       <nav className="space-y-1">
-        {displayFolders.map(folder => (
+        {FOLDERS.map(folder => (
           <button
             key={folder.id}
             onClick={() => onSelectFolder(folder.id)}
@@ -70,16 +38,11 @@ export function FolderSidebar({
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
-            {FOLDER_ICONS[folder.id] || <Inbox className="h-4 w-4" />}
-            <span className="flex-1 text-left capitalize">{folder.name}</span>
-            {folder.unread_count > 0 && (
-              <span className={cn(
-                "text-xs font-medium px-1.5 py-0.5 rounded-full",
-                selectedFolder === folder.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted-foreground/20"
-              )}>
-                {folder.unread_count}
+            {folder.icon}
+            <span className="flex-1 text-left">{folder.name}</span>
+            {folder.id === 'inbox' && unreadCount > 0 && (
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">
+                {unreadCount}
               </span>
             )}
           </button>
