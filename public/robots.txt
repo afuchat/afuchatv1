@@ -1,9 +1,16 @@
 # AfuChat Robots.txt
 # https://afuchat.com
-# Last updated: 2026-01-04
+# Last updated: 2026-03-08
 
 User-agent: *
 Allow: /
+Allow: /feed
+Allow: /home
+Allow: /post/
+Allow: /search
+Allow: /shop
+Allow: /gifts
+Allow: /games
 
 # Block non-content paths
 Disallow: /api/
@@ -15,6 +22,8 @@ Disallow: /checkout
 Disallow: /complete-profile
 Disallow: /change-password
 Disallow: /onboarding
+Disallow: /wallet
+Disallow: /transfer
 
 # Block query parameters that create duplicates
 Disallow: /*?*ref=
