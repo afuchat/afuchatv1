@@ -203,8 +203,11 @@ const Moments = () => {
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <div className="max-w-2xl mx-auto">
-        {/* Clean Header */}
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/40">
+        {/* Header — respects Telegram safe area */}
+        <div 
+          className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/40"
+          style={{ paddingTop: isTelegram ? 'var(--tg-safe-top, 0px)' : undefined }}
+        >
           <div className="flex items-center justify-between px-4 py-3">
             <h1 className="text-xl font-bold text-foreground">Moments</h1>
             <Button onClick={handleCreateStory} size="sm" variant="ghost" className="gap-1.5 text-primary font-semibold">
