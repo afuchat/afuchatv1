@@ -261,13 +261,13 @@ const AppRoutes = () => {
       <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
       <Route path="/marketplace" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Marketplace /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/notifications" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Notifications /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/post/:postId" element={<Navigate to="/home" replace />} />
+      <Route path="/post/:postId" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><PostDetail /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/admin" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/afuai" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><AfuAI /></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       
       <Route path="/onboarding" element={<Onboarding />} />
       
-      <Route path="/support" element={<Support />} />
+      <Route path="/support" element={<Layout><Support /></Layout>} />
       <Route path="/leaderboard" element={<Layout><UnifiedLeaderboard /></Layout>} />
       <Route path="/wallet" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><FinancialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/social" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SocialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
@@ -280,9 +280,9 @@ const AppRoutes = () => {
       <Route path="/settings" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Settings /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
       <Route path="/security" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SecurityDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/change-password" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><ChangePassword /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/terms" element={<TermsOfUse />} />
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/whats-new" element={<WhatsNew />} />
+      <Route path="/terms" element={<Layout><TermsOfUse /></Layout>} />
+      <Route path="/privacy" element={<Layout><PrivacyPolicy /></Layout>} />
+      <Route path="/whats-new" element={<Layout><WhatsNew /></Layout>} />
       <Route path="/trending" element={<Navigate to="/search" replace />} />
       <Route path="/admin/affiliate-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminAffiliateRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/admin/creator-withdrawals" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminCreatorWithdrawals /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
