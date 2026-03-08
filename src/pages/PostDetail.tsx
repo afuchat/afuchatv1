@@ -47,7 +47,7 @@ const renderContentWithMentions = (content: string) => {
       parts.push(
         <Link 
           key={`mention-${idx}`} 
-          to={`/${handle}`} 
+          to={`/@${handle}`} 
           className="text-primary hover:underline font-semibold"
           onClick={(e) => e.stopPropagation()}
         >
