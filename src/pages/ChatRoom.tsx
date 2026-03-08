@@ -194,7 +194,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   const [searchResults, setSearchResults] = useState<Message[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isClearHistoryOpen, setIsClearHistoryOpen] = useState(false);
-  const [afuAIProcessing, setAfuAIProcessing] = useState(false);
+  
   const [isGifPickerOpen, setIsGifPickerOpen] = useState(false);
 
   // Improved scroll behavior - scroll to bottom on new messages
