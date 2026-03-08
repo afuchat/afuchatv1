@@ -295,9 +295,6 @@ export const useSubscription = (targetUserId?: string) => {
     return hasTierAccess('gold');
   }, [hasTierAccess]);
 
-  const canUseAfuAI = useCallback((): boolean => {
-    return hasTierAccess('platinum');
-  }, [hasTierAccess]);
 
   return {
     ...subscription,
