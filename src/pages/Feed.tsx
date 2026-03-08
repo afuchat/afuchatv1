@@ -490,6 +490,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionResults, setMentionResults] = useState<Array<{ id: string; handle: string; display_name: string; avatar_url: string | null }>>([]);
+  const [showOtherReasonInput, setShowOtherReasonInput] = useState(false);
+  const [otherReasonText, setOtherReasonText] = useState('');
 
   const EMOJI_CATEGORIES = {
     'Smileys': ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🫢', '🤫', '🤔'],
