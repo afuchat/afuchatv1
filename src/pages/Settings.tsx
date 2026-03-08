@@ -281,7 +281,7 @@ const Settings = () => {
                   <div className="flex items-center gap-3 mb-1">
                     {activeItem && (
                       <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center", activeItem.color)}>
-                        <activeItem.icon className="h-4.5 w-4.5 text-white" />
+                        <activeItem.icon className="h-4.5 w-4.5 text-primary-foreground" />
                       </div>
                     )}
                     <h2 className="text-2xl font-bold tracking-tight">{activeContent.title}</h2>
