@@ -375,12 +375,7 @@ export const StoryViewer = ({
             <span className="text-xs font-medium">{viewCount} {viewCount === 1 ? 'view' : 'views'}</span>
             <ChevronUp className="h-3.5 w-3.5 ml-0.5" />
           </button>
-        ) : (
-          <div className="flex items-center gap-1.5 text-white/40">
-            <Eye className="h-3.5 w-3.5" />
-            <span className="text-xs font-medium">{viewCount} {viewCount === 1 ? 'view' : 'views'}</span>
-          </div>
-        )}
+        ) : null}
       </div>
 
       {/* Viewers Sheet */}
