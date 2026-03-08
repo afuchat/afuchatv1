@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PageSkeleton } from '@/components/skeletons';
 import { motion } from 'framer-motion';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 
 const SignIn = () => {
   const navigate = useNavigate();
