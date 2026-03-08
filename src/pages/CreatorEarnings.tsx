@@ -1371,7 +1371,7 @@ export default function CreatorEarnings() {
                 <p>💵 Withdraw custom amounts to <strong>MTN or Airtel Money</strong></p>
                 <p>📱 Payment info saved for quick future withdrawals</p>
                 <p className="text-xs pt-2">
-                  Questions? Contact <strong>Support</strong> for full program details
+                  Questions? Ask <strong>AfuAI</strong> for full program details
                 </p>
               </div>
 

@@ -8,11 +8,11 @@ import {
   Image as ImageIcon, Hash, TrendingUp, Menu, DollarSign,
   ChevronLeft, Grid3x3, Sun, Moon, Monitor, PenSquare
 } from 'lucide-react';
-
+import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import { ContextualRightSidebar } from '@/components/desktop/ContextualRightSidebar';
 import { DesktopAccountSwitcher } from '@/components/desktop/DesktopAccountSwitcher';
-
+import { useAfuAI } from '@/contexts/AfuAIContext';
 import { supabase } from '@/integrations/supabase/client';
 import NewPostModal from '@/components/ui/NewPostModal';
 import { cn } from '@/lib/utils';
@@ -49,7 +49,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [isNewPostOpen, setIsNewPostOpen] = useState(false);
   const { isDeveloper } = useDeveloperStatus();
-  
+  const { openAfuAI } = useAfuAI();
   const { theme, setTheme } = useTheme();
 
   // Hide right sidebar on certain pages (active chat rooms, settings, admin, etc.)
@@ -239,6 +239,18 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* AfuAI Toggle */}
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                onClick={openAfuAI}
+                title="Open AfuAI"
+              >
+                <img src={aiChatIcon} alt="AfuAI" className="h-5 w-5 object-contain select-none" draggable={false} />
+              </Button>
+            )}
 
             <Link to="/notifications">
               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full relative">

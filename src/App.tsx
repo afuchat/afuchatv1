@@ -11,6 +11,8 @@ import { AccountModeProvider } from "./contexts/AccountModeContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { TelegramProvider } from "./contexts/TelegramContext";
+import { AfuAIProvider } from "./contexts/AfuAIContext";
+import AfuAIModal from "./components/afuai/AfuAIModal";
 import { SettingsSheet } from "./components/SettingsSheet";
 import { RequireCountry } from "./components/RequireCountry";
 import { RequireDateOfBirth } from "./components/RequireDateOfBirth";
@@ -55,7 +57,7 @@ const EditProfile = lazy(() => import("./pages/EditProfile"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const PostDetail = lazy(() => import("./pages/PostDetail"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-
+const AfuAI = lazy(() => import("./pages/AfuAI"));
 const Support = lazy(() => import("./pages/Support"));
 
 const UnifiedLeaderboard = lazy(() => import("./pages/UnifiedLeaderboard"));
@@ -241,7 +243,7 @@ const AppRoutes = () => {
       <Route path="/notifications" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Notifications /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/post/:postId" element={<Navigate to="/home" replace />} />
       <Route path="/admin" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      
+      <Route path="/afuai" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AfuAI /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       
       <Route path="/onboarding" element={<Onboarding />} />
       
@@ -348,10 +350,13 @@ const App = () => (
                   <Sonner />
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <TelegramProvider>
-                      <AnimatePresence mode="wait">
+                      <AfuAIProvider>
+                        <AnimatePresence mode="wait">
                           <AppWithDesktopCheck />
                         </AnimatePresence>
+                        <AfuAIModal />
                         <SettingsSheet />
+                      </AfuAIProvider>
                     </TelegramProvider>
                   </BrowserRouter>
                 </TooltipProvider>
