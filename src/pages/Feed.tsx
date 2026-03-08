@@ -1126,25 +1126,34 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                       
                       {/* Nested replies */}
                       {reply.nested_replies && reply.nested_replies.length > 0 && (
-                        <div className="mt-3 space-y-3 ml-1">
+                        <div className="mt-3 ml-1">
                           <div className="border-l-[1.5px] border-border/40 pl-3 space-y-3">
-                            {reply.nested_replies.map((nested) => (
-                              <div key={nested.id} className="flex gap-2.5">
-                                <Avatar className="h-6 w-6 flex-shrink-0 ring-1 ring-border/30">
-                                  <AvatarImage src={nested.profiles.avatar_url || undefined} />
-                                  <AvatarFallback className="text-[9px] bg-muted text-muted-foreground font-semibold">{nested.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-baseline gap-1.5">
-                                    <span className="font-semibold text-xs text-foreground">{nested.profiles.display_name}</span>
-                                    <span className="text-[10px] text-muted-foreground/60">{formatTime(nested.created_at)}</span>
+                            {reply.nested_replies.map((nested) => {
+                              // Strip leading @mention from display for cleaner look
+                              const contentText = nested.content.replace(/^@\S+\s*/, '');
+                              const mentionedHandle = nested.content.match(/^@(\S+)/)?.[1];
+                              
+                              return (
+                                <div key={nested.id} className="flex gap-2.5">
+                                  <Avatar className="h-6 w-6 flex-shrink-0 ring-1 ring-border/30">
+                                    <AvatarImage src={nested.profiles.avatar_url || undefined} />
+                                    <AvatarFallback className="text-[9px] bg-muted text-muted-foreground font-semibold">{nested.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-baseline gap-1.5">
+                                      <span className="font-semibold text-xs text-foreground">{nested.profiles.display_name}</span>
+                                      {mentionedHandle && (
+                                        <span className="text-[10px] text-primary/60 font-medium">→ @{mentionedHandle}</span>
+                                      )}
+                                      <span className="text-[10px] text-muted-foreground/60">{formatTime(nested.created_at)}</span>
+                                    </div>
+                                    <p className="text-xs text-foreground/85 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
+                                      {parsePostContent(contentText || nested.content, nested.id, navigate)}
+                                    </p>
                                   </div>
-                                  <p className="text-xs text-foreground/85 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
-                                    {parsePostContent(nested.content, nested.id, navigate)}
-                                  </p>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}
