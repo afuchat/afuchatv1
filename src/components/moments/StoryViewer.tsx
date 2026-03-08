@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { X, Trash2, Eye, Pause, Play } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
+import { motion, AnimatePresence } from 'framer-motion';
+import { formatDistanceToNowStrict } from 'date-fns';
 
 interface Story {
   id: string;
@@ -21,152 +21,275 @@ interface Story {
 }
 
 interface StoryViewerProps {
-  story: Story;
+  stories: Story[];
+  currentIndex: number;
   onClose: () => void;
+  onNext: () => void;
+  onPrevious: () => void;
   onDelete: (storyId: string) => void;
   canDelete: boolean;
-  onNext?: () => void;
-  onPrevious?: () => void;
 }
 
-export const StoryViewer = ({ 
-  story, 
-  onClose, 
-  onDelete, 
-  canDelete,
-  onNext,
-  onPrevious 
-}: StoryViewerProps) => {
-  const [progress, setProgress] = useState(0);
-  const duration = story.media_type === 'video' ? 15000 : 5000; // 15s for video, 5s for image
+const STORY_DURATION = 5000; // 5 seconds per image
+const VIDEO_DURATION = 15000;
+const TICK_INTERVAL = 50;
 
+export const StoryViewer = ({
+  stories,
+  currentIndex,
+  onClose,
+  onNext,
+  onPrevious,
+  onDelete,
+  canDelete,
+}: StoryViewerProps) => {
+  const story = stories[currentIndex];
+  const duration = story.media_type === 'video' ? VIDEO_DURATION : STORY_DURATION;
+
+  const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [showPauseIcon, setShowPauseIcon] = useState(false);
+  const pausedRef = useRef(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLongPress = useRef(false);
+  const progressRef = useRef(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Reset progress when story changes
+  useEffect(() => {
+    setProgress(0);
+    progressRef.current = 0;
+    setPaused(false);
+    pausedRef.current = false;
+  }, [currentIndex, story.id]);
+
+  // Progress timer
   useEffect(() => {
     const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          if (onNext) {
-            onNext();
-          } else {
-            onClose();
-          }
-          return 0;
-        }
-        return prev + (100 / (duration / 100));
-      });
-    }, 100);
+      if (pausedRef.current) return;
+      
+      progressRef.current += (100 / (duration / TICK_INTERVAL));
+      
+      if (progressRef.current >= 100) {
+        progressRef.current = 0;
+        setProgress(0);
+        onNext();
+        return;
+      }
+      
+      setProgress(progressRef.current);
+    }, TICK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [duration, onNext, onClose]);
+  }, [duration, onNext, story.id]);
 
-  const handlePrevious = () => {
-    if (onPrevious) {
-      setProgress(0);
+  // Video sync
+  useEffect(() => {
+    if (story.media_type === 'video' && videoRef.current) {
+      if (paused) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play().catch(() => {});
+      }
+    }
+  }, [paused, story.media_type]);
+
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') onNext();
+      else if (e.key === 'ArrowLeft') onPrevious();
+      else if (e.key === 'Escape') onClose();
+      else if (e.key === ' ') {
+        e.preventDefault();
+        togglePause();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onNext, onPrevious, onClose]);
+
+  const togglePause = useCallback(() => {
+    const next = !pausedRef.current;
+    pausedRef.current = next;
+    setPaused(next);
+    setShowPauseIcon(true);
+    setTimeout(() => setShowPauseIcon(false), 600);
+  }, []);
+
+  // Long press handlers
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    isLongPress.current = false;
+    longPressTimer.current = setTimeout(() => {
+      isLongPress.current = true;
+      pausedRef.current = true;
+      setPaused(true);
+    }, 200);
+  }, []);
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
+    if (isLongPress.current) {
+      // Was a long press — resume on release
+      pausedRef.current = false;
+      setPaused(false);
+      isLongPress.current = false;
+      return;
+    }
+
+    // Short tap — navigate
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const third = rect.width / 3;
+
+    if (x < third) {
       onPrevious();
-    }
-  };
-
-  const handleNext = () => {
-    if (onNext) {
-      setProgress(0);
+    } else if (x > third * 2) {
       onNext();
-    } else {
-      onClose();
     }
+  }, [onPrevious, onNext]);
+
+  const handlePointerLeave = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    if (isLongPress.current) {
+      pausedRef.current = false;
+      setPaused(false);
+      isLongPress.current = false;
+    }
+  }, []);
+
+  const timeAgo = (date: string) => {
+    try { return formatDistanceToNowStrict(new Date(date), { addSuffix: true }); }
+    catch { return ''; }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[60] bg-black flex items-center justify-center"
+    >
+      {/* Progress Bars */}
+      <div className="absolute top-0 left-0 right-0 z-20 px-2 pt-[max(env(safe-area-inset-top),12px)] flex gap-1">
+        {stories.map((s, i) => (
+          <div key={s.id} className="flex-1 h-[3px] rounded-full bg-white/20 overflow-hidden">
+            <motion.div
+              className="h-full bg-white rounded-full"
+              style={{
+                width: i < currentIndex ? '100%' : i === currentIndex ? `${progress}%` : '0%',
+              }}
+              transition={{ duration: 0.05, ease: 'linear' }}
+            />
+          </div>
+        ))}
+      </div>
+
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/60 to-transparent">
-        <Progress value={progress} className="mb-4 h-1" />
+      <div className="absolute top-0 left-0 right-0 z-20 pt-[max(calc(env(safe-area-inset-top)+24px),36px)] px-4 pb-3 bg-gradient-to-b from-black/60 via-black/30 to-transparent">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 ring-2 ring-white">
+            <Avatar className="h-9 w-9 ring-2 ring-white/30">
               <AvatarImage src={story.profiles.avatar_url || undefined} />
-              <AvatarFallback>{story.profiles.display_name[0]}</AvatarFallback>
+              <AvatarFallback className="text-xs">{story.profiles.display_name[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium text-white">{story.profiles.display_name}</p>
-              <p className="text-xs text-white/80">
-                {new Date(story.created_at).toLocaleDateString()}
-              </p>
+              <p className="font-semibold text-white text-sm leading-tight">{story.profiles.display_name}</p>
+              <p className="text-[11px] text-white/50">{timeAgo(story.created_at)}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {canDelete && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white hover:bg-white/20"
-                onClick={() => {
-                  if (confirm('Delete this story?')) {
-                    onDelete(story.id);
-                  }
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm('Delete this story?')) onDelete(story.id);
                 }}
+                className="h-9 w-9 flex items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <Trash2 className="h-5 w-5" />
-              </Button>
+              </button>
             )}
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-white hover:bg-white/20"
-              onClick={onClose}
+            <button
+              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              className="h-9 w-9 flex items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors"
             >
               <X className="h-5 w-5" />
-            </Button>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Navigation Areas */}
-      <div className="absolute inset-0 flex">
-        {/* Previous Area */}
-        {onPrevious && (
-          <div 
-            className="w-1/3 cursor-pointer flex items-center justify-start pl-4"
-            onClick={handlePrevious}
+      {/* Media */}
+      <div
+        className="absolute inset-0 flex items-center justify-center touch-none select-none"
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={story.id}
+            initial={{ opacity: 0, scale: 1.02 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="w-full h-full flex items-center justify-center"
           >
-            <ChevronLeft className="h-8 w-8 text-white opacity-0 hover:opacity-100 transition-opacity" />
-          </div>
-        )}
-        
-        {/* Media Area */}
-        <div className="flex-1 flex items-center justify-center">
-          {story.media_type === 'image' ? (
-            <img 
-              src={story.media_url} 
-              alt="Story" 
-              className="max-h-screen max-w-full object-contain"
-            />
-          ) : (
-            <video 
-              src={story.media_url} 
-              className="max-h-screen max-w-full object-contain"
-              autoPlay
-              loop
-              playsInline
-            />
+            {story.media_type === 'image' ? (
+              <img
+                src={story.media_url}
+                alt=""
+                className="max-h-full max-w-full object-contain"
+                draggable={false}
+              />
+            ) : (
+              <video
+                ref={videoRef}
+                src={story.media_url}
+                className="max-h-full max-w-full object-contain"
+                autoPlay
+                playsInline
+                muted={false}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Pause indicator */}
+        <AnimatePresence>
+          {showPauseIcon && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            >
+              <div className="h-16 w-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                {paused ? <Pause className="h-7 w-7 text-white" /> : <Play className="h-7 w-7 text-white ml-1" />}
+              </div>
+            </motion.div>
           )}
-        </div>
-
-        {/* Next Area */}
-        {onNext && (
-          <div 
-            className="w-1/3 cursor-pointer flex items-center justify-end pr-4"
-            onClick={handleNext}
-          >
-            <ChevronRight className="h-8 w-8 text-white opacity-0 hover:opacity-100 transition-opacity" />
-          </div>
-        )}
+        </AnimatePresence>
       </div>
 
-      {/* Caption */}
-      {story.caption && (
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
-          <p className="text-white text-center">{story.caption}</p>
+      {/* Caption + Views */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 pb-[max(env(safe-area-inset-bottom),16px)] px-4 bg-gradient-to-t from-black/70 via-black/30 to-transparent">
+        {story.caption && (
+          <p className="text-white text-sm mb-3 leading-relaxed max-w-[90%]">{story.caption}</p>
+        )}
+        <div className="flex items-center gap-1.5 text-white/40">
+          <Eye className="h-3.5 w-3.5" />
+          <span className="text-xs font-medium">{story.view_count} views</span>
         </div>
-      )}
-    </div>
+      </div>
+    </motion.div>
   );
 };
