@@ -100,8 +100,8 @@ const DesktopPageWindow = ({ children, title, className, maxWidth = 'max-w-4xl' 
       </div>
 
       {/* Window Content */}
-      <ScrollArea className="flex-1 overflow-hidden">
-        <div className="min-h-0">
+      <ScrollArea className="flex-1">
+        <div>
           {children}
         </div>
       </ScrollArea>
