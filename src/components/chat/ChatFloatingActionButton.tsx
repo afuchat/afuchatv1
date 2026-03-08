@@ -22,6 +22,7 @@ const ChatFloatingActionButton = ({
   onNewChat, 
   onCreateGroup,
   onCreateChannel,
+  onCreateStory,
   isVisible = true 
 }: ChatFloatingActionButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
