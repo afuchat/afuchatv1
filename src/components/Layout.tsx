@@ -302,7 +302,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
 
   if (onMainTab && !shouldHideNav) {
     return (
-      <div className="overflow-hidden bg-background select-none touch-pan-y h-[100dvh]">
+      <div className={cn(
+        "overflow-hidden bg-background select-none touch-pan-y",
+        isTelegram ? "h-full" : "h-[100dvh]"
+      )}>
         <MainTabsNavigation chatScrollHide={chatScrollHide}>
           {children}
         </MainTabsNavigation>

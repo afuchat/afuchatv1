@@ -26,7 +26,6 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 import { LoadingBar } from '@/components/LoadingBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ScrollToTop } from './components/ScrollToTop';
-import { TelegramSafeAreaHeader } from './components/TelegramSafeAreaHeader';
 
 
 // Eager load critical pages
@@ -365,7 +364,6 @@ const App = () => (
                   <Sonner />
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <TelegramProvider>
-                      <TelegramSafeAreaHeader />
                       <AfuAIProvider>
                         <AnimatePresence mode="wait">
                           <AppWithDesktopCheck />
