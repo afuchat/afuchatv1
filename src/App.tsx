@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AccountModeProvider } from "./contexts/AccountModeContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -139,26 +139,45 @@ const ProfileRedirect = () => {
 // Referral redirect: afuchat.com/username -> signup with ref
 const ReferralRedirect = () => {
   const { username } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!username) {
+      navigate('/page-not-found', { replace: true });
+      return;
+    }
+
+    // If username starts with @, redirect to profile route
+    if (username.startsWith('@')) {
+      navigate(`/@${username.slice(1)}`, { replace: true });
+      return;
+    }
+
+    // Skip known app routes to prevent false referral lookups
+    const reservedRoutes = ['auth', 'home', 'feed', 'search', 'shop', 'chats', 'chat', 'notifications', 'admin', 'settings', 'support', 'terms', 'privacy', 'wallet', 'gifts', 'premium', 'profile', 'onboarding', 'complete-profile', 'welcome', 'banned', 'page-not-found', 'user-not-found', 'afuai', 'afumail', 'moments', 'mini-programs', 'games', 'leaderboard', 'social', 'transfer', 'red-envelope', 'developer-sdk', 'verification-request', 'creator-earnings', 'qr-code', 'security', 'change-password', 'whats-new', 'marketplace', 'food-delivery', 'bookings', 'rides', 'travel', 'events', 'orders', 'order', 'product', 'merchant', 'ads', 'affiliate-request', 'affiliate-dashboard', 'business', 'christmas-gifts', 'game', 'memory-game', 'puzzle-game', 'mini-program-orders', 'trending'];
+    if (reservedRoutes.includes(username.toLowerCase())) {
+      navigate('/page-not-found', { replace: true });
+      return;
+    }
+
     const resolveReferral = async () => {
       // Look up the user's referral code from their handle
       const { data } = await supabase
         .from('profiles')
         .select('id')
-        .ilike('handle', username || '')
+        .ilike('handle', username)
         .maybeSingle();
       
       if (data) {
         const refCode = data.id.replace(/-/g, '').substring(0, 12).toUpperCase();
         window.location.href = `/auth/signup?ref=${refCode}`;
       } else {
-        window.location.href = '/page-not-found';
+        navigate('/page-not-found', { replace: true });
       }
     };
     resolveReferral();
-  }, [username]);
+  }, [username, navigate]);
 
   return (
     <div className="h-screen flex items-center justify-center">
