@@ -4,8 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAccountMode } from '@/contexts/AccountModeContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { Home, MessageSquare, Search, Bell, User, Settings, Shield, BarChart3, Grid3x3, Gamepad2, ShoppingBag, Wallet, Send, Gift, Image as ImageIcon, Hash, TrendingUp, Building2, MessageCircle } from 'lucide-react';
-import aiChatIcon from '@/assets/ai-chat-icon.ico';
-import { useAfuAI } from '@/contexts/AfuAIContext';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
 import NotificationIcon from '@/components/nav/NotificationIcon';
