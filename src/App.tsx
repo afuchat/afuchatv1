@@ -25,6 +25,7 @@ import { preloadAllGiftImages } from "./hooks/useGiftImageCache";
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { LoadingBar } from '@/components/LoadingBar';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ScrollToTop } from './components/ScrollToTop';
 
 
 // Eager load critical pages
