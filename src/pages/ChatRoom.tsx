@@ -1843,11 +1843,11 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
         {/* Messages container - only this scrolls */}
         <div 
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-4 bg-background" 
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-3 bg-background" 
           style={{ fontSize: `${chatPreferences.fontSize}px` }}
         >
           {messages.length === 0 && redEnvelopes.length === 0 && chatGifts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-3 px-4">
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 px-6">
               <MessageSquare className="h-14 w-14 text-muted-foreground/40" />
               <div>
                 <p className="text-sm font-medium text-foreground/80">No messages yet</p>
