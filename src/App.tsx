@@ -365,6 +365,7 @@ const App = () => (
                   <Sonner />
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <TelegramProvider>
+                      <TelegramSafeAreaHeader />
                       <AfuAIProvider>
                         <AnimatePresence mode="wait">
                           <AppWithDesktopCheck />
