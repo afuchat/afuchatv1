@@ -286,22 +286,7 @@ serve(async (req) => {
           console.error('[TG Auth] Create user error:', createError.message);
           throw createError;
         } else {
-          const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-            email,
-            password: crypto.randomUUID(),
-            email_confirm: true,
-            user_metadata: {
-              telegram_id: telegramId,
-              display_name: displayName,
-              avatar_url: photoUrl,
-            }
-          });
-
-          if (createError) {
-            console.error('[TG Auth] Create user error:', createError.message);
-            throw createError;
-          }
-          userId = newUser.user!.id;
+          userId = newUser!.user!.id;
           console.log('[TG Auth] Created new auth user:', userId);
         }
 
