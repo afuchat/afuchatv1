@@ -28,7 +28,7 @@ type TabId = 'home' | 'search' | 'shorts' | 'notifications' | 'chats';
 const TABS: { id: TabId; path: string; icon: any; label: string; requiresAuth: boolean }[] = [
   { id: 'home', path: '/home', icon: Home, label: 'Home', requiresAuth: false },
   { id: 'search', path: '/search', icon: Search, label: 'Search', requiresAuth: false },
-  { id: 'shorts', path: '/shorts', icon: Film, label: 'Shorts', requiresAuth: false },
+  { id: 'shorts', path: '/shorts', icon: Music2, label: 'Shorts', requiresAuth: false },
   { id: 'notifications', path: '/notifications', icon: Bell, label: 'Alerts', requiresAuth: true },
   { id: 'chats', path: '/chats', icon: MessageCircle, label: 'Chats', requiresAuth: true },
 ];
