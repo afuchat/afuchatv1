@@ -76,9 +76,10 @@ export const PostShortPlayer = ({
   const [localLikes, setLocalLikes] = useState(post.like_count);
   const [imageIndex, setImageIndex] = useState(0);
 
-  const hasImages = (post.post_images && post.post_images.length > 0) || post.image_url;
+  const hasMultipleImages = post.post_images && post.post_images.length > 1;
   const images = post.post_images?.sort((a, b) => a.display_order - b.display_order).map(i => i.image_url) 
     || (post.image_url ? [post.image_url] : []);
+  const hasImages = images.length > 0;
 
   // Random gradient for text-only posts
   const bgGradient = useMemo(() => {
