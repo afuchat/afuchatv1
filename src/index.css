@@ -111,17 +111,7 @@ html.telegram-mini-app .fixed.bottom-0 {
   bottom: var(--tg-safe-bottom, 0px) !important;
 }
 
-/* ====== Telegram: Hide ALL in-app back buttons ====== */
-html.telegram-mini-app button:has(> .lucide-arrow-left),
-html.telegram-mini-app button:has(> .lucide-chevron-left),
-html.telegram-mini-app a:has(> .lucide-arrow-left),
-html.telegram-mini-app a:has(> .lucide-chevron-left) {
-  display: none !important;
-}
-html.telegram-mini-app [role="button"]:has(> .lucide-arrow-left),
-html.telegram-mini-app [role="button"]:has(> .lucide-chevron-left) {
-  display: none !important;
-}
+/* Telegram: Use native back button but keep in-app ones visible for consistency */
 
 @tailwind components;
 @tailwind utilities;
@@ -1174,27 +1164,4 @@ html.telegram-mini-app nav {
   background-color: hsl(var(--background));
 }
 
-/* Telegram: remove all decorative borders for a cleaner native feel */
-html.telegram-mini-app .border-b,
-html.telegram-mini-app .border-t,
-html.telegram-mini-app .border-border,
-html.telegram-mini-app [class*="border-border"] {
-  border-color: transparent !important;
-}
-
-/* Telegram: keep only intentional card/section separators via subtle background shifts */
-html.telegram-mini-app .border {
-  border-color: transparent !important;
-}
-
-/* Telegram: restore borders only where truly needed (inputs, explicit outlines) */
-html.telegram-mini-app input,
-html.telegram-mini-app textarea,
-html.telegram-mini-app select {
-  border-color: hsl(var(--input)) !important;
-}
-
-/* Telegram: ensure cards have no visible borders */
-html.telegram-mini-app [class*="rounded"] {
-  border-color: transparent;
-}
+/* Telegram: keep borders identical to main platform for visual consistency */
