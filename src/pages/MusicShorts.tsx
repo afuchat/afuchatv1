@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomLoader } from '@/components/ui/CustomLoader';
-import { Button } from '@/components/ui/button';
-import { Music2, RefreshCw } from 'lucide-react';
-import { MusicDiscovery } from '@/components/music-shorts/MusicDiscovery';
+import { Music2 } from 'lucide-react';
 import { PostShortPlayer } from '@/components/music-shorts/PostShortPlayer';
 import { toast } from 'sonner';
 
