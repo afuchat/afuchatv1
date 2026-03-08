@@ -132,7 +132,38 @@ const queryClient = new QueryClient({
 
 const ProfileRedirect = () => {
   const { userId } = useParams();
-  return <Navigate to={`/${userId}`} replace />;
+  return <Navigate to={`/@${userId}`} replace />;
+};
+
+// Referral redirect: afuchat.com/username -> signup with ref
+const ReferralRedirect = () => {
+  const { username } = useParams();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const resolveReferral = async () => {
+      // Look up the user's referral code from their handle
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('handle', username || '')
+        .maybeSingle();
+      
+      if (data) {
+        const refCode = data.id.replace(/-/g, '').substring(0, 12).toUpperCase();
+        window.location.href = `/auth/signup?ref=${refCode}`;
+      } else {
+        window.location.href = '/page-not-found';
+      }
+    };
+    resolveReferral();
+  }, [username]);
+
+  return (
+    <div className="h-screen flex items-center justify-center">
+      <div className="text-muted-foreground text-sm">Redirecting...</div>
+    </div>
+  );
 };
 
 const AppRoutes = () => {
