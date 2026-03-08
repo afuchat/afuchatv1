@@ -34,7 +34,7 @@ const parseMessageContent = (content: string): React.ReactNode => {
       parts.push(
         <Link 
           key={`mention-${idx}`} 
-          to={`/${handle}`} 
+          to={`/@${handle}`} 
           className="text-blue-300 hover:underline font-medium"
           onClick={(e) => e.stopPropagation()}
         >
@@ -450,7 +450,7 @@ export const MessageBubble = ({
     >
       {/* Sender avatar in group chats only */}
       {isGroup && !isOwn && isLastInGroup && (
-        <Link to={`/${message.profiles.handle}`} className="flex-shrink-0 mb-0.5" onClick={(e) => e.stopPropagation()}>
+        <Link to={`/@${message.profiles.handle}`} className="flex-shrink-0 mb-0.5" onClick={(e) => e.stopPropagation()}>
           <UIAvatar className="h-7 w-7">
             <AvatarImage src={message.profiles.avatar_url || undefined} alt={message.profiles.display_name} />
             <AvatarFallback className="text-[10px]">
@@ -465,7 +465,7 @@ export const MessageBubble = ({
       <div className="flex flex-col max-w-[85%]">
         {/* Sender name in group chats */}
         {isGroup && !isOwn && !isGrouped && (
-          <Link to={`/${message.profiles.handle}`} className="text-[11px] font-semibold text-primary ml-1 mb-0.5 hover:underline" onClick={(e) => e.stopPropagation()}>
+          <Link to={`/@${message.profiles.handle}`} className="text-[11px] font-semibold text-primary ml-1 mb-0.5 hover:underline" onClick={(e) => e.stopPropagation()}>
             {message.profiles.display_name}
           </Link>
         )}

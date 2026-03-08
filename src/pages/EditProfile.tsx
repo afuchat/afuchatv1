@@ -119,7 +119,7 @@ const EditProfile: React.FC = () => {
         // Verify route matches current user (check both ID and handle)
         if (userId && data && userId !== user.id && userId !== data.handle) {
           toast.error('Access denied: Can only edit your own profile');
-          navigate(`/${data.handle}`);
+          navigate(`/@${data.handle}`);
           return;
         }
 
@@ -399,7 +399,7 @@ const EditProfile: React.FC = () => {
       // Check for profile completion reward
       await checkProfileCompletion();
       
-      navigate(`/${user.id}`);
+      navigate(`/@${user.id}`);
     } catch (error: any) {
       console.error('Update error:', error);
       if (error.code === '23505' || error.message.includes('already taken')) { 
@@ -415,7 +415,7 @@ const EditProfile: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate(`/${user?.id}`);
+    navigate(`/@${user?.id}`);
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {

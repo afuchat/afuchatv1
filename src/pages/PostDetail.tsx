@@ -47,7 +47,7 @@ const renderContentWithMentions = (content: string) => {
       parts.push(
         <Link 
           key={`mention-${idx}`} 
-          to={`/${handle}`} 
+          to={`/@${handle}`} 
           className="text-primary hover:underline font-semibold"
           onClick={(e) => e.stopPropagation()}
         >
@@ -629,7 +629,7 @@ const PostDetail = () => {
         <div className="p-4 border-b border-border">
             {/* AUTHOR BLOCK */}
             <div className="flex items-center gap-3 mb-4">
-              <Link to={`/${post.author.handle}`}>
+              <Link to={`/@${post.author.handle}`}>
                 <Avatar className="h-12 w-12 border border-border">
                   <AvatarImage src={post.author.avatar_url || undefined} />
                   <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
@@ -637,7 +637,7 @@ const PostDetail = () => {
                   </AvatarFallback>
                 </Avatar>
               </Link>
-              <Link to={`/${post.author.handle}`} className="flex-1 min-w-0">
+              <Link to={`/@${post.author.handle}`} className="flex-1 min-w-0">
                 <div className="flex items-center gap-1">
                   <span className="text-lg font-bold hover:underline truncate">
                     {post.author.display_name}

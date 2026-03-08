@@ -277,7 +277,7 @@ const SocialHub = () => {
                       <div className="flex items-start gap-3">
                         <Avatar
                           className="h-12 w-12 cursor-pointer"
-                          onClick={() => navigate(`/${suggestedUser.id}`)}
+                          onClick={() => navigate(`/@${suggestedUser.id}`)}
                         >
                           <AvatarImage src={suggestedUser.avatar_url} />
                           <AvatarFallback>{suggestedUser.display_name[0]}</AvatarFallback>
@@ -285,7 +285,7 @@ const SocialHub = () => {
                         <div className="flex-1 min-w-0">
                           <div
                             className="flex items-center gap-2 cursor-pointer"
-                            onClick={() => navigate(`/${suggestedUser.id}`)}
+                            onClick={() => navigate(`/@${suggestedUser.id}`)}
                           >
                             <span className="font-semibold truncate max-w-[120px]" title={suggestedUser.display_name}>{suggestedUser.display_name.length > 12 ? `${suggestedUser.display_name.slice(0, 10)}...` : suggestedUser.display_name}</span>
                             {suggestedUser.is_verified && (

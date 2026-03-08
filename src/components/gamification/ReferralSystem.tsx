@@ -12,6 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 export const ReferralSystem = () => {
   const { user } = useAuth();
   const [referralCode, setReferralCode] = useState<string>('');
+  const [userHandle, setUserHandle] = useState<string>('');
   const [referrals, setReferrals] = useState<any[]>([]);
   const [totalXP, setTotalXP] = useState(0);
 
@@ -19,15 +20,21 @@ export const ReferralSystem = () => {
     if (user) {
       generateReferralCode();
       fetchReferrals();
+      fetchHandle();
     }
   }, [user]);
 
   const generateReferralCode = () => {
     if (user) {
-      // Generate a unique referral code based on full user ID for uniqueness
       const code = `${user.id.replace(/-/g, '').substring(0, 12).toUpperCase()}`;
       setReferralCode(code);
     }
+  };
+
+  const fetchHandle = async () => {
+    if (!user) return;
+    const { data } = await supabase.from('profiles').select('handle').eq('id', user.id).maybeSingle();
+    if (data?.handle) setUserHandle(data.handle);
   };
 
   const fetchReferrals = async () => {
@@ -69,16 +76,20 @@ export const ReferralSystem = () => {
     }
   };
 
+  const getReferralLink = () => {
+    if (userHandle) return `${window.location.origin}/${userHandle}`;
+    return `${window.location.origin}/auth/signup?ref=${referralCode}`;
+  };
+
   const copyReferralLink = () => {
-    const link = `${window.location.origin}/auth/signup?ref=${referralCode}`;
-    navigator.clipboard.writeText(link);
+    navigator.clipboard.writeText(getReferralLink());
     toast.success('Referral link copied!', {
       description: 'Your friend gets 1 week free Premium and you earn 500 Nexa!',
     });
   };
 
   const shareReferralLink = async () => {
-    const link = `${window.location.origin}/auth/signup?ref=${referralCode}`;
+    const link = getReferralLink();
     if (navigator.share) {
       try {
         await navigator.share({
@@ -115,7 +126,7 @@ export const ReferralSystem = () => {
         {/* Referral Link Section */}
         <div className="flex gap-2">
           <Input
-            value={`${window.location.origin}/auth/signup?ref=${referralCode}`}
+            value={getReferralLink()}
             readOnly
             className="flex-1 text-xs"
           />

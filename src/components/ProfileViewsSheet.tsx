@@ -126,7 +126,7 @@ export const ProfileViewsSheet = ({ isOpen, onClose }: ProfileViewsSheetProps) =
 
   const handleViewProfile = (handle: string) => {
     onClose();
-    navigate(`/${handle}`);
+    navigate(`/@${handle}`);
   };
 
   return (

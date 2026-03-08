@@ -176,7 +176,7 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 			parts.push(
 				<Link
 					key={`mention-${idx}`}
-					to={`/${handle}`} 
+					to={`/@${handle}`} 
 					className="text-blue-500 hover:text-blue-400 font-medium transition-colors"
 					onClick={(e) => e.stopPropagation()}
 				>
@@ -250,7 +250,7 @@ const ProfileAvatarDisplay = ({ profileId, profile }: { profileId: string | null
 
 	const handleClick = () => {
 		if (isOwnProfile) {
-			navigate(`/${profileId}/edit`);
+			navigate(`/@${profileId}/edit`);
 		}
 	};
 
@@ -1363,7 +1363,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						<Button 
 							variant="outline" 
 							className="rounded-full px-6 py-2 font-bold bg-background hover:bg-muted border-2 h-auto"
-							onClick={() => navigate(`/${urlParam}/edit`)}
+							onClick={() => navigate(`/@${urlParam}/edit`)}
 							aria-label="Edit your profile"
 						>
 							{t('profile.editProfile')}
@@ -1715,14 +1715,14 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						<div className="flex gap-4 mt-3">
 							<div 
 								className="flex items-center cursor-pointer hover:underline"
-								onClick={() => navigate(`/${profile.handle}/following`)}
+								onClick={() => navigate(`/@${profile.handle}/following`)}
 							>
 								<span className="font-bold text-sm">{formatCount(followCount.following)}</span>
 								<span className="text-muted-foreground text-sm ml-1">{t('profile.following')}</span>
 							</div>
 							<div 
 								className="flex items-center cursor-pointer hover:underline"
-								onClick={() => navigate(`/${profile.handle}/followers`)}
+								onClick={() => navigate(`/@${profile.handle}/followers`)}
 							>
 								<span className="font-bold text-sm">{formatCount(followCount.followers)}</span>
 								<span className="text-muted-foreground text-sm ml-1">{t('profile.followers')}</span>
@@ -1903,7 +1903,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 										<div 
 											key={affiliatedUser.id}
 											className="p-4 hover:bg-muted/10 cursor-pointer transition-colors flex items-center gap-3"
-											onClick={() => navigate(`/${affiliatedUser.handle}`)}
+											onClick={() => navigate(`/@${affiliatedUser.handle}`)}
 										>
 										<StoryAvatar 
 											userId={affiliatedUser.id}
@@ -1953,7 +1953,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				isOpen={isActionsSheetOpen}
 				onClose={() => setIsActionsSheetOpen(false)}
 				onLogout={handleLogout}
-				onEditProfile={() => navigate(`/${urlParam}/edit`)}
+				onEditProfile={() => navigate(`/@${urlParam}/edit`)}
 			/>
 
 			{/* Affiliate Details Sheet */}

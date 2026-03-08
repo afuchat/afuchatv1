@@ -182,7 +182,7 @@ const UnifiedLeaderboard = () => {
             <div
               key={user.id}
               className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-muted/30 transition-colors"
-              onClick={() => navigate(`/${user.handle}`)}
+              onClick={() => navigate(`/@${user.handle}`)}
             >
               {/* Rank */}
               <span className="text-muted-foreground font-semibold w-10 text-sm">

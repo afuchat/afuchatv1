@@ -249,7 +249,7 @@ export const DesktopRightSidebar = ({ className, variant = 'full' }: DesktopRigh
                   key={suggestedUser.id} 
                   className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <Link to={`/${suggestedUser.id}`}>
+                  <Link to={`/@${suggestedUser.id}`}>
                     <Avatar className="h-10 w-10 border border-border/50">
                       <AvatarImage src={suggestedUser.avatar_url || ''} alt={suggestedUser.display_name} />
                       <AvatarFallback className="text-xs">
@@ -260,7 +260,7 @@ export const DesktopRightSidebar = ({ className, variant = 'full' }: DesktopRigh
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <Link 
-                        to={`/${suggestedUser.id}`}
+                        to={`/@${suggestedUser.id}`}
                         className="font-medium text-sm truncate hover:underline max-w-[100px]"
                       >
                         {suggestedUser.display_name}

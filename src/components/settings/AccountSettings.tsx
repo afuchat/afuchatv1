@@ -102,7 +102,7 @@ export const AccountSettings = () => {
         </div>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-            onClick={() => user && navigate(`/${user.id}/edit`)}>
+            onClick={() => user && navigate(`/@${user.id}/edit`)}>
             <div className="flex items-center gap-3">
               <User className="h-5 w-5 text-muted-foreground" />
               <div>

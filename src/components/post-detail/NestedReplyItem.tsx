@@ -142,7 +142,7 @@ export const NestedReplyItem = ({
 
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <Link to={`/${reply.author.handle}`}>
+          <Link to={`/@${reply.author.handle}`}>
             <Avatar className="h-10 w-10 border border-border">
               <AvatarImage src={reply.author.avatar_url || undefined} />
               <AvatarFallback className="bg-muted text-muted-foreground text-sm font-semibold">
@@ -156,7 +156,7 @@ export const NestedReplyItem = ({
           {/* Header */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <Link 
-              to={`/${reply.author.handle}`} 
+              to={`/@${reply.author.handle}`} 
               className="font-bold text-foreground hover:underline"
             >
               {reply.author.display_name}

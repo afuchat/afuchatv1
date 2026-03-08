@@ -1,5 +1,6 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import '@/types/telegram.d.ts';
+import { supabase } from '@/integrations/supabase/client';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -132,7 +133,38 @@ const queryClient = new QueryClient({
 
 const ProfileRedirect = () => {
   const { userId } = useParams();
-  return <Navigate to={`/${userId}`} replace />;
+  return <Navigate to={`/@${userId}`} replace />;
+};
+
+// Referral redirect: afuchat.com/username -> signup with ref
+const ReferralRedirect = () => {
+  const { username } = useParams();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const resolveReferral = async () => {
+      // Look up the user's referral code from their handle
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('handle', username || '')
+        .maybeSingle();
+      
+      if (data) {
+        const refCode = data.id.replace(/-/g, '').substring(0, 12).toUpperCase();
+        window.location.href = `/auth/signup?ref=${refCode}`;
+      } else {
+        window.location.href = '/page-not-found';
+      }
+    };
+    resolveReferral();
+  }, [username]);
+
+  return (
+    <div className="h-screen flex items-center justify-center">
+      <div className="text-muted-foreground text-sm">Redirecting...</div>
+    </div>
+  );
 };
 
 const AppRoutes = () => {
@@ -259,11 +291,8 @@ const AppRoutes = () => {
       <Route path="/@:userId/followers" element={<Layout><Followers /></Layout>} />
       <Route path="/@:userId/following" element={<Layout><Following /></Layout>} />
 
-      {/* Profile routes without @ prefix - will fall through to 404 if not found */}
-      <Route path="/:userId" element={<Layout><Profile mustExist={false} /></Layout>} />
-      <Route path="/:userId/edit" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><EditProfile /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/:userId/followers" element={<Layout><Followers /></Layout>} />
-      <Route path="/:userId/following" element={<Layout><Following /></Layout>} />
+      {/* Referral route: afuchat.com/username redirects to signup with referral code */}
+      <Route path="/:username" element={<ReferralRedirect />} />
 
       <Route path="/user-not-found" element={<UserNotFound />} />
       <Route path="/page-not-found" element={<NotFound />} />

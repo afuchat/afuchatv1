@@ -365,7 +365,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
               <div className="flex items-center justify-between mb-3">
                 {/* Main avatar */}
                 <button 
-                  onClick={() => handleNavigate(`/${profile.handle}`)}
+                  onClick={() => handleNavigate(`/@${profile.handle}`)}
                   className="flex-shrink-0"
                 >
                   <Avatar className="h-12 w-12">
@@ -418,7 +418,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
               </div>
               
               <button 
-                onClick={() => handleNavigate(`/${profile.handle}`)}
+                onClick={() => handleNavigate(`/@${profile.handle}`)}
                 className="text-left"
               >
                 <div className="flex items-center gap-1">
@@ -434,14 +434,14 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
 
               <div className="flex items-center gap-4 mt-3">
                 <button 
-                  onClick={() => handleNavigate(`/${profile.handle}/following`)}
+                  onClick={() => handleNavigate(`/@${profile.handle}/following`)}
                   className="hover:underline"
                 >
                   <span className="font-bold">{followCounts.following}</span>
                   <span className="text-muted-foreground ml-1">Following</span>
                 </button>
                 <button 
-                  onClick={() => handleNavigate(`/${profile.handle}/followers`)}
+                  onClick={() => handleNavigate(`/@${profile.handle}/followers`)}
                   className="hover:underline"
                 >
                   <span className="font-bold">{followCounts.followers}</span>

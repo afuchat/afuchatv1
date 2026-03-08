@@ -109,7 +109,7 @@ export const ViewsAnalyticsSheet = ({
   };
 
   const handleViewerClick = (viewerId: string) => {
-    navigate(`/${viewerId}`);
+    navigate(`/@${viewerId}`);
     onClose();
   };
 

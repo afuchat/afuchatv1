@@ -596,7 +596,7 @@ const Search = () => {
     setShowSuggestions(false);
     
     if (suggestion.type === 'user') {
-      navigate(`/${suggestion.id}`);
+      navigate(`/@${suggestion.id}`);
     } else if (suggestion.type === 'web') {
       // Switch to Web tab and set query for web search
       setQuery(suggestion.text);
@@ -783,7 +783,7 @@ const Search = () => {
   }, [debouncedQuery, handleSearch, navigate, location.search]);
 
   const handleViewProfile = (userId: string) => {
-    navigate(`/${userId}`);
+    navigate(`/@${userId}`);
   };
 
   const handleViewPost = (postId: string) => {
