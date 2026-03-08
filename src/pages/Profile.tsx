@@ -41,6 +41,7 @@ import { PrivateProfileOverlay } from '@/components/PrivateProfileOverlay';
 import { FollowRequestsSheet } from '@/components/FollowRequestsSheet';
 import UserActionsSheet from '@/components/UserActionsSheet';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
+import { AIPostSummary } from '@/components/feed/AIPostSummary';
 import { WarningBadge } from '@/components/WarningBadge';
 import { ProfileViewsSheet } from '@/components/ProfileViewsSheet';
 import { EditPostModal } from '@/components/EditPostModal';
@@ -1845,6 +1846,9 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 												)}
 												{post.quoted_post && (
 													<QuotedPostCard quotedPost={post.quoted_post} />
+												)}
+												{post.content && post.content.length >= 150 && (
+													<AIPostSummary postContent={post.content} postId={post.id} />
 												)}
 												<div className="flex justify-between items-center text-xs text-muted-foreground mt-2">
 													<span>
