@@ -367,6 +367,36 @@ export type Database = {
           },
         ]
       }
+      afumail_aliases: {
+        Row: {
+          alias_email: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_plus_address: boolean
+          label: string | null
+          user_id: string
+        }
+        Insert: {
+          alias_email: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_plus_address?: boolean
+          label?: string | null
+          user_id: string
+        }
+        Update: {
+          alias_email?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_plus_address?: boolean
+          label?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       afumail_emails: {
         Row: {
           body_html: string | null
@@ -5326,6 +5356,7 @@ export type Database = {
             Args: { p_mobile_network: string; p_phone_number: string }
             Returns: Json
           }
+      resolve_afumail_recipient: { Args: { p_email: string }; Returns: string }
       rotate_featured_items: { Args: never; Returns: undefined }
       send_gift: {
         Args: { p_gift_id: string; p_message?: string; p_receiver_id: string }
