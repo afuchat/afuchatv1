@@ -55,11 +55,11 @@ export const ActivityLog = () => {
 
   const getActivityColor = (type: string) => {
     switch (type) {
-      case 'daily_login': return 'bg-blue-500';
-      case 'tip_sent': return 'bg-red-500';
-      case 'tip_received': return 'bg-green-500';
-      case 'post_created': return 'bg-purple-500';
-      case 'referral_reward': return 'bg-amber-500';
+      case 'daily_login': return 'bg-primary';
+      case 'tip_sent': return 'bg-destructive';
+      case 'tip_received': return 'bg-primary/80';
+      case 'post_created': return 'bg-primary';
+      case 'referral_reward': return 'bg-primary/80';
       default: return 'bg-muted';
     }
   };
