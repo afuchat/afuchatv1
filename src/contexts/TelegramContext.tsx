@@ -54,6 +54,14 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
       telegram.setHeaderColor('bg_color');
       telegram.setBackgroundColor('bg_color');
       
+      // Set bottom bar color if available (Bot API 7.10+)
+      try {
+        const webApp = window.Telegram?.WebApp;
+        if (webApp?.setBottomBarColor) {
+          webApp.setBottomBarColor('bg_color');
+        }
+      } catch {}
+      
       // Disable overscroll/pull-to-refresh behavior in Telegram
       document.body.style.overscrollBehavior = 'contain';
       

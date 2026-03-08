@@ -2234,7 +2234,6 @@ async function handleCallback(callbackQuery: any) {
     case 'app_food':
     case 'app_rides':
     case 'app_bookings':
-    case 'app_afumail':
     case 'app_finance':
     case 'app_events': {
       const appName = data.replace('app_', '');
@@ -2244,7 +2243,6 @@ async function handleCallback(callbackQuery: any) {
         food: 'food-delivery',
         rides: 'rides',
         bookings: 'bookings',
-        afumail: 'afumail',
         finance: 'finance',
         events: 'events'
       };
@@ -2253,6 +2251,76 @@ async function handleCallback(callbackQuery: any) {
         inline_keyboard: [
           [{ text: t('openApp', lang), url: `https://afuchat.com/${appUrls[appName]}` }],
           [{ text: t('backToMiniApps', lang), callback_data: 'menu_mini_apps' }]
+        ]
+      });
+      break;
+    }
+    
+    case 'app_afumail':
+    case 'menu_afumail': {
+      if (!isLinked) {
+        await editMessage(chatId, messageId, t('linkFirst', lang), {
+          inline_keyboard: [[{ text: t('linkAccount', lang), callback_data: 'link_account' }]]
+        });
+        break;
+      }
+      
+      // Get mailbox
+      const { data: mailbox } = await supabase
+        .from('afumail_mailboxes')
+        .select('email_address')
+        .eq('user_id', tgUser.user_id)
+        .single();
+      
+      // Get recent inbox
+      const { data: recentEmails } = await supabase
+        .from('afumail_user_emails')
+        .select(`
+          id, is_read, is_starred, folder,
+          afumail_emails(id, sender_email, subject, body_text, sent_at, created_at)
+        `)
+        .eq('user_id', tgUser.user_id)
+        .eq('folder', 'inbox')
+        .eq('is_trashed', false)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      const emailAddr = mailbox?.email_address || 'Not set up yet';
+      let mailText = `📧 <b>AfuMail</b>\n\n<b>Your address:</b> ${emailAddr}\n\n`;
+      
+      if (recentEmails && recentEmails.length > 0) {
+        mailText += '<b>Recent Inbox:</b>\n\n';
+        recentEmails.forEach((ue: any, i: number) => {
+          const email = ue.afumail_emails;
+          if (!email) return;
+          const unread = !ue.is_read ? '🔵 ' : '';
+          const starred = ue.is_starred ? '⭐ ' : '';
+          const subject = email.subject || '(No subject)';
+          const from = email.sender_email?.split('@')[0] || 'Unknown';
+          const time = getTimeAgo(email.sent_at || email.created_at);
+          mailText += `${unread}${starred}<b>${from}</b> · ${time}\n${subject.slice(0, 60)}\n\n`;
+        });
+      } else {
+        mailText += 'No emails in your inbox yet.\n\n';
+      }
+      
+      mailText += 'Open AfuMail for the full experience.';
+      
+      const { count: unreadCount } = await supabase
+        .from('afumail_user_emails')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', tgUser.user_id)
+        .eq('folder', 'inbox')
+        .eq('is_read', false)
+        .eq('is_trashed', false);
+      
+      const unreadBadge = unreadCount ? ` (${unreadCount})` : '';
+      
+      await editMessage(chatId, messageId, mailText, {
+        inline_keyboard: [
+          [{ text: `📥 Open AfuMail${unreadBadge}`, url: 'https://afuchat.com/afumail' }],
+          [{ text: '🔄 Refresh', callback_data: 'menu_afumail' }],
+          [{ text: t('backToMiniApps', lang), callback_data: 'menu_mini_apps' }],
         ]
       });
       break;
@@ -3075,6 +3143,81 @@ async function handleMessage(message: any) {
     const lang = await getUserLang(tgUser);
     const menu = buildLanguageMenu(lang);
     await sendTelegramMessage(chatId, menu.text, menu.reply_markup);
+    return;
+  }
+  
+  // Handle /mail command
+  if (text === '/mail') {
+    const tgUser = await getOrCreateTelegramUser(telegramUser);
+    const isLinked = tgUser?.is_linked && tgUser?.user_id;
+    const lang = await getUserLang(tgUser);
+    
+    if (!isLinked) {
+      await sendTelegramMessage(chatId, t('linkFirst', lang), {
+        inline_keyboard: [[{ text: t('linkAccount', lang), callback_data: 'link_account' }]]
+      });
+      return;
+    }
+    
+    // Get mailbox email
+    const { data: mailbox } = await supabase
+      .from('afumail_mailboxes')
+      .select('email_address')
+      .eq('user_id', tgUser.user_id)
+      .single();
+    
+    // Get recent inbox emails
+    const { data: recentEmails } = await supabase
+      .from('afumail_user_emails')
+      .select(`
+        id, is_read, is_starred, folder,
+        afumail_emails(id, sender_email, subject, body_text, sent_at, created_at)
+      `)
+      .eq('user_id', tgUser.user_id)
+      .eq('folder', 'inbox')
+      .eq('is_trashed', false)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    
+    const emailAddr = mailbox?.email_address || 'Not set up yet';
+    let emailText = `📧 <b>AfuMail</b>\n\n<b>Your address:</b> ${emailAddr}\n\n`;
+    
+    if (recentEmails && recentEmails.length > 0) {
+      emailText += '<b>Recent Inbox:</b>\n\n';
+      recentEmails.forEach((ue: any, i: number) => {
+        const email = ue.afumail_emails;
+        if (!email) return;
+        const unread = !ue.is_read ? '🔵 ' : '';
+        const starred = ue.is_starred ? '⭐ ' : '';
+        const subject = email.subject || '(No subject)';
+        const from = email.sender_email?.split('@')[0] || 'Unknown';
+        const time = getTimeAgo(email.sent_at || email.created_at);
+        emailText += `${unread}${starred}<b>${from}</b> · ${time}\n${subject.slice(0, 60)}\n\n`;
+      });
+    } else {
+      emailText += 'No emails in your inbox yet.\n\n';
+    }
+    
+    emailText += 'Open AfuMail in the web app for the full experience.';
+    
+    // Count unread
+    const { count: unreadCount } = await supabase
+      .from('afumail_user_emails')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', tgUser.user_id)
+      .eq('folder', 'inbox')
+      .eq('is_read', false)
+      .eq('is_trashed', false);
+    
+    const unreadBadge = unreadCount ? ` (${unreadCount} unread)` : '';
+    
+    await sendTelegramMessage(chatId, emailText, {
+      inline_keyboard: [
+        [{ text: `📥 Open AfuMail${unreadBadge}`, url: 'https://afuchat.com/afumail' }],
+        [{ text: '🔄 Refresh', callback_data: 'menu_afumail' }],
+        [{ text: t('mainMenu', lang), callback_data: 'main_menu' }],
+      ]
+    });
     return;
   }
   
