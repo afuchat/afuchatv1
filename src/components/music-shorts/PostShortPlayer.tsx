@@ -169,12 +169,7 @@ export const PostShortPlayer = ({
 
       {/* Center text content */}
       <div className="absolute inset-0 flex items-center justify-center px-8 z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0.7, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center max-w-[85%]"
-        >
+        <div className="text-center max-w-[85%]">
           <p
             className={cn(
               "leading-relaxed drop-shadow-lg font-semibold",
@@ -187,11 +182,11 @@ export const PostShortPlayer = ({
           >
             {post.content?.length > 200 ? post.content.slice(0, 200) + '...' : post.content}
           </p>
-        </motion.div>
+        </div>
       </div>
 
       {/* Image carousel dots */}
-      {images.length > 1 && (
+      {hasMultipleImages && (
         <div className="absolute top-1/2 right-3 z-20 flex flex-col gap-1.5">
           {images.map((_, i) => (
             <div key={i} className={cn("w-1.5 h-1.5 rounded-full transition-all", i === imageIndex ? "bg-white scale-125" : "bg-white/40")} />
