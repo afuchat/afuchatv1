@@ -1600,7 +1600,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                       { key: 'harassment', label: 'Harassment', icon: '😤' },
                       { key: 'hate_speech', label: 'Hate speech', icon: '🛑' },
                       { key: 'inappropriate', label: 'Inappropriate', icon: '⚠️' },
-                      { key: 'other', label: 'Something else', icon: '📝' },
                     ].map((reason) => (
                       <button
                         key={reason.key}
@@ -1611,14 +1610,49 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         <span className="text-[13px] text-foreground">{reason.label}</span>
                       </button>
                     ))}
-                  </div>
-                  <div className="border-t border-border">
-                    <button 
-                      className="w-full py-2 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
-                      onClick={() => { setShowReportCard(false); setReportTargetId(null); }}
-                    >
-                      Cancel
-                    </button>
+                    {/* Something else — with text input */}
+                    {!showOtherReasonInput ? (
+                      <button
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-muted/50 transition-colors active:bg-muted"
+                        onClick={() => setShowOtherReasonInput(true)}
+                      >
+                        <span className="text-sm">📝</span>
+                        <span className="text-[13px] text-foreground">Something else</span>
+                      </button>
+                    ) : (
+                      <div className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={otherReasonText}
+                            onChange={(e) => setOtherReasonText(e.target.value)}
+                            placeholder="Describe the issue..."
+                            autoFocus
+                            className="flex-1 text-[13px] bg-muted/50 border border-border/50 rounded-lg px-3 py-1.5 text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/40 min-w-0"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && otherReasonText.trim() && reportTargetId) {
+                                handleReportComment(reportTargetId, `other: ${otherReasonText.trim()}`);
+                                setOtherReasonText('');
+                                setShowOtherReasonInput(false);
+                              }
+                            }}
+                          />
+                          <button
+                            disabled={!otherReasonText.trim()}
+                            onClick={() => {
+                              if (reportTargetId && otherReasonText.trim()) {
+                                handleReportComment(reportTargetId, `other: ${otherReasonText.trim()}`);
+                                setOtherReasonText('');
+                                setShowOtherReasonInput(false);
+                              }
+                            }}
+                            className={cn("text-xs font-bold transition-all", otherReasonText.trim() ? "text-primary" : "text-primary/30")}
+                          >
+                            Send
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
