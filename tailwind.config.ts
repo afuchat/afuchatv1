@@ -176,6 +176,22 @@ export default {
           "0%": { width: "0%" },
           "100%": { width: "100%" },
         },
+        "kenburns-zoom-in": {
+          "0%": { transform: "scale(1) translate(0, 0)" },
+          "100%": { transform: "scale(1.15) translate(-2%, -1%)" },
+        },
+        "kenburns-zoom-out": {
+          "0%": { transform: "scale(1.15) translate(-2%, -1%)" },
+          "100%": { transform: "scale(1) translate(0, 0)" },
+        },
+        "kenburns-pan-left": {
+          "0%": { transform: "scale(1.1) translate(3%, 0)" },
+          "100%": { transform: "scale(1.1) translate(-3%, 0)" },
+        },
+        "kenburns-pan-right": {
+          "0%": { transform: "scale(1.1) translate(-3%, 0)" },
+          "100%": { transform: "scale(1.1) translate(3%, 0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.25s ease-out",
@@ -195,6 +211,10 @@ export default {
         "bounce-soft": "bounce-soft 1s ease-in-out infinite",
         "marquee": "marquee 8s linear infinite",
         "music-progress": "music-progress 30s linear infinite",
+        "kenburns-zoom-in": "kenburns-zoom-in 6s ease-in-out forwards",
+        "kenburns-zoom-out": "kenburns-zoom-out 6s ease-in-out forwards",
+        "kenburns-pan-left": "kenburns-pan-left 6s ease-in-out forwards",
+        "kenburns-pan-right": "kenburns-pan-right 6s ease-in-out forwards",
         "enter": "fade-in 0.3s ease-out, scale-in 0.2s ease-out",
         "exit": "fade-out 0.2s ease-in, scale-out 0.15s ease-in",
       },
