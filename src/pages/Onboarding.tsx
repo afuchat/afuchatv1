@@ -265,6 +265,7 @@ const Onboarding = () => {
       const { data: follows } = await supabase.from('follows').select('id').eq('follower_id', user.id).limit(1);
       const hasFollows = follows && follows.length > 0;
       
+      // Fully complete users → redirect to home immediately
       if (isProfileComplete && hasInterests && hasFollows) {
         localStorage.removeItem('onboarding_step');
         navigate('/home', { replace: true });
@@ -272,12 +273,19 @@ const Onboarding = () => {
         return;
       }
       
-      const savedStep = parseInt(localStorage.getItem('onboarding_step') || '0', 10);
-      let correctStep = savedStep;
+      // Determine correct step based on what's missing
+      let correctStep = 0;
       
-      if (!isProfileComplete && correctStep >= 2) correctStep = 1;
-      else if (isProfileComplete && !hasInterests && correctStep >= 3) correctStep = 2;
-      else if (isProfileComplete && hasInterests && !hasFollows && correctStep >= 4) correctStep = 3;
+      if (isProfileComplete && hasInterests && !hasFollows) {
+        // Only need to follow people
+        correctStep = 3;
+      } else if (isProfileComplete && !hasInterests) {
+        // Need to select interests
+        correctStep = 2;
+      } else if (!isProfileComplete) {
+        // Need to complete profile - skip account type (step 0), go directly to profile (step 1)
+        correctStep = 1;
+      }
       
       if (correctStep === 3) await loadSuggestedUsers();
       
