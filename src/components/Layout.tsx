@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { DesktopHybridLayout } from '@/components/DesktopHybridLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 
@@ -207,9 +208,11 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     }
   }, [user]);
 
+  const isTelegram = useIsTelegram();
+
   useEffect(() => {
-    // Only run scroll handlers on mobile
-    if (!isMobile) return;
+    // Disable scroll-to-hide in Telegram — keep nav always visible
+    if (!isMobile || isTelegram) return;
     
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -234,7 +237,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('chat-scroll-state' as any, handleChatScroll as any);
     };
-  }, [isMobile]);
+  }, [isMobile, isTelegram]);
 
   // Show desktop-friendly layout instead of blocking
   const isDesktop = !isMobile;
@@ -335,7 +338,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
           )}
           style={{ bottom: 'var(--tg-safe-bottom, 0px)' }}
         >
-          <nav className="bg-background border-t border-border/40">
+          <nav className={cn("bg-background", !isTelegram && "border-t border-border/40")}>
             <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
               {/* Home */}
               <Link

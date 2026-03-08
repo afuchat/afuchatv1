@@ -5,6 +5,7 @@ import { Home, Search, Bell, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 
 // Lazy load tab content
 import { lazy, Suspense } from 'react';
@@ -48,6 +49,7 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const isDesktop = !isMobile;
+  const isTelegram = useIsTelegram();
   
   const currentTabIndex = getTabIndexFromPath(location.pathname);
   const isOnMainTab = currentTabIndex !== -1;
@@ -67,10 +69,10 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
     }
   }, [location.pathname]);
 
-  // Scroll-to-hide navigation
+  // Scroll-to-hide navigation (disabled in Telegram for always-visible nav)
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container || !isMobile) return;
+    if (!container || !isMobile || isTelegram) return;
 
     const handleScroll = () => {
       const currentScrollY = container.scrollTop;
@@ -86,7 +88,7 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
 
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
+  }, [isMobile, isTelegram]);
 
   // Fetch notification counts
   useEffect(() => {
@@ -206,7 +208,7 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
           bottom: 'var(--tg-safe-bottom, 0px)',
         }}
       >
-        <nav className="bg-background border-t border-border/40">
+        <nav className={cn("bg-background", !isTelegram && "border-t border-border/40")}>
           <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
             {TABS.map((tab, index) => {
               const isActive = activeTab === index;

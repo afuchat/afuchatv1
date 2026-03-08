@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 import { cn } from '@/lib/utils';
 
 interface PageHeaderProps {
@@ -17,6 +18,7 @@ interface PageHeaderProps {
 export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const isTelegram = useIsTelegram();
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
 
@@ -36,7 +38,8 @@ export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderPr
   });
 
   useEffect(() => {
-    if (!isMobile) return;
+    // Never hide header in Telegram
+    if (!isMobile || isTelegram) return;
 
     const handleWindowScroll = () => {
       const currentScrollY = window.scrollY;
@@ -54,11 +57,12 @@ export const PageHeader = ({ title, subtitle, rightContent, icon }: PageHeaderPr
       window.removeEventListener('scroll', handleWindowScroll);
       window.removeEventListener('nav-scroll-state' as any, handleNavScroll as any);
     };
-  }, [isMobile]);
+  }, [isMobile, isTelegram]);
 
   return (
     <div className={cn(
-      "sticky z-10 bg-background/95 backdrop-blur border-b border-border transition-all duration-300 ease-out",
+      "sticky z-10 bg-background/95 backdrop-blur transition-all duration-300 ease-out",
+      !isTelegram && "border-b border-border",
       isMobile && isHidden ? "-top-16" : "top-0"
     )}>
       <div className="max-w-6xl mx-auto px-4 py-3">
