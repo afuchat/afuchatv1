@@ -235,7 +235,7 @@ export default function Following() {
   };
 
   const handleUserClick = (userHandle: string) => {
-    navigate(`/${userHandle}`);
+    navigate(`/@${userHandle}`);
   };
 
   return (

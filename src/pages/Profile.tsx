@@ -1953,7 +1953,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				isOpen={isActionsSheetOpen}
 				onClose={() => setIsActionsSheetOpen(false)}
 				onLogout={handleLogout}
-				onEditProfile={() => navigate(`/${urlParam}/edit`)}
+				onEditProfile={() => navigate(`/@${urlParam}/edit`)}
 			/>
 
 			{/* Affiliate Details Sheet */}

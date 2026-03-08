@@ -1712,7 +1712,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
               if (chatInfo?.is_group) {
                 setIsGroupSettingsOpen(true);
               } else if (otherUser) {
-                navigate(`/${otherUser.handle}`);
+                navigate(`/@${otherUser.handle}`);
               }
             }}
           >

@@ -58,7 +58,7 @@ export const ProfileCompletionBanner = () => {
 
   const handleComplete = () => {
     if (userHandle) {
-      navigate(`/${userHandle}/edit`);
+      navigate(`/@${userHandle}/edit`);
     }
   };
 

@@ -744,7 +744,7 @@ const BusinessDashboard = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => navigate(`/${affiliate.handle}`)}
+                          onClick={() => navigate(`/@${affiliate.handle}`)}
                         >
                           View
                         </Button>

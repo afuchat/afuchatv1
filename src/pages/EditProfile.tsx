@@ -415,7 +415,7 @@ const EditProfile: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate(`/${user?.id}`);
+    navigate(`/@${user?.id}`);
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
