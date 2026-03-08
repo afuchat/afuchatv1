@@ -137,10 +137,26 @@ const ProfileRedirect = () => {
 };
 
 // Referral redirect: afuchat.com/username -> signup with ref
-const ReferralRedirect = () => {
+// Smart catch-all: renders Profile for @handle, or does referral redirect for bare usernames
+const UsernameOrReferral = () => {
   const { username } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+
+  // If path is /@handle, render profile directly (no redirect needed)
+  if (username?.startsWith('@')) {
+    return (
+      <Layout>
+        <Profile mustExist={true} />
+      </Layout>
+    );
+  }
+
+  // Otherwise, handle as referral
+  return <ReferralHandler username={username} />;
+};
+
+const ReferralHandler = ({ username }: { username?: string }) => {
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!username) {
@@ -148,13 +164,7 @@ const ReferralRedirect = () => {
       return;
     }
 
-    // If username starts with @, redirect to profile route
-    if (username.startsWith('@')) {
-      navigate(`/@${username.slice(1)}`, { replace: true });
-      return;
-    }
-
-    // Skip known app routes to prevent false referral lookups
+    // Skip known app routes
     const reservedRoutes = ['auth', 'home', 'feed', 'search', 'shop', 'chats', 'chat', 'notifications', 'admin', 'settings', 'support', 'terms', 'privacy', 'wallet', 'gifts', 'premium', 'profile', 'onboarding', 'complete-profile', 'welcome', 'banned', 'page-not-found', 'user-not-found', 'afuai', 'afumail', 'moments', 'mini-programs', 'games', 'leaderboard', 'social', 'transfer', 'red-envelope', 'developer-sdk', 'verification-request', 'creator-earnings', 'qr-code', 'security', 'change-password', 'whats-new', 'marketplace', 'food-delivery', 'bookings', 'rides', 'travel', 'events', 'orders', 'order', 'product', 'merchant', 'ads', 'affiliate-request', 'affiliate-dashboard', 'business', 'christmas-gifts', 'game', 'memory-game', 'puzzle-game', 'mini-program-orders', 'trending'];
     if (reservedRoutes.includes(username.toLowerCase())) {
       navigate('/page-not-found', { replace: true });
@@ -162,7 +172,6 @@ const ReferralRedirect = () => {
     }
 
     const resolveReferral = async () => {
-      // Look up the user's referral code from their handle
       const { data } = await supabase
         .from('profiles')
         .select('id')
