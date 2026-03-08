@@ -988,6 +988,11 @@ const Search = () => {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   setShowSuggestions(false);
+                  const trimmed = query.trim();
+                  if (trimmed) {
+                    addToSearchHistory(trimmed);
+                    setHistoryKey(prev => prev + 1);
+                  }
                 } else if (e.key === 'Escape') {
                   setShowSuggestions(false);
                   inputRef.current?.blur();
