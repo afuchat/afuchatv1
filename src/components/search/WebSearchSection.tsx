@@ -601,7 +601,7 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
           {/* Remaining results */}
           <div className="divide-y divide-border/60">
             {rest.map((result, i) => (
-              <ResultCard key={result.url + i} result={result} index={i} onClick={() => openUrl(result.url, result.title)} />
+              <ResultCard key={result.url + i} result={result} index={i} onClick={() => openUrl(result.url, result.title)} onOpenUrl={openUrl} />
             ))}
           </div>
         </div>
