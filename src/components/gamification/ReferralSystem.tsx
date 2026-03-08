@@ -12,6 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 export const ReferralSystem = () => {
   const { user } = useAuth();
   const [referralCode, setReferralCode] = useState<string>('');
+  const [userHandle, setUserHandle] = useState<string>('');
   const [referrals, setReferrals] = useState<any[]>([]);
   const [totalXP, setTotalXP] = useState(0);
 
@@ -19,15 +20,21 @@ export const ReferralSystem = () => {
     if (user) {
       generateReferralCode();
       fetchReferrals();
+      fetchHandle();
     }
   }, [user]);
 
   const generateReferralCode = () => {
     if (user) {
-      // Generate a unique referral code based on full user ID for uniqueness
       const code = `${user.id.replace(/-/g, '').substring(0, 12).toUpperCase()}`;
       setReferralCode(code);
     }
+  };
+
+  const fetchHandle = async () => {
+    if (!user) return;
+    const { data } = await supabase.from('profiles').select('handle').eq('id', user.id).maybeSingle();
+    if (data?.handle) setUserHandle(data.handle);
   };
 
   const fetchReferrals = async () => {
