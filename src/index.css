@@ -1074,10 +1074,12 @@ html.telegram-mini-app [role="button"]:active {
   transition: transform 0.1s ease;
 }
 
-/* Telegram safe areas */
+/* Telegram safe area fallbacks via env() - used before JS sets real values */
 html.telegram-mini-app {
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
 }
 
 /* Optimize scrolling for Telegram WebView */
@@ -1090,17 +1092,6 @@ html.telegram-mini-app .scroll-container {
 html.telegram-mini-app ::-webkit-scrollbar {
   width: 0;
   height: 0;
-}
-
-/* Telegram platform-specific adjustments */
-html.telegram-mini-app[data-tg-platform="ios"] {
-  /* iOS-specific padding for notch */
-  padding-top: max(var(--sat), 0px);
-}
-
-html.telegram-mini-app[data-tg-platform="android"] {
-  /* Android-specific adjustments */
-  padding-bottom: var(--sab);
 }
 
 /* Touch optimization for Telegram */

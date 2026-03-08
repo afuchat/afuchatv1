@@ -96,10 +96,25 @@
           document.documentElement.classList.add('android-device');
         }
         
-        // Set Telegram viewport height CSS variable early
+        // Set Telegram viewport height and safe area CSS variables early
         if (isTelegram) {
-          document.documentElement.style.setProperty('--tg-viewport-height', window.Telegram.WebApp.viewportHeight + 'px');
-          document.documentElement.style.setProperty('--tg-viewport-stable-height', window.Telegram.WebApp.viewportStableHeight + 'px');
+          var wa = window.Telegram.WebApp;
+          document.documentElement.style.setProperty('--tg-viewport-height', wa.viewportHeight + 'px');
+          document.documentElement.style.setProperty('--tg-viewport-stable-height', wa.viewportStableHeight + 'px');
+          
+          // Read safe area insets if available (Bot API 7.7+)
+          var sa = wa.safeAreaInset || { top: 0, bottom: 0, left: 0, right: 0 };
+          var csa = wa.contentSafeAreaInset || { top: 0, bottom: 0, left: 0, right: 0 };
+          document.documentElement.style.setProperty('--tg-safe-area-top', sa.top + 'px');
+          document.documentElement.style.setProperty('--tg-safe-area-bottom', sa.bottom + 'px');
+          document.documentElement.style.setProperty('--tg-safe-area-left', sa.left + 'px');
+          document.documentElement.style.setProperty('--tg-safe-area-right', sa.right + 'px');
+          document.documentElement.style.setProperty('--tg-content-safe-area-top', csa.top + 'px');
+          document.documentElement.style.setProperty('--tg-content-safe-area-bottom', csa.bottom + 'px');
+          document.documentElement.style.setProperty('--tg-safe-top', (sa.top + csa.top) + 'px');
+          document.documentElement.style.setProperty('--tg-safe-bottom', (sa.bottom + csa.bottom) + 'px');
+          document.documentElement.style.setProperty('--tg-safe-left', (sa.left + csa.left) + 'px');
+          document.documentElement.style.setProperty('--tg-safe-right', (sa.right + csa.right) + 'px');
         }
       })();
     </script>
