@@ -783,7 +783,7 @@ const Search = () => {
   }, [debouncedQuery, handleSearch, navigate, location.search]);
 
   const handleViewProfile = (userId: string) => {
-    navigate(`/profile/${userId}`);
+    navigate(`/${userId}`);
   };
 
   const handleViewPost = (postId: string) => {

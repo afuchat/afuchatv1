@@ -44,7 +44,7 @@ export const QuotedPostCard: React.FC<QuotedPostCardProps> = ({ quotedPost, clas
   const handleViewProfile = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(`/profile/${quotedPost.author_id}`);
+    navigate(`/${quotedPost.author_id}`);
   };
 
   const images = quotedPost.post_images?.sort((a, b) => a.display_order - b.display_order) || 
