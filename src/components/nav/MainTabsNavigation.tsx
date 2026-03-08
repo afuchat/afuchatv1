@@ -208,7 +208,7 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
           bottom: 'var(--tg-safe-bottom, 0px)',
         }}
       >
-        <nav className="bg-background border-t border-border/40">
+        <nav className={cn("bg-background", !isTelegram && "border-t border-border/40")}>
           <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
             {TABS.map((tab, index) => {
               const isActive = activeTab === index;
