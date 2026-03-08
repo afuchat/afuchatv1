@@ -70,10 +70,11 @@ function cleanPostAction(content: string): string {
   return content.replace(/\[POST_ACTION\].*?\[\/POST_ACTION\]/s, '').trim();
 }
 
-const AfuAIModal = () => {
+const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
   const { user } = useAuth();
   const { isOpen, closeAfuAI } = useAfuAI();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
