@@ -158,8 +158,6 @@ const MusicShorts = () => {
             <PostShortPlayer
               post={short}
               isActive={index === activeIndex}
-              isMuted={isMuted}
-              onToggleMute={() => setIsMuted(!isMuted)}
             />
           </div>
         ))}
