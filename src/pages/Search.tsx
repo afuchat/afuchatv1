@@ -596,7 +596,7 @@ const Search = () => {
     setShowSuggestions(false);
     
     if (suggestion.type === 'user') {
-      navigate(`/profile/${suggestion.id}`);
+      navigate(`/${suggestion.id}`);
     } else if (suggestion.type === 'web') {
       // Switch to Web tab and set query for web search
       setQuery(suggestion.text);
