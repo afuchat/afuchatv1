@@ -2026,7 +2026,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
               accept="image/*,image/gif,.pdf,.doc,.docx,.txt"
               onChange={handleFileSelect}
             />
-            <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-1.5 w-full">
+            <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-end gap-1 w-full">
               {recording ? (
                 <div className="flex-1 flex items-center gap-2 px-4 py-2.5 bg-destructive/10 rounded-full border border-destructive/20">
                   <div className="w-2.5 h-2.5 bg-destructive rounded-full animate-pulse" />
