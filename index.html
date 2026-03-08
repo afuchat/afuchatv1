@@ -61,11 +61,28 @@
     <!-- Inline script to prevent theme flash -->
     <script>
       (function() {
-        // Detect Telegram Mini App first
+        // Hex to HSL conversion for early theme application
+        function hexToHSL(hex) {
+          hex = hex.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c) { return c + c; }).join('');
+          var r = parseInt(hex.substring(0, 2), 16) / 255;
+          var g = parseInt(hex.substring(2, 4), 16) / 255;
+          var b = parseInt(hex.substring(4, 6), 16) / 255;
+          var max = Math.max(r, g, b), min = Math.min(r, g, b);
+          var h = 0, s = 0, l = (max + min) / 2;
+          if (max !== min) {
+            var d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+            else if (max === g) h = ((b - r) / d + 2) / 6;
+            else h = ((r - g) / d + 4) / 6;
+          }
+          return Math.round(h * 360) + ' ' + Math.round(s * 100) + '% ' + Math.round(l * 100) + '%';
+        }
+
         var isTelegram = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
-        
-        // Theme handling - use Telegram theme if in Telegram
         var theme, resolved;
+        
         if (isTelegram && window.Telegram.WebApp.colorScheme) {
           resolved = window.Telegram.WebApp.colorScheme;
           document.documentElement.classList.add('telegram-mini-app');
@@ -80,41 +97,90 @@
           }
         }
         document.documentElement.classList.add(resolved);
-        
-        // Update theme-color meta tag
-        var themeColor = resolved === 'dark' ? '#0F1114' : '#F6F6F6';
-        var meta = document.querySelector('meta[name="theme-color"]:not([media])');
-        if (meta) meta.setAttribute('content', themeColor);
 
-        // Handle iOS safe areas
+        // Apply Telegram theme colors early to prevent flash
+        if (isTelegram) {
+          var wa = window.Telegram.WebApp;
+          var tp = wa.themeParams || {};
+          var el = document.documentElement;
+
+          // Map Telegram colors to app tokens
+          if (tp.button_color) {
+            var btnHSL = hexToHSL(tp.button_color);
+            el.style.setProperty('--primary', btnHSL);
+            el.style.setProperty('--ring', btnHSL);
+            el.style.setProperty('--accent', btnHSL);
+          }
+          if (tp.button_text_color) {
+            var btnTextHSL = hexToHSL(tp.button_text_color);
+            el.style.setProperty('--primary-foreground', btnTextHSL);
+            el.style.setProperty('--accent-foreground', btnTextHSL);
+          }
+          if (tp.bg_color) {
+            el.style.setProperty('--background', hexToHSL(tp.bg_color));
+            el.style.setProperty('--sidebar-background', hexToHSL(tp.bg_color));
+          }
+          if (tp.text_color) {
+            var textHSL = hexToHSL(tp.text_color);
+            el.style.setProperty('--foreground', textHSL);
+            el.style.setProperty('--card-foreground', textHSL);
+            el.style.setProperty('--popover-foreground', textHSL);
+          }
+          if (tp.section_bg_color || tp.bg_color) {
+            var cardHSL = hexToHSL(tp.section_bg_color || tp.bg_color);
+            el.style.setProperty('--card', cardHSL);
+            el.style.setProperty('--popover', cardHSL);
+          }
+          if (tp.secondary_bg_color) {
+            var secHSL = hexToHSL(tp.secondary_bg_color);
+            el.style.setProperty('--secondary', secHSL);
+            el.style.setProperty('--muted', secHSL);
+          }
+          if (tp.hint_color) {
+            var hintHSL = hexToHSL(tp.hint_color);
+            el.style.setProperty('--muted-foreground', hintHSL);
+            el.style.setProperty('--secondary-foreground', hintHSL);
+          }
+          if (tp.section_separator_color) {
+            var sepHSL = hexToHSL(tp.section_separator_color);
+            el.style.setProperty('--border', sepHSL);
+            el.style.setProperty('--input', sepHSL);
+          }
+          if (tp.destructive_text_color) {
+            el.style.setProperty('--destructive', hexToHSL(tp.destructive_text_color));
+          }
+
+          // Theme color for mobile browser chrome
+          var themeColor = tp.header_bg_color || tp.bg_color || (resolved === 'dark' ? '#000000' : '#ffffff');
+          var meta = document.querySelector('meta[name="theme-color"]:not([media])');
+          if (meta) meta.setAttribute('content', themeColor);
+
+          // Viewport and safe areas
+          el.style.setProperty('--tg-viewport-height', wa.viewportHeight + 'px');
+          el.style.setProperty('--tg-viewport-stable-height', wa.viewportStableHeight + 'px');
+          var sa = wa.safeAreaInset || { top: 0, bottom: 0, left: 0, right: 0 };
+          var csa = wa.contentSafeAreaInset || { top: 0, bottom: 0, left: 0, right: 0 };
+          el.style.setProperty('--tg-safe-area-top', sa.top + 'px');
+          el.style.setProperty('--tg-safe-area-bottom', sa.bottom + 'px');
+          el.style.setProperty('--tg-safe-area-left', sa.left + 'px');
+          el.style.setProperty('--tg-safe-area-right', sa.right + 'px');
+          el.style.setProperty('--tg-content-safe-area-top', csa.top + 'px');
+          el.style.setProperty('--tg-content-safe-area-bottom', csa.bottom + 'px');
+          el.style.setProperty('--tg-safe-top', (sa.top + csa.top) + 'px');
+          el.style.setProperty('--tg-safe-bottom', (sa.bottom + csa.bottom) + 'px');
+          el.style.setProperty('--tg-safe-left', (sa.left + csa.left) + 'px');
+          el.style.setProperty('--tg-safe-right', (sa.right + csa.right) + 'px');
+        } else {
+          var themeColor = resolved === 'dark' ? '#000000' : '#F6F6F6';
+          var meta = document.querySelector('meta[name="theme-color"]:not([media])');
+          if (meta) meta.setAttribute('content', themeColor);
+        }
+
         if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
           document.documentElement.classList.add('ios-device');
         }
-
-        // Handle Android
         if (/Android/.test(navigator.userAgent)) {
           document.documentElement.classList.add('android-device');
-        }
-        
-        // Set Telegram viewport height and safe area CSS variables early
-        if (isTelegram) {
-          var wa = window.Telegram.WebApp;
-          document.documentElement.style.setProperty('--tg-viewport-height', wa.viewportHeight + 'px');
-          document.documentElement.style.setProperty('--tg-viewport-stable-height', wa.viewportStableHeight + 'px');
-          
-          // Read safe area insets if available (Bot API 7.7+)
-          var sa = wa.safeAreaInset || { top: 0, bottom: 0, left: 0, right: 0 };
-          var csa = wa.contentSafeAreaInset || { top: 0, bottom: 0, left: 0, right: 0 };
-          document.documentElement.style.setProperty('--tg-safe-area-top', sa.top + 'px');
-          document.documentElement.style.setProperty('--tg-safe-area-bottom', sa.bottom + 'px');
-          document.documentElement.style.setProperty('--tg-safe-area-left', sa.left + 'px');
-          document.documentElement.style.setProperty('--tg-safe-area-right', sa.right + 'px');
-          document.documentElement.style.setProperty('--tg-content-safe-area-top', csa.top + 'px');
-          document.documentElement.style.setProperty('--tg-content-safe-area-bottom', csa.bottom + 'px');
-          document.documentElement.style.setProperty('--tg-safe-top', (sa.top + csa.top) + 'px');
-          document.documentElement.style.setProperty('--tg-safe-bottom', (sa.bottom + csa.bottom) + 'px');
-          document.documentElement.style.setProperty('--tg-safe-left', (sa.left + csa.left) + 'px');
-          document.documentElement.style.setProperty('--tg-safe-right', (sa.right + csa.right) + 'px');
         }
       })();
     </script>
