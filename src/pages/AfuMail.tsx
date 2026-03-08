@@ -82,10 +82,26 @@ export default function AfuMail() {
     setSelectedEmail(prev => prev ? { ...prev, is_starred: !prev.is_starred } : null);
   }, [selectedEmail, toggleStar]);
 
+  const userEmail = user?.email || '';
+  const isAfuChatUser = userEmail.endsWith('@afuchat.com');
+
   if (!user) {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground">Please sign in to access AfuMail</p>
+      </div>
+    );
+  }
+
+  if (!isAfuChatUser) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-background px-6 text-center gap-4">
+        <img src={afumailLogo} alt="AfuMail" className="h-16 w-16 rounded-2xl" />
+        <h2 className="text-xl font-bold">AfuMail is Exclusive</h2>
+        <p className="text-muted-foreground max-w-sm">
+          AfuMail is only available to users registered with an <strong>@afuchat.com</strong> email address. Your current email (<strong>{userEmail}</strong>) is not eligible.
+        </p>
+        <Button variant="outline" onClick={() => navigate(-1)}>Go Back</Button>
       </div>
     );
   }
