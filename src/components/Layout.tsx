@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { DesktopHybridLayout } from '@/components/DesktopHybridLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsTelegram } from '@/hooks/useIsTelegram';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
 
