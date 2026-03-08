@@ -267,7 +267,7 @@ const AppRoutes = () => {
       
       <Route path="/onboarding" element={<Onboarding />} />
       
-      <Route path="/support" element={<Support />} />
+      <Route path="/support" element={<Layout><Support /></Layout>} />
       <Route path="/leaderboard" element={<Layout><UnifiedLeaderboard /></Layout>} />
       <Route path="/wallet" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><FinancialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/social" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SocialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
