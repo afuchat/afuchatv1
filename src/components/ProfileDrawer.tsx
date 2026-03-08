@@ -356,7 +356,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
         hideCloseButton
       >
         <div 
-          className="overflow-y-auto h-full px-4 py-6 overscroll-contain"
+          className="overflow-y-auto h-full px-4 py-6 overscroll-contain pt-[max(1.5rem,var(--tg-safe-top,0px))] pb-[max(1.5rem,var(--tg-safe-bottom,0px))]"
           onTouchMove={(e) => e.stopPropagation()}
         >
           {/* Profile Header */}
