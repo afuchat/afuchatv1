@@ -645,7 +645,8 @@ export const WebSearchSection = ({ query }: WebSearchSectionProps) => {
   };
 
   if (!query.trim()) return <EmptyState />;
-  if (loading) return <SearchSkeleton query={query} />;
+  // Only show skeleton on first search (no existing results)
+  if (loading && results.length === 0 && !hasSearched) return <SearchSkeleton query={query} />;
 
   if (error) {
     return (
