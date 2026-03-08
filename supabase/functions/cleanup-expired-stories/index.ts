@@ -16,59 +16,74 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    const now = new Date().toISOString();
+
     // Get expired stories
     const { data: expiredStories, error: fetchError } = await supabaseClient
       .from('stories')
       .select('id, media_url')
-      .lt('expires_at', new Date().toISOString());
+      .lt('expires_at', now);
 
     if (fetchError) {
       console.error('Error fetching expired stories:', fetchError);
       throw fetchError;
     }
 
-    console.log(`Found ${expiredStories?.length || 0} expired stories to clean up`);
+    console.log(`Found ${expiredStories?.length || 0} expired stories to permanently delete`);
 
     if (expiredStories && expiredStories.length > 0) {
-      // Delete media files from storage
+      const storyIds = expiredStories.map(s => s.id);
+
+      // 1. Delete related story_views first (FK constraint)
+      const { error: viewsError } = await supabaseClient
+        .from('story_views')
+        .delete()
+        .in('story_id', storyIds);
+
+      if (viewsError) {
+        console.error('Error deleting story views:', viewsError);
+      }
+
+      // 2. Delete media files from storage
       for (const story of expiredStories) {
         try {
-          // Extract file path from URL
           const url = new URL(story.media_url);
           const pathParts = url.pathname.split('/');
           const fileName = pathParts.slice(pathParts.indexOf('stories') + 1).join('/');
 
-          const { error: storageError } = await supabaseClient.storage
-            .from('stories')
-            .remove([fileName]);
+          if (fileName) {
+            const { error: storageError } = await supabaseClient.storage
+              .from('stories')
+              .remove([fileName]);
 
-          if (storageError) {
-            console.error(`Error deleting file ${fileName}:`, storageError);
+            if (storageError) {
+              console.error(`Error deleting file ${fileName}:`, storageError);
+            }
           }
         } catch (error) {
           console.error('Error processing story media:', error);
         }
       }
 
-      // Delete story records
+      // 3. Permanently delete story records from database
       const { error: deleteError } = await supabaseClient
         .from('stories')
         .delete()
-        .lt('expires_at', new Date().toISOString());
+        .lt('expires_at', now);
 
       if (deleteError) {
         console.error('Error deleting expired stories:', deleteError);
         throw deleteError;
       }
 
-      console.log(`Successfully cleaned up ${expiredStories.length} expired stories`);
+      console.log(`Permanently deleted ${expiredStories.length} expired stories (records + media + views)`);
     }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        cleaned: expiredStories?.length || 0,
-        message: 'Expired stories cleaned up successfully'
+        deleted: expiredStories?.length || 0,
+        message: 'Expired stories permanently deleted'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
