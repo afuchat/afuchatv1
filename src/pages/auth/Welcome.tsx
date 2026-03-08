@@ -26,6 +26,7 @@ const slides = [
 const TelegramLoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const [autoLogging, setAutoLogging] = useState(true);
+  const navigate = useNavigate();
 
   const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
   const initData = window.Telegram?.WebApp?.initData;
@@ -39,33 +40,41 @@ const TelegramLoginScreen = () => {
 
     setLoading(true);
     try {
+      console.log('[TG Login] Invoking telegram-web-auth with initData');
       const { data, error } = await supabase.functions.invoke('telegram-web-auth', {
         body: { initData },
       });
 
+      console.log('[TG Login] Response:', { data, error });
+
       if (error) throw error;
 
-      if (data?.access_token) {
-        await supabase.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-        });
-        return; // Auth context will handle redirect
+      if (!data?.success) {
+        throw new Error(data?.error || 'Login failed');
       }
 
-      // Fallback: magic link OTP verification
+      // Verify the magic link token to get session
       if (data?.token) {
-        const { error: verifyError } = await supabase.auth.verifyOtp({
+        console.log('[TG Login] Verifying OTP token');
+        const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: data.token,
           type: 'magiclink',
         });
-        if (verifyError) throw verifyError;
+        
+        if (verifyError) {
+          console.error('[TG Login] OTP verify error:', verifyError);
+          throw verifyError;
+        }
+        
+        console.log('[TG Login] Session established');
+        toast.success('Welcome!');
+        navigate('/home', { replace: true });
         return;
       }
 
-      throw new Error('Login failed');
+      throw new Error('No authentication token received');
     } catch (err: any) {
-      console.error('[TG Login]', err);
+      console.error('[TG Login] Error:', err);
       toast.error(err?.message || 'Login failed. Please try again.');
       setAutoLogging(false);
     } finally {
@@ -90,7 +99,7 @@ const TelegramLoginScreen = () => {
   // Show loading while auto-login is in progress
   if (autoLogging) {
     return (
-      <div className="h-[100dvh] flex flex-col items-center justify-center bg-background px-6">
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-background touch-none select-none">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -106,7 +115,7 @@ const TelegramLoginScreen = () => {
   }
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
+    <div className="fixed inset-0 flex flex-col bg-background overflow-hidden touch-none select-none">
       <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-sm mx-auto w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -114,7 +123,7 @@ const TelegramLoginScreen = () => {
           className="w-full flex flex-col items-center gap-6"
         >
           {/* Avatar */}
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             {photoUrl ? (
               <img
                 src={photoUrl}
@@ -137,7 +146,7 @@ const TelegramLoginScreen = () => {
           </div>
 
           {/* User info */}
-          <div className="text-center space-y-1">
+          <div className="text-center space-y-1 flex-shrink-0">
             <h1 className="text-xl font-bold text-foreground">
               {firstName} {lastName}
             </h1>
@@ -150,7 +159,7 @@ const TelegramLoginScreen = () => {
           <button
             onClick={doLogin}
             disabled={loading}
-            className="w-full h-12 rounded-xl bg-[#229ED9] text-white font-semibold text-sm flex items-center justify-center gap-2.5 hover:bg-[#1e8ec4] active:scale-[0.98] transition-all disabled:opacity-50 mt-2"
+            className="w-full h-12 rounded-xl bg-[#229ED9] text-white font-semibold text-sm flex items-center justify-center gap-2.5 hover:bg-[#1e8ec4] active:scale-[0.98] transition-all disabled:opacity-50 mt-2 flex-shrink-0"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -162,7 +171,7 @@ const TelegramLoginScreen = () => {
             {loading ? 'Connecting...' : 'Continue with Telegram'}
           </button>
 
-          <p className="text-[11px] text-muted-foreground text-center leading-relaxed mt-2">
+          <p className="text-[11px] text-muted-foreground text-center leading-relaxed mt-2 flex-shrink-0">
             By continuing, you agree to our{' '}
             <a href="/terms" className="underline">Terms</a> and{' '}
             <a href="/privacy" className="underline">Privacy Policy</a>
@@ -232,10 +241,10 @@ const Welcome = () => {
   };
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
-      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full overflow-hidden">
-        {/* Image area */}
-        <div className="relative w-full aspect-[4/3] overflow-hidden bg-muted flex-shrink-0">
+    <div className="fixed inset-0 flex flex-col bg-background overflow-hidden touch-none">
+      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full h-full">
+        {/* Image area - using flex-basis for predictable sizing */}
+        <div className="relative w-full flex-shrink-0" style={{ height: '40%' }}>
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={slide.id}
@@ -253,9 +262,9 @@ const Welcome = () => {
           </AnimatePresence>
         </div>
 
-        {/* Content area */}
+        {/* Content area - fills remaining space */}
         <div className="flex-1 flex flex-col px-6 pt-6 pb-8 min-h-0">
-          {/* Dots */}
+          {/* Dots - always in sync with content */}
           <div className="flex items-center justify-center gap-1.5 mb-6 flex-shrink-0">
             {slides.map((_, index) => (
               <button
@@ -268,7 +277,7 @@ const Welcome = () => {
             ))}
           </div>
 
-          {/* Text */}
+          {/* Text - animates with image */}
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={slide.id}
@@ -278,16 +287,17 @@ const Welcome = () => {
               animate="center"
               exit="exit"
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="text-center space-y-2 mb-6 flex-shrink-0"
+              className="text-center space-y-2 flex-shrink-0"
             >
               <h1 className="text-2xl font-black tracking-tight text-foreground">{slide.title}</h1>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">{slide.description}</p>
             </motion.div>
           </AnimatePresence>
 
-          <div className="flex-1 min-h-0" />
+          {/* Spacer */}
+          <div className="flex-1" />
 
-          {/* Actions */}
+          {/* Actions - pinned to bottom */}
           <div className="space-y-3 flex-shrink-0">
             {isLastSlide ? (
               <>
