@@ -1062,27 +1062,40 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </div>
       )}
 
-      {/* Instagram-style Comments Bottom Sheet */}
+      {/* Comments Bottom Sheet */}
       <Drawer open={showComments} onOpenChange={setShowComments}>
-        <DrawerContent className="max-h-[85vh] flex flex-col">
-          <DrawerHeader className="border-b border-border/40 py-3 px-4 flex-shrink-0">
-            <DrawerTitle className="text-center text-base font-bold">Comments</DrawerTitle>
+        <DrawerContent className="max-h-[85vh] flex flex-col rounded-t-3xl">
+          {/* Handle bar */}
+          <div className="flex justify-center pt-2 pb-1 flex-shrink-0">
+            <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
+          </div>
+          
+          <DrawerHeader className="border-b border-border/30 py-2.5 px-4 flex-shrink-0">
+            <DrawerTitle className="text-center text-sm font-bold tracking-tight">
+              Comments
+              {post.replies && post.replies.length > 0 && (
+                <span className="text-muted-foreground font-normal ml-1.5">· {post.reply_count || post.replies.length}</span>
+              )}
+            </DrawerTitle>
           </DrawerHeader>
           
-          <div className="flex-1 overflow-y-auto px-4 py-2">
+          <div className="flex-1 overflow-y-auto px-4 py-3 min-h-0">
             {post.replies && post.replies.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
-                  <div key={reply.id} className="flex gap-3">
+                  <div key={reply.id} className="flex gap-3 group">
                     <div className="flex-shrink-0 cursor-pointer" onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}>
-                      <Avatar className="h-9 w-9">
+                      <Avatar className="h-9 w-9 ring-1 ring-border/50">
                         <AvatarImage src={reply.profiles.avatar_url || undefined} />
-                        <AvatarFallback className="text-xs bg-muted">{reply.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                        <AvatarFallback className="text-xs bg-muted text-muted-foreground font-semibold">{reply.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
                       </Avatar>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-sm text-foreground cursor-pointer hover:underline" onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}>
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span 
+                          className="font-semibold text-[13px] text-foreground cursor-pointer hover:underline leading-tight" 
+                          onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}
+                        >
                           {reply.profiles.display_name}
                         </span>
                         <VerifiedBadge 
@@ -1093,14 +1106,14 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                           size="sm"
                           userId={reply.author_id}
                         />
-                        <span className="text-xs text-muted-foreground">{formatTime(reply.created_at)}</span>
+                        <span className="text-[11px] text-muted-foreground/70 leading-tight">{formatTime(reply.created_at)}</span>
                       </div>
-                      <p className="text-sm text-foreground mt-0.5 whitespace-pre-wrap break-words">
+                      <p className="text-[13px] text-foreground/90 mt-1 whitespace-pre-wrap break-words leading-relaxed">
                         {parsePostContent(reply.content, reply.id, navigate)}
                       </p>
-                      <div className="flex items-center gap-4 mt-1.5">
+                      <div className="flex items-center gap-5 mt-2">
                         <button 
-                          className="text-xs text-muted-foreground hover:text-foreground font-medium"
+                          className="text-[11px] text-muted-foreground hover:text-foreground font-semibold uppercase tracking-wide transition-colors"
                           onClick={() => {
                             setReplyingToReply({ id: reply.id, handle: reply.profiles.handle });
                             setReplyText(`@${reply.profiles.handle} `);
@@ -1111,66 +1124,70 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                       
                       {/* Nested replies */}
                       {reply.nested_replies && reply.nested_replies.length > 0 && (
-                        <div className="mt-3 space-y-3 pl-2 border-l-2 border-border/30">
-                          {reply.nested_replies.map((nested) => (
-                            <div key={nested.id} className="flex gap-2.5">
-                              <Avatar className="h-7 w-7 flex-shrink-0">
-                                <AvatarImage src={nested.profiles.avatar_url || undefined} />
-                                <AvatarFallback className="text-[10px] bg-muted">{nested.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-semibold text-xs text-foreground">{nested.profiles.display_name}</span>
-                                  <span className="text-[10px] text-muted-foreground">{formatTime(nested.created_at)}</span>
+                        <div className="mt-3 space-y-3 ml-1">
+                          <div className="border-l-[1.5px] border-border/40 pl-3 space-y-3">
+                            {reply.nested_replies.map((nested) => (
+                              <div key={nested.id} className="flex gap-2.5">
+                                <Avatar className="h-6 w-6 flex-shrink-0 ring-1 ring-border/30">
+                                  <AvatarImage src={nested.profiles.avatar_url || undefined} />
+                                  <AvatarFallback className="text-[9px] bg-muted text-muted-foreground font-semibold">{nested.profiles.display_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-baseline gap-1.5">
+                                    <span className="font-semibold text-xs text-foreground">{nested.profiles.display_name}</span>
+                                    <span className="text-[10px] text-muted-foreground/60">{formatTime(nested.created_at)}</span>
+                                  </div>
+                                  <p className="text-xs text-foreground/85 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
+                                    {parsePostContent(nested.content, nested.id, navigate)}
+                                  </p>
                                 </div>
-                                <p className="text-xs text-foreground mt-0.5 whitespace-pre-wrap break-words">
-                                  {parsePostContent(nested.content, nested.id, navigate)}
-                                </p>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
-                    {/* Like button for comment */}
-                    <div className="flex-shrink-0 pt-1">
-                      <Heart className="h-4 w-4 text-muted-foreground hover:text-red-500 cursor-pointer transition-colors" strokeWidth={1.5} />
+                    {/* Like button */}
+                    <div className="flex flex-col items-center gap-0.5 flex-shrink-0 pt-2 opacity-70 group-hover:opacity-100 transition-opacity">
+                      <Heart className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500 cursor-pointer transition-colors" strokeWidth={1.5} />
                     </div>
                   </div>
                 ))}
                 {organizedReplies.length > visibleRepliesCount && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     onClick={() => setVisibleRepliesCount(prev => prev + 10)}
-                    className="text-primary text-xs hover:underline p-0 h-auto w-full text-center"
+                    className="text-primary text-xs font-semibold py-2 w-full text-center hover:text-primary/80 transition-colors"
                   >
-                    Load more comments
-                  </Button>
+                    View more comments
+                  </button>
                 )}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <MessageCircle className="h-12 w-12 text-muted-foreground/30 mb-3" />
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                  <MessageCircle className="h-7 w-7 text-muted-foreground/40" strokeWidth={1.5} />
+                </div>
                 <p className="text-sm font-semibold text-foreground">No comments yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Start the conversation.</p>
+                <p className="text-xs text-muted-foreground mt-1">Be the first to share your thoughts.</p>
               </div>
             )}
           </div>
 
-          {/* Quick emoji reactions row */}
-          <div className="flex-shrink-0 border-t border-border/40">
-            <div className="flex items-center gap-3 px-4 py-2 overflow-x-auto scrollbar-hide">
+          {/* Bottom input area */}
+          <div className="flex-shrink-0 bg-background border-t border-border/30">
+            {/* Quick emoji row */}
+            <div className="flex items-center gap-1 px-4 py-2">
               {['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'].map((emoji) => (
                 <button
                   key={emoji}
-                  className="text-2xl hover:scale-125 transition-transform flex-shrink-0"
+                  className="text-xl p-1.5 rounded-full hover:bg-muted/60 active:scale-90 transition-all flex-shrink-0"
                   onClick={() => {
                     if (!user) {
                       toast.info('Sign in to comment');
                       return;
                     }
                     setReplyText(prev => prev + emoji);
+                    commentInputRef.current?.focus();
                   }}
                 >
                   {emoji}
@@ -1178,22 +1195,31 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               ))}
             </div>
             
-            {/* Comment input */}
+            {/* Reply context banner */}
+            {replyingToReply && user && (
+              <div className="flex items-center justify-between px-4 py-2 bg-muted/40">
+                <span className="text-xs text-muted-foreground">
+                  Replying to <span className="font-semibold text-foreground">@{replyingToReply.handle}</span>
+                </span>
+                <button 
+                  className="text-xs text-primary font-semibold hover:text-primary/80 transition-colors" 
+                  onClick={() => { setReplyingToReply(null); setReplyText(''); }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {/* Input row */}
             {user ? (
-              <div>
-                {replyingToReply && (
-                  <div className="flex items-center justify-between px-4 py-1.5 bg-muted/50 border-t border-border/20">
-                    <span className="text-xs text-muted-foreground">Replying to <span className="font-semibold text-foreground">@{replyingToReply.handle}</span></span>
-                    <button className="text-xs text-primary font-medium" onClick={() => { setReplyingToReply(null); setReplyText(''); }}>Cancel</button>
-                  </div>
-                )}
-                <div className="flex items-center gap-3 px-4 py-3 border-t border-border/20">
-                  <Avatar className="h-8 w-8 flex-shrink-0">
-                    <AvatarImage src={userProfile?.avatar_url || undefined} />
-                    <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                      {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+              <div className="flex items-center gap-3 px-4 py-3">
+                <Avatar className="h-8 w-8 flex-shrink-0 ring-1 ring-border/30">
+                  <AvatarImage src={userProfile?.avatar_url || undefined} />
+                  <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
+                    {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 flex items-center bg-muted/40 rounded-full px-4 py-2 border border-border/30 focus-within:border-primary/40 focus-within:bg-muted/60 transition-all">
                   <input
                     ref={commentInputRef}
                     type="text"
@@ -1205,23 +1231,26 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         handleReplySubmit();
                       }
                     }}
-                    placeholder={replyingToReply ? `Reply to @${replyingToReply.handle}...` : `Add a comment for ${post.profiles.handle}...`}
-                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                    placeholder={replyingToReply ? `Reply to @${replyingToReply.handle}...` : 'Add a comment...'}
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none min-w-0"
                   />
-                {replyText.trim() && (
-                  <Button
-                    size="sm"
-                    className="rounded-full h-8 px-4 text-xs font-bold"
-                    onClick={handleReplySubmit}
-                  >
-                    Post
-                  </Button>
-                )}
                 </div>
+                <button
+                  onClick={handleReplySubmit}
+                  disabled={!replyText.trim()}
+                  className={`text-sm font-bold transition-all flex-shrink-0 ${
+                    replyText.trim() 
+                      ? 'text-primary hover:text-primary/80 active:scale-95' 
+                      : 'text-primary/30 cursor-default'
+                  }`}
+                >
+                  Post
+                </button>
               </div>
             ) : (
-              <div className="px-4 py-3 text-center text-xs text-muted-foreground border-t border-border/20">
-                <Link to="/auth/signin" className="text-primary font-medium hover:underline">Sign in</Link> to comment
+              <div className="px-4 py-4 text-center text-sm text-muted-foreground">
+                <Link to="/auth/signin" className="text-primary font-semibold hover:underline">Sign in</Link>
+                <span className="ml-1">to comment</span>
               </div>
             )}
           </div>
