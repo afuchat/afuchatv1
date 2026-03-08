@@ -705,12 +705,19 @@ html.telegram-mini-app .sticky.top-0 {
     overflow-x: hidden !important;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
 
   /* Ensure root element scrolls properly */
   #root {
     min-height: 100%;
     overflow-y: visible;
+  }
+
+  /* Smooth momentum scrolling for all scrollable containers */
+  [style*="overflow"], .overflow-y-auto, .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   /* Prevent injected iframes from blocking scrolling */

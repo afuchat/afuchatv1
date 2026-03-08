@@ -310,17 +310,24 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   return (
     <div
       className={cn(
-        "min-h-screen bg-background select-none touch-pan-y overflow-y-auto",
+        "min-h-[100dvh] bg-background select-none touch-pan-y",
         isDesktop && "desktop-scrollbar"
       )}
+      style={{
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+      }}
     >
       {/* Main Content */}
-      <main className={shouldHideUI ? "min-h-screen" : "pb-20 min-h-screen"}>
+      <main className={cn(
+        "min-h-[100dvh]",
+        !shouldHideUI && "pb-20"
+      )}>
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
         >
           {children}
         </motion.div>
@@ -332,7 +339,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
           "lg:hidden fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
           (isNavHidden || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
         )}>
-          <nav className="bg-background">
+          <nav className="bg-background border-t border-border/50">
             <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
               {/* Home */}
               <Link
