@@ -176,6 +176,22 @@ export default {
           "0%": { width: "0%" },
           "100%": { width: "100%" },
         },
+        "kenburns-zoom-in": {
+          "0%": { transform: "scale(1) translate(0, 0)" },
+          "100%": { transform: "scale(1.15) translate(-2%, -1%)" },
+        },
+        "kenburns-zoom-out": {
+          "0%": { transform: "scale(1.15) translate(-2%, -1%)" },
+          "100%": { transform: "scale(1) translate(0, 0)" },
+        },
+        "kenburns-pan-left": {
+          "0%": { transform: "scale(1.1) translate(3%, 0)" },
+          "100%": { transform: "scale(1.1) translate(-3%, 0)" },
+        },
+        "kenburns-pan-right": {
+          "0%": { transform: "scale(1.1) translate(-3%, 0)" },
+          "100%": { transform: "scale(1.1) translate(3%, 0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.25s ease-out",
