@@ -64,7 +64,7 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
     if (worthSummarizing) {
       checkAndGenerateSummary();
     }
-  }, [hasAccess, postId]);
+  }, [postId]);
 
   const checkAndGenerateSummary = async () => {
     // Check for cached summary first
