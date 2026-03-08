@@ -1,4 +1,4 @@
-import { useState, memo } from 'react';
+import { useState, memo, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { ImageLightbox } from './ImageLightbox';
 
@@ -10,11 +10,13 @@ interface ImageCarouselProps {
 export const ImageCarousel = memo(({ images, className }: ImageCarouselProps) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const touchStartX = useRef(0);
+  const touchDelta = useRef(0);
 
-  if (!images || images.length === 0) return null;
-
-  const imageUrls = images.map(img => typeof img === 'string' ? img : img.url);
-  const imageAlts = images.map(img => typeof img === 'string' ? 'Post image' : (img.alt || 'Post image'));
+  const imageUrls = (images || []).map(img => typeof img === 'string' ? img : img.url);
+  const imageAlts = (images || []).map(img => typeof img === 'string' ? 'Post image' : (img.alt || 'Post image'));
+  const imageObjects = (images || []).map(img => typeof img === 'string' ? { url: img, alt: 'Post image' } : img);
 
   const handleImageClick = (e: React.MouseEvent, index: number) => {
     e.preventDefault();
@@ -23,9 +25,27 @@ export const ImageCarousel = memo(({ images, className }: ImageCarouselProps) =>
     setLightboxOpen(true);
   };
 
-  const imageObjects = images.map(img => typeof img === 'string' ? { url: img, alt: 'Post image' } : img);
+  const handleSlideSwipe = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
 
-  // X/Twitter style image layouts
+  const handleSlideMove = useCallback((e: React.TouchEvent) => {
+    touchDelta.current = e.touches[0].clientX - touchStartX.current;
+  }, []);
+
+  const handleSlideEnd = useCallback(() => {
+    if (Math.abs(touchDelta.current) > 50) {
+      if (touchDelta.current < 0 && currentSlide < imageUrls.length - 1) {
+        setCurrentSlide(prev => prev + 1);
+      } else if (touchDelta.current > 0 && currentSlide > 0) {
+        setCurrentSlide(prev => prev - 1);
+      }
+    }
+    touchDelta.current = 0;
+  }, [currentSlide, imageUrls.length]);
+
+  if (!images || images.length === 0) return null;
+
   return (
     <>
       <div className={cn('relative', className)}>
@@ -66,72 +86,49 @@ export const ImageCarousel = memo(({ images, className }: ImageCarouselProps) =>
           </div>
         )}
 
-        {/* Three Images - One large left, two stacked right */}
-        {imageUrls.length === 3 && (
-          <div className="grid grid-cols-2 gap-0.5 rounded-2xl overflow-hidden border border-border aspect-[16/9]">
+        {/* 3+ Images - Horizontal swipeable slider */}
+        {imageUrls.length >= 3 && (
+          <div className="relative rounded-2xl overflow-hidden border border-border">
             <div
-              className="relative row-span-2 overflow-hidden cursor-pointer"
-              onClick={(e) => handleImageClick(e, 0)}
+              className="flex transition-transform duration-300 ease-out"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+              onTouchStart={handleSlideSwipe}
+              onTouchMove={handleSlideMove}
+              onTouchEnd={handleSlideEnd}
             >
-              <img
-                src={imageUrls[0]}
-                alt={imageAlts[0]}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover hover:brightness-95 transition-all"
-              />
+              {imageUrls.map((image, index) => (
+                <div
+                  key={index}
+                  className="w-full flex-shrink-0 cursor-pointer"
+                  onClick={(e) => handleImageClick(e, index)}
+                >
+                  <img
+                    src={image}
+                    alt={imageAlts[index]}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-[288px] object-cover hover:brightness-95 transition-all"
+                  />
+                </div>
+              ))}
             </div>
-            <div
-              className="relative overflow-hidden cursor-pointer"
-              onClick={(e) => handleImageClick(e, 1)}
-            >
-              <img
-                src={imageUrls[1]}
-                alt={imageAlts[1]}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover hover:brightness-95 transition-all"
-              />
-            </div>
-            <div
-              className="relative overflow-hidden cursor-pointer"
-              onClick={(e) => handleImageClick(e, 2)}
-            >
-              <img
-                src={imageUrls[2]}
-                alt={imageAlts[2]}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover hover:brightness-95 transition-all"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Four+ Images - 2x2 Grid */}
-        {imageUrls.length >= 4 && (
-          <div className="grid grid-cols-2 gap-0.5 rounded-2xl overflow-hidden border border-border aspect-square">
-            {imageUrls.slice(0, 4).map((image, index) => (
-              <div
-                key={index}
-                className="relative overflow-hidden cursor-pointer"
-                onClick={(e) => handleImageClick(e, index)}
-              >
-                <img
-                  src={image}
-                  alt={imageAlts[index]}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover hover:brightness-95 transition-all"
+            {/* Dot indicators */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {imageUrls.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => { e.stopPropagation(); setCurrentSlide(index); }}
+                  className={cn(
+                    'w-1.5 h-1.5 rounded-full transition-all',
+                    index === currentSlide ? 'bg-white w-3' : 'bg-white/50'
+                  )}
                 />
-                {/* Show +N overlay on 4th image if more than 4 */}
-                {imageUrls.length > 4 && index === 3 && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <span className="text-white text-2xl font-bold">+{imageUrls.length - 4}</span>
-                  </div>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
+            {/* Counter badge */}
+            <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">
+              {currentSlide + 1}/{imageUrls.length}
+            </div>
           </div>
         )}
       </div>
