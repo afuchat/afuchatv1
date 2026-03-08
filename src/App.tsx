@@ -25,6 +25,7 @@ import { preloadAllGiftImages } from "./hooks/useGiftImageCache";
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { LoadingBar } from '@/components/LoadingBar';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ScrollToTop } from './components/ScrollToTop';
 
 
 // Eager load critical pages
@@ -227,10 +228,11 @@ const AppRoutes = () => {
 
   return (
     <>
+      <ScrollToTop />
       <LoadingBar />
       <Suspense fallback={
         <motion.div 
-          className="flex items-center justify-center min-h-screen"
+          className="flex items-center justify-center h-full min-h-[50vh]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
