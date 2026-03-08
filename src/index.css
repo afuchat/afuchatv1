@@ -1164,27 +1164,4 @@ html.telegram-mini-app nav {
   background-color: hsl(var(--background));
 }
 
-/* Telegram: remove all decorative borders for a cleaner native feel */
-html.telegram-mini-app .border-b,
-html.telegram-mini-app .border-t,
-html.telegram-mini-app .border-border,
-html.telegram-mini-app [class*="border-border"] {
-  border-color: transparent !important;
-}
-
-/* Telegram: keep only intentional card/section separators via subtle background shifts */
-html.telegram-mini-app .border {
-  border-color: transparent !important;
-}
-
-/* Telegram: restore borders only where truly needed (inputs, explicit outlines) */
-html.telegram-mini-app input,
-html.telegram-mini-app textarea,
-html.telegram-mini-app select {
-  border-color: hsl(var(--input)) !important;
-}
-
-/* Telegram: ensure cards have no visible borders */
-html.telegram-mini-app [class*="rounded"] {
-  border-color: transparent;
-}
+/* Telegram: keep borders identical to main platform for visual consistency */
