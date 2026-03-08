@@ -725,6 +725,12 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />
+
+      <CreateStoryDialog
+        open={isCreateStoryDialogOpen}
+        onOpenChange={setIsCreateStoryDialogOpen}
+        onSuccess={() => {}}
+      />
     </div>
   );
 };
