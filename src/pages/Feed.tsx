@@ -478,6 +478,50 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   const [commentActionId, setCommentActionId] = useState<string | null>(null);
   const [showDeleteCommentConfirm, setShowDeleteCommentConfirm] = useState(false);
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
+  const [expandedNestedReplies, setExpandedNestedReplies] = useState<Set<string>>(new Set());
+  const [commentImageFile, setCommentImageFile] = useState<File | null>(null);
+  const [commentImagePreview, setCommentImagePreview] = useState<string | null>(null);
+  const commentImageInputRef = useRef<HTMLInputElement>(null);
+  const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
+  const [commentLikeCounts, setCommentLikeCounts] = useState<Record<string, number>>({});
+
+  const toggleNestedReplies = (replyId: string) => {
+    setExpandedNestedReplies(prev => {
+      const next = new Set(prev);
+      if (next.has(replyId)) next.delete(replyId);
+      else next.add(replyId);
+      return next;
+    });
+  };
+
+  const handleCommentImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Please select an image'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
+    setCommentImageFile(file);
+    setCommentImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearCommentImage = () => {
+    setCommentImageFile(null);
+    if (commentImagePreview) URL.revokeObjectURL(commentImagePreview);
+    setCommentImagePreview(null);
+  };
+
+  const toggleCommentLike = (commentId: string) => {
+    setLikedComments(prev => {
+      const next = new Set(prev);
+      if (next.has(commentId)) {
+        next.delete(commentId);
+        setCommentLikeCounts(p => ({ ...p, [commentId]: Math.max(0, (p[commentId] || 0) - 1) }));
+      } else {
+        next.add(commentId);
+        setCommentLikeCounts(p => ({ ...p, [commentId]: (p[commentId] || 0) + 1 }));
+      }
+      return next;
+    });
+  };
 
   // Track post view when it becomes visible - optimized to prevent duplicates
   useEffect(() => {
