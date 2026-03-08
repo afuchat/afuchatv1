@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,10 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Image, Video, Upload, Crown } from 'lucide-react';
+import { Image, Video, Upload } from 'lucide-react';
 import { compressImage } from '@/lib/imageCompression';
-import { useSubscription } from '@/hooks/useSubscription';
-import { useNavigate } from 'react-router-dom';
 
 interface CreateStoryDialogProps {
   open: boolean;
@@ -19,23 +17,12 @@ interface CreateStoryDialogProps {
 
 export const CreateStoryDialog = ({ open, onOpenChange, onSuccess }: CreateStoryDialogProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { canCreateStories, tier } = useSubscription();
   const [caption, setCaption] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Check subscription when dialog opens
-  useEffect(() => {
-    if (open && !canCreateStories()) {
-      toast.error('Gold or Platinum subscription required to create stories');
-      onOpenChange(false);
-      navigate('/premium');
-    }
-  }, [open, canCreateStories, navigate, onOpenChange]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
