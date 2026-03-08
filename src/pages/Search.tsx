@@ -595,6 +595,15 @@ const Search = () => {
   const handleSuggestionSelect = (suggestion: { type: string; id: string; text: string }) => {
     setShowSuggestions(false);
     
+    // Save the selected suggestion text to history
+    if (suggestion.type !== 'user') {
+      const trimmed = suggestion.text.trim();
+      if (trimmed) {
+        addToSearchHistory(trimmed);
+        setHistoryKey(prev => prev + 1);
+      }
+    }
+    
     if (suggestion.type === 'user') {
       navigate(`/@${suggestion.id}`);
     } else if (suggestion.type === 'web') {
@@ -621,8 +630,6 @@ const Search = () => {
     }
 
     setLoading(true);
-    addToSearchHistory(trimmedQuery);
-    setHistoryKey(prev => prev + 1);
     navigate(`?q=${encodeURIComponent(trimmedQuery)}`, { replace: true });
 
     const searchConfig = 'english'; 
@@ -988,6 +995,11 @@ const Search = () => {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   setShowSuggestions(false);
+                  const trimmed = query.trim();
+                  if (trimmed) {
+                    addToSearchHistory(trimmed);
+                    setHistoryKey(prev => prev + 1);
+                  }
                 } else if (e.key === 'Escape') {
                   setShowSuggestions(false);
                   inputRef.current?.blur();
