@@ -308,8 +308,6 @@ export const useSubscription = (targetUserId?: string) => {
     canCreateGroups,
     canCreateChannels,
     canCreateRedEnvelopes,
-    canAccessMarketplace,
-    canUseAIPostAnalysis,
-    canUseAfuAI
+    canUseAIPostAnalysis
   };
 };
