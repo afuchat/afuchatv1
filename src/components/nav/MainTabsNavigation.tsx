@@ -12,7 +12,7 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 
 const HomePage = lazy(() => import('@/pages/Home'));
 const SearchPage = lazy(() => import('@/pages/Search'));
-const Shorts = lazy(() => import('@/pages/Shorts'));
+const MusicShorts = lazy(() => import('@/pages/MusicShorts'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const DesktopChats = lazy(() => import('@/pages/DesktopChats'));
 
