@@ -1224,7 +1224,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                               userId={reply.author_id}
                             />
                           </div>
-                          <p className="text-[13px] text-foreground/90 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
+                          <p className="text-sm text-foreground/90 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
                             {parsePostContent(reply.content, reply.id, navigate)}
                           </p>
                         </div>
@@ -1310,7 +1310,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                                               {mentionedHandle && (
                                                 <span className="text-[10px] text-primary/60 font-medium ml-1">→ @{mentionedHandle}</span>
                                               )}
-                                              <p className="text-xs text-foreground/85 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
+                                              <p className="text-[13px] text-foreground/85 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
                                                 {parsePostContent(contentText || nested.content, nested.id, navigate)}
                                               </p>
                                             </div>
