@@ -36,7 +36,7 @@ export const AppearanceSettings = () => {
                     "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
                     isActive ? option.color : "bg-muted"
                   )}>
-                    <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-muted-foreground")} />
+                    <Icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
                   </div>
                   <div className="text-center">
                     <p className={cn("text-sm font-semibold", isActive && "text-primary")}>{option.label}</p>
