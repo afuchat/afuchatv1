@@ -52,6 +52,11 @@ html.telegram-mini-app {
 html.telegram-mini-app body {
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
+  /* Prevent body scroll in Telegram - pages manage their own scroll */
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 /* Global safe area for all content in Telegram Mini App */
@@ -60,6 +65,8 @@ html.telegram-mini-app #root {
   padding-bottom: var(--tg-safe-bottom, 0px);
   padding-left: var(--tg-safe-left, 0px);
   padding-right: var(--tg-safe-right, 0px);
+  height: 100%;
+  overflow: hidden;
 }
 
 /* Ensure fixed headers account for combined safe area in Telegram */

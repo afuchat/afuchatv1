@@ -96,8 +96,8 @@ const SignUp = () => {
   );
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background">
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 max-w-sm mx-auto w-full">
+    <div className="fixed inset-0 flex flex-col bg-background overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 max-w-sm mx-auto w-full overflow-y-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full space-y-8">
           <button onClick={() => navigate('/auth/welcome')} className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-5 w-5" />

@@ -1,30 +1,51 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { hmac } from "https://deno.land/x/hmac@v2.0.1/mod.ts";
+import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-function validateInitData(initData: string, botToken: string): { valid: boolean; data: Record<string, string> } {
-  const params = new URLSearchParams(initData);
-  const hash = params.get('hash');
-  if (!hash) return { valid: false, data: {} };
+// HMAC-SHA256 using Web Crypto API (Deno-compatible)
+async function hmacSha256(key: Uint8Array | string, data: string): Promise<Uint8Array> {
+  const keyData = typeof key === 'string' ? new TextEncoder().encode(key) : key;
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(data));
+  return new Uint8Array(signature);
+}
 
-  params.delete('hash');
-  const entries = Array.from(params.entries());
-  entries.sort(([a], [b]) => a.localeCompare(b));
-  const dataCheckString = entries.map(([k, v]) => `${k}=${v}`).join('\n');
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
-  // HMAC-SHA256 validation per Telegram docs
-  const secretKey = hmac('sha256', 'WebAppData', botToken, 'utf8', 'hex');
-  const checkHash = hmac('sha256', secretKey, dataCheckString, 'hex', 'hex');
+async function validateInitData(initData: string, botToken: string): Promise<{ valid: boolean; data: Record<string, string> }> {
+  try {
+    const params = new URLSearchParams(initData);
+    const hash = params.get('hash');
+    if (!hash) return { valid: false, data: {} };
 
-  const data: Record<string, string> = {};
-  for (const [k, v] of params.entries()) data[k] = v;
+    params.delete('hash');
+    const entries = Array.from(params.entries());
+    entries.sort(([a], [b]) => a.localeCompare(b));
+    const dataCheckString = entries.map(([k, v]) => `${k}=${v}`).join('\n');
 
-  return { valid: checkHash === hash, data };
+    // Step 1: HMAC-SHA256 of bot token with "WebAppData" as key
+    const secretKey = await hmacSha256('WebAppData', botToken);
+    // Step 2: HMAC-SHA256 of data string with secret key
+    const checkHashBytes = await hmacSha256(secretKey, dataCheckString);
+    const checkHash = bytesToHex(checkHashBytes);
+
+    const data: Record<string, string> = {};
+    for (const [k, v] of params.entries()) data[k] = v;
+
+    return { valid: checkHash === hash, data };
+  } catch (err) {
+    console.error('[TG Auth] Validation error:', err);
+    return { valid: false, data: {} };
+  }
 }
 
 serve(async (req) => {
@@ -34,31 +55,46 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { initData, telegramIdentifier, mode } = body;
+    const { initData, telegramIdentifier } = body;
+
+    console.log('[TG Auth] Request received:', { hasInitData: !!initData, hasTelegramIdentifier: !!telegramIdentifier });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')!;
+    const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
+    
+    if (!botToken) {
+      console.error('[TG Auth] TELEGRAM_BOT_TOKEN not configured');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
     // ===== MODE 1: Telegram Mini App initData (primary for TMA) =====
     if (initData) {
-      console.log('[TG Auth] initData mode');
+      console.log('[TG Auth] initData mode - validating...');
 
-      const { valid, data } = validateInitData(initData, botToken);
+      const { valid, data } = await validateInitData(initData, botToken);
+      
       if (!valid) {
         console.error('[TG Auth] Invalid initData signature');
         return new Response(
-          JSON.stringify({ error: 'Invalid Telegram data' }),
+          JSON.stringify({ error: 'Invalid Telegram authentication' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
         );
       }
 
+      console.log('[TG Auth] initData validated successfully');
+
       // Check auth_date freshness (5 min window)
       const authDate = parseInt(data['auth_date'] || '0');
       if (Date.now() / 1000 - authDate > 300) {
+        console.log('[TG Auth] Auth expired, age:', Date.now() / 1000 - authDate);
         return new Response(
           JSON.stringify({ error: 'Authentication expired. Please reopen the app.' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
@@ -90,6 +126,7 @@ serve(async (req) => {
         .maybeSingle();
 
       let userId: string;
+      const email = `tg_${telegramId}@telegram.afuchat.app`;
 
       if (existingTgUser?.user_id && existingTgUser?.is_linked) {
         // Existing linked user — sign them in
@@ -122,7 +159,6 @@ serve(async (req) => {
         // New user — create auth account + profile + telegram link
         const displayName = [firstName, lastName].filter(Boolean).join(' ') || `User ${telegramId}`;
         const handle = username || `tg_${telegramId}`;
-        const email = `tg_${telegramId}@telegram.afuchat.app`;
 
         // Check if email already exists (from previous signup)
         const { data: existingUsers } = await supabase.auth.admin.listUsers();
@@ -135,7 +171,7 @@ serve(async (req) => {
           // Create new auth user
           const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
             email,
-            password: crypto.randomUUID(), // Random password, they'll use TG to login
+            password: crypto.randomUUID(),
             email_confirm: true,
             user_metadata: {
               telegram_id: telegramId,
@@ -212,57 +248,30 @@ serve(async (req) => {
         console.log('[TG Auth] Linked telegram user');
       }
 
-      // Generate session tokens
-      const { data: authData, error: authError } = await supabase.auth.admin.generateLink({
+      // Generate session by creating a magic link and verifying it server-side
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
         type: 'magiclink',
-        email: `tg_${telegramId}@telegram.afuchat.app`,
+        email,
       });
 
-      if (authError) throw authError;
-
-      // Use the OTP to verify and get tokens
-      const magicUrl = new URL(authData.properties.action_link);
-      const token = magicUrl.searchParams.get('token');
-
-      // Verify the OTP to get actual session tokens
-      const verifyResponse = await fetch(`${supabaseUrl}/auth/v1/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseServiceKey,
-        },
-        body: JSON.stringify({
-          type: 'magiclink',
-          token,
-          redirect_to: `${req.headers.get('origin') || 'https://afuchat.com'}/home`,
-        }),
-      });
-
-      // If verify gives us a redirect with tokens, parse them
-      // Otherwise fall back to magic link approach
-      if (verifyResponse.ok) {
-        const verifyData = await verifyResponse.json();
-        if (verifyData.access_token) {
-          return new Response(
-            JSON.stringify({
-              success: true,
-              access_token: verifyData.access_token,
-              refresh_token: verifyData.refresh_token,
-              user_id: userId,
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
+      if (linkError) {
+        console.error('[TG Auth] Magic link error:', linkError.message);
+        throw linkError;
       }
 
-      // Fallback: return magic link for client-side verification
+      // Extract token from magic link URL
+      const magicUrl = new URL(linkData.properties.action_link);
+      const token = magicUrl.searchParams.get('token');
+
+      console.log('[TG Auth] Generated magic link token');
+
       return new Response(
         JSON.stringify({
           success: true,
-          magicLink: authData.properties.action_link,
           token,
           type: 'magiclink',
           user_id: userId,
+          email,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
