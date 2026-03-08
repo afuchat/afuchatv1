@@ -316,9 +316,11 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   return (
     <div
       className={cn(
-        "min-h-screen bg-background select-none touch-pan-y",
+        "bg-background select-none touch-pan-y",
+        isTelegram ? "h-full overflow-y-auto" : "min-h-screen",
         isDesktop && "desktop-scrollbar"
       )}
+      style={isTelegram ? { WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } : undefined}
     >
       {/* Main Content */}
       <main className={cn(

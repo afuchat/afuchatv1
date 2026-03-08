@@ -175,7 +175,7 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
   return (
     <div className={cn(
       "flex flex-col touch-pan-y",
-      isTelegram ? "h-[calc(100%-0px)]" : "h-[100dvh]"
+      isTelegram ? "h-full" : "h-[100dvh]"
     )}
     style={{ overflow: 'hidden' }}
     >
