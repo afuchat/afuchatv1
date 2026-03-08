@@ -35,7 +35,7 @@ const MusicShorts = () => {
   const [musicTracks, setMusicTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [showDiscovery, setShowDiscovery] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 

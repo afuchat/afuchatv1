@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Heart, MessageCircle, Share2, Volume2, VolumeX, Music, Eye } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Volume2, VolumeX, Music } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,21 +41,6 @@ const BACKGROUND_GRADIENTS = [
   'linear-gradient(135deg, #0f3460 0%, #533483 100%)',
 ];
 
-// Animated particles overlay
-const ParticlesOverlay = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {Array.from({ length: 15 }).map((_, i) => (
-      <motion.div
-        key={i}
-        className="absolute w-1 h-1 rounded-full bg-white/20"
-        initial={{ x: Math.random() * 100 + '%', y: '110%', opacity: 0 }}
-        animate={{ y: '-10%', opacity: [0, 0.5, 0] }}
-        transition={{ duration: 3 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 3, ease: 'linear' }}
-        style={{ left: `${Math.random() * 100}%` }}
-      />
-    ))}
-  </div>
-);
 
 export const PostShortPlayer = ({
   post,
@@ -76,9 +60,10 @@ export const PostShortPlayer = ({
   const [localLikes, setLocalLikes] = useState(post.like_count);
   const [imageIndex, setImageIndex] = useState(0);
 
-  const hasImages = (post.post_images && post.post_images.length > 0) || post.image_url;
+  const hasMultipleImages = post.post_images && post.post_images.length > 1;
   const images = post.post_images?.sort((a, b) => a.display_order - b.display_order).map(i => i.image_url) 
     || (post.image_url ? [post.image_url] : []);
+  const hasImages = images.length > 0;
 
   // Random gradient for text-only posts
   const bgGradient = useMemo(() => {
@@ -113,9 +98,9 @@ export const PostShortPlayer = ({
     if (audioRef.current) audioRef.current.muted = isMuted;
   }, [isMuted]);
 
-  // Cycle images if multiple
+  // Cycle images only if multiple
   useEffect(() => {
-    if (!isActive || images.length <= 1) return;
+    if (!isActive || !hasMultipleImages) return;
     const timer = setInterval(() => {
       setImageIndex(prev => (prev + 1) % images.length);
     }, 3000);
@@ -152,33 +137,23 @@ export const PostShortPlayer = ({
       {/* Background */}
       {hasImages ? (
         <div className="absolute inset-0">
-          <motion.img
-            key={imageIndex}
+          <img
             src={images[imageIndex]}
             alt=""
             className="w-full h-full object-cover"
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70" />
         </div>
       ) : (
         <>
           <div className="absolute inset-0" style={{ background: bgGradient }} />
-          <ParticlesOverlay />
           <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/40" />
         </>
       )}
 
       {/* Center text content */}
       <div className="absolute inset-0 flex items-center justify-center px-8 z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0.7, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center max-w-[85%]"
-        >
+        <div className="text-center max-w-[85%]">
           <p
             className={cn(
               "leading-relaxed drop-shadow-lg font-semibold",
@@ -191,11 +166,11 @@ export const PostShortPlayer = ({
           >
             {post.content?.length > 200 ? post.content.slice(0, 200) + '...' : post.content}
           </p>
-        </motion.div>
+        </div>
       </div>
 
       {/* Image carousel dots */}
-      {images.length > 1 && (
+      {hasMultipleImages && (
         <div className="absolute top-1/2 right-3 z-20 flex flex-col gap-1.5">
           {images.map((_, i) => (
             <div key={i} className={cn("w-1.5 h-1.5 rounded-full transition-all", i === imageIndex ? "bg-white scale-125" : "bg-white/40")} />
@@ -229,12 +204,7 @@ export const PostShortPlayer = ({
         </button>
         {post.music_track && (
           <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit">
-            <motion.div
-              animate={isActive ? { rotate: 360 } : {}}
-              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-            >
-              <Music className="h-3.5 w-3.5 text-white" />
-            </motion.div>
+            <Music className="h-3.5 w-3.5 text-white" />
             <span className="text-white text-xs font-medium truncate max-w-[180px]">
               {post.music_track.title} • {post.music_track.artist}
             </span>
