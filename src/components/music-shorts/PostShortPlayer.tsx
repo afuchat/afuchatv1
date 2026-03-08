@@ -153,21 +153,16 @@ export const PostShortPlayer = ({
       {/* Background */}
       {hasImages ? (
         <div className="absolute inset-0">
-          <motion.img
-            key={imageIndex}
+          <img
             src={images[imageIndex]}
             alt=""
             className="w-full h-full object-cover"
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70" />
         </div>
       ) : (
         <>
           <div className="absolute inset-0" style={{ background: bgGradient }} />
-          <ParticlesOverlay />
           <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/40" />
         </>
       )}
