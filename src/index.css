@@ -21,7 +21,6 @@ body {
 html, body {
   overscroll-behavior: auto;
   -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
 }
 
 /* Safe area insets for notched devices (non-Telegram) */
