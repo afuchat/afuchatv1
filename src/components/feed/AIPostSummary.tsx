@@ -103,7 +103,7 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
 
       const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
         body: {
-          message: `Analyze this social media post and provide a single-sentence professional insight or key takeaway. Format it as a brief, actionable tip starting with a verb (e.g., "Consider...", "Note that...", "Key point:"). Be concise and factual, not explanatory:\n\n"${cleanContent}"`,
+          message: `Read this post carefully and provide a single professional sentence summarizing the core message or key information in the post itself. Focus strictly on what the post says — the topic, facts, or ideas presented. Do NOT reference users, viewers, engagement, or who posted it. Do NOT use words like "benefits" or "takeaway". Just state what the post is about in a neutral, informative tone:\n\n"${cleanContent}"`,
           context: 'post_summary'
         }
       });
