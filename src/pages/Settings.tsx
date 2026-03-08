@@ -29,24 +29,24 @@ const settingsSections = [
   {
     group: 'Account',
     items: [
-      { value: 'account' as SettingsTab, label: 'Account', description: 'Profile, language & display', icon: User, color: 'bg-blue-500' },
-      { value: 'appearance' as SettingsTab, label: 'Appearance', description: 'Theme & layout', icon: Palette, color: 'bg-purple-500' },
+      { value: 'account' as SettingsTab, label: 'Account', description: 'Profile, language & display', icon: User, color: 'bg-primary' },
+      { value: 'appearance' as SettingsTab, label: 'Appearance', description: 'Theme & layout', icon: Palette, color: 'bg-primary/80' },
     ]
   },
   {
     group: 'Privacy & Security',
     items: [
-      { value: 'security' as SettingsTab, label: 'Security & Privacy', description: 'Privacy controls & linked accounts', icon: Shield, color: 'bg-green-500' },
-      { value: '2fa' as SettingsTab, label: 'Two-Factor Auth', description: 'Extra security layer', icon: Key, color: 'bg-amber-500' },
-      { value: 'blocked' as SettingsTab, label: 'Blocked Users', description: 'Manage blocked accounts', icon: UserX, color: 'bg-red-500' },
+      { value: 'security' as SettingsTab, label: 'Security & Privacy', description: 'Privacy controls & linked accounts', icon: Shield, color: 'bg-primary' },
+      { value: '2fa' as SettingsTab, label: 'Two-Factor Auth', description: 'Extra security layer', icon: Key, color: 'bg-primary/80' },
+      { value: 'blocked' as SettingsTab, label: 'Blocked Users', description: 'Manage blocked accounts', icon: UserX, color: 'bg-destructive' },
     ]
   },
   {
     group: 'Activity & Data',
     items: [
-      { value: 'notifications' as SettingsTab, label: 'Notifications', description: 'Push, email & quiet hours', icon: Bell, color: 'bg-pink-500' },
-      { value: 'activity' as SettingsTab, label: 'Activity Log', description: 'Recent activity & Nexa earnings', icon: Activity, color: 'bg-cyan-500' },
-      { value: 'data' as SettingsTab, label: 'Data & Privacy', description: 'Export data & account deletion', icon: Database, color: 'bg-orange-500' },
+      { value: 'notifications' as SettingsTab, label: 'Notifications', description: 'Push, email & quiet hours', icon: Bell, color: 'bg-primary' },
+      { value: 'activity' as SettingsTab, label: 'Activity Log', description: 'Recent activity & Nexa earnings', icon: Activity, color: 'bg-primary/80' },
+      { value: 'data' as SettingsTab, label: 'Data & Privacy', description: 'Export data & account deletion', icon: Database, color: 'bg-primary' },
     ]
   }
 ];
@@ -115,17 +115,15 @@ const Settings = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <PageHeader 
-                title="Settings"
-                rightContent={
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon-sm" onClick={() => navigate('/whats-new')}>
-                      <Sparkles className="h-4 w-4" />
-                    </Button>
-                  </div>
-                }
-              />
-              <div className="px-4 pb-32">
+              <div className="fixed top-0 left-0 right-0 z-20 bg-background/95 backdrop-blur border-b border-border">
+                <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+                  <h1 className="text-xl font-bold">Settings</h1>
+                  <Button variant="ghost" size="icon-sm" onClick={() => navigate('/whats-new')}>
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="pt-14 px-4 pb-32">
                 {settingsSections.map((section) => (
                   <div key={section.group} className="mb-6">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">
@@ -144,7 +142,7 @@ const Settings = () => {
                             )}
                           >
                             <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0", item.color)}>
-                              <Icon className="h-4 w-4 text-white" />
+                              <Icon className="h-4 w-4 text-primary-foreground" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-semibold text-sm">{item.label}</p>
@@ -165,7 +163,7 @@ const Settings = () => {
                     className="w-full rounded-2xl bg-card shadow-soft px-4 py-3.5 flex items-center gap-3.5 text-left hover:bg-muted/50 active:bg-muted transition-colors"
                   >
                     <div className="h-8 w-8 rounded-lg bg-destructive flex items-center justify-center flex-shrink-0">
-                      <LogOut className="h-4 w-4 text-white" />
+                      <LogOut className="h-4 w-4 text-destructive-foreground" />
                     </div>
                     <p className="font-semibold text-sm text-destructive">Log Out</p>
                   </button>
@@ -180,7 +178,7 @@ const Settings = () => {
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
+              <div className="fixed top-0 left-0 right-0 z-20 bg-background/95 backdrop-blur border-b border-border">
                 <div className="px-4 py-3 flex items-center gap-3">
                   <Button variant="ghost" size="icon-sm" onClick={handleBack}>
                     <ArrowLeft className="h-5 w-5" />
@@ -188,14 +186,14 @@ const Settings = () => {
                   <div className="flex items-center gap-2.5">
                     {activeItem && (
                       <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center", activeItem.color)}>
-                        <activeItem.icon className="h-3.5 w-3.5 text-white" />
+                        <activeItem.icon className="h-3.5 w-3.5 text-primary-foreground" />
                       </div>
                     )}
                     <h1 className="text-lg font-bold">{activeContent?.title}</h1>
                   </div>
                 </div>
               </div>
-              <div className="px-4 py-6 pb-32">
+              <div className="pt-14 px-4 py-6 pb-32">
                 {activeContent && <activeContent.Component />}
               </div>
             </motion.div>
@@ -253,7 +251,7 @@ const Settings = () => {
                             "h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
                             isActive ? item.color : "bg-muted"
                           )}>
-                            <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-muted-foreground")} />
+                            <Icon className={cn("h-4 w-4", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
                           </div>
                           <div className="min-w-0">
                             <p className={cn("text-sm font-semibold", isActive && "text-primary")}>{item.label}</p>
@@ -281,7 +279,7 @@ const Settings = () => {
                   <div className="flex items-center gap-3 mb-1">
                     {activeItem && (
                       <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center", activeItem.color)}>
-                        <activeItem.icon className="h-4.5 w-4.5 text-white" />
+                        <activeItem.icon className="h-4.5 w-4.5 text-primary-foreground" />
                       </div>
                     )}
                     <h2 className="text-2xl font-bold tracking-tight">{activeContent.title}</h2>

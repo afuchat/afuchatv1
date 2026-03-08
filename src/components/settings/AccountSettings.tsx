@@ -72,14 +72,12 @@ export const AccountSettings = () => {
     }
   };
 
-  const currentLang = languages.find(l => l.code === i18n.language);
-
   return (
     <div className="space-y-0">
       <SettingsSection title="Profile">
         <SettingsRow
           icon={User}
-          iconColor="bg-blue-500"
+          iconColor="bg-primary"
           label="Edit Profile"
           description="Update your name, bio, and avatar"
           onClick={() => user && navigate(`/@${user.id}/edit`)}
@@ -91,7 +89,7 @@ export const AccountSettings = () => {
       <SettingsSection title="Language & Region">
         <SettingsRow
           icon={Globe}
-          iconColor="bg-indigo-500"
+          iconColor="bg-primary/80"
           label="App Language"
           description="Choose your preferred language"
           isLast
@@ -117,7 +115,7 @@ export const AccountSettings = () => {
       <SettingsSection title="Display">
         <SettingsRow
           icon={showBalance ? Eye : EyeOff}
-          iconColor="bg-teal-500"
+          iconColor="bg-primary"
           label="Show Balance on Profile"
           description="Display your Nexa balance and progress bar to visitors"
           toggle
@@ -130,7 +128,7 @@ export const AccountSettings = () => {
       <SettingsSection title="Email">
         <SettingsRow
           icon={Mail}
-          iconColor="bg-sky-500"
+          iconColor="bg-primary/80"
           label="Email Address"
           description={user?.email || 'No email set'}
           isLast

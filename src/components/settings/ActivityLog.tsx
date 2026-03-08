@@ -55,11 +55,11 @@ export const ActivityLog = () => {
 
   const getActivityColor = (type: string) => {
     switch (type) {
-      case 'daily_login': return 'bg-blue-500';
-      case 'tip_sent': return 'bg-red-500';
-      case 'tip_received': return 'bg-green-500';
-      case 'post_created': return 'bg-purple-500';
-      case 'referral_reward': return 'bg-amber-500';
+      case 'daily_login': return 'bg-primary';
+      case 'tip_sent': return 'bg-destructive';
+      case 'tip_received': return 'bg-primary/80';
+      case 'post_created': return 'bg-primary';
+      case 'referral_reward': return 'bg-primary/80';
       default: return 'bg-muted';
     }
   };
@@ -79,8 +79,8 @@ export const ActivityLog = () => {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <SettingsStatCard icon={TrendingUp} iconColor="bg-primary" label="Total Nexa" value={stats.totalXP} />
-        <SettingsStatCard icon={Calendar} iconColor="bg-green-500" label="Today" value={stats.todayXP} />
-        <SettingsStatCard icon={Activity} iconColor="bg-blue-500" label="This Week" value={stats.weekXP} />
+        <SettingsStatCard icon={Calendar} iconColor="bg-primary/80" label="Today" value={stats.todayXP} />
+        <SettingsStatCard icon={Activity} iconColor="bg-primary" label="This Week" value={stats.weekXP} />
       </div>
 
       {/* Activity Log */}
@@ -107,7 +107,7 @@ export const ActivityLog = () => {
                     )}
                   >
                     <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0", colorClass)}>
-                      <Icon className="h-3.5 w-3.5 text-white" />
+                      <Icon className="h-3.5 w-3.5 text-primary-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
