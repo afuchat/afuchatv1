@@ -1,4 +1,4 @@
-import { useState, memo } from 'react';
+import { useState, memo, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { ImageLightbox } from './ImageLightbox';
 
@@ -10,6 +10,40 @@ interface ImageCarouselProps {
 export const ImageCarousel = memo(({ images, className }: ImageCarouselProps) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slideRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+  const touchDelta = useRef(0);
+
+  const imageUrls = (images || []).map(img => typeof img === 'string' ? img : img.url);
+  const imageAlts = (images || []).map(img => typeof img === 'string' ? 'Post image' : (img.alt || 'Post image'));
+  const imageObjects = (images || []).map(img => typeof img === 'string' ? { url: img, alt: 'Post image' } : img);
+
+  const handleImageClick = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const handleSlideSwipe = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleSlideMove = useCallback((e: React.TouchEvent) => {
+    touchDelta.current = e.touches[0].clientX - touchStartX.current;
+  }, []);
+
+  const handleSlideEnd = useCallback(() => {
+    if (Math.abs(touchDelta.current) > 50) {
+      if (touchDelta.current < 0 && currentSlide < imageUrls.length - 1) {
+        setCurrentSlide(prev => prev + 1);
+      } else if (touchDelta.current > 0 && currentSlide > 0) {
+        setCurrentSlide(prev => prev - 1);
+      }
+    }
+    touchDelta.current = 0;
+  }, [currentSlide, imageUrls.length]);
 
   if (!images || images.length === 0) return null;
 
