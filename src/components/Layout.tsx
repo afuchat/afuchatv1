@@ -301,11 +301,12 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   }
 
   if (onMainTab && !shouldHideNav) {
+    // Main-tab pages: self-contained viewport box — MainTabsNavigation manages internal scroll
+    // Uses 100dvh on web, 100vh in TMA (where #root is the viewport)
     return (
-      <div className={cn(
-        "overflow-hidden bg-background select-none touch-pan-y",
-        isTelegram ? "h-full" : "h-[100dvh]"
-      )}>
+      <div className="overflow-hidden bg-background select-none touch-pan-y"
+        style={{ height: isTelegram ? '100vh' : '100dvh' }}
+      >
         <MainTabsNavigation chatScrollHide={chatScrollHide}>
           {children}
         </MainTabsNavigation>
