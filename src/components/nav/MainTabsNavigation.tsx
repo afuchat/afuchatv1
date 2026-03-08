@@ -138,10 +138,8 @@ export const MainTabsNavigation = ({ children, isScrollingDown = false, chatScro
       case 1:
         return <SearchPage />;
       case 2:
-        return <MusicShorts />;
-      case 3:
         return user ? <Notifications /> : null;
-      case 4:
+      case 3:
         return user ? <DesktopChats /> : null;
       default:
         return null;

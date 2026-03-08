@@ -177,8 +177,6 @@ const AppRoutes = () => {
       <Route path="/chats" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
       <Route path="/chat/:chatId" element={<RequireAuth><RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck></RequireAuth>} />
       <Route path="/search" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SearchPage /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
-      <Route path="/shorts" element={<Layout><MusicShorts /></Layout>} />
-      <Route path="/music-shorts" element={<Layout><MusicShorts /></Layout>} />
       <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
       <Route path="/marketplace" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Marketplace /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/notifications" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Notifications /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
