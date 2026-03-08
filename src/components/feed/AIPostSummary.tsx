@@ -184,7 +184,7 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <p className="text-xs text-foreground/90 leading-relaxed font-medium px-3 py-2">
+            <p className="text-xs text-foreground/90 leading-relaxed font-medium italic px-3 py-2">
               {summary}
             </p>
           </motion.div>
