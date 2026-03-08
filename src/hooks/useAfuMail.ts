@@ -48,11 +48,15 @@ export function useAfuMail() {
   // Initialize mailbox
   useEffect(() => {
     if (!userId) return;
-    supabase.rpc('get_or_create_mailbox', { p_user_id: userId })
-      .then(({ data, error }) => {
+    const init = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_or_create_mailbox', { p_user_id: userId });
         if (!error && data) setMailboxEmail(data);
-      })
-      .catch(err => console.error('Mailbox init error:', err));
+      } catch (err) {
+        console.error('Mailbox init error:', err);
+      }
+    };
+    init();
   }, [userId]);
 
   // Fetch emails for a folder
