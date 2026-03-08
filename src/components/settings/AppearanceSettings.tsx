@@ -1,92 +1,94 @@
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Sun, Moon, Monitor, Palette, Type, Layout } from 'lucide-react';
+import { Sun, Moon, Monitor, Type, Layout } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Button } from '@/components/ui/button';
+import { SettingsSection } from './SettingsUI';
+import { cn } from '@/lib/utils';
 
 export const AppearanceSettings = () => {
   const { theme, setTheme } = useTheme();
 
   const themeOptions = [
-    { value: 'light', label: 'Light', icon: Sun, description: 'Bright and clean' },
-    { value: 'dark', label: 'Dark', icon: Moon, description: 'Easy on the eyes' },
-    { value: 'system', label: 'System', icon: Monitor, description: 'Follows device settings' },
+    { value: 'light' as const, label: 'Light', icon: Sun, description: 'Bright and clean', color: 'bg-amber-500' },
+    { value: 'dark' as const, label: 'Dark', icon: Moon, description: 'Easy on the eyes', color: 'bg-slate-700' },
+    { value: 'system' as const, label: 'System', icon: Monitor, description: 'Follows device', color: 'bg-blue-500' },
   ];
 
   return (
-    <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Palette className="h-5 w-5 text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold">Theme</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {themeOptions.map((option) => {
-            const Icon = option.icon;
-            const isActive = theme === option.value;
-            return (
-              <button
-                key={option.value}
-                onClick={() => setTheme(option.value as 'light' | 'dark' | 'system')}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  isActive
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50 bg-muted/30'
-                }`}
-              >
-                <div className="flex flex-col items-center gap-3">
-                  <div className={`p-3 rounded-full ${isActive ? 'bg-primary/10' : 'bg-muted'}`}>
-                    <Icon className={`h-6 w-6 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+    <div className="space-y-0">
+      <SettingsSection title="Theme">
+        <div className="p-4">
+          <div className="grid grid-cols-3 gap-3">
+            {themeOptions.map((option) => {
+              const Icon = option.icon;
+              const isActive = theme === option.value;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => setTheme(option.value)}
+                  className={cn(
+                    "flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 transition-all duration-200",
+                    isActive
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-transparent bg-muted/30 hover:bg-muted/50"
+                  )}
+                >
+                  <div className={cn(
+                    "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
+                    isActive ? option.color : "bg-muted"
+                  )}>
+                    <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-muted-foreground")} />
                   </div>
                   <div className="text-center">
-                    <p className="font-semibold">{option.label}</p>
-                    <p className="text-xs text-muted-foreground">{option.description}</p>
+                    <p className={cn("text-sm font-semibold", isActive && "text-primary")}>{option.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{option.description}</p>
                   </div>
-                </div>
-              </button>
-            );
-          })}
+                  {isActive && (
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </Card>
+      </SettingsSection>
 
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Type className="h-5 w-5 text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold">Text & Display</h3>
-        </div>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
-            <div>
-              <p className="font-medium">Font Size</p>
-              <p className="text-sm text-muted-foreground">Adjust text size</p>
+      <SettingsSection title="Text & Display">
+        <div className="px-4 py-3.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-7 w-7 rounded-lg bg-purple-500 flex items-center justify-center">
+                <Type className="h-3.5 w-3.5 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">Font Size</p>
+                <p className="text-xs text-muted-foreground">Adjust text size</p>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">A</Button>
-              <Button variant="outline" size="sm" className="text-lg">A</Button>
-              <Button variant="outline" size="sm" className="text-xl">A</Button>
+            <div className="flex gap-1.5">
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">A</Button>
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-sm">A</Button>
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-base">A</Button>
             </div>
           </div>
         </div>
-      </Card>
+      </SettingsSection>
 
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Layout className="h-5 w-5 text-primary" />
+      <SettingsSection title="Layout">
+        <div className="px-4 py-3.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-7 w-7 rounded-lg bg-cyan-500 flex items-center justify-center">
+                <Layout className="h-3.5 w-3.5 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">Compact Mode</p>
+                <p className="text-xs text-muted-foreground">Show more content with reduced spacing</p>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-muted px-2 py-1 rounded-full">Soon</span>
           </div>
-          <h3 className="text-xl font-semibold">Layout</h3>
         </div>
-        <div className="space-y-4">
-          <div className="p-4 rounded-lg bg-muted/30">
-            <p className="font-medium mb-2">Compact Mode</p>
-            <p className="text-sm text-muted-foreground mb-4">Show more content by reducing spacing</p>
-            <Button variant="outline" size="sm">Coming Soon</Button>
-          </div>
-        </div>
-      </Card>
+      </SettingsSection>
     </div>
   );
 };

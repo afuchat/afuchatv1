@@ -1,12 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { User, Globe, Mail, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -15,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PhoneNumberInput } from './PhoneNumberInput';
-
+import { SettingsSection, SettingsRow } from './SettingsUI';
 import { useState, useEffect } from 'react';
 
 export const AccountSettings = () => {
@@ -35,36 +32,25 @@ export const AccountSettings = () => {
   useEffect(() => {
     const fetchBalanceVisibility = async () => {
       if (!user) return;
-      
       const { data, error } = await supabase
         .from('profiles')
         .select('show_balance')
         .eq('id', user.id)
         .single();
-      
       if (!error && data) {
         setShowBalance(data.show_balance ?? true);
       }
     };
-    
     fetchBalanceVisibility();
   }, [user]);
 
   const handleLanguageChange = async (languageCode: string) => {
     i18n.changeLanguage(languageCode);
-    
-    if (languageCode === 'ar') {
-      document.documentElement.dir = 'rtl';
-    } else {
-      document.documentElement.dir = 'ltr';
-    }
+    document.documentElement.dir = languageCode === 'ar' ? 'rtl' : 'ltr';
 
     if (user) {
       try {
-        await supabase
-          .from('profiles')
-          .update({ language: languageCode })
-          .eq('id', user.id);
+        await supabase.from('profiles').update({ language: languageCode }).eq('id', user.id);
         toast.success(t('common.success'));
       } catch (error) {
         console.error('Error saving language preference:', error);
@@ -75,14 +61,9 @@ export const AccountSettings = () => {
 
   const handleBalanceVisibilityToggle = async (checked: boolean) => {
     if (!user) return;
-    
     setShowBalance(checked);
-    
     try {
-      await supabase
-        .from('profiles')
-        .update({ show_balance: checked })
-        .eq('id', user.id);
+      await supabase.from('profiles').update({ show_balance: checked }).eq('id', user.id);
       toast.success(checked ? 'Balance is now visible' : 'Balance is now hidden');
     } catch (error) {
       console.error('Error updating balance visibility:', error);
@@ -91,108 +72,70 @@ export const AccountSettings = () => {
     }
   };
 
+  const currentLang = languages.find(l => l.code === i18n.language);
+
   return (
-    <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <User className="h-5 w-5 text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold">Profile Information</h3>
-        </div>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-            onClick={() => user && navigate(`/@${user.id}/edit`)}>
-            <div className="flex items-center gap-3">
-              <User className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="font-medium">Edit Profile</p>
-                <p className="text-sm text-muted-foreground">Update your name, bio, and avatar</p>
-              </div>
-            </div>
-            <Button variant="ghost" size="sm">Edit</Button>
-          </div>
-        </div>
-      </Card>
+    <div className="space-y-0">
+      <SettingsSection title="Profile">
+        <SettingsRow
+          icon={User}
+          iconColor="bg-blue-500"
+          label="Edit Profile"
+          description="Update your name, bio, and avatar"
+          onClick={() => user && navigate(`/@${user.id}/edit`)}
+          chevron
+          isLast
+        />
+      </SettingsSection>
 
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Globe className="h-5 w-5 text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold">Language & Region</h3>
-        </div>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
-            <div className="flex items-center gap-3">
-              <Globe className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="font-medium">App Language</p>
-                <p className="text-sm text-muted-foreground">Choose your preferred language</p>
-              </div>
-            </div>
-            <Select value={i18n.language} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {languages.map((lang) => (
-                  <SelectItem key={lang.code} value={lang.code}>
-                    <span className="flex items-center gap-2">
-                      <span>{lang.flag}</span>
-                      <span>{lang.name}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </Card>
+      <SettingsSection title="Language & Region">
+        <SettingsRow
+          icon={Globe}
+          iconColor="bg-indigo-500"
+          label="App Language"
+          description="Choose your preferred language"
+          isLast
+        >
+          <Select value={i18n.language} onValueChange={handleLanguageChange}>
+            <SelectTrigger className="w-full mt-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((lang) => (
+                <SelectItem key={lang.code} value={lang.code}>
+                  <span className="flex items-center gap-2">
+                    <span>{lang.flag}</span>
+                    <span>{lang.name}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </SettingsRow>
+      </SettingsSection>
 
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Eye className="h-5 w-5 text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold">Display Preferences</h3>
-        </div>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
-            <div className="flex items-center gap-3">
-              {showBalance ? <Eye className="h-5 w-5 text-muted-foreground" /> : <EyeOff className="h-5 w-5 text-muted-foreground" />}
-              <div>
-                <p className="font-medium">Show Balance on Profile</p>
-                <p className="text-sm text-muted-foreground">Display your Nexa balance and progress bar to visitors</p>
-              </div>
-            </div>
-            <Switch
-              checked={showBalance}
-              onCheckedChange={handleBalanceVisibilityToggle}
-            />
-          </div>
-        </div>
-      </Card>
+      <SettingsSection title="Display">
+        <SettingsRow
+          icon={showBalance ? Eye : EyeOff}
+          iconColor="bg-teal-500"
+          label="Show Balance on Profile"
+          description="Display your Nexa balance and progress bar to visitors"
+          toggle
+          checked={showBalance}
+          onCheckedChange={handleBalanceVisibilityToggle}
+          isLast
+        />
+      </SettingsSection>
 
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Mail className="h-5 w-5 text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold">Email</h3>
-        </div>
-        <div className="space-y-4">
-          <div className="p-4 rounded-lg bg-muted/30">
-            <div className="flex items-center gap-3">
-              <Mail className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="font-medium">Email Address</p>
-                <p className="text-sm text-muted-foreground">{user?.email || 'No email set'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
+      <SettingsSection title="Email">
+        <SettingsRow
+          icon={Mail}
+          iconColor="bg-sky-500"
+          label="Email Address"
+          description={user?.email || 'No email set'}
+          isLast
+        />
+      </SettingsSection>
 
       <PhoneNumberInput />
     </div>
