@@ -49,18 +49,17 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   const [unreadChats, setUnreadChats] = useState(0);
   const { isDeveloper } = useDeveloperStatus();
   
+  const isTelegram = useIsTelegram();
+
   // Detect if running in iframe (embedded mini program)
   const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
-  // NOTE: We no longer hide navigation just because we're in an iframe.
-  // (Lovable preview + in-app webviews are iframes; hiding nav breaks the app.)
-  
+
   // Initialize push notifications listener
   usePushNotifications();
 
   // Cache key for user data
   const userCacheKey = user?.id ? `layout_user_data_${user.id}` : null;
 
-  // Define functions before useEffect hooks
   const checkAdminStatus = async () => {
     if (!user) return;
     
@@ -80,7 +79,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
       }
     }
     
-    // Check admin status from secure user_roles table, not profiles
+    // Check admin status from secure user_roles table
     const { data: roleData } = await supabase
       .from('user_roles')
       .select('role')
@@ -91,7 +90,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     const adminStatus = !!roleData;
     setIsAdmin(adminStatus);
     
-    // Get business mode and affiliate status from profiles (non-sensitive)
+    // Get business mode and affiliate status from profiles
     const { data: profileData } = await supabase
       .from('profiles')
       .select('is_business_mode, is_affiliate')
@@ -115,12 +114,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     }
   };
 
-  // All hooks must be called before any conditional returns
   useEffect(() => {
     if (user) {
       checkAdminStatus();
       
-      // Fetch unread notifications count
       const fetchUnreadCount = async () => {
         const { count } = await supabase
           .from('notifications')
@@ -131,9 +128,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
       };
       fetchUnreadCount();
 
-      // Fetch unread chats count
       const fetchUnreadChatsCount = async () => {
-        // Get all chats user is a member of
         const { data: memberChats } = await supabase
           .from('chat_members')
           .select('chat_id')
@@ -146,7 +141,6 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
 
         const chatIds = memberChats.map(c => c.chat_id);
         
-        // Get messages with their read status from message_status table
         const { data: messagesWithStatus } = await supabase
           .from('messages')
           .select(`
@@ -157,7 +151,6 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
           .in('chat_id', chatIds)
           .neq('sender_id', user.id);
         
-        // Count unique chats with unread messages (no read_at for current user)
         const unreadChatIds = new Set<string>();
         messagesWithStatus?.forEach(msg => {
           const userReadStatus = msg.message_status?.find((s: any) => s.user_id === user.id);
@@ -169,7 +162,6 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
       };
       fetchUnreadChatsCount();
 
-      // Real-time subscription for notifications
       const notifChannel = supabase
         .channel('nav-notifications')
         .on('postgres_changes', {
@@ -177,28 +169,13 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
           schema: 'public',
           table: 'notifications',
           filter: `user_id=eq.${user.id}`,
-        }, () => {
-          fetchUnreadCount();
-        })
+        }, () => fetchUnreadCount())
         .subscribe();
 
-      // Real-time subscription for messages (unread chats)
       const msgChannel = supabase
         .channel('nav-messages')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-        }, () => {
-          fetchUnreadChatsCount();
-        })
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'message_status',
-        }, () => {
-          fetchUnreadChatsCount();
-        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchUnreadChatsCount)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'message_status' }, fetchUnreadChatsCount)
         .subscribe();
 
       return () => {
@@ -208,10 +185,8 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     }
   }, [user]);
 
-  const isTelegram = useIsTelegram();
-
   useEffect(() => {
-    // Disable scroll-to-hide in Telegram — keep nav always visible
+    // Disable scroll-to-hide nav in Telegram
     if (!isMobile || isTelegram) return;
     
     const handleScroll = () => {
@@ -239,7 +214,6 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     };
   }, [isMobile, isTelegram]);
 
-  // Show desktop-friendly layout instead of blocking
   const isDesktop = !isMobile;
 
   const navItems = [
@@ -249,7 +223,6 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     { path: '/chats', icon: MessageSquare, label: t('common.messages') },
   ];
 
-  // Additional features section
   const featureItems = [
     { path: '/shop', icon: ShoppingBag, label: 'Shop' },
     { path: '/wallet', icon: Wallet, label: 'Wallet', requiresAuth: true },
@@ -283,15 +256,13 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     return location.pathname.startsWith(path);
   };
   
-  // Hide bottom navigation in chat rooms or when hideNav is true.
   const isChatRoom = location.pathname.startsWith('/chat/');
   const shouldHideNav = isChatRoom || hideNav;
   const shouldHideUI = hideNav;
   
-  // Use MainTabsNavigation for main tab routes (sliding tab behavior)
   const onMainTab = isMainTabRoute(location.pathname);
-  
-  // Desktop: use DesktopHybridLayout for all pages
+
+  // Desktop layout
   if (isDesktop) {
     return (
       <DesktopHybridLayout>
@@ -300,12 +271,10 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     );
   }
 
+  // Main tab pages with tab navigation
   if (onMainTab && !shouldHideNav) {
     return (
-      <div className={cn(
-        "overflow-hidden bg-background select-none touch-pan-y",
-        isTelegram ? "h-full" : "h-[100dvh]"
-      )}>
+      <div className="fixed inset-0 flex flex-col bg-background">
         <MainTabsNavigation chatScrollHide={chatScrollHide}>
           {children}
         </MainTabsNavigation>
@@ -313,20 +282,17 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     );
   }
 
+  // All other pages (including Premium page)
   return (
-    <div
-      className={cn(
-        "bg-background select-none touch-pan-y",
-        isTelegram ? "h-full overflow-y-auto" : "min-h-screen",
-        isDesktop && "desktop-scrollbar"
-      )}
-      style={isTelegram ? { WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } : undefined}
-    >
-      {/* Main Content */}
-      <main className={cn(
-        shouldHideUI ? "" : "pb-20",
-        !isTelegram && "min-h-screen"
-      )}>
+    <div className="fixed inset-0 flex flex-col bg-background">
+      {/* Main scrollable content area */}
+      <main 
+        className={cn(
+          "flex-1 overflow-y-auto -webkit-overflow-scrolling-touch overscroll-y-contain",
+          "pb-[calc(var(--tg-safe-area-inset-bottom,0px)+80px)]",
+          isTelegram && "pt-[var(--tg-safe-area-inset-top,48px)]"
+        )}
+      >
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -337,16 +303,16 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
         </motion.div>
       </main>
 
-      {/* Mobile Bottom Navigation - Solid bar with liquid glass on active tabs */}
+      {/* Mobile Bottom Navigation */}
       {!shouldHideNav && (
         <div
           className={cn(
             "lg:hidden fixed left-0 right-0 z-50 transition-all duration-300 ease-out",
             (isNavHidden || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
           )}
-          style={{ bottom: 'var(--tg-safe-bottom, 0px)' }}
+          style={{ bottom: 'var(--tg-safe-area-inset-bottom, 0px)' }}
         >
-          <nav className={cn("bg-background", !isTelegram && "border-t border-border/40")}>
+          <nav className={cn("bg-background/95 backdrop-blur-lg border-t border-border/40")}>
             <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
               {/* Home */}
               <Link
@@ -374,7 +340,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                   fill={(isActive('/') || isActive('/home')) ? 'currentColor' : 'none'}
                 />
               </Link>
-              
+
               {/* Search */}
               <Link
                 to="/search"
@@ -393,7 +359,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                   strokeWidth={isActive('/search') ? 2.5 : 2} 
                 />
               </Link>
-              
+
               {/* Notifications */}
               {user ? (
                 <Link
@@ -429,7 +395,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
                   <Bell className="h-6 w-6 text-muted-foreground group-hover:text-primary/80 transition-colors duration-200" strokeWidth={2} />
                 </Link>
               )}
-              
+
               {/* Chats */}
               {user ? (
                 <Link
@@ -469,11 +435,12 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
           </nav>
         </div>
       )}
-      {/* Bottom safe area background fill */}
-      {!shouldHideNav && (
+
+      {/* Bottom safe area fill to prevent visual cutoff */}
+      {!shouldHideNav && isTelegram && (
         <div
-          className="lg:hidden fixed bottom-0 left-0 right-0 bg-background z-40"
-          style={{ height: 'var(--tg-safe-bottom, env(safe-area-inset-bottom, 0px))' }}
+          className="lg:hidden fixed bottom-0 left-0 right-0 bg-background z-40 pointer-events-none"
+          style={{ height: 'var(--tg-safe-area-inset-bottom, 0px)' }}
         />
       )}
     </div>
