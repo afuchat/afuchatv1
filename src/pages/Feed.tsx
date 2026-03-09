@@ -48,17 +48,19 @@ import { SubscriptionExpiryBanner } from '@/components/SubscriptionExpiryBanner'
 import { UnclaimedRedEnvelopeBanner } from '@/components/home/UnclaimedRedEnvelopeBanner';
 import { useTelegramOptional } from '@/contexts/TelegramContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-// --- INTERFACES ---
 
-// NEW: Define AuthUser interface for type safety (must match the one in PostActionsSheet.tsx)
+// ────────────────────────────────────────────────────────────────
+// INTERFACES
+// ────────────────────────────────────────────────────────────────
+
 interface AuthUser {
-    id: string;
-    user_metadata: {
-        display_name?: string;
-        handle?: string;
-        is_verified?: boolean;
-        is_organization_verified?: boolean;
-    }
+  id: string;
+  user_metadata: {
+    display_name?: string;
+    handle?: string;
+    is_verified?: boolean;
+    is_organization_verified?: boolean;
+  }
 }
 
 interface Post {
@@ -155,8 +157,10 @@ interface Reply {
   is_developer?: boolean;
 }
 
+// ────────────────────────────────────────────────────────────────
+// UTILITY FUNCTIONS
+// ────────────────────────────────────────────────────────────────
 
-// --- UTILITY FUNCTIONS (Unchanged) ---
 const formatTime = (isoString: string) => {
   const date = new Date(isoString);
   const now = new Date();
@@ -174,7 +178,6 @@ const formatTime = (isoString: string) => {
 };
 
 const parsePostContent = (content: string, postId: string, navigate: ReturnType<typeof useNavigate>) => {
-  // Ensure content is a string
   const safeContent = typeof content === 'string' ? content : String(content || '');
   
   const lookupAndNavigateByHandle = async (handle: string) => {
@@ -193,7 +196,6 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
     navigate(`/@${data.id}`); 
   };
   
-  // First process mentions, then process hashtags and links (including plain domains like dev-write.netlify.app)
   const combinedRegex = /(@[a-zA-Z0-9_-]+|#\w+|https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?)/g;
   const parts: (string | JSX.Element)[] = [];
   let lastIndex = 0;
@@ -238,7 +240,6 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
         </Link>
       );
     } else {
-      // It's a URL (either with http/https or a plain domain)
       const url = matchText.startsWith('http') ? matchText : `https://${matchText}`;
       parts.push(
         <a
@@ -266,7 +267,10 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
   return <>{parts}</>;
 };
 
-// Avatar Display Components
+// ────────────────────────────────────────────────────────────────
+// AVATAR DISPLAY COMPONENTS
+// ────────────────────────────────────────────────────────────────
+
 const UserAvatarSmall = ({ 
   userId, 
   name, 
@@ -335,114 +339,115 @@ const UserAvatarMedium = ({
   );
 };
 
-// --- REPLY ITEM (Unchanged) ---
-
-// --- REPLY ITEM (Updated with auto-translation) ---
+// ────────────────────────────────────────────────────────────────
+// REPLY ITEM COMPONENT
+// ────────────────────────────────────────────────────────────────
 
 const ReplyItem = ({ reply, navigate, handleViewProfile }: { 
   reply: Reply; 
   navigate: any; 
   handleViewProfile: (id: string) => void;
 }) => {
-    const { i18n, t } = useTranslation();
-    const { translateText } = useAITranslation();
-    const [translatedContent, setTranslatedContent] = useState<string | null>(null);
-    const [isTranslating, setIsTranslating] = useState(false);
+  const { i18n, t } = useTranslation();
+  const { translateText } = useAITranslation();
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
 
-    const handleTranslate = async () => {
-        if (translatedContent) {
-            setTranslatedContent(null);
-            return;
-        }
-        setIsTranslating(true);
-        const translated = await translateText(reply.content, i18n.language);
-        setTranslatedContent(translated);
-        setIsTranslating(false);
-    };
+  const handleTranslate = async () => {
+    if (translatedContent) {
+      setTranslatedContent(null);
+      return;
+    }
+    setIsTranslating(true);
+    const translated = await translateText(reply.content, i18n.language);
+    setTranslatedContent(translated);
+    setIsTranslating(false);
+  };
 
-    const displayContent = translatedContent || reply.content;
+  const displayContent = translatedContent || reply.content;
 
-    return (
-        <div className="flex pt-2 pb-1 relative">
-            <div className="absolute left-5 top-0 bottom-0 w-px bg-muted ml-px mt-2.5 mb-1.5" />
-            
-            <div
-                className="mr-1.5 sm:mr-2 flex-shrink-0 cursor-pointer z-10"
-                onClick={() => handleViewProfile(reply.author_id)}
-            >
-                <UserAvatarSmall 
-                  userId={reply.author_id} 
-                  name={reply.profiles.display_name}
-                  avatarUrl={reply.profiles.avatar_url}
-                />
-            </div>
+  return (
+    <div className="flex pt-2 pb-1 relative">
+      <div className="absolute left-5 top-0 bottom-0 w-px bg-muted ml-px mt-2.5 mb-1.5" />
+      
+      <div
+        className="mr-1.5 sm:mr-2 flex-shrink-0 cursor-pointer z-10"
+        onClick={() => handleViewProfile(reply.author_id)}
+      >
+        <UserAvatarSmall 
+          userId={reply.author_id} 
+          name={reply.profiles.display_name}
+          avatarUrl={reply.profiles.avatar_url}
+        />
+      </div>
 
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-x-1 min-w-0">
-                    <span
-                        className="font-bold text-foreground text-xs sm:text-sm cursor-pointer hover:underline truncate max-w-[80px] sm:max-w-[120px]"
-                        onClick={() => handleViewProfile(reply.author_id)}
-                        title={reply.profiles.display_name}
-                    >
-                        {reply.profiles.display_name.length > 10 ? `${reply.profiles.display_name.slice(0, 8)}...` : reply.profiles.display_name}
-                    </span>
-                    
-                    {reply.profiles.is_affiliate && reply.profiles.is_business_mode && (
-                      <AffiliatedBadge size="sm" />
-                    )}
-                    
-                    {reply.profiles.is_warned && (
-                      <WarningBadge size="sm" reason={reply.profiles.warning_reason} variant="post" />
-                    )}
-                    
-                    <VerifiedBadge 
-                      isVerified={reply.profiles.is_verified || reply.is_developer}
-                      isOrgVerified={reply.profiles.is_organization_verified}
-                      isAffiliate={reply.profiles.is_affiliate}
-                      isDeveloper={reply.is_developer}
-                      affiliateBusinessLogo={reply.profiles.affiliated_business?.avatar_url}
-                      affiliateBusinessName={reply.profiles.affiliated_business?.display_name}
-                      size="sm"
-                      userId={reply.author_id}
-                      verificationSource={reply.profiles.verification_source}
-                    />
-                    {reply.profiles.is_business_mode && !reply.profiles.is_affiliate && (
-                      <BusinessBadge size="sm" />
-                    )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-x-1 min-w-0">
+          <span
+            className="font-bold text-foreground text-xs sm:text-sm cursor-pointer hover:underline truncate max-w-[80px] sm:max-w-[120px]"
+            onClick={() => handleViewProfile(reply.author_id)}
+            title={reply.profiles.display_name}
+          >
+            {reply.profiles.display_name.length > 10 ? `${reply.profiles.display_name.slice(0, 8)}...` : reply.profiles.display_name}
+          </span>
+          
+          {reply.profiles.is_affiliate && reply.profiles.is_business_mode && (
+            <AffiliatedBadge size="sm" />
+          )}
+          
+          {reply.profiles.is_warned && (
+            <WarningBadge size="sm" reason={reply.profiles.warning_reason} variant="post" />
+          )}
+          
+          <VerifiedBadge 
+            isVerified={reply.profiles.is_verified || reply.is_developer}
+            isOrgVerified={reply.profiles.is_organization_verified}
+            isAffiliate={reply.profiles.is_affiliate}
+            isDeveloper={reply.is_developer}
+            affiliateBusinessLogo={reply.profiles.affiliated_business?.avatar_url}
+            affiliateBusinessName={reply.profiles.affiliated_business?.display_name}
+            size="sm"
+            userId={reply.author_id}
+            verificationSource={reply.profiles.verification_source}
+          />
+          {reply.profiles.is_business_mode && !reply.profiles.is_affiliate && (
+            <BusinessBadge size="sm" />
+          )}
 
-                    <span
-                        className="text-muted-foreground text-[10px] sm:text-xs hover:underline cursor-pointer truncate flex-shrink min-w-0"
-                        onClick={() => handleViewProfile(reply.author_id)}
-                    >
-                        @{reply.profiles.handle}
-                    </span>
-                    <span className="text-muted-foreground text-[10px] sm:text-xs flex-shrink-0">·</span>
-                    <span className="text-muted-foreground text-[10px] sm:text-xs whitespace-nowrap flex-shrink-0">
-                      {formatTime(reply.created_at)}
-                    </span>
-                </div>
-
-                <p className="text-foreground text-xs leading-snug whitespace-pre-wrap break-words mt-0.5">
-                    {parsePostContent(displayContent, reply.id, navigate)}
-                </p>
-                {i18n.language !== 'en' && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleTranslate}
-                        disabled={isTranslating}
-                        className="text-[10px] text-muted-foreground hover:text-primary mt-0.5 p-0 h-auto"
-                    >
-                        {isTranslating ? t('common.translating') : translatedContent ? t('common.showOriginal') : t('common.translate')}
-                    </Button>
-                )}
-            </div>
+          <span
+            className="text-muted-foreground text-[10px] sm:text-xs hover:underline cursor-pointer truncate flex-shrink min-w-0"
+            onClick={() => handleViewProfile(reply.author_id)}
+          >
+            @{reply.profiles.handle}
+          </span>
+          <span className="text-muted-foreground text-[10px] sm:text-xs flex-shrink-0">·</span>
+          <span className="text-muted-foreground text-[10px] sm:text-xs whitespace-nowrap flex-shrink-0">
+            {formatTime(reply.created_at)}
+          </span>
         </div>
-    );
+
+        <p className="text-foreground text-xs leading-snug whitespace-pre-wrap break-words mt-0.5">
+          {parsePostContent(displayContent, reply.id, navigate)}
+        </p>
+        {i18n.language !== 'en' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleTranslate}
+            disabled={isTranslating}
+            className="text-[10px] text-muted-foreground hover:text-primary mt-0.5 p-0 h-auto"
+          >
+            {isTranslating ? t('common.translating') : translatedContent ? t('common.showOriginal') : t('common.translate')}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 };
 
-
-// --- POST CARD (Updated to accept and pass through new props) ---
+// ────────────────────────────────────────────────────────────────
+// POST CARD COMPONENT
+// ────────────────────────────────────────────────────────────────
 
 const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost, onReportPost, onEditPost, onQuotePost, onHidePost, userProfile, expandedPosts, setExpandedPosts, guestMode = false }:
   { 
@@ -547,7 +552,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
   const handleReplyTextChange = async (value: string) => {
     setReplyText(value);
-    // Check for @ mention
     const atMatch = value.match(/@(\w{1,})$/);
     if (atMatch && atMatch[1].length >= 1) {
       setMentionQuery(atMatch[1]);
@@ -555,7 +559,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       const { data } = await supabase
         .from('profiles')
         .select('id, handle, display_name, avatar_url')
-        .or(`handle.ilike.%${atMatch[1]}%,display_name.ilike.%${atMatch[1]}%`)
+        .or(`handle.ilike.%\( {atMatch[1]}%,display_name.ilike.% \){atMatch[1]}%`)
         .limit(5);
       setMentionResults(data || []);
     } else {
@@ -565,18 +569,16 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   };
 
   const insertMention = (handle: string) => {
-    const newText = replyText.replace(/@\w*$/, `@${handle} `);
+    const newText = replyText.replace(/@\w*\( /, `@ \){handle} `);
     setReplyText(newText);
     setShowMentionSuggestions(false);
     commentInputRef.current?.focus();
   };
 
-  // Track post view when it becomes visible - optimized to prevent duplicates
   useEffect(() => {
     if (!user || !postRef.current || hasTrackedView) return;
     
-    // Check if view was already tracked in this session
-    const viewKey = `${post.id}-${user.id}`;
+    const viewKey = `\( {post.id}- \){user.id}`;
     const sessionViews = sessionStorage.getItem('viewedPosts');
     let viewedSet: Set<string> = new Set();
     
@@ -596,7 +598,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         if (entry.isIntersecting && !hasTrackedView) {
           setHasTrackedView(true);
           
-          // Track the view in the database only if not already tracked
           if (!viewedSet.has(viewKey)) {
             try {
               const { error } = await supabase
@@ -607,12 +608,10 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 });
               
               if (!error) {
-                // Mark as viewed in session storage
                 viewedSet.add(viewKey);
                 sessionStorage.setItem('viewedPosts', JSON.stringify(Array.from(viewedSet)));
               }
             } catch (error: any) {
-              // Only log non-duplicate errors
               if (!error?.message?.includes('duplicate')) {
                 console.debug('View tracking error:', error);
               }
@@ -620,7 +619,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           }
         }
       },
-      { threshold: 0.5, rootMargin: '50px' } // Preload views slightly before visible
+      { threshold: 0.5, rootMargin: '50px' }
     );
 
     observer.observe(postRef.current);
@@ -628,17 +627,14 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     return () => observer.disconnect();
   }, [user, post.id, hasTrackedView]);
   
-  // Organize replies into a tree structure
   const organizeReplies = (replies: Reply[]): Reply[] => {
     const replyMap = new Map<string, Reply>();
     const topLevelReplies: Reply[] = [];
 
-    // First pass: create reply objects with nested_replies arrays
     replies.forEach(reply => {
       replyMap.set(reply.id, { ...reply, nested_replies: [] });
     });
 
-    // Second pass: organize into tree structure
     replies.forEach(reply => {
       const replyWithNested = replyMap.get(reply.id)!;
       if (reply.parent_reply_id && replyMap.has(reply.parent_reply_id)) {
@@ -649,13 +645,10 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       }
     });
 
-    // Sort: pinned replies first, then by creation date
     const sortReplies = (repliesToSort: Reply[]): Reply[] => {
       return repliesToSort.sort((a, b) => {
-        // Pinned replies come first
         if (a.is_pinned && !b.is_pinned) return -1;
         if (!a.is_pinned && b.is_pinned) return 1;
-        // Otherwise sort by date (newest first)
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
     };
@@ -693,15 +686,15 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     };
 
     navigate('/ai-chat', { 
-        state: { 
-            context: 'post_analysis',
-            postDetails: postDetails 
-        } 
+      state: { 
+        context: 'post_analysis',
+        postDetails: postDetails 
+      } 
     });
   };
 
   const handleShare = () => {
-    const shareUrl = `${window.location.origin}/post/${post.id}`;
+    const shareUrl = `\( {window.location.origin}/post/ \){post.id}`;
     const shareData = {
       title: `Check out this post by ${post.profiles.display_name}`,
       text: post.content.substring(0, 100) + '...',
@@ -711,7 +704,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     if (navigator.share && navigator.canShare?.(shareData)) {
       navigator.share(shareData).catch((error) => {
         console.error('Error sharing', error);
-        // Fallback to copy
         navigator.clipboard.writeText(shareUrl).then(() => {
           toast.success(t('feed.linkCopied'));
         }).catch(() => {
@@ -740,14 +732,12 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     }
 
     const trimmedReplyText = replyText.trim();
-    // Only append mention for nested replies (not top-level), and don't duplicate if user typed it
     const replyToHandle = replyingToReply ? `@${replyingToReply.handle}` : '';
     const hasMention = replyToHandle && trimmedReplyText.includes(replyToHandle);
     const finalContent = (replyToHandle && !hasMention) ? `${replyToHandle} ${trimmedReplyText}` : trimmedReplyText;
     const parentId = replyingToReply?.id || null;
     const tempId = `temp-reply-${Date.now()}`;
     
-    // Create optimistic reply
     const optimisticReply: Reply = {
       id: tempId,
       post_id: post.id,
@@ -767,7 +757,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       },
     };
     
-    // Add optimistic reply immediately
     addReply(post.id, optimisticReply);
     setReplyText('');
     setReplyingToReply(null);
@@ -788,7 +777,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       if (error) throw error;
 
       if (newReply) {
-        // Fetch affiliated business data if needed
         let affiliated_business = null;
         if (newReply.profiles?.affiliated_business_id) {
           const { data: businessData } = await supabase
@@ -799,12 +787,9 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           affiliated_business = businessData || null;
         }
 
-        // Real-time subscription will handle adding the actual reply
-        // Just show success message
         toast.success('Reply posted!');
         awardNexa('create_reply', { post_id: post.id });
         
-        // Award XP to post author
         fetch('https://rhnsjqqtdzlkvqazfcbg.supabase.co/functions/v1/award-xp', {
           method: 'POST',
           headers: {
@@ -823,12 +808,10 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       console.error('Reply error:', error);
       toast.error('Failed to post reply. Please try again.');
       
-      // Rollback: Remove the optimistic reply
       window.dispatchEvent(new CustomEvent('remove-optimistic-reply', { 
         detail: { postId: post.id, replyId: tempId } 
       }));
       
-      // Restore the reply text so user can try again
       setReplyText(trimmedReplyText);
     }
   };
@@ -841,7 +824,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
     const tempId = `temp-nested-reply-${Date.now()}`;
     
-    // Create optimistic nested reply
     const optimisticReply: Reply = {
       id: tempId,
       post_id: post.id,
@@ -861,7 +843,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       },
     };
 
-    // Add optimistic reply immediately
     addReply(post.id, optimisticReply);
 
     try {
@@ -878,14 +859,12 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
       if (error) throw error;
 
-      // Real-time subscription will handle adding the actual reply
       toast.success('Reply posted!');
       awardNexa('create_reply', { post_id: post.id });
     } catch (error) {
       console.error('Nested reply error:', error);
       toast.error('Failed to post reply. Please try again.');
       
-      // Rollback: Remove the optimistic reply
       window.dispatchEvent(new CustomEvent('remove-optimistic-reply', { 
         detail: { postId: post.id, replyId: tempId } 
       }));
@@ -914,15 +893,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     }
 
     toast.success(currentPinnedState ? 'Comment unpinned' : 'Comment pinned');
-    
-    // Update local state
-    const updatedReplies = post.replies.map(r => 
-      r.id === replyId 
-        ? { ...r, is_pinned: !currentPinnedState, pinned_by: !currentPinnedState ? user.id : null, pinned_at: !currentPinnedState ? new Date().toISOString() : null }
-        : r
-    );
-    
-    // Update the post in the parent's state would typically happen via realtime
   };
 
   const handleDeleteReply = async (replyId: string) => {
@@ -943,10 +913,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     }
 
     toast.success('Comment deleted');
-    
-    // Update local state by removing the reply
-    const updatedReplies = post.replies.filter(r => r.id !== replyId);
-    // Trigger parent refresh would happen via realtime
   };
 
   const handleReportComment = async (replyId: string, reason: string) => {
@@ -954,7 +920,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       toast.error('Please sign in to report');
       return;
     }
-    // Log report locally - table may not exist in schema
     console.log('Comment reported:', { replyId, reason, reporter: user.id });
     toast.success('Comment reported. We\'ll review it shortly.');
     setShowReportCard(false);
@@ -963,7 +928,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
   return (
     <div ref={postRef} className="border-b border-border/40 bg-background transition-colors">
-      {/* Instagram-style Header: Avatar + Name + Handle + Time + Actions */}
       <div className="flex items-center justify-between px-3 py-2.5">
         <div className="flex items-center gap-2.5 min-w-0">
           <div
@@ -1040,7 +1004,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </div>
       </div>
 
-      {/* Media - Full width */}
       <div>
         {((post.post_images && post.post_images.length > 0) || post.image_url) && (
           <div className="w-full">
@@ -1059,7 +1022,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           </div>
         )}
 
-        {/* Quoted Post */}
         {post.quoted_post && (
           <div className="px-3 pt-2">
             <QuotedPostCard quotedPost={post.quoted_post} />
@@ -1067,7 +1029,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         )}
       </div>
 
-      {/* Text Content */}
       <div className="px-3 pt-2 pb-1">
         <ReadMoreText
           text={parsePostContent(translatedContent || post.content, post.id, navigate)}
@@ -1091,14 +1052,12 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         )}
       </div>
 
-      {/* AI Post Summary */}
       {post.content.length >= 150 && (
         <div className="px-3 pb-1">
           <AIPostSummary postContent={post.content} postId={post.id} />
         </div>
       )}
 
-      {/* Action Buttons Row - below text */}
       <div className="flex justify-between items-center px-3 py-1">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" className="flex items-center gap-1.5 group h-9 px-1" onClick={() => onAcknowledge(post.id, post.has_liked)}>
@@ -1141,13 +1100,11 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </Button>
       </div>
 
-      {/* Highlighted Comments Preview - Overlapping Avatars + Count */}
       {!showComments && post.reply_count > 0 && (
         <div 
           className="px-3 pb-2 flex items-center gap-2 cursor-pointer group"
           onClick={() => setShowComments(true)}
         >
-          {/* Overlapping avatar stack (max 3) */}
           <div className="flex items-center -space-x-2">
             {organizedReplies.slice(0, 3).map((reply, idx) => (
               <Avatar 
@@ -1162,7 +1119,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               </Avatar>
             ))}
           </div>
-          {/* Comment count */}
           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             {post.reply_count === 1 
               ? 'View 1 comment' 
@@ -1171,10 +1127,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </div>
       )}
 
-      {/* Comments Bottom Sheet */}
       <Drawer open={showComments} onOpenChange={(open) => { setShowComments(open); if (!open) clearCommentImage(); }}>
         <DrawerContent className="max-h-[85vh] flex flex-col rounded-t-3xl">
-          {/* Handle bar */}
           <div className="flex justify-center pt-2 pb-1 flex-shrink-0">
             <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
           </div>
@@ -1196,7 +1150,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               <div className="space-y-4">
                 {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
                   <div key={reply.id} className="flex gap-3">
-                    {/* Avatar */}
                     <div className="flex-shrink-0 cursor-pointer" onClick={() => { handleViewProfile(reply.author_id); setShowComments(false); }}>
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={reply.profiles.avatar_url || undefined} />
@@ -1204,7 +1157,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                       </Avatar>
                     </div>
                     
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -1229,7 +1181,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                           </p>
                         </div>
                         
-                        {/* Like button on the right */}
                         <div className="flex flex-col items-center gap-0.5 flex-shrink-0 pt-1">
                           <button onClick={() => toggleCommentLike(reply.id)} className="p-1">
                             <Heart 
@@ -1243,7 +1194,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         </div>
                       </div>
                       
-                      {/* Meta row: time, Reply, Delete/Report */}
                       <div className="flex items-center gap-4 mt-1.5">
                         <span className="text-[11px] text-muted-foreground">{formatTime(reply.created_at)}</span>
                         <button 
@@ -1268,7 +1218,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                         )}
                       </div>
                       
-                      {/* View X replies toggle */}
                       {reply.nested_replies && reply.nested_replies.length > 0 && (
                         <div className="mt-2">
                           <button 
@@ -1282,7 +1231,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                             <ChevronDown className={cn("h-3 w-3 transition-transform", expandedNestedReplies.has(reply.id) && "rotate-180")} />
                           </button>
                           
-                          {/* Nested replies - collapsible */}
                           <AnimatePresence>
                             {expandedNestedReplies.has(reply.id) && (
                               <motion.div 
@@ -1314,7 +1262,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                                                 {parsePostContent(contentText || nested.content, nested.id, navigate)}
                                               </p>
                                             </div>
-                                            {/* Nested like */}
                                             <button onClick={() => toggleCommentLike(nested.id)} className="p-1 flex-shrink-0 pt-0.5">
                                               <Heart 
                                                 className={cn("h-3 w-3 transition-colors", likedComments.has(nested.id) ? "fill-red-500 text-red-500" : "text-muted-foreground")} 
@@ -1373,9 +1320,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             )}
           </div>
 
-          {/* Bottom input area */}
           <div className="flex-shrink-0 bg-background border-t border-border/30 relative">
-            {/* Emoji Picker Panel */}
             <AnimatePresence>
               {showEmojiPicker && (
                 <motion.div 
@@ -1410,7 +1355,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               )}
             </AnimatePresence>
 
-            {/* Mention Suggestions */}
             <AnimatePresence>
               {showMentionSuggestions && mentionResults.length > 0 && (
                 <motion.div 
@@ -1442,7 +1386,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               )}
             </AnimatePresence>
 
-            {/* Image preview */}
             {commentImagePreview && (
               <div className="px-4 pt-3 pb-1">
                 <div className="relative inline-block">
@@ -1457,7 +1400,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               </div>
             )}
             
-            {/* Reply context banner */}
             {replyingToReply && user && (
               <div className="flex items-center justify-between px-4 py-2 bg-muted/40 border-b border-border/20">
                 <span className="text-xs text-muted-foreground">
@@ -1472,7 +1414,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               </div>
             )}
 
-            {/* Input row */}
             {user ? (
               <div className="flex items-center gap-2.5 px-4 py-3">
                 <Avatar className="h-8 w-8 flex-shrink-0">
@@ -1498,7 +1439,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                     placeholder="Add comment..."
                     className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none min-w-0"
                   />
-                  {/* Action icons */}
                   <input
                     ref={commentImageInputRef}
                     type="file"
@@ -1549,7 +1489,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               </div>
             )}
 
-            {/* Inline Delete Confirmation — compact popover style */}
             <AnimatePresence>
               {showDeleteCommentConfirm && (
                 <>
@@ -1589,7 +1528,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               )}
             </AnimatePresence>
 
-            {/* Inline Report Card — compact popover style */}
             <AnimatePresence>
               {showReportCard && (
                 <>
@@ -1678,9 +1616,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     </div>
   );
 };
-
-
-// --- FEED COMPONENT (Updated with new handlers) ---
+// --- FEED COMPONENT ---
 
 interface FeedProps {
   defaultTab?: 'foryou' | 'following';
@@ -1696,13 +1632,10 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   const telegram = useTelegramOptional();
   const isMobile = useIsMobile();
   
-  // Premium status - must be at top level with other hooks
   const { isPremium, loading: premiumLoading, expiresAt } = usePremiumStatus();
   
-  // Personalized feed algorithm
   const { sortPosts, recordInteraction, learnUserInterests } = useFeedAlgorithm();
   
-  // All useState hooks first
   const [posts, setPosts] = useState<Post[]>([]);
   const [followingPosts, setFollowingPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1727,14 +1660,10 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     setQuotePost(post);
   };
   
-  
-  // Scroll hide state for header
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   
-  // Track which posts have had view attempts to prevent duplicates
   const viewedPostsRef = useRef<Set<string>>(new Set());
-  // Load previously viewed posts from session storage
   useEffect(() => {
     const savedViews = sessionStorage.getItem('viewedPosts');
     if (savedViews) {
@@ -1747,12 +1676,25 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     }
   }, []);
 
-  // Sync activeTab when defaultTab changes
+  // Telegram Mini App scrolling fix
+  useEffect(() => {
+    if (telegram?.isTelegram && window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      
+      tg.ready();
+      
+      if (typeof tg.disableVerticalSwipes === 'function') {
+        tg.disableVerticalSwipes();
+      }
+      
+      tg.expand();
+    }
+  }, [telegram?.isTelegram]);
+
   useEffect(() => {
     setActiveTab(defaultTab);
   }, [defaultTab]);
 
-  // Optimized scroll hide effect with throttling
   useEffect(() => {
     let ticking = false;
     let lastKnownScrollY = 0;
@@ -1774,7 +1716,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       }
     };
 
-    // Listen for container scroll events from MainTabsNavigation
     const handleNavScroll = (e: CustomEvent) => {
       setIsScrollingDown(e.detail.hidden);
     };
@@ -1788,27 +1729,22 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     };
   }, [lastScrollY]);
 
-  // Load fresh data on mount - clear caches to ensure new posts show
   useEffect(() => {
-    // Clear all feed caches on page load to ensure fresh posts
     sessionStorage.removeItem('feedPosts');
     sessionStorage.removeItem('feedFollowingPosts');
     sessionStorage.removeItem('feedShuffleSeed');
     
-    // Clear algorithm sort seed to get fresh ordering
     if (user) {
       sessionStorage.removeItem(`feedSortSeed:${user.id}`);
     } else {
       sessionStorage.removeItem('feedSortSeed:guest');
     }
     
-    // Restore active tab preference
     const cachedTab = sessionStorage.getItem('feedActiveTab');
     if (cachedTab) {
       setActiveTab(cachedTab as 'foryou' | 'following');
     }
     
-    // Clean up old viewed posts data (keep only last 500 views)
     const viewedPosts = sessionStorage.getItem('viewedPosts');
     if (viewedPosts) {
       try {
@@ -1821,16 +1757,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       }
     }
     
-    // Fetch fresh data
     setCurrentPage(0);
     setHasMore(true);
     fetchPosts(0, true);
   }, [user]);
 
-  // Refetch posts when user changes to get correct has_liked status
   useEffect(() => {
     if (user) {
-      // Fetch user profile
       supabase
         .from('profiles')
         .select('display_name, avatar_url')
@@ -1844,17 +1777,14 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     }
   }, [user]);
 
-  // Save active tab preference
   useEffect(() => {
     sessionStorage.setItem('feedActiveTab', activeTab);
   }, [activeTab]);
 
-  // Restore scroll position after content is rendered - use window scroll
   useEffect(() => {
     if (posts.length > 0) {
       const savedPosition = sessionStorage.getItem('feedScrollPosition');
       if (savedPosition) {
-        // Small delay to ensure content is rendered
         setTimeout(() => {
           window.scrollTo(0, parseInt(savedPosition));
         }, 50);
@@ -1867,12 +1797,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       cur.map((p) =>
         p.id === postId
           ? {
-            ...p,
-            replies: [...(p.replies || []), newReply].sort(
-              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-            ),
-            reply_count: (p.reply_count || 0) + 1,
-          }
+              ...p,
+              replies: [...(p.replies || []), newReply].sort(
+                (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+              ),
+              reply_count: (p.reply_count || 0) + 1,
+            }
           : p
       );
     
@@ -1880,7 +1810,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     setFollowingPosts(updateWithReply);
   }, []);
 
-  // Listen for optimistic post and reply events
   useEffect(() => {
     const handleOptimisticPostAdd = (event: CustomEvent) => {
       const optimisticPost = event.detail;
@@ -1890,23 +1819,19 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
     const handleOptimisticPostSuccess = (event: CustomEvent) => {
       const { tempId } = event.detail;
-      // Remove optimistic post - real-time subscription will add the real one
       setPosts(prev => prev.filter(p => p.id !== tempId));
       setFollowingPosts(prev => prev.filter(p => p.id !== tempId));
     };
 
     const handleOptimisticPostError = (event: CustomEvent) => {
       const tempId = event.detail;
-      // Remove failed optimistic post
       setPosts(prev => prev.filter(p => p.id !== tempId));
       setFollowingPosts(prev => prev.filter(p => p.id !== tempId));
     };
 
-    // Handle new post created by current user - add immediately to top
     const handleOwnPostCreated = async (event: CustomEvent) => {
       const postData = event.detail;
       
-      // Fetch the complete post data
       const { data: newPost, error } = await supabase
         .from('posts')
         .select(`
@@ -1919,7 +1844,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         .single();
 
       if (!error && newPost) {
-        // Fetch quoted post if exists
         let quotedPost = null;
         if (newPost.quoted_post_id) {
           const { data: quotedData } = await supabase
@@ -1948,7 +1872,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           quoted_post: quotedPost,
         };
         
-        // Add to top of feed immediately
         setPosts(prev => [mappedPost, ...prev.filter(p => p.id !== postData.id)]);
         setFollowingPosts(prev => [mappedPost, ...prev.filter(p => p.id !== postData.id)]);
       }
@@ -1998,7 +1921,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     }
     const currentUserId = user.id;
 
-    // Update both posts and followingPosts optimistically
     const updatePosts = (currentPosts: Post[]) =>
       currentPosts.map((p) =>
         p.id === postId
@@ -2018,7 +1940,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       if (error) {
         console.error('Unlike error:', error);
         toast.error('Failed to unlike post');
-        // Revert both
         const revertPosts = (currentPosts: Post[]) =>
           currentPosts.map((p) =>
             p.id === postId
@@ -2029,7 +1950,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         setFollowingPosts(revertPosts);
       }
     } else {
-      // Use upsert with onConflict to handle duplicate likes gracefully
       const { error } = await supabase
         .from('post_acknowledgments')
         .upsert(
@@ -2040,7 +1960,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       if (error) {
         console.error('Like error:', error);
         toast.error('Failed to like post');
-        // Revert both
         const revertPosts = (currentPosts: Post[]) =>
           currentPosts.map((p) =>
             p.id === postId
@@ -2050,16 +1969,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         setPosts(revertPosts);
         setFollowingPosts(revertPosts);
       } else {
-        // Award Nexa for giving a reaction
         awardNexa('give_reaction', { post_id: postId });
         
-        // Record interaction for personalized feed algorithm
         const post = posts.find(p => p.id === postId) || followingPosts.find(p => p.id === postId);
         if (post) {
           recordInteraction('like', post.content, post.author_id);
         }
         
-        // Award Nexa to post author for receiving a reaction
         if (post && post.author_id !== currentUserId) {
           fetch('https://rhnsjqqtdzlkvqazfcbg.supabase.co/functions/v1/award-xp', {
             method: 'POST',
@@ -2079,7 +1995,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     }
   }, [user, guestMode, navigate, posts, followingPosts, awardNexa, recordInteraction]);
 
-  // NEW: Delete Post Handler - Opens confirmation sheet
   const handleDeletePost = useCallback((postId: string) => {
     if (!user) {
       navigate('/auth');
@@ -2088,7 +2003,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     setDeletePostId(postId);
   }, [user, navigate]);
 
-  // Actual delete after confirmation
   const confirmDeletePost = useCallback(async () => {
     if (!deletePostId || !user) return;
     
@@ -2121,7 +2035,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     setDeletePostId(null);
   }, [deletePostId, user, posts]);
 
-  // NEW: Report Post Handler - Opens report sheet
   const handleReportPost = useCallback((postId: string) => {
       if (!user) {
         navigate('/auth');
@@ -2130,24 +2043,19 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       setReportPostId(postId);
   }, [user, navigate]);
 
-  // Actual report after reason selection
   const confirmReportPost = useCallback((reason: string) => {
       if (!reportPostId || !user) return;
       
       console.log(`User ${user.id} reported post ${reportPostId} for: ${reason}`);
       toast.success('Post reported. We will review this content.');
       setReportPostId(null);
-
-      // In a real app, you would insert a record into a 'post_reports' table here.
   }, [user]);
 
-  // Hide Post Handler - Removes post from local view
   const handleHidePost = useCallback((postId: string) => {
     setPosts(currentPosts => currentPosts.filter(p => p.id !== postId));
     setFollowingPosts(currentPosts => currentPosts.filter(p => p.id !== postId));
   }, []);
 
-  // Edit Post Handler - Opens edit modal
   const handleEditPost = useCallback((postId: string) => {
     if (!user) {
       navigate('/auth');
@@ -2159,19 +2067,15 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     }
   }, [user, navigate, posts, followingPosts]);
 
-  // After post is updated, refresh the posts
   const handlePostUpdated = useCallback(() => {
     fetchPosts();
     setEditPost(null);
   }, []);
 
-
-
   const fetchPosts = useCallback(async (page: number = 0, isInitial: boolean = false) => {
     if (isInitial) setLoading(true);
     else setLoadingMore(true);
     
-    // Set a timeout to prevent endless loading
     const loadingTimeout = setTimeout(() => {
       if (isInitial) setLoading(false);
       else setLoadingMore(false);
@@ -2179,12 +2083,10 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     }, 30000);
     
     try {
-      const POSTS_PER_PAGE = 25; // Posts to display per page
-      // For pagination, calculate proper offset based on displayed posts count
+      const POSTS_PER_PAGE = 25;
       const from = page * POSTS_PER_PAGE;
       const to = from + POSTS_PER_PAGE - 1;
 
-      // Fetch posts with optimized query - only essential fields, exclude blocked posts
       const { data: postData, error: postsError } = await supabase
         .from('posts')
         .select(`
@@ -2208,17 +2110,15 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       if (postsError) throw postsError;
       if (!postData) throw new Error('No posts data received');
 
-      // Check if there are more posts to load
       setHasMore(postData.length === POSTS_PER_PAGE);
 
-      // Fetch following posts efficiently - only if user is logged in
       let followingPostData: any[] = [];
       if (user) {
         const { data: followingData } = await supabase
           .from('follows')
           .select('following_id')
           .eq('follower_id', user.id)
-          .limit(100); // Limit to reduce data
+          .limit(100);
 
         if (followingData?.length > 0) {
           const followingIds = followingData.map((f) => f.following_id);
@@ -2241,16 +2141,14 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             .in('author_id', followingIds)
             .eq('is_blocked', false)
             .order('created_at', { ascending: false })
-            .limit(50); // Limit following posts
+            .limit(50);
           followingPostData = data || [];
         }
       }
 
       const postIds = postData.map((p) => p.id);
 
-      // Batch fetch all data in parallel
       const [businessData, affiliationData, repliesData, likedData, likeCountsData, quotedPostsData, developerData] = await Promise.all([
-        // Business profiles
         (async () => {
           const businessIds = Array.from(new Set([
             ...postData.map(p => p.profiles?.affiliated_business_id),
@@ -2269,7 +2167,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           return map;
         })(),
 
-        // Affiliation dates
         (async () => {
           const authorIds = Array.from(new Set([
             ...postData.filter(p => p.profiles?.is_affiliate).map(p => p.author_id),
@@ -2289,14 +2186,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           return map;
         })(),
 
-        // Replies (needed for preview + reply list)
         supabase
           .from('post_replies')
           .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason, verification_source)')
           .in('post_id', postIds)
           .order('created_at', { ascending: true }),
 
-        // Current user's likes only (for has_liked)
         user
           ? supabase
               .from('post_acknowledgments')
@@ -2305,10 +2200,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
               .eq('user_id', user.id)
           : Promise.resolve({ data: [] as any[] }),
 
-        // Aggregate like counts (prevents PostgREST row-limit truncation)
         supabase.rpc('get_post_like_counts', { post_ids: postIds }),
 
-        // Quoted posts
         (async () => {
           const quotedPostIds = Array.from(new Set([
             ...postData.map(p => p.quoted_post_id),
@@ -2332,7 +2225,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
           const map = new Map();
           (data || []).forEach((qp: any) => {
-            // Ensure profiles fallback for quoted posts
             if (!qp.profiles) {
               qp.profiles = { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, avatar_url: null };
             }
@@ -2341,7 +2233,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           return map;
         })(),
 
-        // Developer roles
         (async () => {
           const authorIds = Array.from(new Set([
             ...postData.map(p => p.author_id),
@@ -2359,7 +2250,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         })()
       ]);
 
-      // Process replies
       const repliesByPostId = new Map<string, Reply[]>();
       (repliesData.data || []).forEach((r: any) => {
         const reply = r as Reply;
@@ -2369,20 +2259,16 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         if (reply.profiles?.is_affiliate && reply.author_id) {
           reply.affiliation_date = affiliationData.get(reply.author_id);
         }
-        // Add developer status to reply
         reply.is_developer = developerData.has(reply.author_id);
         if (!repliesByPostId.has(r.post_id)) repliesByPostId.set(r.post_id, []);
         repliesByPostId.get(r.post_id)!.push(reply);
       });
 
-      // Like counts map
       const likeCountByPostId = new Map<string, number>();
       (likeCountsData.data || []).forEach((row: any) => likeCountByPostId.set(row.post_id, Number(row.like_count || 0)));
 
-      // Current user liked set
       const likedSet = new Set<string>((likedData as any)?.data?.map((r: any) => r.post_id) || []);
 
-      // Map posts - returns null for posts with deleted/invalid profiles
       const mapPost = (post: any): Post | null => {
         const replies = repliesByPostId.get(post.id) || [];
 
@@ -2390,13 +2276,11 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           post.profiles.affiliated_business = businessData.get(post.profiles.affiliated_business_id) || null;
         }
 
-        // Get quoted post data if exists and add developer status
         const quotedPost = post.quoted_post_id ? quotedPostsData.get(post.quoted_post_id) : null;
         if (quotedPost && quotedPost.author_id) {
           quotedPost.is_developer = developerData.has(quotedPost.author_id);
         }
 
-        // Skip posts without valid profiles (deleted accounts)
         if (!post.profiles) {
           return null;
         }
@@ -2415,13 +2299,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         } as Post;
       };
 
-      // Apply personalized feed algorithm for "For You" tab
-      // Following tab stays chronological for fresh content from followed users
-      // Filter out null posts (from deleted accounts)
       const mappedPosts = postData.map(mapPost).filter((p): p is Post => p !== null);
       const mappedFollowingPosts = followingPostData.map(mapPost).filter((p): p is Post => p !== null);
       
-      // Sort posts with personalization when logged in, random shuffle for guests
       const shuffleArray = <T,>(array: T[]): T[] => {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -2432,14 +2312,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       };
       const finalPosts = user ? sortPosts(mappedPosts) : shuffleArray(mappedPosts);
       
-      // Following posts stay chronological (already sorted by created_at desc)
       const finalFollowingPosts = mappedFollowingPosts;
       
       if (isInitial) {
         setPosts(finalPosts);
         setFollowingPosts(finalFollowingPosts);
       } else {
-        // For pagination, append only NEW posts (deduplicate by id)
         setPosts(prev => {
           const existingIds = new Set(prev.map(p => p.id));
           const newUniquePosts = finalPosts.filter(p => !existingIds.has(p.id));
@@ -2464,35 +2342,17 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       setLoading(false);
       setLoadingMore(false);
     }
-   }, [user, sortPosts]);
+  }, [user, sortPosts]);
 
-  // Manually load next page of posts (used by scroll + button)
   const handleLoadMore = useCallback(() => {
     if (loadingMore || !hasMore || loading) return;
     setLoadingMore(true);
     fetchPosts(currentPage + 1, false);
     setCurrentPage(prev => prev + 1);
   }, [loadingMore, hasMore, loading, currentPage, fetchPosts]);
-
-  // Infinite scroll with IntersectionObserver for smoother loading
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    const handleWindowScroll = () => {
-      sessionStorage.setItem('feedScrollPosition', window.scrollY.toString());
-    };
-
-    window.addEventListener('scroll', handleWindowScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleWindowScroll);
-  }, []);
-
-  // IntersectionObserver for infinite scroll - triggers load when sentinel is visible
-  useEffect(() => {
+          useEffect(() => {
     if (!loadMoreRef.current) return;
 
-    // On desktop, the scroll happens inside a parent <main> with overflow-y: auto,
-    // so we need to set the IntersectionObserver root to that scrollable container.
-    // On mobile, root: null (viewport) works fine.
     let root: Element | null = null;
     if (!isMobile) {
       let el: HTMLElement | null = loadMoreRef.current;
@@ -2526,19 +2386,18 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     return () => observer.disconnect();
   }, [handleLoadMore, loadingMore, hasMore, loading, isMobile]);
 
+  // ────────────────────────────────────────────────────────────────
+  // Real-time subscriptions
+  // ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const postsChannel = supabase
       .channel('feed-updates')
-      // Real-time auto-append for new posts when online
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'posts' },
         async (payload) => {
-          // Skip if this is current user's post (will be added via custom event)
           if (payload.new.author_id === user?.id) return;
-          
-          // For other users' posts, just increment the new posts count
           setNewPostsCount(prev => prev + 1);
         }
       )
@@ -2546,7 +2405,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'posts' },
         async (payload) => {
-          // Fetch updated post data
           const { data: updatedPost, error } = await supabase
             .from('posts')
             .select(`
@@ -2559,7 +2417,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             .single();
 
           if (!error && updatedPost) {
-            // Update post in both feeds while preserving replies and likes
             const updatePost = (currentPosts: Post[]): Post[] =>
               currentPosts.map((p) =>
                 p.id === payload.new.id
@@ -2569,7 +2426,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                         ...updatedPost.profiles,
                         verification_source: updatedPost.profiles.verification_source as 'manual' | 'premium' | null
                       } : p.profiles,
-                      replies: p.replies, // preserve existing replies
+                      replies: p.replies,
                       reply_count: p.reply_count,
                       like_count: p.like_count,
                       has_liked: p.has_liked,
@@ -2586,7 +2443,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'posts' },
         (payload) => {
-          // Remove deleted post from both feeds
           const removePost = (currentPosts: Post[]) =>
             currentPosts.filter((p) => p.id !== payload.old.id);
           
@@ -2626,7 +2482,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             addReply(payload.new.post_id, newReply);
 
             const mentionsAfuAi = /@afuai/i.test(payload.new.content);
-            const AI_FEATURES_COMING_SOON = true; // Temporarily disabled
+            const AI_FEATURES_COMING_SOON = true;
             if (mentionsAfuAi && !AI_FEATURES_COMING_SOON) {
               const { data: postData } = await supabase
                 .from('posts')
@@ -2643,7 +2499,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                       'Content-Type': 'application/json',
                       'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
                     },
-                     body: JSON.stringify({
+                    body: JSON.stringify({
                       postId: payload.new.post_id,
                       replyContent: payload.new.content,
                       originalPostContent: postData?.content || '',
@@ -2662,7 +2518,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'post_replies' },
         (payload) => {
-          // Update reply (useful for pinning/unpinning)
           const updateReply = (currentPosts: Post[]) =>
             currentPosts.map((p) => {
               if (p.id === payload.new.post_id) {
@@ -2686,7 +2541,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'post_replies' },
         (payload) => {
-          // Remove deleted reply
           const removeReply = (currentPosts: Post[]) =>
             currentPosts.map((p) => {
               if (p.id === payload.old.post_id) {
@@ -2711,17 +2565,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'post_acknowledgments' },
         (payload) => {
-          // Skip if this is current user's action (already updated optimistically)
           if (payload.new.user_id === user?.id) return;
           
-          // Update like count for other users' actions
           const updateLike = (currentPosts: Post[]) =>
             currentPosts.map((p) =>
               p.id === payload.new.post_id
-                ? {
-                    ...p,
-                    like_count: p.like_count + 1,
-                  }
+                ? { ...p, like_count: p.like_count + 1 }
                 : p
             );
           
@@ -2733,17 +2582,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'post_acknowledgments' },
         (payload) => {
-          // Skip if this is current user's action (already updated optimistically)
           if (payload.old.user_id === user?.id) return;
           
-          // Update like count for other users' actions
           const updateUnlike = (currentPosts: Post[]) =>
             currentPosts.map((p) =>
               p.id === payload.old.post_id
-                ? {
-                    ...p,
-                    like_count: Math.max(0, p.like_count - 1),
-                  }
+                ? { ...p, like_count: Math.max(0, p.like_count - 1) }
                 : p
             );
           
@@ -2753,17 +2597,14 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       )
       .subscribe();
 
-    // Subscribe to profile updates
     const profilesChannel = supabase
       .channel('profiles-updates')
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles' },
         (payload) => {
-          // Update profile info in all posts and replies by this user
           const updateProfile = (currentPosts: Post[]) =>
             currentPosts.map((p) => {
-              // Update post author profile
               if (p.author_id === payload.new.id) {
                 return {
                   ...p,
@@ -2772,8 +2613,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                     display_name: payload.new.display_name || p.profiles.display_name,
                     handle: payload.new.handle || p.profiles.handle,
                     avatar_url: payload.new.avatar_url,
-                    banner_url: payload.new.banner_url,
-                    bio: payload.new.bio,
                     is_verified: payload.new.is_verified ?? p.profiles.is_verified,
                     is_organization_verified: payload.new.is_organization_verified ?? p.profiles.is_organization_verified,
                     is_business_mode: payload.new.is_business_mode ?? p.profiles.is_business_mode,
@@ -2782,7 +2621,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                 };
               }
               
-              // Update reply author profiles
               if (p.replies && p.replies.length > 0) {
                 const updatedReplies = p.replies.map((r) => {
                   if (r.author_id === payload.new.id) {
@@ -2812,7 +2650,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           setPosts(updateProfile);
           setFollowingPosts(updateProfile);
           
-          // Update current user profile if it's their own update
           if (user && payload.new.id === user.id) {
             setUserProfile({
               display_name: payload.new.display_name,
@@ -2830,12 +2667,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       supabase.removeChannel(profilesChannel);
     };
   }, [user, addReply]);
-  
 
-  // Listen for feed refresh order event (when clicking home button while on home)
+  // ────────────────────────────────────────────────────────────────
+  // Refresh & pull-to-refresh logic
+  // ────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     const handleRefreshFeedOrder = () => {
-      // Re-learn interests and refetch with new personalized order
       learnUserInterests();
       setCurrentPage(0);
       setHasMore(true);
@@ -2849,17 +2687,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     };
   }, [fetchPosts, learnUserInterests]);
 
-  // Pull to refresh - enhanced hook
   const handlePullRefresh = useCallback(async () => {
-    // Re-learn user interests for personalized feed
     learnUserInterests();
     setCurrentPage(0);
     setHasMore(true);
-    // Don't clear posts - keep content visible during refresh for smooth UX
     await fetchPosts(0, true);
   }, [fetchPosts, learnUserInterests]);
 
-  // Container ref for scoped pull-to-refresh (prevents full page refresh)
   const feedContainerRef = useRef<HTMLDivElement>(null);
 
   const { 
@@ -2875,25 +2709,22 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     disabled: false,
   });
 
-  // Listen for feed refresh event
   useEffect(() => {
-    const handleRefresh = () => {
-      manualRefresh();
-    };
+    const handleRefresh = () => manualRefresh();
     window.addEventListener('feed-refresh', handleRefresh);
     return () => window.removeEventListener('feed-refresh', handleRefresh);
   }, [manualRefresh]);
 
+  // ────────────────────────────────────────────────────────────────
+  // Premium button
+  // ────────────────────────────────────────────────────────────────
+
   const premiumButton = useMemo(() => {
-    // Show stable placeholder during loading to prevent flashing
     if (premiumLoading) {
-      return (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted" />
-      );
+      return <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted" />;
     }
     
     if (isPremium && expiresAt) {
-      // For subscribers: show subtle verified/premium indicator
       const daysLeft = Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
       return (
         <Link to="/premium" className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10">
@@ -2903,7 +2734,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       );
     }
     
-    // For non-subscribers: prominent upgrade button
     return (
       <Link 
         to="/premium" 
@@ -2915,6 +2745,10 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     );
   }, [isPremium, premiumLoading, expiresAt]);
 
+  // ────────────────────────────────────────────────────────────────
+  // Loading / empty state fallback
+  // ────────────────────────────────────────────────────────────────
+
   if (loading && posts.length === 0 && followingPosts.length === 0) {
     return (
       <div className="max-w-4xl mx-auto pb-20 pt-28">
@@ -2925,16 +2759,20 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
   const currentPosts = activeTab === 'foryou' ? posts : followingPosts;
 
+  // ────────────────────────────────────────────────────────────────
+  // MAIN RETURN – Feed UI
+  // ────────────────────────────────────────────────────────────────
+
   return (
     <div 
       ref={feedContainerRef} 
-      className="max-w-4xl mx-auto pb-20 scroll-smooth"
+      className="max-w-4xl mx-auto pb-20 scroll-smooth h-full overflow-y-auto"
       style={{
         WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'contain',
+        overscrollBehaviorY: 'contain',
+        touchAction: 'pan-y pinch-zoom',
       }}
     >
-      {/* Pull to refresh indicator */}
       <PullToRefreshIndicator 
         pullDistance={pullDistance} 
         isRefreshing={isRefreshing} 
@@ -2949,7 +2787,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       />
       
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'foryou' | 'following')} className="w-full">
-        {/* Header with Tabs - fixed on mobile, sticky on desktop */}
         <div className={cn(
           "z-40 bg-background/95 backdrop-blur-md border-b border-border/30 transition-transform duration-300",
           isMobile 
@@ -2961,7 +2798,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             : "sticky top-0"
         )}>
           <div className={cn(isMobile && "max-w-4xl mx-auto")}>
-            {/* Mobile-only: avatar + brand row */}
             {isMobile && (
               <div className="flex items-center justify-between px-4 py-3 relative">
                 {user ? (
@@ -2982,7 +2818,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                     Sign In
                   </Link>
                 )}
-                {/* Centered Brand Name */}
                 <span className="text-xl font-bold text-foreground absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
                   AfuChat
                 </span>
@@ -3009,21 +2844,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           </div>
         </div>
 
-        {/* Spacer for fixed header - mobile only */}
-        {isMobile && (
-          <div className="h-[108px]" />
-        )}
+        {isMobile && <div className="h-[108px]" />}
 
-        {/* Promotional Banners */}
         <UnclaimedRedEnvelopeBanner />
-
-        {/* Subscription Expiry Reminder Banner */}
         {user && <SubscriptionExpiryBanner daysThreshold={7} />}
 
-
-        {/* Content area */}
-        <TabsContent value={activeTab} className="m-0" ref={feedRef} forceMount>
-          {/* Show login prompt for Following tab when not authenticated */}
+        <TabsContent value={activeTab} className="m-0" forceMount>
           {activeTab === 'following' && !user ? (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
               <Users className="h-16 w-16 text-muted-foreground/50 mb-4" />
@@ -3048,49 +2874,47 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                 </div>
               ) : (
                 <>
-                    <AnimatePresence mode="popLayout">
-                      {currentPosts.filter(post => post.profiles).map((post, index) => (
-                        <motion.div 
-                          key={post.id}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.98 }}
-                          transition={{ 
-                            duration: 0.25, 
-                            delay: index < 5 ? index * 0.03 : 0,
-                            ease: [0.25, 0.1, 0.25, 1]
-                          }}
-                          layout="position"
-                          layoutId={post.id}
-                          style={{ 
-                            willChange: 'transform, opacity',
-                            contain: 'layout style paint',
-                          }}
-                        >
-                          <PostCard
-                            post={post}
-                            addReply={addReply}
-                            user={user as AuthUser | null}
-                            navigate={navigate}
-                            onAcknowledge={handleAcknowledge}
-                            onDeletePost={handleDeletePost}
-                            onReportPost={handleReportPost}
-                            onEditPost={handleEditPost}
-                            onQuotePost={handleQuotePost}
-                            onHidePost={handleHidePost}
-                            userProfile={userProfile}
-                            expandedPosts={expandedPosts}
-                            setExpandedPosts={setExpandedPosts}
-                            guestMode={guestMode}
-                          />
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  
-                  {/* Infinite scroll sentinel */}
+                  <AnimatePresence mode="popLayout">
+                    {currentPosts.filter(post => post.profiles).map((post, index) => (
+                      <motion.div 
+                        key={post.id}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ 
+                          duration: 0.25, 
+                          delay: index < 5 ? index * 0.03 : 0,
+                          ease: [0.25, 0.1, 0.25, 1]
+                        }}
+                        layout="position"
+                        layoutId={post.id}
+                        style={{ 
+                          willChange: 'transform, opacity',
+                          contain: 'layout style paint',
+                        }}
+                      >
+                        <PostCard
+                          post={post}
+                          addReply={addReply}
+                          user={user as AuthUser | null}
+                          navigate={navigate}
+                          onAcknowledge={handleAcknowledge}
+                          onDeletePost={handleDeletePost}
+                          onReportPost={handleReportPost}
+                          onEditPost={handleEditPost}
+                          onQuotePost={handleQuotePost}
+                          onHidePost={handleHidePost}
+                          userProfile={userProfile}
+                          expandedPosts={expandedPosts}
+                          setExpandedPosts={setExpandedPosts}
+                          guestMode={guestMode}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+
                   <div ref={loadMoreRef} className="h-10" />
 
-                  {/* Loading more indicator - inline smooth loader */}
                   {loadingMore && (
                     <div className="py-6 flex flex-col items-center gap-2">
                       <div className="flex items-center gap-2">
@@ -3102,7 +2926,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                     </div>
                   )}
 
-                  {/* End of feed indicator */}
                   {!hasMore && currentPosts.length > 0 && !loadingMore && (
                     <div className="py-8 text-center">
                       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50">
@@ -3118,8 +2941,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           )}
         </TabsContent>
       </Tabs>
-      
-      {/* Delete Confirmation Sheet */}
+
+      {/* Bottom sheets & modals */}
       <DeletePostSheet
         isOpen={!!deletePostId}
         onClose={() => setDeletePostId(null)}
@@ -3127,14 +2950,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         isDeleting={isDeleting}
       />
       
-      {/* Report Post Sheet */}
       <ReportPostSheet
         isOpen={!!reportPostId}
         onClose={() => setReportPostId(null)}
         onReport={confirmReportPost}
       />
 
-      {/* Edit Post Modal */}
       {editPost && (
         <EditPostModal
           isOpen={!!editPost}
@@ -3144,7 +2965,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         />
       )}
 
-      {/* Quote Post Modal */}
       {quotePost && (
         <NewPostModal
           isOpen={!!quotePost}
