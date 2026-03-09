@@ -29,24 +29,24 @@ const settingsSections = [
   {
     group: 'Account',
     items: [
-      { value: 'account' as SettingsTab, label: 'Account', description: 'Profile, language & display', icon: User, color: 'bg-primary' },
-      { value: 'appearance' as SettingsTab, label: 'Appearance', description: 'Theme & layout', icon: Palette, color: 'bg-primary/80' },
+      { value: 'account' as SettingsTab, label: 'Account', description: 'Profile, language & display', icon: User, color: 'bg-blue-500' },
+      { value: 'appearance' as SettingsTab, label: 'Appearance', description: 'Theme & layout', icon: Palette, color: 'bg-purple-500' },
     ]
   },
   {
     group: 'Privacy & Security',
     items: [
-      { value: 'security' as SettingsTab, label: 'Security & Privacy', description: 'Privacy controls', icon: Shield, color: 'bg-primary' },
-      { value: '2fa' as SettingsTab, label: 'Two-Factor Auth', description: 'Extra security layer', icon: Key, color: 'bg-primary/80' },
-      { value: 'blocked' as SettingsTab, label: 'Blocked Users', description: 'Manage blocked accounts', icon: UserX, color: 'bg-destructive' },
+      { value: 'security' as SettingsTab, label: 'Security & Privacy', description: 'Privacy controls', icon: Shield, color: 'bg-green-500' },
+      { value: '2fa' as SettingsTab, label: 'Two-Factor Auth', description: 'Extra security layer', icon: Key, color: 'bg-amber-500' },
+      { value: 'blocked' as SettingsTab, label: 'Blocked Users', description: 'Manage blocked accounts', icon: UserX, color: 'bg-red-500' },
     ]
   },
   {
     group: 'Activity & Data',
     items: [
-      { value: 'notifications' as SettingsTab, label: 'Notifications', description: 'Push, email & quiet hours', icon: Bell, color: 'bg-primary' },
-      { value: 'activity' as SettingsTab, label: 'Activity Log', description: 'Recent activity & earnings', icon: Activity, color: 'bg-primary/80' },
-      { value: 'data' as SettingsTab, label: 'Data & Privacy', description: 'Export & account deletion', icon: Database, color: 'bg-primary' },
+      { value: 'notifications' as SettingsTab, label: 'Notifications', description: 'Push, email & quiet hours', icon: Bell, color: 'bg-pink-500' },
+      { value: 'activity' as SettingsTab, label: 'Activity Log', description: 'Recent activity & earnings', icon: Activity, color: 'bg-cyan-500' },
+      { value: 'data' as SettingsTab, label: 'Data & Privacy', description: 'Export & account deletion', icon: Database, color: 'bg-orange-500' },
     ]
   }
 ];
@@ -150,7 +150,7 @@ export const SettingsSheet = () => {
                           )}
                         >
                           <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0", item.color)}>
-                            <Icon className="h-3.5 w-3.5 text-primary-foreground" />
+                            <Icon className="h-3.5 w-3.5 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm">{item.label}</p>
@@ -178,7 +178,7 @@ export const SettingsSheet = () => {
                 </Button>
                 {activeItem && (
                   <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center", activeItem.color)}>
-                    <activeItem.icon className="h-3.5 w-3.5 text-primary-foreground" />
+                    <activeItem.icon className="h-3.5 w-3.5 text-white" />
                   </div>
                 )}
                 <h2 className="text-lg font-bold">{activeContent?.title}</h2>

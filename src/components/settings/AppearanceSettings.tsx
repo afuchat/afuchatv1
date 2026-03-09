@@ -8,9 +8,9 @@ export const AppearanceSettings = () => {
   const { theme, setTheme } = useTheme();
 
   const themeOptions = [
-    { value: 'light' as const, label: 'Light', icon: Sun, description: 'Bright and clean', color: 'bg-primary' },
-    { value: 'dark' as const, label: 'Dark', icon: Moon, description: 'Easy on the eyes', color: 'bg-primary/80' },
-    { value: 'system' as const, label: 'System', icon: Monitor, description: 'Follows device', color: 'bg-primary' },
+    { value: 'light' as const, label: 'Light', icon: Sun, description: 'Bright and clean', color: 'bg-amber-500' },
+    { value: 'dark' as const, label: 'Dark', icon: Moon, description: 'Easy on the eyes', color: 'bg-slate-700' },
+    { value: 'system' as const, label: 'System', icon: Monitor, description: 'Follows device', color: 'bg-blue-500' },
   ];
 
   return (
@@ -36,7 +36,7 @@ export const AppearanceSettings = () => {
                     "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
                     isActive ? option.color : "bg-muted"
                   )}>
-                    <Icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
+                    <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-muted-foreground")} />
                   </div>
                   <div className="text-center">
                     <p className={cn("text-sm font-semibold", isActive && "text-primary")}>{option.label}</p>
@@ -56,8 +56,8 @@ export const AppearanceSettings = () => {
         <div className="px-4 py-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-7 w-7 rounded-lg bg-primary/80 flex items-center justify-center">
-                <Type className="h-3.5 w-3.5 text-primary-foreground" />
+              <div className="h-7 w-7 rounded-lg bg-purple-500 flex items-center justify-center">
+                <Type className="h-3.5 w-3.5 text-white" />
               </div>
               <div>
                 <p className="font-semibold text-sm">Font Size</p>
@@ -77,8 +77,8 @@ export const AppearanceSettings = () => {
         <div className="px-4 py-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
-                <Layout className="h-3.5 w-3.5 text-primary-foreground" />
+              <div className="h-7 w-7 rounded-lg bg-cyan-500 flex items-center justify-center">
+                <Layout className="h-3.5 w-3.5 text-white" />
               </div>
               <div>
                 <p className="font-semibold text-sm">Compact Mode</p>
