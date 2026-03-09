@@ -53,6 +53,8 @@ const EditProfile = () => {
   const { checkProfileCompletion } = useNexa();
   const { isDeveloper } = useDeveloperStatus();
 
+  const [isTelegram, setIsTelegram] = useState(false);
+
   const [profile, setProfile] = useState<EditProfileForm>({
     display_name: '',
     handle: '',
@@ -84,6 +86,15 @@ const EditProfile = () => {
   const [usernameMessage, setUsernameMessage] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [originalHandle, setOriginalHandle] = useState('');
+
+  // Detect Telegram Mini App environment
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      setIsTelegram(true);
+      // Optional: signal that the Mini App is ready
+      window.Telegram.WebApp.ready?.();
+    }
+  }, []);
 
   useEffect(() => {
     if (isLoadingAuth) return;
@@ -413,7 +424,12 @@ const EditProfile = () => {
 
   if (isLoadingAuth || loadingProfile) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-background pt-[var(--tg-safe-area-inset-top,44px)]">
+      <div 
+        className={cn(
+          "fixed inset-0 flex flex-col bg-background",
+          isTelegram && "pt-[var(--tg-safe-area-inset-top,48px)]"
+        )}
+      >
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
           <div className="flex items-center justify-between px-4 h-14">
             <Skeleton className="h-8 w-8 rounded-full" />
@@ -437,7 +453,12 @@ const EditProfile = () => {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background pt-[var(--tg-safe-area-inset-top,44px)]">
+    <div 
+      className={cn(
+        "fixed inset-0 flex flex-col bg-background",
+        isTelegram && "pt-[var(--tg-safe-area-inset-top,48px)]"
+      )}
+    >
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 h-14">
