@@ -282,12 +282,12 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     );
   }
 
-  // All other pages (including Premium page)
+  // All other pages (including Premium, Edit Profile, etc.)
   return (
     <div 
       className={cn(
         "fixed inset-0 flex flex-col bg-background",
-        isTelegram && "pt-[var(--tg-safe-area-inset-top,48px)]"  // Safe area applied to root → header starts below status bar
+        isTelegram && "pt-[var(--tg-safe-area-inset-top,64px)]"  // Increased safe area size
       )}
     >
       {/* Optional: Signal ready to Telegram */}
@@ -299,11 +299,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
         />
       )}
 
-      {/* Header – sticky right below safe area */}
-      {/* If you have a global header component, put it here instead */}
-      {/* For pages without custom header, you can leave this empty or add a placeholder */}
-
-      {/* Scrollable main content */}
+      {/* Scrollable main content – this is the only scrolling element */}
       <main 
         className={cn(
           "flex-1 overflow-y-auto -webkit-overflow-scrolling-touch overscroll-y-contain",
