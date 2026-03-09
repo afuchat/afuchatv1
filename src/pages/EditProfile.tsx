@@ -223,7 +223,7 @@ const EditProfile = () => {
           setPhoneError('');
         }
       } catch {
-        // Ignore errors
+        // Ignore
       }
     }, 500);
 
@@ -288,7 +288,7 @@ const EditProfile = () => {
       return;
     }
 
-    if (profile.bio?.trim()) {
+    if (profile.bio) {
       try {
         bioSchema.parse(profile.bio);
       } catch (e: any) {
@@ -349,7 +349,7 @@ const EditProfile = () => {
       navigate(-1);
     } catch (error: any) {
       console.error('Update error:', error);
-      if (error.code === '23505' || error.message?.includes('already taken')) {
+      if (error.code === '23505' || error.message.includes('already taken')) {
         toast.error('Username is already taken');
       } else {
         toast.error(`Failed to update profile: ${error.message}`);
@@ -413,7 +413,7 @@ const EditProfile = () => {
 
   if (isLoadingAuth || loadingProfile) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-background">
+      <div className="fixed inset-0 flex flex-col bg-background pt-[var(--tg-safe-area-inset-top,44px)]">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
           <div className="flex items-center justify-between px-4 h-14">
             <Skeleton className="h-8 w-8 rounded-full" />
@@ -437,7 +437,7 @@ const EditProfile = () => {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
+    <div className="fixed inset-0 flex flex-col bg-background pt-[var(--tg-safe-area-inset-top,44px)]">
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 h-14">
@@ -456,7 +456,7 @@ const EditProfile = () => {
       </div>
 
       {/* Scrollable content */}
-      <main className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch overscroll-y-contain pb-20">
+      <main className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch overscroll-y-contain pb-[calc(var(--tg-safe-area-inset-bottom,0px)+1.5rem)]">
         {/* Avatar Section */}
         <div className="flex flex-col items-center pt-6 pb-4">
           <div className="relative">
