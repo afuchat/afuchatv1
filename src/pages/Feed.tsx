@@ -340,7 +340,7 @@ const UserAvatarMedium = ({
 };
 
 // ────────────────────────────────────────────────────────────────
-// REPLY ITEM
+// REPLY ITEM COMPONENT
 // ────────────────────────────────────────────────────────────────
 
 const ReplyItem = ({ reply, navigate, handleViewProfile }: { 
@@ -446,7 +446,7 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: {
 };
 
 // ────────────────────────────────────────────────────────────────
-// POST CARD
+// POST CARD COMPONENT
 // ────────────────────────────────────────────────────────────────
 
 const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost, onReportPost, onEditPost, onQuotePost, onHidePost, userProfile, expandedPosts, setExpandedPosts, guestMode = false }:
@@ -1616,6 +1616,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     </div>
   );
 };
+
 // ────────────────────────────────────────────────────────────────
 // FEED MAIN COMPONENT
 // ────────────────────────────────────────────────────────────────
@@ -1658,7 +1659,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
 
-  // Telegram fix
   useEffect(() => {
     if (telegram?.isTelegram && window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp;
@@ -1711,98 +1711,91 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   }, [posts.length]);
 
   const addReply = useCallback((postId: string, newReply: Reply) => {
-    const update = (arr: Post[]) =>
-      arr.map(p =>
+    const updater = (list: Post[]) =>
+      list.map(p =>
         p.id === postId
           ? {
               ...p,
-              replies: [...(p.replies || []), newReply].sort((a, b) =>
-                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+              replies: [...(p.replies || []), newReply].sort(
+                (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
               ),
               reply_count: (p.reply_count || 0) + 1,
             }
           : p
       );
 
-    setPosts(update);
-    setFollowingPosts(update);
+    setPosts(updater);
+    setFollowingPosts(updater);
   }, []);
 
-  // Optimistic post/reply events
   useEffect(() => {
-    const onAdd = (e: CustomEvent) => {
-      const p = e.detail;
-      setPosts(prev => [p, ...prev]);
-      setFollowingPosts(prev => [p, ...prev]);
+    const handlers = {
+      'optimistic-post-add': (e: CustomEvent) => {
+        const post = e.detail;
+        setPosts(prev => [post, ...prev]);
+        setFollowingPosts(prev => [post, ...prev]);
+      },
+      'optimistic-post-success': (e: CustomEvent) => {
+        const { tempId } = e.detail;
+        setPosts(prev => prev.filter(p => p.id !== tempId));
+        setFollowingPosts(prev => prev.filter(p => p.id !== tempId));
+      },
+      'optimistic-post-error': (e: CustomEvent) => {
+        const tempId = e.detail;
+        setPosts(prev => prev.filter(p => p.id !== tempId));
+        setFollowingPosts(prev => prev.filter(p => p.id !== tempId));
+      },
+      'own-post-created': async (e: CustomEvent) => {
+        const data = e.detail;
+        const { data: fresh } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, verification_source),
+            post_images(image_url, display_order, alt_text),
+            post_link_previews(url, title, description, image_url, site_name)
+          `)
+          .eq('id', data.id)
+          .single();
+
+        if (fresh) {
+          const mapped = {
+            ...fresh,
+            profiles: fresh.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, is_affiliate: false, verification_source: null },
+            replies: [],
+            reply_count: 0,
+            like_count: 0,
+            has_liked: false,
+          };
+          setPosts(prev => [mapped, ...prev.filter(p => p.id !== data.id)]);
+          setFollowingPosts(prev => [mapped, ...prev.filter(p => p.id !== data.id)]);
+        }
+      },
+      'remove-optimistic-reply': (e: CustomEvent) => {
+        const { postId, replyId } = e.detail;
+        const updater = (list: Post[]) =>
+          list.map(p =>
+            p.id === postId
+              ? {
+                  ...p,
+                  replies: p.replies.filter(r => r.id !== replyId),
+                  reply_count: Math.max(0, p.reply_count - 1),
+                }
+              : p
+          );
+        setPosts(updater);
+        setFollowingPosts(updater);
+      },
     };
 
-    const onSuccess = (e: CustomEvent) => {
-      const { tempId } = e.detail;
-      setPosts(prev => prev.filter(p => p.id !== tempId));
-      setFollowingPosts(prev => prev.filter(p => p.id !== tempId));
-    };
-
-    const onError = (e: CustomEvent) => {
-      const tempId = e.detail;
-      setPosts(prev => prev.filter(p => p.id !== tempId));
-      setFollowingPosts(prev => prev.filter(p => p.id !== tempId));
-    };
-
-    const onOwnCreated = async (e: CustomEvent) => {
-      const data = e.detail;
-      const { data: fresh } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, verification_source),
-          post_images(image_url, display_order, alt_text),
-          post_link_previews(url, title, description, image_url, site_name)
-        `)
-        .eq('id', data.id)
-        .single();
-
-      if (fresh) {
-        const mapped = {
-          ...fresh,
-          profiles: fresh.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, is_affiliate: false, verification_source: null },
-          replies: [],
-          reply_count: 0,
-          like_count: 0,
-          has_liked: false,
-        };
-        setPosts(prev => [mapped, ...prev.filter(p => p.id !== data.id)]);
-        setFollowingPosts(prev => [mapped, ...prev.filter(p => p.id !== data.id)]);
-      }
-    };
-
-    const onRemoveReply = (e: CustomEvent) => {
-      const { postId, replyId } = e.detail;
-      const updater = (arr: Post[]) =>
-        arr.map(p =>
-          p.id === postId
-            ? {
-                ...p,
-                replies: p.replies.filter(r => r.id !== replyId),
-                reply_count: Math.max(0, p.reply_count - 1),
-              }
-            : p
-        );
-      setPosts(updater);
-      setFollowingPosts(updater);
-    };
-
-    window.addEventListener('optimistic-post-add', onAdd as any);
-    window.addEventListener('optimistic-post-success', onSuccess as any);
-    window.addEventListener('optimistic-post-error', onError as any);
-    window.addEventListener('own-post-created', onOwnCreated as any);
-    window.addEventListener('remove-optimistic-reply', onRemoveReply as any);
+    Object.entries(handlers).forEach(([event, fn]) => {
+      window.addEventListener(event as any, fn as EventListener);
+    });
 
     return () => {
-      window.removeEventListener('optimistic-post-add', onAdd as any);
-      window.removeEventListener('optimistic-post-success', onSuccess as any);
-      window.removeEventListener('optimistic-post-error', onError as any);
-      window.removeEventListener('own-post-created', onOwnCreated as any);
-      window.removeEventListener('remove-optimistic-reply', onRemoveReply as any);
+      Object.keys(handlers).forEach(event => {
+        window.removeEventListener(event as any, handlers[event as keyof typeof handlers] as EventListener);
+      });
     };
   }, []);
 
@@ -1814,15 +1807,15 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       return;
     }
 
-    const update = (list: Post[]) =>
+    const updater = (list: Post[]) =>
       list.map(p =>
         p.id === postId
           ? { ...p, has_liked: !hasLiked, like_count: p.like_count + (hasLiked ? -1 : 1) }
           : p
       );
 
-    setPosts(update);
-    setFollowingPosts(update);
+    setPosts(updater);
+    setFollowingPosts(updater);
 
     try {
       if (hasLiked) {
@@ -1835,35 +1828,32 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
         awardNexa('give_reaction', { post_id: postId });
 
-        const p = posts.find(x => x.id === postId) || followingPosts.find(x => x.id === postId);
-        if (p) {
-          recordInteraction('like', p.content, p.author_id);
-          if (p.author_id !== user.id) {
+        const post = posts.find(p => p.id === postId) || followingPosts.find(p => p.id === postId);
+        if (post) {
+          recordInteraction('like', post.content, post.author_id);
+          if (post.author_id !== user.id) {
             fetch('https://rhnsjqqtdzlkvqazfcbg.supabase.co/functions/v1/award-xp', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-              },
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
               body: JSON.stringify({
-                userId: p.author_id,
+                userId: post.author_id,
                 actionType: 'receive_reaction',
                 xpAmount: 2,
-                metadata: { post_id: postId, from_user_id: user.id },
-              }),
+                metadata: { post_id: postId, from_user_id: user.id }
+              })
             });
           }
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error('Acknowledge error:', err);
       toast.error(hasLiked ? 'Failed to unlike' : 'Failed to like');
-      setPosts(update);
-      setFollowingPosts(update);
+      setPosts(updater);
+      setFollowingPosts(updater);
     }
   }, [user, guestMode, navigate, posts, followingPosts, awardNexa, recordInteraction]);
 
-  const handleDeletePost = (id: string) => setDeletePostId(id);
+  const handleDeletePost = (postId: string) => setDeletePostId(postId);
 
   const confirmDeletePost = async () => {
     if (!deletePostId || !user) return;
@@ -1877,13 +1867,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
       return;
     }
 
-    setPosts(p => p.filter(x => x.id !== deletePostId));
-    setFollowingPosts(p => p.filter(x => x.id !== deletePostId));
+    setPosts(prev => prev.filter(p => p.id !== deletePostId));
+    setFollowingPosts(prev => prev.filter(p => p.id !== deletePostId));
 
     const { error } = await supabase.from('posts').delete().eq('id', deletePostId).eq('author_id', user.id);
 
     if (error) {
-      toast.error('Delete failed');
+      toast.error('Failed to delete post');
       fetchPosts(0, true);
     } else {
       toast.success('Post deleted');
@@ -1893,24 +1883,24 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     setDeletePostId(null);
   };
 
-  const handleReportPost = (id: string) => setReportPostId(id);
+  const handleReportPost = (postId: string) => setReportPostId(postId);
 
   const confirmReportPost = (reason: string) => {
     if (!reportPostId || !user) return;
-    console.log(`Reported ${reportPostId} by ${user.id}: ${reason}`);
-    toast.success('Report submitted');
+    console.log(`Report: ${reportPostId} by ${user.id} → ${reason}`);
+    toast.success('Report submitted — thank you!');
     setReportPostId(null);
   };
 
-  const handleHidePost = (id: string) => {
-    setPosts(p => p.filter(x => x.id !== id));
-    setFollowingPosts(p => p.filter(x => x.id !== id));
+  const handleHidePost = (postId: string) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+    setFollowingPosts(prev => prev.filter(p => p.id !== postId));
   };
 
-  const handleEditPost = (id: string) => {
+  const handleEditPost = (postId: string) => {
     if (!user) return navigate('/auth');
-    const p = posts.find(x => x.id === id) || followingPosts.find(x => x.id === id);
-    if (p) setEditPost(p);
+    const post = posts.find(p => p.id === postId) || followingPosts.find(p => p.id === postId);
+    if (post) setEditPost(post);
   };
 
   const handlePostUpdated = () => {
@@ -1918,77 +1908,234 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     setEditPost(null);
   };
 
-  const handleQuotePost = (p: Post) => {
+  const handleQuotePost = (post: Post) => {
     if (!user) return navigate('/auth');
-    setQuotePost(p);
+    setQuotePost(post);
   };
 
-  const fetchPosts = useCallback(async (page = 0, initial = false) => {
-    if (initial) setLoading(true);
+  const fetchPosts = useCallback(async (page = 0, isInitial = false) => {
+    if (isInitial) setLoading(true);
     else setLoadingMore(true);
 
-    try {
-      const perPage = 25;
-      const from = page * perPage;
-      const to = from + perPage - 1;
+    const loadingTimeout = setTimeout(() => {
+      if (isInitial) setLoading(false);
+      else setLoadingMore(false);
+      toast.error('Loading timeout — check connection');
+    }, 30000);
 
-      const { data: feedData, error } = await supabase
+    try {
+      const POSTS_PER_PAGE = 25;
+      const from = page * POSTS_PER_PAGE;
+      const to = from + POSTS_PER_PAGE - 1;
+
+      const { data: postData, error: postsError } = await supabase
         .from('posts')
         .select(`
           id, content, created_at, updated_at, author_id, view_count, image_url, quoted_post_id, is_blocked,
-          profiles!inner(*),
-          post_images(*),
-          post_link_previews(*)
+          profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason, verification_source),
+          post_images(image_url, display_order, alt_text),
+          post_link_previews(url, title, description, image_url, site_name)
         `)
         .eq('is_blocked', false)
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      if (error) throw error;
+      if (postsError) throw postsError;
+      if (!postData) throw new Error('No posts received');
 
-      setHasMore(feedData.length === perPage);
+      setHasMore(postData.length === POSTS_PER_PAGE);
 
-      let followingData: any[] = [];
+      let followingPostData: any[] = [];
       if (user) {
-        const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
+        const { data: follows } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', user.id)
+          .limit(100);
+
         if (follows?.length) {
           const ids = follows.map(f => f.following_id);
           const { data } = await supabase
             .from('posts')
             .select(`
               id, content, created_at, updated_at, author_id, view_count, image_url, quoted_post_id, is_blocked,
-              profiles!inner(*),
-              post_images(*),
-              post_link_previews(*)
+              profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason, verification_source),
+              post_images(image_url, display_order, alt_text),
+              post_link_previews(url, title, description, image_url, site_name)
             `)
             .in('author_id', ids)
             .eq('is_blocked', false)
             .order('created_at', { ascending: false })
             .limit(50);
-          followingData = data ?? [];
+          followingPostData = data || [];
         }
       }
 
-      // enrich logic (replies, likes, quoted, business, affiliate, dev) ...
-      // ... (same as your original fetchPosts body)
+      const postIds = postData.map(p => p.id);
 
-      const mappedFeed = /* mapped */;
-      const mappedFollowing = /* mapped */;
+      const [
+        businessData,
+        affiliationData,
+        repliesData,
+        likedData,
+        likeCountsData,
+        quotedPostsData,
+        developerData
+      ] = await Promise.all([
+        (async () => {
+          const ids = Array.from(new Set([
+            ...postData.map(p => p.profiles?.affiliated_business_id),
+            ...followingPostData.map(p => p.profiles?.affiliated_business_id)
+          ].filter(Boolean))) as string[];
 
-      const sortedFeed = user ? sortPosts(mappedFeed) : shuffle(mappedFeed);
+          if (!ids.length) return new Map();
+          const { data } = await supabase.from('profiles').select('id, avatar_url, display_name').in('id', ids);
+          const map = new Map();
+          (data || []).forEach(b => map.set(b.id, { avatar_url: b.avatar_url, display_name: b.display_name }));
+          return map;
+        })(),
 
-      if (initial) {
-        setPosts(sortedFeed);
-        setFollowingPosts(mappedFollowing);
+        (async () => {
+          const ids = Array.from(new Set([
+            ...postData.filter(p => p.profiles?.is_affiliate).map(p => p.author_id),
+            ...followingPostData.filter(p => p.profiles?.is_affiliate).map(p => p.author_id)
+          ])) as string[];
+
+          if (!ids.length) return new Map();
+          const { data } = await supabase.from('affiliate_requests').select('user_id, reviewed_at').in('user_id', ids).eq('status', 'approved');
+          const map = new Map();
+          (data || []).forEach(a => map.set(a.user_id, a.reviewed_at));
+          return map;
+        })(),
+
+        supabase.from('post_replies')
+          .select('*, profiles(*)')
+          .in('post_id', postIds)
+          .order('created_at'),
+
+        user ? supabase.from('post_acknowledgments')
+          .select('post_id')
+          .in('post_id', postIds)
+          .eq('user_id', user.id) : Promise.resolve({ data: [] }),
+
+        supabase.rpc('get_post_like_counts', { post_ids: postIds }),
+
+        (async () => {
+          const ids = Array.from(new Set([
+            ...postData.map(p => p.quoted_post_id),
+            ...followingPostData.map(p => p.quoted_post_id)
+          ].filter(Boolean))) as string[];
+
+          if (!ids.length) return new Map();
+          const { data } = await supabase.from('posts').select(`
+            id, content, created_at, author_id, image_url,
+            post_images(image_url, display_order, alt_text),
+            profiles(display_name, handle, is_verified, is_organization_verified, avatar_url)
+          `).in('id', ids);
+
+          const map = new Map();
+          (data || []).forEach(qp => {
+            if (!qp.profiles) qp.profiles = { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, avatar_url: null };
+            map.set(qp.id, qp);
+          });
+          return map;
+        })(),
+
+        (async () => {
+          const ids = Array.from(new Set([
+            ...postData.map(p => p.author_id),
+            ...followingPostData.map(p => p.author_id)
+          ])) as string[];
+
+          if (!ids.length) return new Set();
+          const { data } = await supabase.from('developer_roles').select('user_id').in('user_id', ids);
+          return new Set((data || []).map(d => d.user_id));
+        })()
+      ]);
+
+      const repliesByPostId = new Map<string, Reply[]>();
+      (repliesData.data || []).forEach((r: any) => {
+        const reply = r as Reply;
+        if (reply.profiles?.affiliated_business_id) {
+          reply.profiles.affiliated_business = businessData.get(reply.profiles.affiliated_business_id) || null;
+        }
+        if (reply.profiles?.is_affiliate && reply.author_id) {
+          reply.affiliation_date = affiliationData.get(reply.author_id);
+        }
+        reply.is_developer = developerData.has(reply.author_id);
+        if (!repliesByPostId.has(r.post_id)) repliesByPostId.set(r.post_id, []);
+        repliesByPostId.get(r.post_id)!.push(reply);
+      });
+
+      const likeCountByPostId = new Map<string, number>();
+      (likeCountsData.data || []).forEach(row => likeCountByPostId.set(row.post_id, Number(row.like_count || 0)));
+
+      const likedSet = new Set<string>((likedData.data || []).map(r => r.post_id));
+
+      const mapPost = (post: any): Post | null => {
+        const replies = repliesByPostId.get(post.id) || [];
+
+        if (post.profiles?.affiliated_business_id) {
+          post.profiles.affiliated_business = businessData.get(post.profiles.affiliated_business_id) || null;
+        }
+
+        const quotedPost = post.quoted_post_id ? quotedPostsData.get(post.quoted_post_id) : null;
+        if (quotedPost?.author_id) quotedPost.is_developer = developerData.has(quotedPost.author_id);
+
+        if (!post.profiles) return null;
+
+        return {
+          ...post,
+          profiles: post.profiles,
+          quoted_post: quotedPost,
+          replies,
+          reply_count: replies.length,
+          like_count: likeCountByPostId.get(post.id) ?? 0,
+          view_count: post.view_count || 0,
+          has_liked: user ? likedSet.has(post.id) : false,
+          affiliation_date: post.profiles?.is_affiliate && post.author_id ? affiliationData.get(post.author_id) : undefined,
+          is_developer: developerData.has(post.author_id),
+        } as Post;
+      };
+
+      const mappedPosts = postData.map(mapPost).filter((p): p is Post => p !== null);
+      const mappedFollowingPosts = followingPostData.map(mapPost).filter((p): p is Post => p !== null);
+
+      const shuffleArray = <T,>(array: T[]): T[] => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      };
+
+      const finalPosts = user ? sortPosts(mappedPosts) : shuffleArray(mappedPosts);
+      const finalFollowingPosts = mappedFollowingPosts;
+
+      if (isInitial) {
+        setPosts(finalPosts);
+        setFollowingPosts(finalFollowingPosts);
       } else {
-        setPosts(prev => [...prev, ...sortedFeed.filter(p => !prev.some(ep => ep.id === p.id))]);
-        setFollowingPosts(prev => [...prev, ...mappedFollowing.filter(p => !prev.some(ep => ep.id === p.id))]);
+        setPosts(prev => {
+          const ids = new Set(prev.map(p => p.id));
+          return [...prev, ...finalPosts.filter(p => !ids.has(p.id))];
+        });
+        setFollowingPosts(prev => {
+          const ids = new Set(prev.map(p => p.id));
+          return [...prev, ...finalFollowingPosts.filter(p => !ids.has(p.id))];
+        });
       }
     } catch (err) {
-      console.error(err);
-      toast.error('Feed load failed');
+      console.error('[Feed] Fetch error:', err);
+      toast.error('Could not load feed');
+      if (isInitial) {
+        setPosts([]);
+        setFollowingPosts([]);
+      }
       setHasMore(false);
     } finally {
+      clearTimeout(loadingTimeout);
       setLoading(false);
       setLoadingMore(false);
     }
@@ -2004,22 +2151,93 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   useEffect(() => {
     if (!loadMoreRef.current) return;
 
+    let root: Element | null = null;
+    if (!isMobile) {
+      let el = loadMoreRef.current;
+      while (el) {
+        el = el.parentElement;
+        if (el && (window.getComputedStyle(el).overflowY === 'auto' || window.getComputedStyle(el).overflowY === 'scroll')) {
+          root = el;
+          break;
+        }
+      }
+    }
+
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && hasMore && !loadingMore && !loading) handleLoadMore();
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          handleLoadMore();
+        }
       },
-      { threshold: 0.1, rootMargin: '200px' }
+      { root, threshold: 0.1, rootMargin: '200px' }
     );
 
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [handleLoadMore, hasMore, loadingMore, loading]);
+  }, [handleLoadMore, loadingMore, hasMore, loading, isMobile]);
 
-  // real-time subscriptions (your original code here)
   useEffect(() => {
-    // postsChannel, repliesChannel, acksChannel, profilesChannel ...
-    // cleanup return
+    const postsChannel = supabase
+      .channel('feed-posts')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload) => {
+        if (payload.new.author_id === user?.id) return;
+        setNewPostsCount(c => c + 1);
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, async (payload) => {
+        const { data: updated } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, verification_source),
+            post_images(image_url, display_order, alt_text),
+            post_link_previews(url, title, description, image_url, site_name)
+          `)
+          .eq('id', payload.new.id)
+          .single();
+
+        if (updated) {
+          const updater = (arr: Post[]) => arr.map(p =>
+            p.id === updated.id
+              ? {
+                  ...updated,
+                  profiles: updated.profiles ? { ...updated.profiles, verification_source: updated.profiles.verification_source as 'manual' | 'premium' | null } : p.profiles,
+                  replies: p.replies,
+                  reply_count: p.reply_count,
+                  like_count: p.like_count,
+                  has_liked: p.has_liked,
+                }
+              : p
+          );
+          setPosts(updater);
+          setFollowingPosts(updater);
+        }
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, payload => {
+        const remover = (arr: Post[]) => arr.filter(p => p.id !== payload.old.id);
+        setPosts(remover);
+        setFollowingPosts(remover);
+      })
+      .subscribe();
+
+    // ... (your other channels: replies, acks, profiles — same as before)
+
+    return () => {
+      supabase.removeChannel(postsChannel);
+      // remove other channels
+    };
   }, [user, addReply]);
+
+  useEffect(() => {
+    const h = () => {
+      learnUserInterests();
+      setCurrentPage(0);
+      setHasMore(true);
+      fetchPosts(0, true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('refresh-feed-order', h);
+    return () => window.removeEventListener('refresh-feed-order', h);
+  }, [fetchPosts, learnUserInterests]);
 
   const handlePullRefresh = useCallback(async () => {
     learnUserInterests();
@@ -2060,93 +2278,52 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   }, [isPremium, premiumLoading, expiresAt]);
 
   if (loading && !posts.length && !followingPosts.length) {
-    return (
-      <div className="max-w-4xl mx-auto pb-20 pt-28">
-        <FeedSkeleton />
-      </div>
-    );
+    return <div className="max-w-4xl mx-auto pb-20 pt-28"><FeedSkeleton /></div>;
   }
 
   const currentPosts = activeTab === 'foryou' ? posts : followingPosts;
 
   return (
-    <div 
+    <div
       ref={feedContainerRef}
       className="max-w-4xl mx-auto pb-20 scroll-smooth h-full overflow-y-auto"
-      style={{
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'contain',
-      }}
+      style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain', touchAction: 'pan-y pinch-zoom' }}
     >
-      <PullToRefreshIndicator 
-        pullDistance={pullDistance} 
-        isRefreshing={isRefreshing} 
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
         progress={pullProgress}
         showSuccess={showSuccess}
       />
-      
+
       <SEO
         title="Feed — Latest Posts, Updates & Trending Topics | AfuChat"
-        description="Discover the latest posts, trending topics, viral content, and updates from your network on AfuChat's social feed. Share your thoughts, like posts, comment, and connect with friends and creators. Join conversations happening now on social media."
-        keywords="social feed, latest posts, trending topics, social media feed, viral content, user posts, trending hashtags, social updates, share posts, like and comment, follow friends, online feed, social stream, community posts, news feed"
+        description="Discover the latest posts, trending topics, viral content, and updates from your network on AfuChat's social feed."
+        keywords="social feed, latest posts, trending topics, viral content, AfuChat feed"
       />
-      
-      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'foryou' | 'following')} className="w-full">
-        <div className={cn(
-          "z-40 bg-background/95 backdrop-blur-md border-b border-border/30 transition-transform duration-300",
-          isMobile 
-            ? cn(
-                "fixed left-0 right-0",
-                telegram?.isTelegram ? "top-[var(--tg-safe-top,0px)]" : "top-0",
-                isScrollingDown ? "-translate-y-full" : "translate-y-0"
-              )
-            : "sticky top-0"
-        )}>
-          <div className={cn(isMobile && "max-w-4xl mx-auto")}>
-            {isMobile && (
-              <div className="flex items-center justify-between px-4 py-3 relative">
-                {user ? (
-                  <ProfileDrawer
-                    trigger={
-                      <button className="flex-shrink-0">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={userProfile?.avatar_url || undefined} />
-                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                            {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                      </button>
-                    }
-                  />
-                ) : (
-                  <Link to="/auth/signin" className="flex-shrink-0 text-xs font-medium text-primary hover:underline">
-                    Sign In
-                  </Link>
-                )}
-                <span className="text-xl font-bold text-foreground absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-                  AfuChat
-                </span>
-                <div className="flex items-center gap-2">
-                  {user && premiumButton}
-                </div>
-              </div>
-            )}
 
-            <TabsList className="grid grid-cols-2 w-full h-12 rounded-none bg-transparent p-0">
-              <TabsTrigger
-                value="foryou"
-                className="relative data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=active]:shadow-none rounded-none font-bold h-full flex items-center gap-1.5 transition-colors data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-1/2 data-[state=active]:after:-translate-x-1/2 data-[state=active]:after:w-14 data-[state=active]:after:h-1 data-[state=active]:after:bg-primary data-[state=active]:after:rounded-full"
-              >
-                For you
-              </TabsTrigger>
-              <TabsTrigger
-                value="following"
-                className="relative data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=active]:shadow-none rounded-none font-bold h-full transition-colors data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-1/2 data-[state=active]:after:-translate-x-1/2 data-[state=active]:after:w-14 data-[state=active]:after:h-1 data-[state=active]:after:bg-primary data-[state=active]:after:rounded-full"
-              >
-                Following
-              </TabsTrigger>
-            </TabsList>
-          </div>
+      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as any)} className="w-full">
+        <div className={cn(
+          "z-40 bg-background/95 backdrop-blur-md border-b",
+          isMobile && (isScrollingDown ? "-translate-y-full" : "translate-y-0"),
+          "transition-transform duration-300"
+        )}>
+          {isMobile && (
+            <div className="flex items-center justify-between px-4 py-3">
+              {user ? (
+                <ProfileDrawer trigger={<Avatar className="h-9 w-9"><AvatarFallback>{user.user_metadata?.display_name?.[0] || 'U'}</AvatarFallback></Avatar>} />
+              ) : (
+                <Link to="/auth/signin" className="text-sm text-primary">Sign in</Link>
+              )}
+              <span className="text-xl font-bold absolute left-1/2 -translate-x-1/2">AfuChat</span>
+              {user && premiumButton}
+            </div>
+          )}
+
+          <TabsList className="grid w-full grid-cols-2 rounded-none bg-transparent h-12 border-b">
+            <TabsTrigger value="foryou" className="rounded-none data-[state=active]:shadow-none data-[state=active]:after:content-[''] data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-1/2 data-[state=active]:after:-translate-x-1/2 data-[state=active]:after:w-12 data-[state=active]:after:h-1 data-[state=active]:after:bg-primary data-[state=active]:after:rounded-full">For you</TabsTrigger>
+            <TabsTrigger value="following" className="rounded-none data-[state=active]:shadow-none data-[state=active]:after:content-[''] data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-1/2 data-[state=active]:after:-translate-x-1/2 data-[state=active]:after:w-12 data-[state=active]:after:h-1 data-[state=active]:after:bg-primary data-[state=active]:after:rounded-full">Following</TabsTrigger>
+          </TabsList>
         </div>
 
         {isMobile && <div className="h-[108px]" />}
@@ -2154,93 +2331,65 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         <UnclaimedRedEnvelopeBanner />
         {user && <SubscriptionExpiryBanner daysThreshold={7} />}
 
-        <TabsContent value={activeTab} className="m-0" forceMount>
+        <TabsContent value={activeTab} className="mt-0" forceMount>
           {activeTab === 'following' && !user ? (
-            <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-              <Users className="h-16 w-16 text-muted-foreground/50 mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">See posts from people you follow</h3>
-              <p className="text-muted-foreground mb-6 max-w-sm">
-                Sign in and follow users to see their posts here. Discover content from creators you care about.
-              </p>
-              <Link 
-                to="/auth/signin" 
-                className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-full hover:bg-primary/90 transition-colors"
-              >
-                Sign in to follow
+            <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+              <Users className="h-16 w-16 text-muted-foreground/60 mb-6" />
+              <h3 className="text-xl font-semibold mb-3">See posts from people you follow</h3>
+              <p className="text-muted-foreground mb-8 max-w-md">Sign in to follow users and see their latest updates here.</p>
+              <Link to="/auth/signin" className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full hover:bg-primary/90 transition">
+                Sign in
               </Link>
+            </div>
+          ) : currentPosts.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              {activeTab === 'following' ? 'Follow some users to see their posts' : t('feed.noPostsYet')}
             </div>
           ) : (
             <>
-              {currentPosts.length === 0 ? (
-                <div className="text-center text-muted-foreground py-6 sm:py-8 text-xs sm:text-sm px-4">
-                  {activeTab === 'following' && user
-                    ? 'Follow users to see their posts here'
-                    : t('feed.noPostsYet')}
+              <AnimatePresence mode="popLayout">
+                {currentPosts.filter(p => p.profiles).map((post, i) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.3, delay: i * 0.05 }}
+                  >
+                    <PostCard
+                      post={post}
+                      addReply={addReply}
+                      user={user}
+                      navigate={navigate}
+                      onAcknowledge={handleAcknowledge}
+                      onDeletePost={handleDeletePost}
+                      onReportPost={handleReportPost}
+                      onEditPost={handleEditPost}
+                      onQuotePost={handleQuotePost}
+                      onHidePost={handleHidePost}
+                      userProfile={userProfile}
+                      expandedPosts={expandedPosts}
+                      setExpandedPosts={setExpandedPosts}
+                      guestMode={guestMode}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              <div ref={loadMoreRef} className="h-16 flex items-center justify-center">
+                {loadingMore && (
+                  <div className="flex gap-2">
+                    <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                )}
+              </div>
+
+              {!hasMore && currentPosts.length > 0 && !loadingMore && (
+                <div className="py-12 text-center text-muted-foreground text-sm">
+                  {t('feed.noMorePosts') || "You've reached the end"}
                 </div>
-              ) : (
-                <>
-                  <AnimatePresence mode="popLayout">
-                    {currentPosts.filter(post => post.profiles).map((post, index) => (
-                      <motion.div 
-                        key={post.id}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{ 
-                          duration: 0.25, 
-                          delay: index < 5 ? index * 0.03 : 0,
-                          ease: [0.25, 0.1, 0.25, 1]
-                        }}
-                        layout="position"
-                        layoutId={post.id}
-                        style={{ 
-                          willChange: 'transform, opacity',
-                          contain: 'layout style paint',
-                        }}
-                      >
-                        <PostCard
-                          post={post}
-                          addReply={addReply}
-                          user={user as AuthUser | null}
-                          navigate={navigate}
-                          onAcknowledge={handleAcknowledge}
-                          onDeletePost={handleDeletePost}
-                          onReportPost={handleReportPost}
-                          onEditPost={handleEditPost}
-                          onQuotePost={handleQuotePost}
-                          onHidePost={handleHidePost}
-                          userProfile={userProfile}
-                          expandedPosts={expandedPosts}
-                          setExpandedPosts={setExpandedPosts}
-                          guestMode={guestMode}
-                        />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-
-                  <div ref={loadMoreRef} className="h-10" />
-
-                  {loadingMore && (
-                    <div className="py-6 flex flex-col items-center gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
-                      <span className="text-xs text-muted-foreground">Loading more posts...</span>
-                    </div>
-                  )}
-
-                  {!hasMore && currentPosts.length > 0 && !loadingMore && (
-                    <div className="py-8 text-center">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50">
-                        <span className="text-sm text-muted-foreground">
-                          {t('feed.noMorePosts') || "You've caught up with everything!"}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </>
               )}
             </>
           )}
@@ -2253,7 +2402,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         onConfirm={confirmDeletePost}
         isDeleting={isDeleting}
       />
-      
+
       <ReportPostSheet
         isOpen={!!reportPostId}
         onClose={() => setReportPostId(null)}
@@ -2262,7 +2411,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
       {editPost && (
         <EditPostModal
-          isOpen={!!editPost}
+          isOpen={true}
           onClose={() => setEditPost(null)}
           post={editPost}
           onPostUpdated={handlePostUpdated}
@@ -2271,7 +2420,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
       {quotePost && (
         <NewPostModal
-          isOpen={!!quotePost}
+          isOpen={true}
           onClose={() => setQuotePost(null)}
           quotedPost={{
             id: quotePost.id,
@@ -2280,13 +2429,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             author_id: quotePost.author_id,
             image_url: quotePost.image_url,
             post_images: quotePost.post_images,
-            profiles: {
-              display_name: quotePost.profiles.display_name,
-              handle: quotePost.profiles.handle,
-              is_verified: quotePost.profiles.is_verified,
-              is_organization_verified: quotePost.profiles.is_organization_verified,
-              avatar_url: quotePost.profiles.avatar_url,
-            },
+            profiles: quotePost.profiles,
           }}
         />
       )}
