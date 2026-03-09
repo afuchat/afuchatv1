@@ -284,13 +284,30 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
 
   // All other pages (including Premium page)
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
-      {/* Main scrollable content area */}
+    <div 
+      className={cn(
+        "fixed inset-0 flex flex-col bg-background",
+        isTelegram && "pt-[var(--tg-safe-area-inset-top,48px)]"  // Safe area applied to root → header starts below status bar
+      )}
+    >
+      {/* Optional: Signal ready to Telegram */}
+      {isTelegram && (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if (window.Telegram?.WebApp) window.Telegram.WebApp.ready?.();`
+          }}
+        />
+      )}
+
+      {/* Header – sticky right below safe area */}
+      {/* If you have a global header component, put it here instead */}
+      {/* For pages without custom header, you can leave this empty or add a placeholder */}
+
+      {/* Scrollable main content */}
       <main 
         className={cn(
           "flex-1 overflow-y-auto -webkit-overflow-scrolling-touch overscroll-y-contain",
-          "pb-[calc(var(--tg-safe-area-inset-bottom,0px)+80px)]",
-          isTelegram && "pt-[var(--tg-safe-area-inset-top,48px)]"
+          "pb-[calc(var(--tg-safe-area-inset-bottom,0px)+80px)]"
         )}
       >
         <motion.div 
@@ -436,7 +453,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
         </div>
       )}
 
-      {/* Bottom safe area fill to prevent visual cutoff */}
+      {/* Bottom safe area fill */}
       {!shouldHideNav && isTelegram && (
         <div
           className="lg:hidden fixed bottom-0 left-0 right-0 bg-background z-40 pointer-events-none"
