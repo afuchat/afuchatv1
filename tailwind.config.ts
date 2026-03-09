@@ -100,12 +100,12 @@ export default {
         "3xl": "calc(var(--radius) + 16px)",
       },
       boxShadow: {
-        'soft': '0 2px 8px -2px hsl(var(--foreground) / 0.08)',
-        'soft-lg': '0 4px 16px -4px hsl(var(--foreground) / 0.1)',
-        'soft-xl': '0 8px 32px -8px hsl(var(--foreground) / 0.12)',
+        'soft': 'none',
+        'soft-lg': 'none',
+        'soft-xl': 'none',
         'glow': '0 0 20px hsl(var(--primary) / 0.3)',
         'glow-sm': '0 0 10px hsl(var(--primary) / 0.2)',
-        'inner-soft': 'inset 0 1px 2px hsl(var(--foreground) / 0.05)',
+        'inner-soft': 'none',
       },
       keyframes: {
         "accordion-down": {
