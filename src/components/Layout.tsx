@@ -51,6 +51,8 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   
   // Detect if running in iframe (embedded mini program)
   const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+  // NOTE: We no longer hide navigation just because we're in an iframe.
+  // (Lovable preview + in-app webviews are iframes; hiding nav breaks the app.)
   
   // Initialize push notifications listener
   usePushNotifications();
@@ -301,8 +303,8 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   if (onMainTab && !shouldHideNav) {
     return (
       <div className={cn(
-        "fixed inset-0 flex flex-col bg-background",
-        isTelegram && "pt-[var(--tg-safe-area-inset-top,64px)]"
+        "overflow-hidden bg-background select-none touch-pan-y",
+        isTelegram ? "h-full" : "h-[100dvh]"
       )}>
         <MainTabsNavigation chatScrollHide={chatScrollHide}>
           {children}
@@ -312,11 +314,18 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
-      {/* Main scrollable content */}
+    <div
+      className={cn(
+        "bg-background select-none touch-pan-y",
+        isTelegram ? "h-full overflow-y-auto" : "min-h-screen",
+        isDesktop && "desktop-scrollbar"
+      )}
+      style={isTelegram ? { WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } : undefined}
+    >
+      {/* Main Content */}
       <main className={cn(
-        "flex-1 overflow-y-auto -webkit-overflow-scrolling-touch overscroll-y-contain",
-        "pb-[calc(var(--tg-safe-area-inset-bottom,0px)+90px)]"
+        shouldHideUI ? "" : "pb-20",
+        !isTelegram && "min-h-screen"
       )}>
         <motion.div 
           initial={{ opacity: 0 }}
@@ -335,9 +344,9 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
             "lg:hidden fixed left-0 right-0 z-50 transition-all duration-300 ease-out",
             (isNavHidden || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
           )}
-          style={{ bottom: 'var(--tg-safe-area-inset-bottom, 0px)' }}
+          style={{ bottom: 'var(--tg-safe-bottom, 0px)' }}
         >
-          <nav className={cn("bg-background/95 backdrop-blur-lg border-t border-border/40")}>
+          <nav className={cn("bg-background", !isTelegram && "border-t border-border/40")}>
             <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
               {/* Home */}
               <Link
@@ -460,12 +469,11 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
           </nav>
         </div>
       )}
-
       {/* Bottom safe area background fill */}
       {!shouldHideNav && (
         <div
           className="lg:hidden fixed bottom-0 left-0 right-0 bg-background z-40"
-          style={{ height: 'var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))' }}
+          style={{ height: 'var(--tg-safe-bottom, env(safe-area-inset-bottom, 0px))' }}
         />
       )}
     </div>
