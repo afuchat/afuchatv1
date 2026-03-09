@@ -301,12 +301,11 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   }
 
   if (onMainTab && !shouldHideNav) {
-    // Main-tab pages: self-contained viewport box — MainTabsNavigation manages internal scroll
-    // Uses 100dvh on web, 100vh in TMA (where #root is the viewport)
     return (
-      <div className="overflow-hidden bg-background select-none touch-pan-y"
-        style={{ height: isTelegram ? '100vh' : '100dvh' }}
-      >
+      <div className={cn(
+        "overflow-hidden bg-background select-none touch-pan-y",
+        isTelegram ? "h-full" : "h-[100dvh]"
+      )}>
         <MainTabsNavigation chatScrollHide={chatScrollHide}>
           {children}
         </MainTabsNavigation>
@@ -314,13 +313,14 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     );
   }
 
-  // Non-tab pages: flow naturally — #root (TMA) or document (web) scrolls content
   return (
     <div
       className={cn(
-        "min-h-screen bg-background select-none touch-pan-y",
+        "bg-background select-none touch-pan-y",
+        isTelegram ? "h-full overflow-y-auto" : "min-h-screen",
         isDesktop && "desktop-scrollbar"
       )}
+      style={isTelegram ? { WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } : undefined}
     >
       {/* Main Content */}
       <main className={cn(
