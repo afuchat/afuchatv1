@@ -3011,7 +3011,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
         {/* Spacer for fixed header - mobile only */}
         {isMobile && (
-          <div className={cn("h-[108px]", telegram?.isTelegram && "h-[calc(108px+var(--tg-safe-top,0px))]")} />
+          <div className={cn("h-[108px]", telegram?.isTelegram && "h-[calc(108px+var(--tg-safe-area-top,0px))]")} />
         )}
 
         {/* Promotional Banners */}
