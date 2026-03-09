@@ -223,7 +223,7 @@ const EditProfile = () => {
           setPhoneError('');
         }
       } catch {
-        // Ignore
+        // Ignore errors
       }
     }, 500);
 
@@ -288,7 +288,7 @@ const EditProfile = () => {
       return;
     }
 
-    if (profile.bio) {
+    if (profile.bio?.trim()) {
       try {
         bioSchema.parse(profile.bio);
       } catch (e: any) {
@@ -349,7 +349,7 @@ const EditProfile = () => {
       navigate(-1);
     } catch (error: any) {
       console.error('Update error:', error);
-      if (error.code === '23505' || error.message.includes('already taken')) {
+      if (error.code === '23505' || error.message?.includes('already taken')) {
         toast.error('Username is already taken');
       } else {
         toast.error(`Failed to update profile: ${error.message}`);
@@ -413,7 +413,7 @@ const EditProfile = () => {
 
   if (isLoadingAuth || loadingProfile) {
     return (
-      <div className="flex min-h-dvh flex-col bg-background">
+      <div className="fixed inset-0 flex flex-col bg-background">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
           <div className="flex items-center justify-between px-4 h-14">
             <Skeleton className="h-8 w-8 rounded-full" />
@@ -421,7 +421,7 @@ const EditProfile = () => {
             <Skeleton className="h-8 w-16 rounded-lg" />
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch overscroll-y-contain p-4 space-y-6">
           <div className="flex flex-col items-center gap-4">
             <Skeleton className="h-24 w-24 rounded-full" />
             <Skeleton className="h-4 w-32" />
@@ -437,7 +437,7 @@ const EditProfile = () => {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="fixed inset-0 flex flex-col bg-background">
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 h-14">
@@ -455,8 +455,8 @@ const EditProfile = () => {
         </div>
       </div>
 
-      {/* Scrollable main content */}
-      <div className="flex-1 overflow-y-auto overscroll-y-contain pb-12">
+      {/* Scrollable content */}
+      <main className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch overscroll-y-contain pb-20">
         {/* Avatar Section */}
         <div className="flex flex-col items-center pt-6 pb-4">
           <div className="relative">
@@ -701,7 +701,7 @@ const EditProfile = () => {
           )}
 
           {/* Privacy Settings */}
-          <section className="space-y-3">
+          <section className="space-y-3 pb-6">
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">Privacy & Display</h2>
 
             <ToggleItem
@@ -767,12 +767,11 @@ const EditProfile = () => {
             onSave={handleSaveAvatar}
           />
         )}
-      </div>
+      </main>
     </div>
   );
 };
 
-// Toggle Item Component
 const ToggleItem = ({
   icon,
   label,
