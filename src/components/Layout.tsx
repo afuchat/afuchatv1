@@ -271,10 +271,25 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     );
   }
 
-  // Main tab pages with tab navigation
+  // Main tab pages with tab navigation (including home/feed)
   if (onMainTab && !shouldHideNav) {
     return (
       <div className="fixed inset-0 flex flex-col bg-background">
+        {/* Signal to Telegram */}
+        {isTelegram && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                if (window.Telegram?.WebApp) {
+                  window.Telegram.WebApp.ready?.();
+                  window.Telegram.WebApp.disableVerticalSwipes?.();
+                  window.Telegram.WebApp.expand?.();
+                }
+              `
+            }}
+          />
+        )}
+
         <MainTabsNavigation chatScrollHide={chatScrollHide}>
           {children}
         </MainTabsNavigation>
@@ -282,29 +297,32 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     );
   }
 
-  // All other pages (including Premium, Edit Profile, etc.)
+  // All other pages
   return (
-    <div 
-      className={cn(
-        "fixed inset-0 flex flex-col bg-background",
-        isTelegram && "pt-[var(--tg-safe-area-inset-top,64px)]"  // Increased safe area size
-      )}
-    >
-      {/* Optional: Signal ready to Telegram */}
+    <div className="fixed inset-0 flex flex-col bg-background">
+      {/* Signal to Telegram */}
       {isTelegram && (
         <script
           dangerouslySetInnerHTML={{
-            __html: `if (window.Telegram?.WebApp) window.Telegram.WebApp.ready?.();`
+            __html: `
+              if (window.Telegram?.WebApp) {
+                window.Telegram.WebApp.ready?.();
+                window.Telegram.WebApp.disableVerticalSwipes?.();
+                window.Telegram.WebApp.expand?.();
+              }
+            `
           }}
         />
       )}
 
-      {/* Scrollable main content – this is the only scrolling element */}
+      {/* Scrollable main content */}
       <main 
         className={cn(
-          "flex-1 overflow-y-auto -webkit-overflow-scrolling-touch overscroll-y-contain",
-          "pb-[calc(var(--tg-safe-area-inset-bottom,0px)+80px)]"
+          "flex-1 overflow-y-auto -webkit-overflow-scrolling-touch overscroll-y-contain overscroll-x-none scrollbar-none",
+          isTelegram && "pt-[var(--tg-safe-area-inset-top,64px)]",
+          "pb-[calc(var(--tg-safe-area-inset-bottom,0px)+90px)]"
         )}
+        style={{ transform: 'translateZ(0)' }} // GPU acceleration on iOS
       >
         <motion.div 
           initial={{ opacity: 0 }}
@@ -316,7 +334,7 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
         </motion.div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Bottom Navigation */}
       {!shouldHideNav && (
         <div
           className={cn(
