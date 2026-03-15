@@ -2,7 +2,7 @@
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-red)
 ![Supabase](https://img.shields.io/badge/Supabase-Backend%20%26%20DB-3ECF8E?logo=supabase&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-62%25-3178C6?logo=typescript&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-92%25-3178C6?logo=typescript&logoColor=white)
 
 * 🌟 **About AfuChat**
 
