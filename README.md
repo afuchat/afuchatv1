@@ -1,101 +1,79 @@
-# AfuChat
-
 ![Platform Status](https://img.shields.io/badge/status-active-brightgreen)
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-red)
+![Supabase](https://img.shields.io/badge/Supabase-Backend%20%26%20DB-3ECF8E?logo=supabase&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-62%25-3178C6?logo=typescript&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-20%25-F7DF1E?logo=javascript&logoColor=black)
-![SQL](https://img.shields.io/badge/SQL-6%25-00758F?logo=postgresql&logoColor=white)
-![CSS](https://img.shields.io/badge/CSS-10%25-1572B6?logo=css3&logoColor=white)
-![Contributors](https://img.shields.io/badge/contributors-10-orange)
 
----
+* 🌟 **About AfuChat**
 
-## 🌟 About AfuChat
+AfuChat is a **modern digital platform** that brings **communication**, **AI-powered productivity tools**, and **digital identity** into a single ecosystem. Users can post, chat, shop (coming soon), and access intelligent features **without switching between multiple apps**.  
 
-AfuChat is a modern digital platform that unifies **communication** and **AI-powered productivity tools** in one ecosystem. Users can post, chat, and access intelligent features without switching apps.
+Designed for simplicity, speed, and security, AfuChat supports creators, individuals, and businesses to thrive online.
 
----
+*  **Core Features**
 
-## 🚀 Features
+* 🔹 AI-Powered Tools
+- **Smart Writing Assistance:** Draft posts, messages, or documents quickly.  
+- **Content Creation:** Generate images, text, and ideas on the fly.  
+- **Task Support:** Organize tasks and reminders seamlessly.  
+- **Quick Information Access:** Search and retrieve answers instantly.  
 
-### 🔹 AI-Powered Tools
-- Smart writing assistance  
-- Content creation  
-- Task support  
-- Quick information access  
+* 🔹 Communication
+- **Private Messaging:** Secure one-on-one conversations.  
+- **Group Chats:** Community spaces for collaboration and discussion.  
+- **Voice & Media Sharing:** Share images, videos, and audio files.  
+- **Simple Onboarding:** Quick sign-up with Supabase authentication.  
 
-### 🔹 Communication
-- Fast and reliable chat  
-- Private messaging  
-- Community interaction  
-- Simple onboarding  
+* 🔹 Digital Identity
+- **Secure Accounts:** Encrypted login and data protection.  
+- **Verification:** Build trust with verified user profiles.  
+- **Badges & Achievements:** Highlight contributions, early adoption, and top content creators.  
+- **Consistent Identity:** Use the same profile across all AfuChat services.  
 
-### 🔹 Digital Identity
-- Secure user accounts  
-- Professional email (coming soon)  
-- Verification features  
-- Consistent identity across services  
+* 🔹 User Engagement
+- **Post Sharing:** Users can share text, images, and media.  
+- **Comments & Reactions:** Interact with content easily.  
+- **Trending Content:** Highlight the most popular posts in the community.  
+- **Notifications:** Stay updated with mentions, messages, and activities.  
 
----
+* 🔹 Moderation & Safety
+- **Content Filtering:** Ensure safe interactions for all users.  
+- **User Reporting:** Report inappropriate content or behavior.  
+- **Privacy Controls:** Users manage who can see their posts or profile.
+- 
+*  **Vision**
 
-## 🎨 Screenshots
+AfuChat aims to unify **communication**, **AI productivity**, and **digital identity** in a **single digital ecosystem**. Our mission is to make powerful tools:
 
-**Home Feed:**  
-![Home Feed](https://via.placeholder.com/600x300?text=Home+Feed)
+- **Simple** — Easy for anyone to use.  
+- **Accessible** — Available on any device and low bandwidth.  
+- **Secure** — User data and communication protected.  
+- **Helpful** — Empower creators, businesses, and individuals.  
 
-**Chat Interface:**  
-![Chat](https://via.placeholder.com/600x300?text=Chat+Interface)
+* 🛠️ Technology Stack
 
----
+- **Backend & Database:** Supabase (Authentication, DB, Storage, Realtime).  
+- **Frontend:** TypeScript, CSS.  
+- **Security:** Encrypted authentication and communication.  
+- **Integration:** Telegram Mini App.  
+- **Future Plans:** Public APIs, cloud hosting, automated moderation, and extended AI features.  
 
-## 🌍 Vision
+* 🎖️ Badges
 
-AfuChat aims to unify communication and AI into a single platform. Our mission is to make digital tools:
+AfuChat recognizes user achievements with digital badges:
 
-- **Simple**  
-- **Accessible**  
-- **Secure**  
-- **Helpful** for individuals, creators, and businesses  
+- **Community Contributor** — For active engagement.  
+- **Verified Account** — Trusted and authenticated profiles.  
+- **Top Content Creator** — Reward for popular content.  
+- **Early Adopter** — Supporters of the platform from early stages.  
+- **AI Innovator** — Users who utilize AI tools extensively.  
 
----
-
-## 🛠️ Technology Stack
-
-- **Frontend:** TypeScript, JavaScript, CSS  
-- **Backend:** SQL, Node.js  
-- **Security:** Encrypted communication & authentication  
-- **Integration:** Telegram Mini App  
-- **Future:** APIs for developers, cloud hosting, automation  
-
----
-
-## 🧭 Core Principles
-
-- **Simplicity:** Easy for everyone to use  
-- **Security:** Safe, encrypted, and trusted  
-- **Speed:** Optimized for all devices and low bandwidth  
-- **Innovation:** Integrated AI for real productivity  
-- **Accessibility:** No technical background required  
-
----
-
-## 📦 Project Status
-
-- Some features are fully live  
-- Others are in active development  
-- Early users help shape upcoming improvements  
-
----
-
-## 📞 Contact
+* 📞 Contact
 
 - **Support:** support@afuchat.com  
 - **Business Inquiries:** business@afuchat.com  
 - **Website:** [https://afuchat.com](https://afuchat.com)  
 
----
-
-## 📜 License
+* 📜 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
