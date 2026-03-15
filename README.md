@@ -1,6 +1,19 @@
 # AfuChat
 
-AfuChat is a modern digital platform that brings communication, commerce, and AI-powered productivity tools into one unified ecosystem. Built with simplicity and speed in mind, AfuChat enables users to post, chat, shop, and access intelligent features without switching between multiple apps.
+![Platform Status](https://img.shields.io/badge/status-active-brightgreen)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-red)
+![TypeScript](https://img.shields.io/badge/TypeScript-62%25-3178C6?logo=typescript&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-20%25-F7DF1E?logo=javascript&logoColor=black)
+![SQL](https://img.shields.io/badge/SQL-6%25-00758F?logo=postgresql&logoColor=white)
+![CSS](https://img.shields.io/badge/CSS-10%25-1572B6?logo=css3&logoColor=white)
+![Contributors](https://img.shields.io/badge/contributors-10-orange)
+
+---
+
+## 🌟 About AfuChat
+
+AfuChat is a modern digital platform that unifies **communication** and **AI-powered productivity tools** in one ecosystem. Users can post, chat, and access intelligent features without switching apps.
 
 ---
 
@@ -18,12 +31,6 @@ AfuChat is a modern digital platform that brings communication, commerce, and AI
 - Community interaction  
 - Simple onboarding  
 
-### 🔹 AfuMall (E-Commerce)
-- Browse and purchase products  
-- Seller interaction  
-- Order management  
-- Supports small businesses and brands  
-
 ### 🔹 Digital Identity
 - Secure user accounts  
 - Professional email (coming soon)  
@@ -32,28 +39,34 @@ AfuChat is a modern digital platform that brings communication, commerce, and AI
 
 ---
 
-## 🌍 Vision
+## 🎨 Screenshots
 
-AfuChat aims to unify communication, AI, and commerce into a single platform.  
-Our mission is to make powerful digital tools:
-- Simple  
-- Accessible  
-- Secure  
-- Helpful for individuals, creators, and businesses  
+**Home Feed:**  
+![Home Feed](https://via.placeholder.com/600x300?text=Home+Feed)
 
-The platform is designed for growth and continuous improvement as we build toward a full digital ecosystem.
+**Chat Interface:**  
+![Chat](https://via.placeholder.com/600x300?text=Chat+Interface)
 
 ---
 
-## 🛠️ Technology Direction
+## 🌍 Vision
 
-- Fast, lightweight user experience  
-- Secure authentication  
-- Encrypted communication  
-- Scalable backend  
-- Telegram Mini App integration  
-- Future APIs for developers  
-- Cloud hosting and automation services (planned)  
+AfuChat aims to unify communication and AI into a single platform. Our mission is to make digital tools:
+
+- **Simple**  
+- **Accessible**  
+- **Secure**  
+- **Helpful** for individuals, creators, and businesses  
+
+---
+
+## 🛠️ Technology Stack
+
+- **Frontend:** TypeScript, JavaScript, CSS  
+- **Backend:** SQL, Node.js  
+- **Security:** Encrypted communication & authentication  
+- **Integration:** Telegram Mini App  
+- **Future:** APIs for developers, cloud hosting, automation  
 
 ---
 
@@ -61,7 +74,7 @@ The platform is designed for growth and continuous improvement as we build towar
 
 - **Simplicity:** Easy for everyone to use  
 - **Security:** Safe, encrypted, and trusted  
-- **Speed:** Designed for all devices and low bandwidth  
+- **Speed:** Optimized for all devices and low bandwidth  
 - **Innovation:** Integrated AI for real productivity  
 - **Accessibility:** No technical background required  
 
@@ -69,31 +82,20 @@ The platform is designed for growth and continuous improvement as we build towar
 
 ## 📦 Project Status
 
-AfuChat is actively evolving.  
-Some features are fully live, while others are in active development as the platform continues to scale.
-
-Early users help shape upcoming features and improvements.
+- Some features are fully live  
+- Others are in active development  
+- Early users help shape upcoming improvements  
 
 ---
 
 ## 📞 Contact
 
-For support or assistance:  
-**support@afuchat.com**
-
-For business and general inquiries:  
-**business@afuchat.com**
-
-Official website:  
-https://afuchat.com/
+- **Support:** support@afuchat.com  
+- **Business Inquiries:** business@afuchat.com  
+- **Website:** [https://afuchat.com](https://afuchat.com)  
 
 ---
 
 ## 📜 License
 
-All rights reserved.  
-AfuChat is a proprietary platform owned by AfuChat Technologies.
-
-Unauthorized copying, distribution, or modification is not permitted.
-
----
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
