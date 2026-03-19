@@ -28,6 +28,10 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 import { LoadingBar } from '@/components/LoadingBar';
 import { motion, AnimatePresence } from 'framer-motion';
 
+//Maintenance
+import { APP_CONFIG } from '@/config/app';
+import Maintenance from '@/pages/Maintenance';
+
 
 // Eager load critical pages
 import Home from "./pages/Home";
@@ -277,6 +281,15 @@ const AppRoutes = () => {
 
 const AppWithDesktopCheck = () => {
   // Desktop is now fully supported - no blocking
+  return <AppRoutes />;
+};
+
+const AppWithMaintenance = () => {
+  // ✅ MAIN LOGIC
+  if (APP_CONFIG.maintenanceMode) {
+    return <Maintenance />;
+  }
+
   return <AppRoutes />;
 };
 
