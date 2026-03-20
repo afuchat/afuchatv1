@@ -1,3 +1,3 @@
 export const APP_CONFIG = {
-  MAINTENANCE_MODE: true,
+  MAINTENANCE_MODE: false,
 };
