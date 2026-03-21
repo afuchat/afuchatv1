@@ -14,35 +14,41 @@ interface ThinkingDisplayProps {
   className?: string;
   /** Optional typing speed in ms (default: 20) */
   typingSpeed?: number;
+  /**
+   * NEW: Connects seamlessly to the AI message below
+   * - Removes bottom border & rounding
+   * - Uses same background as your message bubble
+   * - Creates a single unified card (perfect for live AI messages)
+   */
+  connectedToMessage?: boolean;
 }
 
-// PRO VERSION v2 — No more jumping when task completes
-// Fixed: When `isComplete` becomes true, steps now smoothly finalize
-//        • Last partial step instantly completes (no text replacement/jump)
-//        • All previous steps keep their exact typed text
-//        • Checkmarks appear without DOM flicker or reset
-//        • Final thought can safely contain more steps (they get added completed)
-
+// PRO VERSION v3 — Professional + Connected to Message
+// • Visually blends into AIMessageContent (no gap, shared styling)
+// • Premium typography & spacing (matches your 13.5px message style)
+// • Smoother finalize (no jump, instant checkmarks)
+// • Subtle gradient + glassmorphic header
+// • Ready to drop directly above <AIMessageContent /> in one container
 export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
   thought,
   isStreaming,
   isComplete,
   className,
   typingSpeed = 20,
+  connectedToMessage = false,
 }) => {
   const [displayedSteps, setDisplayedSteps] = useState<ThinkingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-
   const prevIsStreamingRef = useRef(false);
 
-  const steps = useMemo(() => 
-    thought.split('\n').filter(line => line.trim()), 
+  const steps = useMemo(() =>
+    thought.split('\n').filter(line => line.trim()),
     [thought]
   );
 
-  // Reset only when a brand-new thinking session starts
+  // Reset only on new thinking session
   useEffect(() => {
     if (isStreaming && !prevIsStreamingRef.current) {
       setDisplayedSteps([]);
@@ -52,12 +58,11 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
     prevIsStreamingRef.current = isStreaming;
   }, [isStreaming]);
 
-  // === INCREMENTAL TYPING (only while streaming & not complete) ===
+  // Incremental typing engine
   useEffect(() => {
     if (isComplete || !isStreaming || steps.length === 0) return;
 
     const currentStep = steps[currentStepIndex];
-
     if (currentCharIndex < currentStep.length) {
       const timer = setTimeout(() => {
         setDisplayedSteps(prev => {
@@ -73,15 +78,11 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
         });
         setCurrentCharIndex(prev => prev + 1);
       }, typingSpeed);
-
       return () => clearTimeout(timer);
     } else {
-      // Mark current step complete and move to next
       setDisplayedSteps(prev => {
         const newSteps = [...prev];
-        if (newSteps[currentStepIndex]) {
-          newSteps[currentStepIndex].isComplete = true;
-        }
+        if (newSteps[currentStepIndex]) newSteps[currentStepIndex].isComplete = true;
         return newSteps;
       });
 
@@ -90,41 +91,28 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
           setCurrentStepIndex(prev => prev + 1);
           setCurrentCharIndex(0);
         }, 280);
-
         return () => clearTimeout(nextTimer);
       }
     }
   }, [isStreaming, currentStepIndex, currentCharIndex, steps, typingSpeed]);
 
-  // === SMOOTH FINALIZE ON COMPLETE (NO JUMP) ===
-  // This is the key fix: we only update isComplete flag + finish last step text
-  // Existing typed text never disappears or gets replaced from scratch
+  // Smooth finalize — keeps every typed character, just adds checkmarks + final text
   useEffect(() => {
     if (!isComplete) return;
 
     setDisplayedSteps(prev => {
       const newSteps = [...prev];
-
       const targetLength = steps.length;
-
       for (let i = 0; i < targetLength; i++) {
         if (i < newSteps.length) {
-          // Existing step → keep its typed text (no jump), just mark complete
-          // For the very last step, snap to full final text (instant finish)
-          newSteps[i] = {
-            text: steps[i],                    // use final authoritative text
-            isComplete: true,
-          };
+          newSteps[i] = { text: steps[i], isComplete: true };
         } else {
-          // Rare case: final thought added extra steps
           newSteps.push({ text: steps[i], isComplete: true });
         }
       }
-
       return newSteps;
     });
 
-    // Snap indices so typing engine stops
     setCurrentStepIndex(steps.length);
     setCurrentCharIndex(0);
   }, [isComplete, steps]);
@@ -147,15 +135,17 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border bg-gradient-to-b from-primary/5 via-background to-transparent shadow-sm",
-        isStreaming && !isComplete
-          ? "border-primary/50 animate-pulse-subtle"
-          : "border-border/60",
+        "overflow-hidden border bg-gradient-to-b from-primary/5 via-background to-transparent shadow-sm transition-all",
+        connectedToMessage
+          ? "rounded-t-2xl border-b-0 rounded-b-none bg-transparent border-primary/30" // seamless connection
+          : "rounded-2xl border-primary/50",
+        isStreaming && !isComplete && "animate-pulse-subtle border-primary/60",
+        !isStreaming && !isComplete && "border-border/60",
         className
       )}
     >
-      {/* Pro Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/40 bg-background/80 backdrop-blur-sm">
+      {/* Premium Header */}
+      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border/40 bg-background/90 backdrop-blur-md">
         <div className="relative flex items-center justify-center">
           <BrainCircuit className={cn(
             "h-4 w-4 text-primary transition-all",
@@ -166,7 +156,7 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
           )}
         </div>
 
-        <span className="text-[11px] font-semibold text-primary uppercase tracking-[0.5px]">
+        <span className="text-[11.5px] font-semibold text-primary uppercase tracking-[0.6px]">
           {progressText}
         </span>
 
@@ -175,22 +165,22 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
         )}
       </div>
 
-      {/* Steps Container */}
+      {/* Steps Area — matches your message typography */}
       <div
         ref={containerRef}
-        className="px-4 py-4 max-h-[240px] overflow-y-auto space-y-3 bg-background/60 text-sm scroll-smooth"
+        className="px-5 py-5 max-h-[260px] overflow-y-auto space-y-4 bg-background/70 text-sm scroll-smooth"
       >
         {displayedSteps.map((step, index) => (
           <div
             key={index}
-            className="flex items-start gap-3 animate-in slide-in-from-left-3 duration-300"
+            className="flex items-start gap-3.5 animate-in slide-in-from-left-3 duration-300"
           >
             <div
               className={cn(
-                "flex-shrink-0 mt-0.5 w-6 h-6 rounded-xl flex items-center justify-center text-[10px] font-bold transition-all",
+                "flex-shrink-0 mt-0.5 w-6 h-6 rounded-2xl flex items-center justify-center text-[10px] font-bold transition-all border",
                 step.isComplete
-                  ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30"
-                  : "bg-muted text-muted-foreground"
+                  ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                  : "bg-muted text-muted-foreground border-border/60"
               )}
             >
               {step.isComplete ? (
@@ -203,10 +193,10 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
             <div className="flex-1 min-w-0 pt-0.5">
               <p
                 className={cn(
-                  "text-[13px] leading-relaxed tracking-[-0.1px]",
+                  "text-[13.5px] leading-[1.65] tracking-[-0.15px] text-foreground/90",
                   step.text.startsWith('User requested:') || step.text.startsWith('User:')
                     ? "text-primary font-medium"
-                    : "text-foreground/90"
+                    : ""
                 )}
               >
                 {step.text}
@@ -218,44 +208,45 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
           </div>
         ))}
 
-        {/* Waiting dots */}
-        {isStreaming &&
-          !isComplete &&
-          displayedSteps.length > 0 &&
-          displayedSteps[displayedSteps.length - 1]?.isComplete &&
-          currentStepIndex < steps.length && (
-            <div className="flex items-center gap-3 pl-9">
-              <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '120ms' }} />
-                <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '240ms' }} />
-              </div>
+        {/* Waiting dots when next step is coming */}
+        {isStreaming && !isComplete && displayedSteps.length > 0 && 
+         displayedSteps[displayedSteps.length - 1]?.isComplete && currentStepIndex < steps.length && (
+          <div className="flex items-center gap-3 pl-9">
+            <div className="flex gap-1">
+              <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '120ms' }} />
+              <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '240ms' }} />
             </div>
-          )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// Collapsible version (unchanged — already perfect for history)
+// Updated Collapsible version — also matches message style (for chat history)
 export const CollapsibleThinking: React.FC<{
   thought: string;
   defaultExpanded?: boolean;
   className?: string;
-}> = ({ thought, defaultExpanded = false, className }) => {
+  connectedToMessage?: boolean;
+}> = ({ thought, defaultExpanded = false, className, connectedToMessage = false }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const steps = useMemo(() => thought.split('\n').filter(line => line.trim()), [thought]);
 
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-border/60 bg-muted/30",
+        "overflow-hidden border bg-muted/30",
+        connectedToMessage
+          ? "rounded-t-2xl border-b-0 rounded-b-none border-primary/30 bg-transparent"
+          : "rounded-2xl border-border/60",
         className
       )}
     >
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 text-[11px] font-semibold text-muted-foreground hover:bg-muted/80 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-3.5 text-[11.5px] font-semibold text-muted-foreground hover:bg-muted/80 transition-colors"
       >
         <div className="flex items-center gap-2.5">
           <BrainCircuit className="h-4 w-4 text-primary" />
@@ -265,20 +256,18 @@ export const CollapsibleThinking: React.FC<{
       </button>
 
       {isExpanded && (
-        <div className="px-4 pb-5 pt-1 border-t border-border/40 bg-background/70 space-y-3">
+        <div className="px-5 pb-6 pt-1 border-t border-border/40 bg-background/70 space-y-4">
           {steps.map((step, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5 w-6 h-6 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+            <div key={index} className="flex items-start gap-3.5">
+              <div className="flex-shrink-0 mt-0.5 w-6 h-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
                 <Check className="h-3.5 w-3.5 text-emerald-500" />
               </div>
-              <p
-                className={cn(
-                  "text-[13px] leading-relaxed text-foreground/90",
-                  step.startsWith('User requested:') || step.startsWith('User:')
-                    ? "text-primary font-medium"
-                    : ""
-                )}
-              >
+              <p className={cn(
+                "text-[13.5px] leading-[1.65] text-foreground/90",
+                step.startsWith('User requested:') || step.startsWith('User:')
+                  ? "text-primary font-medium"
+                  : ""
+              )}>
                 {step}
               </p>
             </div>
