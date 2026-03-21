@@ -16,14 +16,12 @@ interface ThinkingDisplayProps {
   typingSpeed?: number;
 }
 
-// PRO VERSION — Production-ready DeepSeek-style thinking display
-// Key upgrades:
-// • True incremental streaming (no reset flicker when thought updates)
-// • Progress indicator in header
-// • Completed steps show ✓ checkmark (much more polished)
-// • Reset only on new streaming session (isStreaming false → true)
-// • Smoother edge-case handling & cleaner code
-// • Ready for production use in chat UIs
+// PRO VERSION v2 — No more jumping when task completes
+// Fixed: When `isComplete` becomes true, steps now smoothly finalize
+//        • Last partial step instantly completes (no text replacement/jump)
+//        • All previous steps keep their exact typed text
+//        • Checkmarks appear without DOM flicker or reset
+//        • Final thought can safely contain more steps (they get added completed)
 
 export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
   thought,
@@ -37,16 +35,14 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Reset tracker for new thinking sessions only
   const prevIsStreamingRef = useRef(false);
 
-  // Memoized steps from current thought (handles incremental appends perfectly)
   const steps = useMemo(() => 
     thought.split('\n').filter(line => line.trim()), 
     [thought]
   );
 
-  // === RESET ONLY ON NEW STREAMING SESSION ===
+  // Reset only when a brand-new thinking session starts
   useEffect(() => {
     if (isStreaming && !prevIsStreamingRef.current) {
       setDisplayedSteps([]);
@@ -56,20 +52,13 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
     prevIsStreamingRef.current = isStreaming;
   }, [isStreaming]);
 
-  // === CORE STREAMING + TYPING ENGINE ===
+  // === INCREMENTAL TYPING (only while streaming & not complete) ===
   useEffect(() => {
-    if (isComplete) {
-      // Final state: show everything instantly
-      setDisplayedSteps(steps.map(text => ({ text, isComplete: true })));
-      return;
-    }
-
-    if (!isStreaming || steps.length === 0) return;
+    if (isComplete || !isStreaming || steps.length === 0) return;
 
     const currentStep = steps[currentStepIndex];
 
     if (currentCharIndex < currentStep.length) {
-      // Type next character
       const timer = setTimeout(() => {
         setDisplayedSteps(prev => {
           const newSteps = [...prev];
@@ -87,7 +76,7 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
 
       return () => clearTimeout(timer);
     } else {
-      // Step finished → mark complete + move to next
+      // Mark current step complete and move to next
       setDisplayedSteps(prev => {
         const newSteps = [...prev];
         if (newSteps[currentStepIndex]) {
@@ -100,26 +89,59 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
         const nextTimer = setTimeout(() => {
           setCurrentStepIndex(prev => prev + 1);
           setCurrentCharIndex(0);
-        }, 280); // natural pause between steps
+        }, 280);
 
         return () => clearTimeout(nextTimer);
       }
     }
-  }, [isStreaming, isComplete, currentStepIndex, currentCharIndex, steps, typingSpeed]);
+  }, [isStreaming, currentStepIndex, currentCharIndex, steps, typingSpeed]);
 
-  // Auto-scroll to bottom
+  // === SMOOTH FINALIZE ON COMPLETE (NO JUMP) ===
+  // This is the key fix: we only update isComplete flag + finish last step text
+  // Existing typed text never disappears or gets replaced from scratch
+  useEffect(() => {
+    if (!isComplete) return;
+
+    setDisplayedSteps(prev => {
+      const newSteps = [...prev];
+
+      const targetLength = steps.length;
+
+      for (let i = 0; i < targetLength; i++) {
+        if (i < newSteps.length) {
+          // Existing step → keep its typed text (no jump), just mark complete
+          // For the very last step, snap to full final text (instant finish)
+          newSteps[i] = {
+            text: steps[i],                    // use final authoritative text
+            isComplete: true,
+          };
+        } else {
+          // Rare case: final thought added extra steps
+          newSteps.push({ text: steps[i], isComplete: true });
+        }
+      }
+
+      return newSteps;
+    });
+
+    // Snap indices so typing engine stops
+    setCurrentStepIndex(steps.length);
+    setCurrentCharIndex(0);
+  }, [isComplete, steps]);
+
+  // Auto-scroll
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [displayedSteps, currentCharIndex]);
+  }, [displayedSteps]);
 
   const isTyping = isStreaming && !isComplete && currentStepIndex < steps.length;
 
   const progressText = isComplete
     ? `Reasoning complete • ${steps.length} steps`
     : steps.length > 0
-    ? `Thinking • Step ${currentStepIndex + 1}/${steps.length}`
+    ? `Thinking • Step ${Math.min(currentStepIndex + 1, steps.length)}/${steps.length}`
     : 'Thinking...';
 
   return (
@@ -163,7 +185,6 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
             key={index}
             className="flex items-start gap-3 animate-in slide-in-from-left-3 duration-300"
           >
-            {/* Step indicator — checkmark for completed, number for current */}
             <div
               className={cn(
                 "flex-shrink-0 mt-0.5 w-6 h-6 rounded-xl flex items-center justify-center text-[10px] font-bold transition-all",
@@ -197,7 +218,7 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
           </div>
         ))}
 
-        {/* Waiting dots when ready for next step */}
+        {/* Waiting dots */}
         {isStreaming &&
           !isComplete &&
           displayedSteps.length > 0 &&
@@ -216,7 +237,7 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
   );
 };
 
-// Enhanced Collapsible version (for history / past messages)
+// Collapsible version (unchanged — already perfect for history)
 export const CollapsibleThinking: React.FC<{
   thought: string;
   defaultExpanded?: boolean;
