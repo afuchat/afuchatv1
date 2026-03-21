@@ -46,7 +46,6 @@ const PLATFORM_ROUTES: Record<string, { path: string; label: string }> = {
   'qr code': { path: '/qr-code', label: 'QR Code' },
   'security': { path: '/security', label: 'Security' },
   'developer sdk': { path: '/developer-sdk', label: 'Developer SDK' },
-  
   "what's new": { path: '/whats-new', label: "What's New" },
   'leaderboard': { path: '/leaderboard', label: 'Leaderboard' },
   'christmas gifts': { path: '/christmas-gifts', label: 'Christmas Gifts' },
@@ -70,21 +69,20 @@ const SLASH_ROUTES: Record<string, string> = {
   '/christmas-gifts': 'Christmas Gifts', '/home': 'Home',
 };
 
-// Create a navigation pill link component
+// Pro navigation pill (rounded-full, refined spacing & hover for premium feel)
 const NavPill: React.FC<{ to: string; label: string }> = ({ to, label }) => (
   <Link
     to={to}
-    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 text-[13px] font-semibold transition-colors mx-0.5"
+    className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 hover:shadow-sm text-[13px] font-semibold transition-all mx-0.5"
   >
     {label}
     <ChevronRight className="h-3 w-3" />
   </Link>
 );
 
-// Convert both slash routes and natural language keywords to clickable links
+// Convert both slash routes, natural language keywords, AND @usernames to clickable links
 function convertRoutesToLinks(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
-  let remaining = text;
   let keyCounter = 0;
 
   // First pass: convert slash-based routes like /wallet
@@ -92,7 +90,6 @@ function convertRoutesToLinks(text: string): React.ReactNode[] {
   let processed = '';
   let lastIndex = 0;
   let match;
-
   while ((match = slashPattern.exec(text)) !== null) {
     const path = match[0].toLowerCase();
     if (SLASH_ROUTES[path]) {
@@ -103,20 +100,23 @@ function convertRoutesToLinks(text: string): React.ReactNode[] {
   }
   processed += text.substring(lastIndex);
 
+  // NEW: @username mentions (prioritized before keywords – links to clean /profile/{username} route)
+  // Protected against emails, code, and existing markers. Usernames 3-30 alphanumeric + underscore.
+  const mentionPattern = /(?<!\[\[NAV:[^\]]*)(?<!\w)@([a-zA-Z0-9_]{3,30})(?!\w)(?![^\[]*\]\])/gi;
+  processed = processed.replace(mentionPattern, `[[NAV:/profile/$1:@$1]]`);
+
   // Second pass: convert keyword-based mentions (sorted by length desc to match longest first)
   const sortedKeywords = Object.keys(PLATFORM_ROUTES).sort((a, b) => b.length - a.length);
   for (const keyword of sortedKeywords) {
     const route = PLATFORM_ROUTES[keyword];
-    // Case-insensitive word boundary match, but avoid matching inside already-converted nav markers
     const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`(?<!\\[\\[NAV:[^\\]]*)(\\b${escapedKeyword}\\b)(?![^\\[]*\\]\\])`, 'gi');
     processed = processed.replace(regex, `[[NAV:${route.path}:${route.label}]]`);
   }
 
-  // Third pass: convert markers to React elements
+  // Third pass: convert all [[NAV:...]] markers to React elements
   const markerPattern = /\[\[NAV:([^:]+):([^\]]+)\]\]/g;
   lastIndex = 0;
-
   while ((match = markerPattern.exec(processed)) !== null) {
     if (match.index > lastIndex) {
       parts.push(processed.substring(lastIndex, match.index));
@@ -124,7 +124,6 @@ function convertRoutesToLinks(text: string): React.ReactNode[] {
     parts.push(<NavPill key={`nav-${keyCounter++}`} to={match[1]} label={match[2]} />);
     lastIndex = match.index + match[0].length;
   }
-
   if (lastIndex < processed.length) {
     parts.push(processed.substring(lastIndex));
   }
@@ -132,10 +131,9 @@ function convertRoutesToLinks(text: string): React.ReactNode[] {
   return parts.length > 0 ? parts : [text];
 }
 
-// Code block with copy button
+// Code block with copy button (unchanged – already premium)
 const CodeBlock: React.FC<{ code: string; language?: string }> = ({ code, language }) => {
   const [copied, setCopied] = useState(false);
-
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(code);
@@ -146,7 +144,6 @@ const CodeBlock: React.FC<{ code: string; language?: string }> = ({ code, langua
       toast.error('Failed to copy');
     }
   }, [code]);
-
   return (
     <div className="relative group my-3">
       <div className="flex items-center justify-between px-4 py-2 bg-zinc-900 rounded-t-lg border-b border-zinc-700">
@@ -249,6 +246,14 @@ const AIMessageContent: React.FC<AIMessageContentProps> = ({ content, isUser }) 
             }
             return <code className={className}>{children}</code>;
           },
+          // NEW: Premium image rendering (rounded, bordered, subtle shadow)
+          img: ({ src, alt }) => (
+            <img
+              src={src}
+              alt={alt || ''}
+              className="my-4 rounded-2xl max-w-full h-auto border border-border/50 shadow-sm"
+            />
+          ),
           blockquote: ({ children }) => (
             <blockquote className="border-l-3 border-primary/50 bg-primary/5 pl-4 py-2 pr-3 rounded-r-lg italic text-foreground/80 my-3">
               {children}
