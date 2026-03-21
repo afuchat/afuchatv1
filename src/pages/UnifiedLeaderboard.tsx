@@ -75,12 +75,19 @@ const UnifiedLeaderboard = () => {
     return value.toLocaleString();
   };
 
+  const getRankLabel = (index: number) => {
+    if (index === 0) return '1st';
+    if (index === 1) return '2nd';
+    if (index === 2) return '3rd';
+    return `${index + 1}th`;
+  };
+
   const getSubtitle = (user: any) =>
     isGiftTab ? `${user.gift_count} gifts received` : (user.current_grade || 'Rookie');
 
   const getValue = (user: any) => (isGiftTab ? user.total_xp : user.xp);
 
-  // Premium Flat Top 3 Cards
+  // Flat Top 3 Cards
   const TopThree = () => {
     if (!leaderboard.length) return null;
     const top3 = leaderboard.slice(0, 3);
@@ -96,7 +103,7 @@ const UnifiedLeaderboard = () => {
               onClick={() => navigate(`/@${user.handle}`)}
               className={cn(
                 "group relative bg-card rounded-3xl p-6 flex flex-col items-center text-center border transition-all hover:shadow-xl cursor-pointer",
-                isFirst && "border-emerald-400/60 shadow-emerald-400/10 scale-[1.03]"
+                isFirst && "border-emerald-400/60 shadow-emerald-400/10"
               )}
             >
               {/* Rank Badge */}
@@ -141,7 +148,7 @@ const UnifiedLeaderboard = () => {
     );
   };
 
-  // Clean Flat List (ranks 4+)
+  // Clean Flat List
   const LeaderboardList = () => (
     <div className="mx-4 bg-card rounded-3xl overflow-hidden border shadow-sm">
       <div className="divide-y divide-border/60">
@@ -160,7 +167,7 @@ const UnifiedLeaderboard = () => {
               </div>
 
               <Avatar className="h-11 w-11 ring-1 ring-border/60">
-                <AvatarImage src={user.avatar_url} className="object-cover" />
+                <AvatarImage src={user.avatar_url} />
                 <AvatarFallback>{user.display_name?.[0]?.toUpperCase()}</AvatarFallback>
               </Avatar>
 
