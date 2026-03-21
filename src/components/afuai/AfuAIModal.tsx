@@ -86,6 +86,11 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
   const [currentThinking, setCurrentThinking] = useState<string | null>(null);
   const [isThinkingStreaming, setIsThinkingStreaming] = useState(false);
   const [thinkingComplete, setThinkingComplete] = useState(false);
+
+  // Premium connected display
+  const [pendingReply, setPendingReply] = useState<string | null>(null);
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
+
   const aiModels = isMobile ? AI_MODELS_MOBILE : AI_MODELS_DESKTOP;
   const [selectedModel, setSelectedModel] = useState<AIModel>(AI_MODELS_DESKTOP[0]);
   const [webSearchMode, setWebSearchMode] = useState(false);
@@ -122,9 +127,9 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
   // Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading, currentThinking]);
+  }, [messages, loading, currentThinking, pendingReply]);
 
-  // Focus textarea when opening
+  // Focus textarea
   useEffect(() => {
     if (isOpen) setTimeout(() => textareaRef.current?.focus(), 300);
   }, [isOpen]);
@@ -173,108 +178,6 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || !user || loading) return;
-
-    let sessionId = currentSessionId;
-    if (!sessionId) {
-      sessionId = await createNewSession();
-      if (!sessionId) { toast.error('Failed to create session'); return; }
-    }
-
-    const userMessage = input.trim();
-    const userMsg: Message = { role: 'user', content: userMessage, timestamp: new Date() };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
-    setLoading(true);
-
-    const isImageGen = selectedModel.isImageModel;
-    const initialThinking = `User requested: "${userMessage.length > 100 ? userMessage.substring(0, 100) + '...' : userMessage}"`;
-    setCurrentThinking(initialThinking);
-    setIsThinkingStreaming(true);
-    setThinkingComplete(false);
-
-    await saveMessage(sessionId, 'user', userMessage);
-
-    try {
-      if (isImageGen) {
-        setCurrentThinking(`${initialThinking}\nAnalyzing description for image generation...\nGenerating image with AI...`);
-        const { data, error } = await supabase.functions.invoke('generate-ai-image', { body: { prompt: userMessage } });
-        if (error) throw error;
-
-        setThinkingComplete(true);
-        setIsThinkingStreaming(false);
-        await new Promise(r => setTimeout(r, 500));
-
-        const assistantMsg: Message = {
-          role: 'assistant',
-          content: data?.reply || 'Here\'s the image I generated!',
-          imageUrl: data?.images?.[0] || undefined,
-          thought: currentThinking || undefined,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, assistantMsg]);
-        setCurrentThinking(null);
-        await saveMessage(sessionId, 'assistant', assistantMsg.content);
-      } else {
-        const history = messages.map(m => ({ role: m.role, content: m.content }));
-        const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
-          body: { message: userMessage, model: selectedModel.id, webSearchMode, history },
-        });
-
-        if (error) {
-          // Handle premium requirement
-          if (error.message?.includes('Premium required')) {
-            toast.error('AfuAI requires Premium subscription');
-            setCurrentThinking(null);
-            setIsThinkingStreaming(false);
-            return;
-          }
-          throw error;
-        }
-
-        if (data) {
-          if (data.thought) setCurrentThinking(data.thought);
-          setThinkingComplete(true);
-          setIsThinkingStreaming(false);
-          await new Promise(r => setTimeout(r, 600));
-
-          let replyContent = data.reply;
-          const postAction = parsePostAction(replyContent);
-
-          if (postAction) {
-            replyContent = cleanPostAction(replyContent);
-            if (postAction.auto_publish) {
-              // Auto-publish directly
-              await createPost(postAction.content);
-              replyContent += '\n\n✅ Post published successfully to your feed!';
-            } else {
-              setPendingPostAction(postAction);
-            }
-          }
-
-          const assistantMsg: Message = {
-            role: 'assistant',
-            content: replyContent,
-            thought: data.thought,
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, assistantMsg]);
-          setCurrentThinking(null);
-          await saveMessage(sessionId, 'assistant', replyContent);
-        }
-      }
-    } catch (e) {
-      console.error('AfuAI error:', e);
-      toast.error('Failed to get response');
-      setCurrentThinking(null);
-      setIsThinkingStreaming(false);
-    } finally {
-      setLoading(false);
-      setThinkingComplete(false);
-    }
-  };
-
   const AI_WATERMARK = '\n\n✦ Generated with AfuAI';
 
   const createPost = async (content: string) => {
@@ -318,7 +221,118 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  // For page mode (mobile), always render. For modal mode (desktop), check isOpen.
+  const handleSend = async () => {
+    if (!input.trim() || !user || loading) return;
+
+    let sessionId = currentSessionId;
+    if (!sessionId) {
+      sessionId = await createNewSession();
+      if (!sessionId) { toast.error('Failed to create session'); return; }
+    }
+
+    const userMessage = input.trim();
+    const userMsg: Message = { role: 'user', content: userMessage, timestamp: new Date() };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    setLoading(true);
+
+    const isImageGen = selectedModel.isImageModel;
+    const initialThinking = `User requested: "${userMessage.length > 100 ? userMessage.substring(0, 100) + '...' : userMessage}"`;
+
+    setCurrentThinking(initialThinking);
+    setIsThinkingStreaming(true);
+    setThinkingComplete(false);
+    setPendingReply(null);
+    setPendingImageUrl(null);
+
+    await saveMessage(sessionId, 'user', userMessage);
+
+    try {
+      if (isImageGen) {
+        setCurrentThinking(`${initialThinking}\nAnalyzing description for image generation...\nGenerating image with AI...`);
+        const { data, error } = await supabase.functions.invoke('generate-ai-image', { body: { prompt: userMessage } });
+        if (error) throw error;
+
+        setThinkingComplete(true);
+        setIsThinkingStreaming(false);
+        setPendingReply(data?.reply || "Here's the image I generated!");
+        setPendingImageUrl(data?.images?.[0]);
+
+        await new Promise(r => setTimeout(r, 500));
+
+        const assistantMsg: Message = {
+          role: 'assistant',
+          content: data?.reply || "Here's the image I generated!",
+          imageUrl: data?.images?.[0],
+          thought: currentThinking,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, assistantMsg]);
+        setPendingReply(null);
+        setPendingImageUrl(null);
+        setCurrentThinking(null);
+        await saveMessage(sessionId, 'assistant', assistantMsg.content);
+      } else {
+        const history = messages.map(m => ({ role: m.role, content: m.content }));
+        const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
+          body: { message: userMessage, model: selectedModel.id, webSearchMode, history },
+        });
+
+        if (error) {
+          if (error.message?.includes('Premium required')) {
+            toast.error('AfuAI requires Premium subscription');
+            setCurrentThinking(null);
+            setIsThinkingStreaming(false);
+            return;
+          }
+          throw error;
+        }
+
+        if (data) {
+          if (data.thought) setCurrentThinking(data.thought);
+
+          let replyContent = data.reply;
+          const postAction = parsePostAction(replyContent);
+          if (postAction) {
+            replyContent = cleanPostAction(replyContent);
+            if (postAction.auto_publish) {
+              await createPost(postAction.content);
+              replyContent += '\n\n✅ Post published successfully to your feed!';
+            } else {
+              setPendingPostAction(postAction);
+            }
+          }
+
+          setThinkingComplete(true);
+          setIsThinkingStreaming(false);
+          setPendingReply(replyContent);
+
+          await new Promise(r => setTimeout(r, 600));
+
+          const assistantMsg: Message = {
+            role: 'assistant',
+            content: replyContent,
+            thought: data.thought,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, assistantMsg]);
+          setPendingReply(null);
+          setCurrentThinking(null);
+          await saveMessage(sessionId, 'assistant', replyContent);
+        }
+      }
+    } catch (e) {
+      console.error('AfuAI error:', e);
+      toast.error('Failed to get response');
+      setCurrentThinking(null);
+      setIsThinkingStreaming(false);
+      setPendingReply(null);
+    } finally {
+      setLoading(false);
+      setThinkingComplete(false);
+    }
+  };
+
   const shouldRender = isPage || isOpen;
   if (!shouldRender) return null;
 
@@ -329,7 +343,8 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
       closeAfuAI();
     }
   };
-  // Shared content renderer
+
+  // Full renderContent with premium connected thinking
   const renderContent = () => (
     <>
       {/* Header */}
@@ -369,7 +384,7 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
         </div>
       </header>
 
-      {/* Messages */}
+      {/* Messages Area */}
       <div
         className="flex-1 overflow-y-auto"
         style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
@@ -430,25 +445,28 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
             ))}
           </div>
 
+          {/* PREMIUM CONNECTED THINKING + MESSAGE */}
           {loading && currentThinking && (
             <div className="mt-5 animate-in slide-in-from-bottom-3 duration-300">
-              <ThinkingDisplay
-                thought={currentThinking}
-                isStreaming={isThinkingStreaming}
-                isComplete={thinkingComplete}
-                className="w-full"
-              />
-            </div>
-          )}
+              <div className="rounded-2xl border border-border/50 overflow-hidden shadow-sm">
+                <ThinkingDisplay
+                  thought={currentThinking}
+                  isStreaming={isThinkingStreaming}
+                  isComplete={thinkingComplete}
+                  connectedToMessage={true}
+                  className="w-full"
+                />
 
-          {loading && thinkingComplete && !currentThinking && (
-            <div className="flex items-start mt-5">
-              <div className="bg-muted/50 border border-border/50 rounded-2xl rounded-bl-md px-4 py-3">
-                <div className="flex gap-1.5">
-                  <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
+                {thinkingComplete && pendingReply && (
+                  <div className="px-4 pb-4 bg-muted/50 border-t border-border/50">
+                    <AIMessageContent content={pendingReply} isUser={false} />
+                    {pendingImageUrl && (
+                      <div className="mt-3">
+                        <GeneratedImageDisplay imageUrl={pendingImageUrl} prompt={pendingReply} />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -522,7 +540,6 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-
               <button
                 onClick={() => setWebSearchMode(!webSearchMode)}
                 disabled={loading}
@@ -543,14 +560,13 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
     </>
   );
 
-  // Page mode: render as a full page div (no modal, no animation)
+  // Page mode
   if (isPage) {
     return (
       <>
         <div className="flex flex-col h-[100dvh] bg-background">
           {renderContent()}
         </div>
-
         {/* History Sheet */}
         <Sheet open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
           <SheetContent side="left" className={cn("border-r border-border/40 z-[250]", isMobile ? "w-[85%]" : "w-80")}>
@@ -600,7 +616,6 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
             </ScrollArea>
           </SheetContent>
         </Sheet>
-
         {/* Post Preview */}
         <PostPreviewDialog
           postAction={pendingPostAction}
@@ -611,7 +626,7 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
     );
   }
 
-  // Modal mode: animated panel for desktop
+  // Modal mode
   return (
     <>
       <AnimatePresence>
@@ -627,7 +642,6 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* History Sheet */}
       <Sheet open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
         <SheetContent side="left" className={cn("border-r border-border/40 z-[250]", isMobile ? "w-[85%]" : "w-80")}>
@@ -677,7 +691,6 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
           </ScrollArea>
         </SheetContent>
       </Sheet>
-
       {/* Post Preview */}
       <PostPreviewDialog
         postAction={pendingPostAction}
