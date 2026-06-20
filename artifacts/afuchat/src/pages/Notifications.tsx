@@ -590,7 +590,7 @@ const Notifications = () => {
   const hasContent = filteredNotifications.length > 0 || (activeFilter === 'all' && followRequests.length > 0);
 
   return (
-    <div className="h-full flex flex-col max-w-2xl mx-auto">
+    <div className="min-h-screen flex flex-col max-w-2xl mx-auto pb-20">
       {/* ── Header ── */}
       <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-4 h-14">
@@ -696,7 +696,7 @@ const Notifications = () => {
       </div>
 
       {/* ── Content ── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         {!hasContent ? (
           <EmptyState filter={activeFilter} />
         ) : (

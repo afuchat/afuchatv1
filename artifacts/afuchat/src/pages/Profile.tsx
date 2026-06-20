@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { MessageSquare, UserPlus, Calendar, Lock, Camera, Building2, UserX, Clock, Users, MoreVertical, Share2, Footprints, Github } from 'lucide-react';
+import { imgAvatar, imgBanner } from '@/lib/cdn';
 import { ButtonLoader } from '@/components/ui/CustomLoader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -266,7 +267,7 @@ const ProfileAvatarDisplay = ({ profileId, profile }: { profileId: string | null
                                 title={isOwnProfile ? 'Click to edit profile picture' : undefined}
                         >
                                 <img 
-                                        src={profile.avatar_url} 
+                                        src={imgAvatar(profile.avatar_url)} 
                                         alt={profile.display_name}
                                         className="w-full h-full object-cover"
                                 />
@@ -1281,7 +1282,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
                                                 </div>
                                         ) : profile?.banner_url ? (
                                                 <img 
-                                                        src={profile.banner_url} 
+                                                        src={imgBanner(profile.banner_url)} 
                                                         alt="Profile banner"
                                                         className="w-full h-full object-cover"
                                                 />

@@ -71,6 +71,7 @@ const Events = lazy(() => import("./pages/Events"));
 const EventDetail = lazy(() => import("./pages/EventDetail"));
 const MusicShorts = lazy(() => import("./pages/MusicShorts"));
 const DesktopChats = lazy(() => import("./pages/Chats"));
+const ChatRoom = lazy(() => import("./pages/ChatRoom"));
 const ShopCart = lazy(() => import("./pages/ShopCart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
@@ -211,7 +212,7 @@ const AppRoutes = () => {
 
           {/* ── Chats ── */}
           <Route path="/chats" element={<CombinedRouteGuard requireAuth><Layout><DesktopChats /></Layout></CombinedRouteGuard>} />
-          <Route path="/chat/:chatId" element={<CombinedRouteGuard requireAuth><Layout><DesktopChats /></Layout></CombinedRouteGuard>} />
+          <Route path="/chat/:chatId" element={<CombinedRouteGuard requireAuth><ChatRoom /></CombinedRouteGuard>} />
 
           {/* ── Gifts ── */}
           <Route path="/gifts" element={<Layout><Gifts /></Layout>} />

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { cn } from '@/lib/utils';
+import { imgAvatar, imgPost } from '@/lib/cdn';
 
 interface QuotedPost {
   id: string;
@@ -69,7 +70,7 @@ export const QuotedPostCard: React.FC<QuotedPostCardProps> = ({ quotedPost, clas
           className="h-5 w-5 cursor-pointer" 
           onClick={handleViewProfile}
         >
-          <AvatarImage src={quotedPost.profiles.avatar_url || undefined} alt={quotedPost.profiles.display_name} />
+          <AvatarImage src={imgAvatar(quotedPost.profiles.avatar_url)} alt={quotedPost.profiles.display_name} />
           <AvatarFallback className="text-[8px]">
             {quotedPost.profiles.display_name.charAt(0).toUpperCase()}
           </AvatarFallback>
@@ -111,7 +112,7 @@ export const QuotedPostCard: React.FC<QuotedPostCardProps> = ({ quotedPost, clas
       {images.length > 0 && (
         <div className="mt-2 rounded-xl overflow-hidden max-h-32 relative">
           <img 
-            src={images[0].image_url} 
+            src={imgPost(images[0].image_url)} 
             alt={images[0].alt_text || 'Quoted post image'}
             className="w-full h-full object-cover max-h-32"
           />

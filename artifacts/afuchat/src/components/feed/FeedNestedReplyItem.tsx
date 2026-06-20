@@ -7,6 +7,7 @@ import { useAITranslation } from '@/hooks/useAITranslation';
 import { Pin, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WarningBadge } from '@/components/WarningBadge';
+import { imgAvatar } from '@/lib/cdn';
 
 interface Reply {
   id: string;
@@ -168,7 +169,7 @@ export const FeedNestedReplyItem = ({
             onClick={() => handleViewProfile(reply.author_id)}
           >
             <Avatar className="h-9 w-9 border border-border">
-              <AvatarImage src={reply.profiles.avatar_url || undefined} />
+              <AvatarImage src={imgAvatar(reply.profiles.avatar_url)} />
               <AvatarFallback className="bg-muted text-muted-foreground text-sm font-semibold">
                 {reply.profiles.display_name?.charAt(0)?.toUpperCase() || '?'}
               </AvatarFallback>

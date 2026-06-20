@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { imgAvatar } from '@/lib/cdn';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { checkContentAllowed } from '@/lib/contentModeration';
@@ -142,7 +143,7 @@ export const CommentInput = ({
     )}>
       {/* Avatar */}
       <Avatar className={cn(compact ? "h-8 w-8" : "h-10 w-10", "flex-shrink-0")}>
-        <AvatarImage src={userProfile?.avatar_url || undefined} />
+        <AvatarImage src={imgAvatar(userProfile?.avatar_url)} />
         <AvatarFallback className="bg-primary/10 text-primary text-xs">
           {user.email?.[0]?.toUpperCase() || 'U'}
         </AvatarFallback>

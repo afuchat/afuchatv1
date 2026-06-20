@@ -527,7 +527,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
 
   if (loading && chats.length === 0) {
     return (
-      <div className={`flex flex-col bg-background relative overflow-hidden ${isEmbedded ? 'h-full' : 'h-screen'}`}>
+      <div className={`flex flex-col bg-background relative overflow-hidden ${isEmbedded ? 'h-full' : 'h-[calc(100dvh-3.5rem-4rem)] md:h-screen'}`}>
         <ChatListSkeleton />
       </div>
     );
@@ -541,7 +541,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
   ];
 
   return (
-    <div className={`flex flex-col bg-background relative overflow-hidden ${isEmbedded ? 'h-full' : 'h-screen'}`}>
+    <div className={`flex flex-col bg-background relative overflow-hidden ${isEmbedded ? 'h-full' : 'h-[calc(100dvh-3.5rem-4rem)] md:h-screen'}`}>
       {/* Stories Header */}
       <ChatStoriesHeader 
         isExpanded={isStoriesExpanded}

@@ -8,6 +8,7 @@ import { MessageActionsMenu } from './MessageActionsMenu';
 import { OrderNotificationActions } from '@/components/shop/OrderNotificationActions';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar as UIAvatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { imgAvatar } from '@/lib/cdn';
 
 // Helper function to parse message content with clickable links, mentions, and hashtags
 const parseMessageContent = (content: string): React.ReactNode => {
@@ -452,7 +453,7 @@ export const MessageBubble = ({
       {isGroup && !isOwn && isLastInGroup && (
         <Link to={`/@${message.profiles.handle}`} className="flex-shrink-0 mb-0.5" onClick={(e) => e.stopPropagation()}>
           <UIAvatar className="h-7 w-7">
-            <AvatarImage src={message.profiles.avatar_url || undefined} alt={message.profiles.display_name} />
+            <AvatarImage src={imgAvatar(message.profiles.avatar_url)} alt={message.profiles.display_name} />
             <AvatarFallback className="text-[10px]">
               {message.profiles.display_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
             </AvatarFallback>

@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChatMenuDrawer } from './ChatMenuDrawer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { imgAvatar } from '@/lib/cdn';
 
 interface StoryUser {
   user_id: string;
@@ -210,7 +211,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                   className="flex-shrink-0"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={currentUserProfile?.avatar_url || undefined} />
+                    <AvatarImage src={imgAvatar(currentUserProfile?.avatar_url)} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                       {currentUserProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
                     </AvatarFallback>
@@ -232,7 +233,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                         <div className="p-[1.5px] rounded-full bg-gradient-to-br from-primary via-teal-400 to-green-500">
                           {currentUserProfile?.avatar_url ? (
                             <img
-                              src={currentUserProfile.avatar_url}
+                              src={imgAvatar(currentUserProfile.avatar_url)}
                               alt="My Story"
                               className="h-7 w-7 rounded-full object-cover border-[1.5px] border-background"
                             />
@@ -257,7 +258,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                         <div className="p-[1.5px] rounded-full bg-gradient-to-br from-primary via-teal-400 to-green-500">
                           {storyUser.avatar_url ? (
                             <img
-                              src={storyUser.avatar_url}
+                              src={imgAvatar(storyUser.avatar_url)}
                               alt={storyUser.display_name}
                               className="h-7 w-7 rounded-full object-cover border-[1.5px] border-background"
                             />
@@ -312,7 +313,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                       <div className={currentUserHasStory ? "p-[2px] rounded-full bg-gradient-to-br from-primary via-teal-400 to-green-500" : ""}>
                         {currentUserProfile?.avatar_url ? (
                           <img
-                            src={currentUserProfile.avatar_url}
+                            src={imgAvatar(currentUserProfile.avatar_url)}
                             alt="My Story"
                             className={`h-14 w-14 rounded-full object-cover ${currentUserHasStory ? 'border-2 border-background' : 'border-2 border-border'}`}
                           />
@@ -346,7 +347,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                       <div className="p-[2px] rounded-full bg-gradient-to-br from-primary via-teal-400 to-green-500">
                         {storyUser.avatar_url ? (
                           <img
-                            src={storyUser.avatar_url}
+                            src={imgAvatar(storyUser.avatar_url)}
                             alt={storyUser.display_name}
                             className="h-14 w-14 rounded-full object-cover border-2 border-background"
                           />

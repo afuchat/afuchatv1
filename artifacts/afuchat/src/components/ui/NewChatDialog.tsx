@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
 import { UserAvatar } from '@/components/avatar/UserAvatar';
+import { imgAvatar } from '@/lib/cdn';
 
 interface UserProfile {
   id: string;
@@ -174,7 +175,7 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                 >
                   {profile.avatar_url ? (
                     <img
-                      src={profile.avatar_url}
+                      src={imgAvatar(profile.avatar_url)}
                       alt={profile.display_name}
                       className="h-10 w-10 rounded-full object-cover flex-shrink-0"
                     />
