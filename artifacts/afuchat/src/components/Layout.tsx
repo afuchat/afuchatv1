@@ -1,481 +1,438 @@
-import { ReactNode, useEffect, useState, useRef } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAccountMode } from '@/contexts/AccountModeContext';
-import { useSettings } from '@/contexts/SettingsContext';
-import { Home, MessageSquare, Search, Bell, User, Settings, Shield, BarChart3, Grid3x3, Gamepad2, ShoppingBag, Wallet, Send, Gift, Image as ImageIcon, Hash, TrendingUp, Building2, MessageCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import {
+  Home, Search, Bell, MessageSquare, Gift, Wallet, ShoppingBag,
+  Sparkles, Music, Grid3x3, Crown, Shield, User, Settings,
+  Calendar, TrendingUp, DollarSign, Star, LogOut, Plus, X
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/components/Logo';
-import NotificationIcon from '@/components/nav/NotificationIcon';
-import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
-import { MainTabsNavigation } from '@/components/nav/MainTabsNavigation';
-import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
-import { DesktopHybridLayout } from '@/components/DesktopHybridLayout';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useIsTelegram } from '@/hooks/useIsTelegram';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { useDeveloperStatus } from '@/hooks/useDeveloperStatus';
-
-// Check if current path is a main tab route
-const MAIN_TAB_ROUTES = ['/', '/home', '/feed', '/search', '/shorts', '/notifications', '/chats'];
-const isMainTabRoute = (pathname: string): boolean => {
-  return MAIN_TAB_ROUTES.includes(pathname);
-};
+import NewPostModal from '@/components/ui/NewPostModal';
 
 interface LayoutProps {
   children: ReactNode;
   hideNav?: boolean;
 }
 
-const Layout = ({ children, hideNav = false }: LayoutProps) => {
-  const { user } = useAuth();
-  const { mode, canUseBusiness } = useAccountMode();
-  const { openSettings } = useSettings();
-  
+type NavItem = {
+  label: string;
+  icon: React.ElementType;
+  path: string;
+  badge?: number;
+  authRequired?: boolean;
+};
+
+const PRIMARY_NAV: NavItem[] = [
+  { label: 'Home', icon: Home, path: '/' },
+  { label: 'Explore', icon: Search, path: '/search' },
+  { label: 'Notifications', icon: Bell, path: '/notifications', authRequired: true },
+  { label: 'Messages', icon: MessageSquare, path: '/chats', authRequired: true },
+  { label: 'Moments', icon: TrendingUp, path: '/moments', authRequired: true },
+];
+
+const SECONDARY_NAV: NavItem[] = [
+  { label: 'Gifts', icon: Gift, path: '/gifts' },
+  { label: 'Wallet', icon: Wallet, path: '/wallet', authRequired: true },
+  { label: 'Marketplace', icon: ShoppingBag, path: '/marketplace' },
+  { label: 'Events', icon: Calendar, path: '/events' },
+  { label: 'Music', icon: Music, path: '/shorts' },
+  { label: 'Mini Apps', icon: Grid3x3, path: '/mini-programs' },
+  { label: 'AfuAI', icon: Sparkles, path: '/afuai' },
+];
+
+const TERTIARY_NAV: NavItem[] = [
+  { label: 'Creator Hub', icon: DollarSign, path: '/creator-earnings', authRequired: true },
+  { label: 'Affiliate', icon: Star, path: '/affiliate-dashboard', authRequired: true },
+  { label: 'Premium', icon: Crown, path: '/premium' },
+];
+
+const BOTTOM_TABS = [
+  { label: 'Home', icon: Home, path: '/' },
+  { label: 'Explore', icon: Search, path: '/search' },
+  { label: 'Gifts', icon: Gift, path: '/gifts' },
+  { label: 'Alerts', icon: Bell, path: '/notifications' },
+];
+
+const CHAT_PATHS = ['/chats', '/chat/'];
+
+function isActivePath(pathname: string, path: string): boolean {
+  if (path === '/') return pathname === '/' || pathname === '/home' || pathname === '/feed';
+  if (path === '/chats') return pathname.startsWith('/chats') || pathname.startsWith('/chat/');
+  return pathname === path || pathname.startsWith(path + '/');
+}
+
+function NavLink({
+  item,
+  collapsed,
+  badge,
+  onClick,
+}: {
+  item: NavItem;
+  collapsed?: boolean;
+  badge?: number;
+  onClick?: () => void;
+}) {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-  const isMobile = useIsMobile();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isBusinessMode, setIsBusinessMode] = useState(false);
-  const [isAffiliate, setIsAffiliate] = useState(false);
-  const [isNavHidden, setIsNavHidden] = useState(false);
-  const lastScrollY = useRef(0);
-  const [chatScrollHide, setChatScrollHide] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [unreadChats, setUnreadChats] = useState(0);
-  const { isDeveloper } = useDeveloperStatus();
-  
-  // Detect if running in iframe (embedded mini program)
-  const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
-  // NOTE: We no longer hide navigation just because we're in an iframe.
-  // (Lovable preview + in-app webviews are iframes; hiding nav breaks the app.)
-  
-  // Initialize push notifications listener
-  usePushNotifications();
-
-  // Cache key for user data
-  const userCacheKey = user?.id ? `layout_user_data_${user.id}` : null;
-
-  // Define functions before useEffect hooks
-  const checkAdminStatus = async () => {
-    if (!user) return;
-    
-    // Check memory cache first
-    if (userCacheKey) {
-      const cached = sessionStorage.getItem(userCacheKey);
-      if (cached) {
-        try {
-          const data = JSON.parse(cached);
-          if (Date.now() - data.timestamp < 60000) { // 1 minute cache
-            setIsAdmin(data.isAdmin);
-            setIsBusinessMode(data.isBusinessMode);
-            setIsAffiliate(data.isAffiliate);
-            return;
-          }
-        } catch {}
-      }
-    }
-    
-    // Check admin status from secure user_roles table, not profiles
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
-    
-    const adminStatus = !!roleData;
-    setIsAdmin(adminStatus);
-    
-    // Get business mode and affiliate status from profiles (non-sensitive)
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('is_business_mode, is_affiliate')
-      .eq('id', user.id)
-      .single();
-
-    const businessMode = profileData?.is_business_mode || false;
-    const affiliateStatus = profileData?.is_affiliate || false;
-    
-    setIsBusinessMode(businessMode);
-    setIsAffiliate(affiliateStatus);
-    
-    // Cache the results
-    if (userCacheKey) {
-      sessionStorage.setItem(userCacheKey, JSON.stringify({
-        isAdmin: adminStatus,
-        isBusinessMode: businessMode,
-        isAffiliate: affiliateStatus,
-        timestamp: Date.now()
-      }));
-    }
-  };
-
-  // All hooks must be called before any conditional returns
-  useEffect(() => {
-    if (user) {
-      checkAdminStatus();
-      
-      // Fetch unread notifications count
-      const fetchUnreadCount = async () => {
-        const { count } = await supabase
-          .from('notifications')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('is_read', false);
-        if (count !== null) setUnreadNotifications(count);
-      };
-      fetchUnreadCount();
-
-      // Fetch unread chats count
-      const fetchUnreadChatsCount = async () => {
-        // Get all chats user is a member of
-        const { data: memberChats } = await supabase
-          .from('chat_members')
-          .select('chat_id')
-          .eq('user_id', user.id);
-        
-        if (!memberChats || memberChats.length === 0) {
-          setUnreadChats(0);
-          return;
-        }
-
-        const chatIds = memberChats.map(c => c.chat_id);
-        
-        // Get messages with their read status from message_status table
-        const { data: messagesWithStatus } = await supabase
-          .from('messages')
-          .select(`
-            chat_id,
-            id,
-            message_status!left(read_at, user_id)
-          `)
-          .in('chat_id', chatIds)
-          .neq('sender_id', user.id);
-        
-        // Count unique chats with unread messages (no read_at for current user)
-        const unreadChatIds = new Set<string>();
-        messagesWithStatus?.forEach(msg => {
-          const userReadStatus = msg.message_status?.find((s: any) => s.user_id === user.id);
-          if (!userReadStatus || !userReadStatus.read_at) {
-            unreadChatIds.add(msg.chat_id);
-          }
-        });
-        setUnreadChats(unreadChatIds.size);
-      };
-      fetchUnreadChatsCount();
-
-      // Real-time subscription for notifications
-      const notifChannel = supabase
-        .channel('nav-notifications')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        }, () => {
-          fetchUnreadCount();
-        })
-        .subscribe();
-
-      // Real-time subscription for messages (unread chats)
-      const msgChannel = supabase
-        .channel('nav-messages')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-        }, () => {
-          fetchUnreadChatsCount();
-        })
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'message_status',
-        }, () => {
-          fetchUnreadChatsCount();
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(notifChannel);
-        supabase.removeChannel(msgChannel);
-      };
-    }
-  }, [user]);
-
-  const isTelegram = useIsTelegram();
-
-  useEffect(() => {
-    // Disable scroll-to-hide in Telegram — keep nav always visible
-    if (!isMobile || isTelegram) return;
-    
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
-        setIsNavHidden(true);
-      } else {
-        setIsNavHidden(false);
-      }
-      
-      lastScrollY.current = currentScrollY;
-    };
-
-    const handleChatScroll = (e: CustomEvent) => {
-      setChatScrollHide(e.detail.hide);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('chat-scroll-state' as any, handleChatScroll as any);
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('chat-scroll-state' as any, handleChatScroll as any);
-    };
-  }, [isMobile, isTelegram]);
-
-  // Show desktop-friendly layout instead of blocking
-  const isDesktop = !isMobile;
-
-  const navItems = [
-    { path: '/', icon: Home, label: t('common.home') },
-    { path: '/search', icon: Search, label: t('search.title') },
-    { path: '/notifications', icon: Bell, label: t('common.notifications'), badge: true },
-    { path: '/chats', icon: MessageSquare, label: t('common.messages') },
-  ];
-
-  // Additional features section
-  const featureItems = [
-    { path: '/shop', icon: ShoppingBag, label: 'Shop' },
-    { path: '/wallet', icon: Wallet, label: 'Wallet', requiresAuth: true },
-    { path: '/transfer', icon: Send, label: 'Transfer', requiresAuth: true },
-    { path: '/gifts', icon: Gift, label: 'Gifts' },
-    { path: '/moments', icon: ImageIcon, label: 'Moments' },
-  ];
-
-  if (user) {
-    navItems.push({ path: `/${user.id}`, icon: User, label: t('common.profile'), badge: false });
-  }
-
-  if (isAffiliate && !isDeveloper) {
-    navItems.push({ path: '/affiliate-dashboard', icon: TrendingUp, label: 'Affiliate', badge: false });
-  }
-
-  if (isAdmin) {
-    navItems.push({ path: '/admin', icon: Shield, label: t('admin.title'), badge: false });
-  }
-
-  if (isBusinessMode && mode === 'business') {
-    navItems.push({ path: '/business/dashboard', icon: BarChart3, label: t('business.title'), badge: false });
-  }
-
-  navItems.push({ path: '/settings', icon: Settings, label: t('common.settings'), badge: false });
-
-  const isActive = (path: string) => {
-    if (path === '/') {
-      return location.pathname === '/';
-    }
-    return location.pathname.startsWith(path);
-  };
-  
-  // Hide bottom navigation in chat rooms or when hideNav is true.
-  const isChatRoom = location.pathname.startsWith('/chat/');
-  const shouldHideNav = isChatRoom || hideNav;
-  const shouldHideUI = hideNav;
-  
-  // Use MainTabsNavigation for main tab routes (sliding tab behavior)
-  const onMainTab = isMainTabRoute(location.pathname);
-  
-  // Desktop: use DesktopHybridLayout for all pages
-  if (isDesktop) {
-    return (
-      <DesktopHybridLayout>
-        {children}
-      </DesktopHybridLayout>
-    );
-  }
-
-  if (onMainTab && !shouldHideNav) {
-    return (
-      <div className={cn(
-        "overflow-hidden bg-background select-none touch-pan-y",
-        isTelegram ? "h-full" : "h-[100dvh]"
-      )}>
-        <MainTabsNavigation chatScrollHide={chatScrollHide}>
-          {children}
-        </MainTabsNavigation>
-      </div>
-    );
-  }
+  const active = isActivePath(location.pathname, item.path);
+  const Icon = item.icon;
 
   return (
-    <div
+    <Link
+      to={item.path}
+      onClick={onClick}
       className={cn(
-        "min-h-screen bg-background select-none touch-pan-y",
-        isDesktop && "desktop-scrollbar"
+        'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group relative',
+        active
+          ? 'bg-primary/10 text-primary font-semibold'
+          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+        collapsed && 'justify-center px-2'
       )}
+      title={collapsed ? item.label : undefined}
     >
-      {/* Main Content */}
+      <div className="relative flex-shrink-0">
+        <Icon className={cn('h-5 w-5 transition-transform group-hover:scale-110', active && 'scale-110')} />
+        {badge != null && badge > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-0.5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+            {badge > 99 ? '99+' : badge}
+          </span>
+        )}
+      </div>
+      {!collapsed && (
+        <span className="text-[15px] truncate">{item.label}</span>
+      )}
+      {active && !collapsed && (
+        <motion.div
+          layoutId="sidebar-indicator"
+          className="absolute left-0 inset-y-1 w-[3px] bg-primary rounded-r-full"
+          transition={{ type: 'spring', stiffness: 400, damping: 40 }}
+        />
+      )}
+    </Link>
+  );
+}
+
+function NavDivider() {
+  return <div className="my-1.5 border-t border-border/40" />;
+}
+
+type LayoutProfile = {
+  display_name: string;
+  handle: string;
+  avatar_url: string | null;
+  is_admin: boolean | null;
+  current_grade: string | null;
+  platinum_until: string | null;
+};
+
+export default function Layout({ children, hideNav = false }: LayoutProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+
+  usePushNotifications();
+
+  const { data: profile } = useQuery({
+    queryKey: ['layout-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('display_name, handle, avatar_url, is_admin, current_grade, platinum_until')
+        .eq('id', user.id)
+        .single();
+      return data as unknown as LayoutProfile | null;
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+  });
+
+  const { data: unreadNotifs = 0 } = useQuery({
+    queryKey: ['unread-notifs', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count } = await (supabase as any)
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+      return count ?? 0;
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
+  });
+
+  const { data: unreadChats = 0 } = useQuery({
+    queryKey: ['unread-chats', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count } = await supabase
+        .from('chats')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .not('last_message_at', 'is', null);
+      return count ?? 0;
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
+  });
+
+  const isAdmin = profile?.is_admin ?? false;
+  const isPremium = profile?.platinum_until
+    ? new Date(profile.platinum_until) > new Date()
+    : false;
+
+  const getBadge = (path: string): number | undefined => {
+    if (path === '/notifications') return unreadNotifs || undefined;
+    if (path === '/chats') return unreadChats || undefined;
+    return undefined;
+  };
+
+  if (hideNav) return <>{children}</>;
+
+  const isProfilePath = location.pathname.startsWith('/@');
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      {/* ─── Desktop Sidebar ────────────────────────────── */}
+      <aside className="hidden md:flex flex-col fixed inset-y-0 left-0 w-64 border-r border-border/50 bg-background/95 backdrop-blur-sm z-30">
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 px-4 py-5">
+          <Logo size="sm" />
+          <span className="font-bold text-[18px] text-foreground tracking-tight">AfuChat</span>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto pb-4">
+          {PRIMARY_NAV.filter(i => !i.authRequired || user).map(item => (
+            <NavLink key={item.path} item={item} badge={getBadge(item.path)} />
+          ))}
+
+          <NavDivider />
+
+          {SECONDARY_NAV.filter(i => !i.authRequired || user).map(item => (
+            <NavLink key={item.path} item={item} />
+          ))}
+
+          <NavDivider />
+
+          {TERTIARY_NAV.filter(i => !i.authRequired || user).map(item => (
+            <NavLink key={item.path} item={item} />
+          ))}
+
+          {isAdmin && (
+            <>
+              <NavDivider />
+              <NavLink item={{ label: 'Admin', icon: Shield, path: '/admin' }} />
+            </>
+          )}
+        </nav>
+
+        {/* Create Post Button */}
+        {user && (
+          <div className="px-3 pb-3">
+            <button
+              onClick={() => setIsPostModalOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-colors text-[15px]"
+            >
+              <Plus className="h-4 w-4" />
+              New Post
+            </button>
+          </div>
+        )}
+
+        <NavDivider />
+
+        {/* User Widget */}
+        <div className="px-3 pb-4">
+          {user && profile ? (
+            <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors group">
+              <Link to={`/@${profile.handle}`}>
+                <Avatar className="h-9 w-9 ring-2 ring-border group-hover:ring-primary/30 transition-all">
+                  <AvatarImage src={profile.avatar_url ?? undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                    {(profile.display_name || 'U').slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{profile.display_name}</p>
+                <p className="text-xs text-muted-foreground truncate">@{profile.handle}</p>
+              </div>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  title="Settings"
+                >
+                  <Settings className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <button
+                onClick={() => navigate('/auth/signin')}
+                className="w-full py-2 px-4 text-sm font-medium text-primary border border-primary/30 hover:bg-primary/10 rounded-xl transition-colors"
+              >
+                Sign in
+              </button>
+              <button
+                onClick={() => navigate('/auth/signup')}
+                className="w-full py-2 px-4 text-sm font-semibold bg-primary text-white hover:bg-primary/90 rounded-xl transition-colors"
+              >
+                Create account
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* ─── Mobile Header ──────────────────────────────── */}
+      <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 bg-background/95 backdrop-blur-sm border-b border-border/50 flex items-center px-4 gap-3">
+        <Link to="/" className="flex items-center gap-2">
+          <Logo size="sm" />
+          <span className="font-bold text-[17px] tracking-tight">AfuChat</span>
+        </Link>
+        <div className="flex-1" />
+        {user ? (
+          <>
+            <Link
+              to="/chats"
+              className="relative p-2 rounded-full hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Messages"
+            >
+              <MessageSquare className="h-5 w-5" />
+              {unreadChats > 0 && (
+                <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
+              )}
+            </Link>
+            <Link
+              to={`/@${profile?.handle ?? ''}`}
+              className="flex-shrink-0"
+            >
+              <Avatar className="h-8 w-8 ring-2 ring-border">
+                <AvatarImage src={profile?.avatar_url ?? undefined} />
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+                  {(profile?.display_name || 'U').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+          </>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/auth/signin')}
+              className="text-sm font-medium text-primary"
+            >
+              Sign in
+            </button>
+            <button
+              onClick={() => navigate('/auth/signup')}
+              className="text-sm font-semibold bg-primary text-white px-3 py-1.5 rounded-lg"
+            >
+              Join
+            </button>
+          </div>
+        )}
+      </header>
+
+      {/* ─── Main Content ───────────────────────────────── */}
       <main className={cn(
-        shouldHideUI ? "" : "pb-20",
-        !isTelegram && "min-h-screen"
+        'flex-1 flex flex-col',
+        'md:ml-64',
+        'pt-14 pb-16 md:pt-0 md:pb-0',
+        'min-h-screen'
       )}>
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-        >
+        <div className="w-full max-w-2xl mx-auto px-0 md:px-4 md:py-4">
           {children}
-        </motion.div>
+        </div>
       </main>
 
-      {/* Mobile Bottom Navigation - Solid bar with liquid glass on active tabs */}
-      {!shouldHideNav && (
-        <div
-          className={cn(
-            "lg:hidden fixed left-0 right-0 z-50 transition-all duration-300 ease-out",
-            (isNavHidden || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
-          )}
-          style={{ bottom: 'var(--tg-safe-bottom, 0px)' }}
-        >
-          <nav className={cn("bg-background", !isTelegram && "border-t border-border/40")}>
-            <div className="flex justify-between items-center h-16 px-6 max-w-lg mx-auto">
-              {/* Home */}
+      {/* ─── Mobile Bottom Navigation ───────────────────── */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 h-16 bg-background/95 backdrop-blur-sm border-t border-border/50">
+        <div className="flex items-center justify-around h-full px-2">
+          {BOTTOM_TABS.map((tab) => {
+            const active = isActivePath(location.pathname, tab.path);
+            const Icon = tab.icon;
+            const badge = getBadge(tab.path);
+            return (
               <Link
-                to="/home"
-                onClick={(e) => {
-                  if (location.pathname === '/home' || location.pathname === '/') {
-                    e.preventDefault();
-                    sessionStorage.removeItem('feedShuffleSeed');
-                    window.dispatchEvent(new Event('refresh-feed-order'));
-                  }
-                }}
+                key={tab.path}
+                to={tab.path}
                 className={cn(
-                  "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group",
-                  (isActive('/') || isActive('/home')) && "nav-glass-active"
+                  'flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors min-w-0 flex-1',
+                  active ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
-                <Home 
-                  className={cn(
-                    "h-6 w-6 transition-colors duration-200",
-                    (isActive('/') || isActive('/home')) 
-                      ? "text-primary" 
-                      : "text-muted-foreground group-hover:text-primary/80"
-                  )} 
-                  strokeWidth={(isActive('/') || isActive('/home')) ? 2.5 : 2}
-                  fill={(isActive('/') || isActive('/home')) ? 'currentColor' : 'none'}
-                />
-              </Link>
-              
-              {/* Search */}
-              <Link
-                to="/search"
-                className={cn(
-                  "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group",
-                  isActive('/search') && "nav-glass-active"
-                )}
-              >
-                <Search 
-                  className={cn(
-                    "h-6 w-6 transition-colors duration-200",
-                    isActive('/search') 
-                      ? "text-primary" 
-                      : "text-muted-foreground group-hover:text-primary/80"
-                  )} 
-                  strokeWidth={isActive('/search') ? 2.5 : 2} 
-                />
-              </Link>
-              
-              {/* Notifications */}
-              {user ? (
-                <Link
-                  to="/notifications"
-                  className={cn(
-                    "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 relative group",
-                    isActive('/notifications') && "nav-glass-active"
+                <div className="relative">
+                  <Icon className={cn('h-5 w-5', active && 'fill-current opacity-90')} />
+                  {badge != null && badge > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-0.5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                      {badge > 99 ? '99+' : badge}
+                    </span>
                   )}
-                >
-                  <div className="relative">
-                    <Bell 
-                      className={cn(
-                        "h-6 w-6 transition-colors duration-200",
-                        isActive('/notifications') 
-                          ? "text-primary" 
-                          : "text-muted-foreground group-hover:text-primary/80"
-                      )} 
-                      strokeWidth={isActive('/notifications') ? 2.5 : 2}
-                      fill={isActive('/notifications') ? 'currentColor' : 'none'}
-                    />
-                    {unreadNotifications > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full shadow-lg">
-                        {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              ) : (
-                <Link
-                  to="/auth/signin"
-                  className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group"
-                >
-                  <Bell className="h-6 w-6 text-muted-foreground group-hover:text-primary/80 transition-colors duration-200" strokeWidth={2} />
-                </Link>
-              )}
-              
-              {/* Chats */}
-              {user ? (
-                <Link
-                  to="/chats"
-                  className={cn(
-                    "flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 relative group",
-                    isActive('/chats') && "nav-glass-active"
-                  )}
-                >
-                  <div className="relative">
-                    <MessageCircle 
-                      className={cn(
-                        "h-6 w-6 transition-colors duration-200",
-                        isActive('/chats') 
-                          ? "text-primary" 
-                          : "text-muted-foreground group-hover:text-primary/80"
-                      )} 
-                      strokeWidth={isActive('/chats') ? 2.5 : 2}
-                      fill={isActive('/chats') ? 'currentColor' : 'none'}
-                    />
-                    {unreadChats > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full shadow-lg">
-                        {unreadChats > 99 ? '99+' : unreadChats}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              ) : (
-                <Link
-                  to="/auth/signin"
-                  className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group"
-                >
-                  <MessageCircle className="h-6 w-6 text-muted-foreground group-hover:text-primary/80 transition-colors duration-200" strokeWidth={2} />
-                </Link>
-              )}
+                </div>
+                <span className="text-[10px] font-medium">{tab.label}</span>
+              </Link>
+            );
+          })}
+
+          {/* Center Create button */}
+          <button
+            onClick={() => user ? setIsPostModalOpen(true) : navigate('/auth/signin')}
+            className="flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors min-w-0 flex-1 text-muted-foreground"
+            aria-label="Create post"
+          >
+            <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center shadow-md shadow-primary/30 -mt-1">
+              <Plus className="h-4 w-4 text-white" />
             </div>
-          </nav>
+          </button>
+
+          {user ? (
+            <Link
+              to={`/@${profile?.handle ?? ''}`}
+              className={cn(
+                'flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors min-w-0 flex-1',
+                isProfilePath ? 'text-primary' : 'text-muted-foreground'
+              )}
+            >
+              <Avatar className="h-5 w-5 ring-1 ring-current">
+                <AvatarImage src={profile?.avatar_url ?? undefined} />
+                <AvatarFallback className="text-[8px] font-semibold bg-primary/10 text-primary">
+                  {(profile?.display_name || 'U').slice(0, 1).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-[10px] font-medium">Profile</span>
+            </Link>
+          ) : (
+            <Link
+              to="/auth/signin"
+              className="flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors min-w-0 flex-1 text-muted-foreground"
+            >
+              <User className="h-5 w-5" />
+              <span className="text-[10px] font-medium">Profile</span>
+            </Link>
+          )}
         </div>
-      )}
-      {/* Bottom safe area background fill */}
-      {!shouldHideNav && (
-        <div
-          className="lg:hidden fixed bottom-0 left-0 right-0 bg-background z-40"
-          style={{ height: 'var(--tg-safe-bottom, env(safe-area-inset-bottom, 0px))' }}
+      </nav>
+
+      {/* Post Modal */}
+      {isPostModalOpen && (
+        <NewPostModal
+          isOpen={isPostModalOpen}
+          onClose={() => setIsPostModalOpen(false)}
         />
       )}
     </div>
   );
-};
-
-export default Layout;
+}
