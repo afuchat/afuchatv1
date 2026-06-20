@@ -4,6 +4,7 @@ import { Heart, MessageCircle, Share2, MoreHorizontal, Repeat2, Bookmark } from 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { cn } from '@/lib/utils';
+import { imgAvatar, imgPost } from '@/lib/cdn';
 import type { FeedPost } from '@/hooks/useFeed';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -100,7 +101,7 @@ const PostCard = memo(({ post, compact = false }: PostCardProps) => {
           className="flex-shrink-0"
         >
           <Avatar className={cn("ring-2 ring-background", premium ? "ring-primary/30" : "", compact ? "h-8 w-8" : "h-10 w-10")}>
-            <AvatarImage src={avatarUrl ?? undefined} alt={displayName} loading="lazy" />
+            <AvatarImage src={imgAvatar(avatarUrl)} alt={displayName} loading="lazy" />
             <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
               {displayName.slice(0, 2).toUpperCase()}
             </AvatarFallback>
@@ -159,7 +160,7 @@ const PostCard = memo(({ post, compact = false }: PostCardProps) => {
           {post.image_url && (
             <div className="mt-3 rounded-xl overflow-hidden border border-border/30 bg-muted/20">
               <img
-                src={post.image_url}
+                src={imgPost(post.image_url)}
                 alt=""
                 className="w-full object-cover max-h-[400px]"
                 loading="lazy"

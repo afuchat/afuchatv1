@@ -9,6 +9,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/components/Logo';
 import { cn } from '@/lib/utils';
+import { imgAvatar } from '@/lib/cdn';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -282,7 +283,7 @@ export default function Layout({ children, hideNav = false }: LayoutProps) {
             <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors group">
               <Link to={`/@${profile.handle}`}>
                 <Avatar className="h-9 w-9 ring-2 ring-border group-hover:ring-primary/30 transition-all">
-                  <AvatarImage src={profile.avatar_url ?? undefined} />
+                  <AvatarImage src={imgAvatar(profile.avatar_url)} />
                   <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
                     {(profile.display_name || 'U').slice(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -345,7 +346,7 @@ export default function Layout({ children, hideNav = false }: LayoutProps) {
               className="flex-shrink-0"
             >
               <Avatar className="h-8 w-8 ring-2 ring-border">
-                <AvatarImage src={profile?.avatar_url ?? undefined} />
+                <AvatarImage src={imgAvatar(profile?.avatar_url)} />
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
                   {(profile?.display_name || 'U').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
@@ -434,7 +435,7 @@ export default function Layout({ children, hideNav = false }: LayoutProps) {
               )}
             >
               <Avatar className="h-5 w-5 ring-1 ring-current">
-                <AvatarImage src={profile?.avatar_url ?? undefined} />
+                <AvatarImage src={imgAvatar(profile?.avatar_url)} />
                 <AvatarFallback className="text-[8px] font-semibold bg-primary/10 text-primary">
                   {(profile?.display_name || 'U').slice(0, 1).toUpperCase()}
                 </AvatarFallback>

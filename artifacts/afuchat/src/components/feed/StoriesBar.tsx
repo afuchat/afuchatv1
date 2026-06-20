@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { imgThumb } from '@/lib/cdn';
 
 type Story = {
   id: string;
@@ -97,7 +98,7 @@ export function StoriesBar() {
             )}>
               <div className="p-[2px] rounded-full bg-background">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={p?.avatar_url ?? undefined} alt={name} loading="lazy" />
+                  <AvatarImage src={imgThumb(p?.avatar_url)} alt={name} loading="lazy" />
                   <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
                     {name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
