@@ -1,0 +1,52 @@
+# AfuChat Robots.txt
+# https://afuchat.com
+# Last updated: 2026-03-08
+
+User-agent: *
+Allow: /
+Allow: /feed
+Allow: /home
+Allow: /post/
+Allow: /search
+Allow: /shop
+Allow: /gifts
+Allow: /games
+
+# Block non-content paths
+Disallow: /api/
+Disallow: /auth/
+Disallow: /_/
+Disallow: /admin/
+Disallow: /settings
+Disallow: /checkout
+Disallow: /complete-profile
+Disallow: /change-password
+Disallow: /onboarding
+Disallow: /wallet
+Disallow: /transfer
+
+# Block query parameters that create duplicates
+Disallow: /*?*ref=
+Disallow: /*?*utm_
+
+# Allow social media crawlers full access
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+# Sitemap location
+Sitemap: https://afuchat.com/sitemap.xml

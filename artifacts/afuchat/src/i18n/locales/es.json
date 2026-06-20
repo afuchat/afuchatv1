@@ -1,0 +1,331 @@
+{
+  "app": {
+    "name": "AfuChat",
+    "tagline": "Conecta, Comparte, Interactúa"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Atrás",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "home": "Inicio",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "notifications": "Notificaciones",
+    "messages": "Mensajes",
+    "logout": "Cerrar Sesión",
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse"
+  },
+  "auth": {
+    "welcome": "Bienvenido a AfuChat",
+    "signIn": "Inicia sesión en tu cuenta",
+    "signUp": "Crea una nueva cuenta",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes una cuenta?",
+    "hasAccount": "¿Ya tienes una cuenta?",
+    "loggedOut": "Sesión cerrada exitosamente",
+    "loginSuccess": "Inicio de sesión exitoso",
+    "loginError": "Error al iniciar sesión"
+  },
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Administra tu cuenta y preferencias",
+    "account": "Cuenta",
+    "editProfile": "Editar Perfil",
+    "privacy": "Privacidad",
+    "privateAccount": "Cuenta Privada",
+    "privateAccountDesc": "Solo los seguidores aprobados pueden ver tus publicaciones",
+    "notifications": "Notificaciones",
+    "pushNotifications": "Notificaciones Push",
+    "pushNotificationsDesc": "Recibe notificaciones de nuevos mensajes y actualizaciones",
+    "language": "Idioma",
+    "selectLanguage": "Seleccionar Idioma",
+    "languageDesc": "Elige tu idioma preferido",
+    "legal": "Legal",
+    "termsOfUse": "Términos de Uso",
+    "privacyPolicy": "Política de Privacidad",
+    "about": "Acerca de",
+    "version": "AfuChat Versión 1.0.0",
+    "copyright": "© 2025 AfuChat. Todos los derechos reservados."
+  },
+  "feed": {
+    "title": "Feed",
+    "newPost": "¿Qué estás pensando?",
+    "post": "Publicar",
+    "acknowledge": "Reconocer",
+    "reply": "Responder",
+    "share": "Compartir",
+    "noPostsYet": "Aún no hay publicaciones",
+    "startConversation": "¡Sé el primero en iniciar una conversación!",
+    "addComment": "Añade un comentario...",
+    "signInToReply": "Inicia sesión para responder",
+    "viewComments": "Ver {{count}} comentario",
+    "viewComments_other": "Ver los {{count}} comentarios",
+    "linkCopied": "¡Enlace copiado al portapapeles!",
+    "failedToCopy": "Error al copiar el enlace",
+    "analyzePost": "Analizar publicación con AfuAI"
+  },
+  "profile": {
+    "posts": "Publicaciones",
+    "followers": "Seguidores",
+    "following": "Siguiendo",
+    "follow": "Seguir",
+    "unfollow": "Dejar de seguir",
+    "message": "Mensaje",
+    "editProfile": "Editar Perfil",
+    "joinedDate": "Se unió {{date}}",
+    "adminDashboard": "Panel de Administración",
+    "notFound": "Perfil no encontrado",
+    "failedToFollow": "Error al seguir",
+    "failedToUnfollow": "Error al dejar de seguir",
+    "failedToChat": "Error al crear chat"
+  },
+  "terms": {
+    "title": "Términos de Uso",
+    "lastUpdated": "Última actualización: Enero 2025"
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: Enero 2025"
+  },
+  "search": {
+    "title": "Explorar",
+    "placeholder": "Buscar usuarios, publicaciones, temas...",
+    "trendingNow": "Tendencias Ahora",
+    "noTrends": "No se detectaron nuevas tendencias en las últimas 24 horas.",
+    "tapTopic": "Toca un tema para buscar",
+    "posts": "Publicaciones",
+    "people": "Personas",
+    "noResults": "No se encontraron resultados para \"{{query}}\".",
+    "postsCount": "{{count}} publicación",
+    "postsCount_other": "{{count}} publicaciones"
+  },
+  "navigation": {
+    "feed": "Feed",
+    "search": "Buscar",
+    "chats": "Chats",
+    "afuai": "AfuAI",
+    "subscribe": "Suscribirse",
+    "openChats": "Abrir Chats",
+    "loginToViewChats": "Inicia sesión para ver chats",
+    "talkToAfuAI": "Habla con AfuAI",
+    "loginToUseAfuAI": "Inicia sesión para usar AfuAI"
+  },
+  "miniPrograms": {
+    "title": "Mini Programas",
+    "searchPlaceholder": "Buscar mini programas...",
+    "all": "Todos",
+    "games": "Juegos",
+    "shopping": "Compras",
+    "entertainment": "Entretenimiento",
+    "media": "Medios",
+    "education": "Educación",
+    "noPrograms": "No se encontraron mini programas",
+    "install": "Instalar",
+    "installed": "Instalado",
+    "open": "Abrir",
+    "installs": "instalaciones",
+    "by": "Por"
+  },
+  "moments": {
+    "title": "Momentos",
+    "createStory": "Crear Historia",
+    "noStories": "Aún no hay historias",
+    "beFirst": "¡Sé el primero en compartir un momento!",
+    "viewStory": "Ver historia"
+  },
+  "transfer": {
+    "title": "Transferir Nexa",
+    "searchUser": "Buscar usuario...",
+    "amount": "Cantidad (Nexa)",
+    "message": "Mensaje (Opcional)",
+    "yourBalance": "Tu Saldo",
+    "send": "Enviar Nexa",
+    "sending": "Enviando...",
+    "recentTransfers": "Transferencias Recientes",
+    "sent": "Enviado",
+    "received": "Recibido",
+    "noTransfers": "Sin transferencias"
+  },
+  "redEnvelope": {
+    "title": "Sobres Rojos",
+    "create": "Crear Sobre Rojo",
+    "totalAmount": "Cantidad Total (Nexa)",
+    "recipients": "Número de Destinatarios",
+    "distributionType": "Tipo de Distribución",
+    "random": "Aleatorio (¡Más divertido!)",
+    "equal": "División Igual",
+    "randomDesc": "Los destinatarios reciben cantidades aleatorias",
+    "equalDesc": "Todos reciben la misma cantidad",
+    "message": "Mensaje (Opcional)",
+    "yourBalance": "Tu Saldo Nexa",
+    "send": "Enviar Sobre Rojo",
+    "sending": "Enviando...",
+    "active": "Sobres Activos",
+    "mySent": "Mis Envíos",
+    "noActive": "Sin sobres activos",
+    "open": "Abrir"
+  },
+  "services": {
+    "title": "Servicios",
+    "subtitle": "Explora todas las funciones y herramientas",
+    "socialContent": "Social y Contenido",
+    "moments": "Momentos",
+    "momentsDesc": "Comparte historias temporales de fotos y videos",
+    "chats": "Chats",
+    "chatsDesc": "Conversaciones privadas y grupales",
+    "discover": "Descubrir",
+    "discoverDesc": "Encuentra y sigue personas interesantes",
+    "trending": "Tendencias",
+    "trendingDesc": "Explora temas de tendencia",
+    "financial": "Financiero",
+    "wallet": "Billetera",
+    "walletDesc": "Gestiona tu balance de Nexa",
+    "transfer": "Transferir Nexa",
+    "transferDesc": "Envía Nexa a otros usuarios",
+    "redEnvelopes": "Sobres Rojos",
+    "redEnvelopesDesc": "Reparto grupal de Nexa con divisiones aleatorias",
+    "miniPrograms": "Mini Programas",
+    "appStore": "Tienda de Apps",
+    "appStoreDesc": "Descubre mini apps y juegos",
+    "developerSDK": "SDK Desarrollador",
+    "developerSDKDesc": "Crea tus propios mini programas",
+    "gamification": "Gamificación",
+    "leaderboard": "Clasificación",
+    "leaderboardDesc": "Principales contribuyentes",
+    "qrCode": "Mi Código QR",
+    "qrCodeDesc": "Comparte tu perfil",
+    "shopping": "Compras",
+    "shop": "Tienda",
+    "shopDesc": "Compra accesorios",
+    "business": "Negocios",
+    "businessDashboard": "Negocios",
+    "businessDashboardDesc": "Panel de negocios",
+    "affiliates": "Afiliados",
+    "affiliatesDesc": "Programa de afiliados",
+    "aiTools": "IA y Herramientas",
+    "afuAI": "AfuAI",
+    "afuAIDesc": "Asistente IA",
+    "support": "Soporte",
+    "supportCenter": "Soporte",
+    "supportCenterDesc": "Obtener ayuda",
+    "terms": "Términos",
+    "termsDesc": "Términos de uso",
+    "privacy": "Privacidad",
+    "privacyDesc": "Política de privacidad"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "sw": "Kiswahili"
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: Enero 2025",
+    "intro": {
+      "title": "Introducción",
+      "welcome": "Bienvenido a AfuChat. Estamos comprometidos a proteger su privacidad y garantizar la transparencia sobre cómo manejamos su información personal.",
+      "agreement": "Al usar AfuChat, usted acepta la recopilación y el uso de información de acuerdo con esta Política de Privacidad.",
+      "compliance": "Esta política se aplica a todos los usuarios a nivel mundial y cumple con las leyes de protección de datos aplicables, incluidos GDPR, CCPA y otras regulaciones regionales de privacidad."
+    },
+    "infoCollected": {
+      "title": "Información que Recopilamos",
+      "direct": "Información que Proporciona Directamente",
+      "automatic": "Información Recopilada Automáticamente",
+      "thirdParty": "Información de Terceros"
+    },
+    "usage": {
+      "title": "Cómo Usamos Su Información",
+      "provision": "Provisión del Servicio",
+      "improvement": "Mejora del Servicio",
+      "safety": "Seguridad y Protección",
+      "communications": "Comunicaciones",
+      "legal": "Cumplimiento Legal"
+    },
+    "ai": {
+      "title": "IA y Aprendizaje Automático",
+      "features": "Funciones de IA",
+      "processing": "Procesamiento de Datos con IA"
+    },
+    "sharing": {
+      "title": "Intercambio y Divulgación de Información",
+      "noSell": "No vendemos su información personal."
+    },
+    "security": {
+      "title": "Seguridad de Datos",
+      "technical": "Seguridad Técnica",
+      "organizational": "Seguridad Organizacional"
+    },
+    "rights": {
+      "title": "Sus Derechos de Privacidad",
+      "access": "Acceso y Portabilidad",
+      "correction": "Corrección y Actualización",
+      "deletion": "Eliminación",
+      "control": "Control y Restricciones"
+    },
+    "contact": "Para consultas relacionadas con la privacidad, contacte: privacy@afuchat.com"
+  },
+  "terms": {
+    "title": "Términos de Uso",
+    "lastUpdated": "Última actualización: Enero 2025",
+    "acceptance": {
+      "title": "Aceptación de los Términos",
+      "intro": "Al acceder y usar AfuChat, usted acepta y acuerda estar sujeto a estos Términos de Uso.",
+      "ageRequirement": "Al crear una cuenta, confirma que tiene al menos 13 años de edad."
+    },
+    "service": {
+      "title": "Descripción del Servicio",
+      "intro": "AfuChat es una plataforma integral de redes sociales y comunicación."
+    },
+    "accounts": {
+      "title": "Cuentas de Usuario y Registro",
+      "requirements": "Debe proporcionar información precisa y mantener la seguridad de su cuenta."
+    },
+    "content": {
+      "title": "Contenido de Usuario y Propiedad Intelectual",
+      "ownership": "Usted conserva la propiedad de su contenido.",
+      "prohibited": "Contenido Prohibido"
+    },
+    "aiContent": {
+      "title": "Contenido Generado por IA",
+      "disclaimer": "El contenido generado por IA se proporciona 'tal cual' sin garantías."
+    },
+    "virtualCurrency": {
+      "title": "Moneda Virtual y Transacciones",
+      "noRealValue": "Los elementos virtuales no tienen valor monetario real."
+    },
+    "conduct": {
+      "title": "Conducta Prohibida",
+      "intro": "Usted acepta no violar ninguna ley ni hacer mal uso del Servicio."
+    },
+    "moderation": {
+      "title": "Moderación de Contenido",
+      "rights": "Nos reservamos el derecho de monitorear y eliminar contenido."
+    },
+    "termination": {
+      "title": "Terminación y Suspensión de Cuenta",
+      "rights": "Podemos suspender o terminar cuentas por violaciones."
+    },
+    "disclaimer": {
+      "title": "Descargo de Responsabilidad de Garantías",
+      "asIs": "EL SERVICIO SE PROPORCIONA 'TAL CUAL' Y 'SEGÚN DISPONIBILIDAD'."
+    },
+    "liability": {
+      "title": "Limitación de Responsabilidad",
+      "limited": "Nuestra responsabilidad está limitada según se describe aquí."
+    },
+    "contact": "Para consultas, contacte: support@afuchat.com"
+  }
+}

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AfuChat"
+version = "1.0.0"
+id = "artifacts/afuchat"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18415
+
+[services.development]
+run = "pnpm --filter @workspace/afuchat run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/afuchat", "run", "build" ]
+publicDir = "artifacts/afuchat/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18415"
+BASE_PATH = "/"

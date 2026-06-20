@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="screen-orientation" content="portrait" />
+    <title>AfuChat</title>
+    <meta name="description" content="AfuChat — The all-in-one social app where you can post like X, chat like Telegram, shop, and use built-in AI. Fast, private, and data-friendly.">
+    <meta name="author" content="AfuChat" />
+    <meta name="google-adsense-account" content="ca-pub-6547165240467026">
+    <meta name="application-name" content="AfuChat">
+    <meta name="version" content="2.0.0">
+    
+    <!-- Canonical URL - prevents duplicate content issues -->
+    <link rel="canonical" href="https://afuchat.com/" />
+    
+    <!-- Robots directives -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+
+    <!-- Mobile / platform meta tags -->
+    <meta name="msapplication-TileColor" content="#00C2CB" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AfuChat" />
+    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/whhFMyYxVrYCuMq4BfursQL7NCK2/social-images/social-1772912434892-1000037910.webp">
+    
+    
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/whhFMyYxVrYCuMq4BfursQL7NCK2/social-images/social-1772912434892-1000037910.webp">
+    
+    
+
+    <!-- Preconnect to important domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://rhnsjqqtdzlkvqazfcbg.supabase.co" crossorigin>
+    
+    <!-- DNS Prefetch for faster loading -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://rhnsjqqtdzlkvqazfcbg.supabase.co">
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6547165240467026" crossorigin="anonymous"></script>
+    
+    <!-- Telegram Mini App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta property="og:title" content="AfuChat">
+  <meta name="twitter:title" content="AfuChat">
+  <meta property="og:description" content="AfuChat — The all-in-one social app where you can post like X, chat like Telegram, shop, and use built-in AI. Fast, private, and data-friendly.">
+  <meta name="twitter:description" content="AfuChat — The all-in-one social app where you can post like X, chat like Telegram, shop, and use built-in AI. Fast, private, and data-friendly.">
+</head>
+
+  <body>
+    <!-- Inline script to prevent theme flash -->
+    <script>
+      (function() {
+        // Hex to HSL conversion for early theme application
+        function hexToHSL(hex) {
+          hex = hex.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c) { return c + c; }).join('');
+          var r = parseInt(hex.substring(0, 2), 16) / 255;
+          var g = parseInt(hex.substring(2, 4), 16) / 255;
+          var b = parseInt(hex.substring(4, 6), 16) / 255;
+          var max = Math.max(r, g, b), min = Math.min(r, g, b);
+          var h = 0, s = 0, l = (max + min) / 2;
+          if (max !== min) {
+            var d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+            else if (max === g) h = ((b - r) / d + 2) / 6;
+            else h = ((r - g) / d + 4) / 6;
+          }
+          return Math.round(h * 360) + ' ' + Math.round(s * 100) + '% ' + Math.round(l * 100) + '%';
+        }
+
+        var isTelegram = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
+        var theme, resolved;
+        
+        if (isTelegram && window.Telegram.WebApp.colorScheme) {
+          resolved = window.Telegram.WebApp.colorScheme;
+          document.documentElement.classList.add('telegram-mini-app');
+        } else {
+          theme = localStorage.getItem('afuchat-theme') || 'system';
+          if (theme === 'system') {
+            resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          } else if (theme === 'light' || theme === 'dark') {
+            resolved = theme;
+          } else {
+            resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+        }
+        document.documentElement.classList.add(resolved);
+
+        // Apply Telegram theme colors early to prevent flash
+        if (isTelegram) {
+          var wa = window.Telegram.WebApp;
+          var tp = wa.themeParams || {};
+          var el = document.documentElement;
+
+          // Map Telegram colors to app tokens
+          if (tp.button_color) {
+            var btnHSL = hexToHSL(tp.button_color);
+            el.style.setProperty('--primary', btnHSL);
+            el.style.setProperty('--ring', btnHSL);
+            el.style.setProperty('--accent', btnHSL);
+          }
+          if (tp.button_text_color) {
+            var btnTextHSL = hexToHSL(tp.button_text_color);
+            el.style.setProperty('--primary-foreground', btnTextHSL);
+            el.style.setProperty('--accent-foreground', btnTextHSL);
+          }
+          if (tp.bg_color) {
+            el.style.setProperty('--background', hexToHSL(tp.bg_color));
+            el.style.setProperty('--sidebar-background', hexToHSL(tp.bg_color));
+          }
+          if (tp.text_color) {
+            var textHSL = hexToHSL(tp.text_color);
+            el.style.setProperty('--foreground', textHSL);
+            el.style.setProperty('--card-foreground', textHSL);
+            el.style.setProperty('--popover-foreground', textHSL);
+          }
+          if (tp.section_bg_color || tp.bg_color) {
+            var cardHSL = hexToHSL(tp.section_bg_color || tp.bg_color);
+            el.style.setProperty('--card', cardHSL);
+            el.style.setProperty('--popover', cardHSL);
+          }
+          if (tp.secondary_bg_color) {
+            var secHSL = hexToHSL(tp.secondary_bg_color);
+            el.style.setProperty('--secondary', secHSL);
+            el.style.setProperty('--muted', secHSL);
+          }
+          if (tp.hint_color) {
+            var hintHSL = hexToHSL(tp.hint_color);
+            el.style.setProperty('--muted-foreground', hintHSL);
+            el.style.setProperty('--secondary-foreground', hintHSL);
+          }
+          if (tp.section_separator_color) {
+            var sepHSL = hexToHSL(tp.section_separator_color);
+            el.style.setProperty('--border', sepHSL);
+            el.style.setProperty('--input', sepHSL);
+          }
+          if (tp.destructive_text_color) {
+            el.style.setProperty('--destructive', hexToHSL(tp.destructive_text_color));
+          }
+
+          // Theme color for mobile browser chrome
+          var themeColor = tp.header_bg_color || tp.bg_color || (resolved === 'dark' ? '#000000' : '#ffffff');
+          var meta = document.querySelector('meta[name="theme-color"]:not([media])');
+          if (meta) meta.setAttribute('content', themeColor);
+
+          // Viewport and safe areas
+          el.style.setProperty('--tg-viewport-height', wa.viewportHeight + 'px');
+          el.style.setProperty('--tg-viewport-stable-height', wa.viewportStableHeight + 'px');
+          var sa = wa.safeAreaInset || { top: 0, bottom: 0, left: 0, right: 0 };
+          var csa = wa.contentSafeAreaInset || { top: 0, bottom: 0, left: 0, right: 0 };
+          el.style.setProperty('--tg-safe-area-top', sa.top + 'px');
+          el.style.setProperty('--tg-safe-area-bottom', sa.bottom + 'px');
+          el.style.setProperty('--tg-safe-area-left', sa.left + 'px');
+          el.style.setProperty('--tg-safe-area-right', sa.right + 'px');
+          el.style.setProperty('--tg-content-safe-area-top', csa.top + 'px');
+          el.style.setProperty('--tg-content-safe-area-bottom', csa.bottom + 'px');
+          // Android Telegram reports 0 for safe areas but status bar still overlaps
+          var isAndroid = /Android/.test(navigator.userAgent);
+          var combinedTop = sa.top + csa.top;
+          var combinedBottom = sa.bottom + csa.bottom;
+          if (isAndroid && combinedTop === 0) combinedTop = 32;
+          if (isAndroid && combinedBottom === 0) combinedBottom = 0;
+          el.style.setProperty('--tg-safe-top', combinedTop + 'px');
+          el.style.setProperty('--tg-safe-bottom', combinedBottom + 'px');
+          el.style.setProperty('--tg-safe-left', (sa.left + csa.left) + 'px');
+          el.style.setProperty('--tg-safe-right', (sa.right + csa.right) + 'px');
+        } else {
+          var themeColor = resolved === 'dark' ? '#000000' : '#F6F6F6';
+          var meta = document.querySelector('meta[name="theme-color"]:not([media])');
+          if (meta) meta.setAttribute('content', themeColor);
+        }
+
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+          document.documentElement.classList.add('ios-device');
+        }
+        if (/Android/.test(navigator.userAgent)) {
+          document.documentElement.classList.add('android-device');
+        }
+      })();
+    </script>
+    
+    <!-- App loading indicator for slow connections -->
+    <style>
+      #app-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--loader-bg, #0F1114);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+      }
+      html.light #app-loader { --loader-bg: #F6F6F6; }
+      html.dark #app-loader { --loader-bg: #0F1114; }
+      #app-loader.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #app-loader .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid transparent;
+        border-top-color: #00C2CB;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+    
+    <div id="app-loader">
+      <div class="spinner"></div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Hide loader when app is ready -->
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var loader = document.getElementById('app-loader');
+          if (loader) loader.classList.add('hidden');
+        }, 100);
+      });
+    </script>
+  </body>
+</html>

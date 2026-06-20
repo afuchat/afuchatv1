@@ -1,0 +1,331 @@
+{
+  "app": {
+    "name": "AfuChat",
+    "tagline": "تواصل، شارك، تفاعل"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "back": "رجوع",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "search": "بحث",
+    "home": "الرئيسية",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات",
+    "notifications": "الإشعارات",
+    "messages": "الرسائل",
+    "logout": "تسجيل الخروج",
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب"
+  },
+  "auth": {
+    "welcome": "مرحباً بك في AfuChat",
+    "signIn": "تسجيل الدخول إلى حسابك",
+    "signUp": "إنشاء حساب جديد",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "noAccount": "ليس لديك حساب؟",
+    "hasAccount": "هل لديك حساب بالفعل؟",
+    "loggedOut": "تم تسجيل الخروج بنجاح",
+    "loginSuccess": "تم تسجيل الدخول بنجاح",
+    "loginError": "فشل تسجيل الدخول"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "subtitle": "إدارة حسابك وتفضيلاتك",
+    "account": "الحساب",
+    "editProfile": "تعديل الملف الشخصي",
+    "privacy": "الخصوصية",
+    "privateAccount": "حساب خاص",
+    "privateAccountDesc": "فقط المتابعون المعتمدون يمكنهم رؤية منشوراتك",
+    "notifications": "الإشعارات",
+    "pushNotifications": "إشعارات الدفع",
+    "pushNotificationsDesc": "تلقي إشعارات للرسائل والتحديثات الجديدة",
+    "language": "اللغة",
+    "selectLanguage": "اختر اللغة",
+    "languageDesc": "اختر لغتك المفضلة",
+    "legal": "قانوني",
+    "termsOfUse": "شروط الاستخدام",
+    "privacyPolicy": "سياسة الخصوصية",
+    "about": "حول",
+    "version": "AfuChat الإصدار 1.0.0",
+    "copyright": "© 2025 AfuChat. جميع الحقوق محفوظة."
+  },
+  "feed": {
+    "title": "الأخبار",
+    "newPost": "بماذا تفكر؟",
+    "post": "نشر",
+    "acknowledge": "إقرار",
+    "reply": "رد",
+    "share": "مشاركة",
+    "noPostsYet": "لا توجد منشورات بعد",
+    "startConversation": "كن أول من يبدأ محادثة!",
+    "addComment": "أضف تعليقاً...",
+    "signInToReply": "سجّل الدخول للرد",
+    "viewComments": "عرض {{count}} تعليق",
+    "viewComments_other": "عرض جميع {{count}} التعليقات",
+    "linkCopied": "تم نسخ الرابط إلى الحافظة!",
+    "failedToCopy": "فشل نسخ الرابط",
+    "analyzePost": "تحليل المنشور مع AfuAI"
+  },
+  "profile": {
+    "posts": "المنشورات",
+    "followers": "المتابعون",
+    "following": "المتابَعون",
+    "follow": "متابعة",
+    "unfollow": "إلغاء المتابعة",
+    "message": "رسالة",
+    "editProfile": "تعديل الملف الشخصي",
+    "joinedDate": "انضم {{date}}",
+    "adminDashboard": "لوحة الإدارة",
+    "notFound": "الملف الشخصي غير موجود",
+    "failedToFollow": "فشلت المتابعة",
+    "failedToUnfollow": "فشل إلغاء المتابعة",
+    "failedToChat": "فشل إنشاء الدردشة"
+  },
+  "terms": {
+    "title": "شروط الاستخدام",
+    "lastUpdated": "آخر تحديث: يناير 2025"
+  },
+  "privacy": {
+    "title": "سياسة الخصوصية",
+    "lastUpdated": "آخر تحديث: يناير 2025"
+  },
+  "search": {
+    "title": "استكشف",
+    "placeholder": "ابحث عن مستخدمين، منشورات، مواضيع...",
+    "trendingNow": "الأكثر رواجاً الآن",
+    "noTrends": "لم يتم اكتشاف أي اتجاهات جديدة في آخر 24 ساعة.",
+    "tapTopic": "انقر على موضوع للبحث",
+    "posts": "المنشورات",
+    "people": "الأشخاص",
+    "noResults": "لم يتم العثور على نتائج لـ \"{{query}}\".",
+    "postsCount": "{{count}} منشور",
+    "postsCount_other": "{{count}} منشورات"
+  },
+  "navigation": {
+    "feed": "الأخبار",
+    "search": "بحث",
+    "chats": "الدردشات",
+    "afuai": "AfuAI",
+    "subscribe": "اشترك",
+    "openChats": "فتح الدردشات",
+    "loginToViewChats": "سجل الدخول لعرض الدردشات",
+    "talkToAfuAI": "تحدث إلى AfuAI",
+    "loginToUseAfuAI": "سجل الدخول لاستخدام AfuAI"
+  },
+  "miniPrograms": {
+    "title": "البرامج المصغرة",
+    "searchPlaceholder": "البحث عن البرامج المصغرة...",
+    "all": "الكل",
+    "games": "الألعاب",
+    "shopping": "التسوق",
+    "entertainment": "الترفيه",
+    "media": "الوسائط",
+    "education": "التعليم",
+    "noPrograms": "لم يتم العثور على برامج مصغرة",
+    "install": "تثبيت",
+    "installed": "مثبت",
+    "open": "فتح",
+    "installs": "التثبيتات",
+    "by": "بواسطة"
+  },
+  "moments": {
+    "title": "اللحظات",
+    "createStory": "إنشاء قصة",
+    "noStories": "لا توجد قصص بعد",
+    "beFirst": "كن أول من يشارك لحظة!",
+    "viewStory": "عرض القصة"
+  },
+  "transfer": {
+    "title": "تحويل نيكسا",
+    "searchUser": "البحث عن مستخدم...",
+    "amount": "المبلغ (نيكسا)",
+    "message": "رسالة (اختياري)",
+    "yourBalance": "رصيدك",
+    "send": "إرسال نيكسا",
+    "sending": "جاري الإرسال...",
+    "recentTransfers": "التحويلات الأخيرة",
+    "sent": "أرسل",
+    "received": "استلم",
+    "noTransfers": "لا توجد تحويلات"
+  },
+  "redEnvelope": {
+    "title": "المظاريف الحمراء",
+    "create": "إنشاء مظروف أحمر",
+    "totalAmount": "المبلغ الإجمالي (نيكسا)",
+    "recipients": "عدد المستلمين",
+    "distributionType": "نوع التوزيع",
+    "random": "عشوائي (أكثر متعة!)",
+    "equal": "تقسيم متساوي",
+    "randomDesc": "يحصل المستلمون على مبالغ عشوائية",
+    "equalDesc": "الجميع يحصل على نفس المبلغ",
+    "message": "رسالة (اختياري)",
+    "yourBalance": "رصيدك نيكسا",
+    "send": "إرسال مظروف أحمر",
+    "sending": "جاري الإرسال...",
+    "active": "المظاريف النشطة",
+    "mySent": "ما أرسلته",
+    "noActive": "لا توجد مظاريف نشطة",
+    "open": "فتح"
+  },
+  "services": {
+    "title": "الخدمات",
+    "subtitle": "استكشف جميع الميزات والأدوات",
+    "socialContent": "الاجتماعية والمحتوى",
+    "moments": "اللحظات",
+    "momentsDesc": "شارك قصص الصور والفيديو المؤقتة",
+    "chats": "الدردشات",
+    "chatsDesc": "محادثات خاصة وجماعية",
+    "discover": "اكتشف",
+    "discoverDesc": "اعثر على أشخاص مثيرين للاهتمام وتابعهم",
+    "trending": "الرائج",
+    "trendingDesc": "استكشف المواضيع الرائجة",
+    "financial": "المالية",
+    "wallet": "المحفظة",
+    "walletDesc": "إدارة رصيد نيكسا الخاص بك",
+    "transfer": "تحويل نيكسا",
+    "transferDesc": "أرسل نيكسا لمستخدمين آخرين",
+    "redEnvelopes": "المظاريف الحمراء",
+    "redEnvelopesDesc": "مشاركة نيكسا جماعية مع تقسيمات عشوائية",
+    "miniPrograms": "البرامج المصغرة",
+    "appStore": "متجر التطبيقات",
+    "appStoreDesc": "اكتشف التطبيقات المصغرة والألعاب",
+    "developerSDK": "SDK المطور",
+    "developerSDKDesc": "أنشئ برامجك المصغرة الخاصة",
+    "gamification": "اللعب",
+    "leaderboard": "لوحة المتصدرين",
+    "leaderboardDesc": "أفضل المساهمين",
+    "qrCode": "رمز QR الخاص بي",
+    "qrCodeDesc": "شارك ملفك الشخصي",
+    "shopping": "التسوق",
+    "shop": "المتجر",
+    "shopDesc": "اشتري الإكسسوارات",
+    "business": "الأعمال",
+    "businessDashboard": "الأعمال",
+    "businessDashboardDesc": "لوحة تحكم الأعمال",
+    "affiliates": "الشركاء",
+    "affiliatesDesc": "برنامج الشركاء",
+    "aiTools": "الذكاء الاصطناعي والأدوات",
+    "afuAI": "AfuAI",
+    "afuAIDesc": "مساعد الذكاء الاصطناعي",
+    "support": "الدعم",
+    "supportCenter": "الدعم",
+    "supportCenterDesc": "احصل على المساعدة",
+    "terms": "الشروط",
+    "termsDesc": "شروط الاستخدام",
+    "privacy": "الخصوصية",
+    "privacyDesc": "سياسة الخصوصية"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "sw": "Kiswahili"
+  },
+  "privacy": {
+    "title": "سياسة الخصوصية",
+    "lastUpdated": "آخر تحديث: يناير 2025",
+    "intro": {
+      "title": "مقدمة",
+      "welcome": "مرحباً بك في AfuChat. نحن ملتزمون بحماية خصوصيتك وضمان الشفافية حول كيفية التعامل مع معلوماتك الشخصية.",
+      "agreement": "باستخدامك لـ AfuChat، فإنك توافق على جمع واستخدام المعلومات وفقاً لسياسة الخصوصية هذه.",
+      "compliance": "تنطبق هذه السياسة على جميع المستخدمين في جميع أنحاء العالم وتتوافق مع قوانين حماية البيانات المعمول بها بما في ذلك GDPR وCCPA واللوائح الإقليمية الأخرى للخصوصية."
+    },
+    "infoCollected": {
+      "title": "المعلومات التي نجمعها",
+      "direct": "المعلومات التي تقدمها مباشرة",
+      "automatic": "المعلومات المجمعة تلقائياً",
+      "thirdParty": "المعلومات من أطراف ثالثة"
+    },
+    "usage": {
+      "title": "كيف نستخدم معلوماتك",
+      "provision": "تقديم الخدمة",
+      "improvement": "تحسين الخدمة",
+      "safety": "السلامة والأمن",
+      "communications": "الاتصالات",
+      "legal": "الامتثال القانوني"
+    },
+    "ai": {
+      "title": "الذكاء الاصطناعي والتعلم الآلي",
+      "features": "ميزات الذكاء الاصطناعي",
+      "processing": "معالجة البيانات بالذكاء الاصطناعي"
+    },
+    "sharing": {
+      "title": "مشاركة المعلومات والإفصاح عنها",
+      "noSell": "نحن لا نبيع معلوماتك الشخصية."
+    },
+    "security": {
+      "title": "أمان البيانات",
+      "technical": "الأمان التقني",
+      "organizational": "الأمان التنظيمي"
+    },
+    "rights": {
+      "title": "حقوق الخصوصية الخاصة بك",
+      "access": "الوصول والقابلية للنقل",
+      "correction": "التصحيح والتحديث",
+      "deletion": "الحذف",
+      "control": "التحكم والقيود"
+    },
+    "contact": "للاستفسارات المتعلقة بالخصوصية، اتصل بـ: privacy@afuchat.com"
+  },
+  "terms": {
+    "title": "شروط الاستخدام",
+    "lastUpdated": "آخر تحديث: يناير 2025",
+    "acceptance": {
+      "title": "قبول الشروط",
+      "intro": "من خلال الوصول واستخدام AfuChat، فإنك تقبل وتوافق على الالتزام بشروط الاستخدام هذه.",
+      "ageRequirement": "من خلال إنشاء حساب، فإنك تؤكد أن عمرك 13 عاماً على الأقل."
+    },
+    "service": {
+      "title": "وصف الخدمة",
+      "intro": "AfuChat عبارة عن منصة شاملة للتواصل الاجتماعي والتواصل."
+    },
+    "accounts": {
+      "title": "حسابات المستخدم والتسجيل",
+      "requirements": "يجب عليك تقديم معلومات دقيقة والحفاظ على أمان حسابك."
+    },
+    "content": {
+      "title": "محتوى المستخدم والملكية الفكرية",
+      "ownership": "أنت تحتفظ بملكية المحتوى الخاص بك.",
+      "prohibited": "المحتوى المحظور"
+    },
+    "aiContent": {
+      "title": "المحتوى الذي تم إنشاؤه بواسطة الذكاء الاصطناعي",
+      "disclaimer": "يتم توفير المحتوى الذي تم إنشاؤه بواسطة الذكاء الاصطناعي 'كما هو' بدون ضمانات."
+    },
+    "virtualCurrency": {
+      "title": "العملة الافتراضية والمعاملات",
+      "noRealValue": "العناصر الافتراضية ليس لها قيمة نقدية حقيقية."
+    },
+    "conduct": {
+      "title": "السلوك المحظور",
+      "intro": "أنت توافق على عدم انتهاك أي قوانين أو إساءة استخدام الخدمة."
+    },
+    "moderation": {
+      "title": "إدارة المحتوى",
+      "rights": "نحتفظ بالحق في مراقبة وإزالة المحتوى."
+    },
+    "termination": {
+      "title": "إنهاء وتعليق الحساب",
+      "rights": "يمكننا تعليق أو إنهاء الحسابات بسبب الانتهاكات."
+    },
+    "disclaimer": {
+      "title": "إخلاء المسؤولية عن الضمانات",
+      "asIs": "يتم توفير الخدمة 'كما هي' و'حسب التوفر'."
+    },
+    "liability": {
+      "title": "تحديد المسؤولية",
+      "limited": "مسؤوليتنا محدودة كما هو موضح هنا."
+    },
+    "contact": "للاستفسارات، اتصل بـ: support@afuchat.com"
+  }
+}

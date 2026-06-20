@@ -1,0 +1,347 @@
+{
+  "app": {
+    "name": "AfuChat",
+    "tagline": "Unganisha, Shiriki, Ingiliana"
+  },
+  "common": {
+    "loading": "Inapakia...",
+    "error": "Kosa",
+    "success": "Mafanikio",
+    "cancel": "Ghairi",
+    "save": "Hifadhi",
+    "delete": "Futa",
+    "edit": "Hariri",
+    "back": "Rudi",
+    "close": "Funga",
+    "confirm": "Thibitisha",
+    "search": "Tafuta",
+    "home": "Nyumbani",
+    "profile": "Wasifu",
+    "settings": "Mipangilio",
+    "notifications": "Arifa",
+    "messages": "Ujumbe",
+    "logout": "Toka",
+    "login": "Ingia",
+    "signup": "Jisajili"
+  },
+  "auth": {
+    "welcome": "Karibu AfuChat",
+    "signIn": "Ingia kwenye akaunti yako",
+    "signUp": "Fungua akaunti mpya",
+    "email": "Barua pepe",
+    "password": "Neno la siri",
+    "forgotPassword": "Umesahau neno la siri?",
+    "noAccount": "Huna akaunti?",
+    "hasAccount": "Tayari una akaunti?",
+    "loggedOut": "Umetoka kikamilifu",
+    "loginSuccess": "Umeingia kikamilifu",
+    "loginError": "Hitilafu ya kuingia"
+  },
+  "settings": {
+    "title": "Mipangilio",
+    "subtitle": "Dhibiti akaunti na mapendekezo yako",
+    "account": "Akaunti",
+    "editProfile": "Hariri Wasifu",
+    "privacy": "Faragha",
+    "privateAccount": "Akaunti ya Faragha",
+    "privateAccountDesc": "Wafuasi walioidhinishwa pekee wanaweza kuona machapisho yako",
+    "notifications": "Arifa",
+    "pushNotifications": "Arifa za Kusukuma",
+    "pushNotificationsDesc": "Pokea arifa za ujumbe mpya na masasisho",
+    "language": "Lugha",
+    "selectLanguage": "Chagua Lugha",
+    "languageDesc": "Chagua lugha yako unayopendelea",
+    "legal": "Kisheria",
+    "termsOfUse": "Masharti ya Matumizi",
+    "privacyPolicy": "Sera ya Faragha",
+    "about": "Kuhusu",
+    "version": "AfuChat Toleo 1.0.0",
+    "copyright": "© 2025 AfuChat. Haki zote zimehifadhiwa."
+  },
+  "feed": {
+    "title": "Mtiririko",
+    "newPost": "Unafikiria nini?",
+    "post": "Chapisha",
+    "acknowledge": "Tambua",
+    "reply": "Jibu",
+    "share": "Shiriki",
+    "noPostsYet": "Hakuna machapisho bado",
+    "startConversation": "Kuwa wa kwanza kuanzisha mazungumzo!",
+    "addComment": "Ongeza maoni...",
+    "signInToReply": "Ingia ili kujibu",
+    "viewComments": "Tazama maoni {{count}}",
+    "viewComments_other": "Tazama maoni {{count}}",
+    "linkCopied": "Kiungo kimenakiliwa kwenye ubao wa kunakili!",
+    "failedToCopy": "Imeshindwa kunakili kiungo",
+    "analyzePost": "Tathmini chapisho na AfuAI"
+  },
+  "profile": {
+    "posts": "Machapisho",
+    "followers": "Wafuasi",
+    "following": "Inafuata",
+    "follow": "Fuata",
+    "unfollow": "Acha kufuata",
+    "message": "Ujumbe",
+    "editProfile": "Hariri Wasifu",
+    "joinedDate": "Alijiunga {{date}}",
+    "adminDashboard": "Dashibodi ya Msimamizi",
+    "notFound": "Wasifu haujapatikana",
+    "failedToFollow": "Imeshindwa kufuata",
+    "failedToUnfollow": "Imeshindwa kuacha kufuata",
+    "failedToChat": "Imeshindwa kuunda gumzo"
+  },
+  "terms": {
+    "title": "Masharti ya Matumizi",
+    "lastUpdated": "Ilisasishwa mwisho: Januari 2025"
+  },
+  "privacy": {
+    "title": "Sera ya Faragha",
+    "lastUpdated": "Ilisasishwa mwisho: Januari 2025"
+  },
+  "search": {
+    "title": "Gundua",
+    "placeholder": "Tafuta watumiaji, machapisho, mada...",
+    "trendingNow": "Inayovuma Sasa",
+    "noTrends": "Hakuna mitindo mipya iliyogunduliwa katika masaa 24 yaliyopita.",
+    "tapTopic": "Gusa mada ili kutafuta",
+    "posts": "Machapisho",
+    "people": "Watu",
+    "noResults": "Hakuna matokeo yaliyopatikana kwa \"{{query}}\".",
+    "postsCount": "Chapisho {{count}}",
+    "postsCount_other": "Machapisho {{count}}"
+  },
+  "navigation": {
+    "feed": "Mtiririko",
+    "search": "Tafuta",
+    "chats": "Mazungumzo",
+    "afuai": "AfuAI",
+    "subscribe": "Jisajili",
+    "openChats": "Fungua Mazungumzo",
+    "loginToViewChats": "Ingia ili kuona mazungumzo",
+    "talkToAfuAI": "Zungumza na AfuAI",
+    "loginToUseAfuAI": "Ingia ili kutumia AfuAI"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "sw": "Kiswahili"
+  },
+  "miniPrograms": {
+    "title": "Programu Ndogo",
+    "searchPlaceholder": "Tafuta programu ndogo...",
+    "all": "Zote",
+    "games": "Michezo",
+    "shopping": "Ununuzi",
+    "entertainment": "Burudani",
+    "media": "Vyombo vya Habari",
+    "education": "Elimu",
+    "noPrograms": "Hakuna programu ndogo zilizopatikana",
+    "install": "Sakinisha",
+    "installed": "Imesakinishwa",
+    "open": "Fungua",
+    "installs": "usakinishaji",
+    "by": "Na"
+  },
+  "moments": {
+    "title": "Wakati",
+    "createStory": "Unda Hadithi",
+    "noStories": "Hakuna hadithi bado",
+    "beFirst": "Kuwa wa kwanza kushiriki wakati!",
+    "viewStory": "Angalia hadithi"
+  },
+  "transfer": {
+    "title": "Hamisha Nexa",
+    "searchUser": "Tafuta mtumiaji...",
+    "amount": "Kiasi (Nexa)",
+    "message": "Ujumbe (Hiari)",
+    "yourBalance": "Salio Lako",
+    "send": "Tuma Nexa",
+    "sending": "Inatuma...",
+    "recentTransfers": "Uhamishaji wa Hivi Karibuni",
+    "sent": "Imetumwa",
+    "received": "Imepokelewa",
+    "noTransfers": "Hakuna uhamishaji"
+  },
+  "redEnvelope": {
+    "title": "Bahasha Nyekundu",
+    "create": "Unda Bahasha Nyekundu",
+    "totalAmount": "Jumla ya Kiasi (Nexa)",
+    "recipients": "Idadi ya Wapokeaji",
+    "distributionType": "Aina ya Usambazaji",
+    "random": "Nasibu (Furaha zaidi!)",
+    "equal": "Mgawanyo Sawa",
+    "randomDesc": "Wapokeaji wanapata kiasi cha nasibu",
+    "equalDesc": "Kila mtu anapata kiasi sawa",
+    "message": "Ujumbe (Hiari)",
+    "yourBalance": "Salio Lako la Nexa",
+    "send": "Tuma Bahasha Nyekundu",
+    "sending": "Inatuma...",
+    "active": "Bahasha Amilifu",
+    "mySent": "Nilizotuma",
+    "noActive": "Hakuna bahasha amilifu",
+    "open": "Fungua"
+  },
+  "services": {
+    "title": "Huduma",
+    "subtitle": "Chunguza vipengele na zana zote",
+    "socialContent": "Jamii na Maudhui",
+    "moments": "Wakati",
+    "momentsDesc": "Shiriki hadithi za picha na video za muda",
+    "chats": "Mazungumzo",
+    "chatsDesc": "Mazungumzo ya faragha na kikundi",
+    "discover": "Gundua",
+    "discoverDesc": "Pata na fuata watu wa kuvutia",
+    "trending": "Maarufu",
+    "trendingDesc": "Chunguza mada zinazovuma",
+    "financial": "Fedha",
+    "wallet": "Pochi",
+    "walletDesc": "Dhibiti salio lako la Nexa",
+    "transfer": "Hamisha Nexa",
+    "transferDesc": "Tuma Nexa kwa watumiaji wengine",
+    "redEnvelopes": "Bahasha Nyekundu",
+    "redEnvelopesDesc": "Ushiriki wa kikundi wa Nexa na mgawanyo wa nasibu",
+    "miniPrograms": "Programu Ndogo",
+    "appStore": "Duka la Programu",
+    "appStoreDesc": "Gundua programu ndogo na michezo",
+    "developerSDK": "SDK ya Msanidi",
+    "developerSDKDesc": "Unda programu zako ndogo",
+    "gamification": "Mchezo",
+    "leaderboard": "Ubao wa Viongozi",
+    "leaderboardDesc": "Wachangiaji bora",
+    "qrCode": "Msimbo Wangu wa QR",
+    "qrCodeDesc": "Shiriki wasifu wako",
+    "shopping": "Ununuzi",
+    "shop": "Duka",
+    "shopDesc": "Nunua vifaa",
+    "business": "Biashara",
+    "businessDashboard": "Biashara",
+    "businessDashboardDesc": "Dashibodi ya biashara",
+    "affiliates": "Washirika",
+    "affiliatesDesc": "Programu ya ushirika",
+    "aiTools": "AI na Zana",
+    "afuAI": "AfuAI",
+    "afuAIDesc": "Msaidizi wa AI",
+    "support": "Usaidizi",
+    "supportCenter": "Usaidizi",
+    "supportCenterDesc": "Pata msaada",
+    "terms": "Masharti",
+    "termsDesc": "Masharti ya matumizi",
+    "privacy": "Faragha",
+    "privacyDesc": "Sera ya faragha"
+  },
+  "gamification": {
+    "xp": "Nexa",
+    "level": "Kiwango",
+    "leaderboard": "Ubao wa Viongozi",
+    "achievements": "Mafanikio",
+    "dailyLogin": "Kuingia kwa Kila Siku",
+    "streak": "Mfululizo",
+    "referFriend": "Rejelea Rafiki"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية",
+    "sw": "Kiswahili"
+  },
+  "privacy": {
+    "title": "Sera ya Faragha",
+    "lastUpdated": "Imesasishwa Mwisho: Januari 2025",
+    "intro": {
+      "title": "Utangulizi",
+      "welcome": "Karibu kwenye AfuChat. Tumejitolea kulinda faragha yako na kuhakikisha uwazi kuhusu jinsi tunavyoshughulikia maelezo yako ya kibinafsi.",
+      "agreement": "Kwa kutumia AfuChat, unakubali ukusanyaji na matumizi ya maelezo kulingana na Sera hii ya Faragha.",
+      "compliance": "Sera hii inatumika kwa watumiaji wote ulimwenguni kote na inazingatia sheria za ulinzi wa data zinazotumika ikiwa ni pamoja na GDPR, CCPA na kanuni nyingine za kikanda za faragha."
+    },
+    "infoCollected": {
+      "title": "Maelezo Tunayokusanya",
+      "direct": "Maelezo Unayotoa Moja kwa Moja",
+      "automatic": "Maelezo Yanayokusanywa Kiotomatiki",
+      "thirdParty": "Maelezo kutoka kwa Wahusika Wengine"
+    },
+    "usage": {
+      "title": "Jinsi Tunavyotumia Maelezo Yako",
+      "provision": "Utoaji wa Huduma",
+      "improvement": "Kuboresha Huduma",
+      "safety": "Usalama na Ulinzi",
+      "communications": "Mawasiliano",
+      "legal": "Kuzingatia Sheria"
+    },
+    "ai": {
+      "title": "AI na Kujifunza kwa Mashine",
+      "features": "Vipengele vya AI",
+      "processing": "Usindikaji wa Data wa AI"
+    },
+    "sharing": {
+      "title": "Kushiriki na Kufichua Maelezo",
+      "noSell": "Hatuuzi maelezo yako ya kibinafsi."
+    },
+    "security": {
+      "title": "Usalama wa Data",
+      "technical": "Usalama wa Kiufundi",
+      "organizational": "Usalama wa Kiashiria"
+    },
+    "rights": {
+      "title": "Haki Zako za Faragha",
+      "access": "Ufikiaji na Usafirishaji",
+      "correction": "Marekebisho na Usasishaji",
+      "deletion": "Kufuta",
+      "control": "Udhibiti na Vikwazo"
+    },
+    "contact": "Kwa maswali yanayohusu faragha, wasiliana na: privacy@afuchat.com"
+  },
+  "terms": {
+    "title": "Masharti ya Matumizi",
+    "lastUpdated": "Imesasishwa Mwisho: Januari 2025",
+    "acceptance": {
+      "title": "Kukubali Masharti",
+      "intro": "Kwa kufikia na kutumia AfuChat, unakubali na kukubaliana kufuata Masharti haya ya Matumizi.",
+      "ageRequirement": "Kwa kuunda akaunti, unathibitisha kuwa una angalau umri wa miaka 13."
+    },
+    "service": {
+      "title": "Maelezo ya Huduma",
+      "intro": "AfuChat ni jukwaa kamili la mitandao ya kijamii na mawasiliano."
+    },
+    "accounts": {
+      "title": "Akaunti za Watumiaji na Usajili",
+      "requirements": "Lazima utoe maelezo sahihi na udumishe usalama wa akaunti yako."
+    },
+    "content": {
+      "title": "Maudhui ya Mtumiaji na Mali ya Akili",
+      "ownership": "Unabaki na umiliki wa maudhui yako.",
+      "prohibited": "Maudhui Yaliyokatazwa"
+    },
+    "aiContent": {
+      "title": "Maudhui Yanayotengenezwa na AI",
+      "disclaimer": "Maudhui yanayotengenezwa na AI yanatolewa 'kama yalivyo' bila dhamana."
+    },
+    "virtualCurrency": {
+      "title": "Sarafu ya Mtandaoni na Miamala",
+      "noRealValue": "Vitu vya mtandaoni havina thamani ya fedha halisi."
+    },
+    "conduct": {
+      "title": "Tabia Iliyokatazwa",
+      "intro": "Unakubali kutokuvunja sheria yoyote au kutumia vibaya Huduma."
+    },
+    "moderation": {
+      "title": "Usimamizi wa Maudhui",
+      "rights": "Tunahifadhi haki ya kufuatilia na kuondoa maudhui."
+    },
+    "termination": {
+      "title": "Kumaliza na Kusimamisha Akaunti",
+      "rights": "Tunaweza kusimamisha au kumaliza akaunti kwa ukiukaji."
+    },
+    "disclaimer": {
+      "title": "Kanusho la Dhamana",
+      "asIs": "HUDUMA INATOLEWA 'KAMA ILIVYO' NA 'KAMA INAVYOPATIKANA'."
+    },
+    "liability": {
+      "title": "Kiwango cha Dhima",
+      "limited": "Dhima yetu imewekewa kikomo kama inavyoelezwa hapa."
+    },
+    "contact": "Kwa maswali, wasiliana na: support@afuchat.com"
+  }
+}

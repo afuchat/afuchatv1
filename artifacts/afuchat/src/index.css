@@ -1,0 +1,1217 @@
+/* Professional Typography & System Optimizations */
+
+@tailwind base;
+
+/* Enhanced Text Rendering - Bolder & Larger */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+  font-size: 16px; /* Base font size */
+}
+
+/* Global text enhancement - all text is bolder */
+body {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Touch + scroll behavior optimizations */
+html, body {
+  overscroll-behavior: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Safe area insets for notched devices (non-Telegram) */
+html:not(.telegram-mini-app) {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Disable native pull-to-refresh in Telegram Mini App */
+html.telegram-mini-app {
+  overscroll-behavior-y: contain;
+  /* Device safe area insets (notch, status bar, home indicator) */
+  --tg-safe-area-top: 0px;
+  --tg-safe-area-bottom: 0px;
+  --tg-safe-area-left: 0px;
+  --tg-safe-area-right: 0px;
+  /* Content safe area insets (Telegram header, bottom bar) */
+  --tg-content-safe-area-top: 0px;
+  --tg-content-safe-area-bottom: 0px;
+  --tg-content-safe-area-left: 0px;
+  --tg-content-safe-area-right: 0px;
+  /* Combined safe area (device + content) for convenience */
+  --tg-safe-top: 0px;
+  --tg-safe-bottom: 0px;
+  --tg-safe-left: 0px;
+  --tg-safe-right: 0px;
+}
+
+html.telegram-mini-app body {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Prevent body scroll in Telegram - #root manages scroll */
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  /* Remove any native safe area from body - we use TG variables */
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/*
+ * TMA Scroll Architecture:
+ * - #root is the ONLY scroll container (overflow-y: auto)
+ * - Main-tab pages (home/search) are self-contained viewport boxes
+ *   (h-full + overflow:hidden) so they never push #root to scroll.
+ *   They manage their own internal scroll via MainTabsNavigation.
+ * - Non-tab pages (profile, settings, gifts…) flow naturally
+ *   and #root scrolls their content.
+ */
+html.telegram-mini-app #root {
+  padding-top: var(--tg-safe-top, 0px);
+  padding-left: var(--tg-safe-left, 0px);
+  padding-right: var(--tg-safe-right, 0px);
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* App wrapper — must fill viewport but NOT clip non-tab content */
+html.telegram-mini-app #root > div {
+  min-height: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* In Telegram, let page content flow naturally so #root handles all scrolling.
+   Target only the main Layout wrapper, not every flex container on the page. */
+html.telegram-mini-app [data-layout-root].h-full.flex.flex-col {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+/* Convert nested scroll containers to flow content in Telegram */
+html.telegram-mini-app .flex-1.min-h-0.overflow-y-auto {
+  overflow: visible !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+/* Ensure fixed headers account for combined safe area in Telegram */
+html.telegram-mini-app .sticky.top-0 {
+  top: 0 !important;
+}
+
+/* Ensure fixed bottom bars account for combined safe area in Telegram */
+html.telegram-mini-app .fixed.bottom-0 {
+  bottom: var(--tg-safe-bottom, 0px) !important;
+}
+
+/* ====== Telegram: Hide ALL in-app back buttons ====== */
+html.telegram-mini-app button:has(> .lucide-arrow-left),
+html.telegram-mini-app button:has(> .lucide-chevron-left),
+html.telegram-mini-app a:has(> .lucide-arrow-left),
+html.telegram-mini-app a:has(> .lucide-chevron-left) {
+  display: none !important;
+}
+html.telegram-mini-app [role="button"]:has(> .lucide-arrow-left),
+html.telegram-mini-app [role="button"]:has(> .lucide-chevron-left) {
+  display: none !important;
+}
+
+@tailwind components;
+@tailwind utilities;
+
+
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+  
+  /* Professional smooth scrolling */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Optimized scroll container */
+  .scroll-optimized {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    will-change: scroll-position;
+  }
+  
+  /* Hardware acceleration */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+  
+  /* Content containment for performance */
+  .contain-layout {
+    contain: layout style;
+  }
+  
+  .contain-paint {
+    contain: paint;
+  }
+  
+  .contain-strict {
+    contain: strict;
+  }
+
+  /* Safe area padding for mobile keyboards */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Mobile keyboard handling for sheets */
+  @supports (height: 100dvh) {
+    .sheet-mobile-keyboard {
+      max-height: 100dvh;
+    }
+  }
+
+  /* Hide scrollbar on mobile */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ========================================
+     Professional Adaptive Scrollbar System
+     - Mobile: Hidden scrollbars (native touch scroll)
+     - Tablet: Thin subtle scrollbars
+     - Desktop: Elegant visible scrollbars
+     ======================================== */
+
+  /* Mobile (< 768px): Hidden scrollbars for clean touch experience */
+  @media (max-width: 767px) {
+    html, body, .scroll-container {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    .scroll-container::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  /* Tablet (768px - 1023px): Thin subtle scrollbars */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    html, body {
+      overflow: auto !important;
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    html::-webkit-scrollbar-track,
+    body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    html::-webkit-scrollbar-thumb,
+    body::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted-foreground) / 0.2);
+      border-radius: 3px;
+    }
+
+    html::-webkit-scrollbar-thumb:hover,
+    body::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--muted-foreground) / 0.35);
+    }
+
+    .tablet-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+    }
+
+    .tablet-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .tablet-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .tablet-scrollbar::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted-foreground) / 0.2);
+      border-radius: 3px;
+    }
+  }
+
+  /* Desktop (≥ 1024px): Hide page-level scrollbar, style inner panels */
+  @media (min-width: 1024px) {
+    html, body {
+      overflow: hidden !important;
+      height: 100%;
+    }
+
+    /* Style scrollbars on inner scrollable panels only */
+    .desktop-scroll-panel {
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--muted-foreground) / 0.25) transparent;
+    }
+
+    .desktop-scroll-panel::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .desktop-scroll-panel::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 4px;
+    }
+
+    .desktop-scroll-panel::-webkit-scrollbar-thumb {
+      background: linear-gradient(
+        180deg,
+        hsl(var(--muted-foreground) / 0.3) 0%,
+        hsl(var(--muted-foreground) / 0.25) 100%
+      );
+      border-radius: 4px;
+      border: 1px solid hsl(var(--background));
+      transition: background 0.2s ease;
+    }
+
+    .desktop-scroll-panel::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(
+        180deg,
+        hsl(var(--primary) / 0.5) 0%,
+        hsl(var(--primary) / 0.4) 100%
+      );
+    }
+
+    .desktop-scroll-panel::-webkit-scrollbar-thumb:active {
+      background: hsl(var(--primary) / 0.6);
+    }
+
+    .desktop-scroll-panel::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+  }
+
+  /* Desktop scrollbar utility class */
+  .desktop-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.25) transparent;
+  }
+
+  .desktop-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .desktop-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  .desktop-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.25);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background 0.2s ease;
+  }
+
+  .desktop-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.4);
+    background-clip: content-box;
+  }
+
+  /* Premium scrollbar with glow effect */
+  .premium-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.3) transparent;
+  }
+
+  .premium-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .premium-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.2);
+    border-radius: 4px;
+  }
+
+  .premium-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 0.4) 0%,
+      hsl(var(--primary) / 0.3) 100%
+    );
+    border-radius: 4px;
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.2);
+    transition: all 0.2s ease;
+  }
+
+  .premium-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 0.6) 0%,
+      hsl(var(--primary) / 0.5) 100%
+    );
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.3);
+  }
+
+  /* Auto-hide scrollbar (shows on hover) */
+  .scrollbar-auto-hide {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-auto-hide::-webkit-scrollbar {
+    width: 0;
+    transition: width 0.2s ease;
+  }
+
+  .scrollbar-auto-hide:hover {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-auto-hide:hover::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .scrollbar-auto-hide:hover::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+
+  /* Scroll container base styles */
+  .scroll-container {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Smooth scrolling for all scroll containers */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Grid background pattern */
+  .bg-grid-white\/5 {
+    background-image: 
+      linear-gradient(to right, hsl(var(--border) / 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.1) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  /* Premium glass effect */
+  .glass {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  }
+
+  /* Oval-rectangular water liquid glass effect for active navigation tabs */
+  .nav-glass-active {
+    position: relative;
+    background: 
+      radial-gradient(ellipse 150% 80% at 50% 20%, rgba(0, 194, 203, 0.28) 0%, transparent 50%),
+      radial-gradient(ellipse 120% 60% at 50% 80%, rgba(0, 194, 203, 0.2) 0%, transparent 45%),
+      radial-gradient(ellipse 80% 100% at 20% 50%, rgba(0, 194, 203, 0.15) 0%, transparent 40%),
+      radial-gradient(ellipse 80% 100% at 80% 50%, rgba(0, 194, 203, 0.15) 0%, transparent 40%),
+      linear-gradient(180deg, rgba(0, 194, 203, 0.1) 0%, rgba(0, 194, 203, 0.05) 100%);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    border: none;
+    border-radius: 50px;
+    box-shadow: 
+      0 4px 20px rgba(0, 194, 203, 0.35),
+      0 2px 6px rgba(0, 194, 203, 0.2),
+      inset 0 2px 6px rgba(255, 255, 255, 0.12),
+      inset 0 -1px 4px rgba(0, 194, 203, 0.08);
+    animation: oval-pulse 3.5s ease-in-out infinite;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  
+  /* Oval water surface caustics */
+  .nav-glass-active::before {
+    content: '';
+    position: absolute;
+    inset: -15%;
+    background: 
+      radial-gradient(ellipse 60% 40% at 30% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 35% at 70% 40%, rgba(255, 255, 255, 0.2) 0%, transparent 45%),
+      radial-gradient(ellipse 70% 30% at 50% 70%, rgba(0, 194, 203, 0.25) 0%, transparent 50%);
+    animation: oval-caustics 5s ease-in-out infinite;
+    pointer-events: none;
+    opacity: 0.9;
+    border-radius: inherit;
+  }
+  
+  /* Oval highlight reflection on top */
+  .nav-glass-active::after {
+    content: '';
+    position: absolute;
+    top: 8%;
+    left: 15%;
+    right: 15%;
+    height: 40%;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.35) 0%,
+      rgba(255, 255, 255, 0.1) 60%,
+      transparent 100%
+    );
+    border-radius: 50%;
+    animation: oval-shine 3s ease-in-out infinite;
+    pointer-events: none;
+    filter: blur(0.5px);
+  }
+  
+  /* Gentle pulsing for oval shape */
+  @keyframes oval-pulse {
+    0%, 100% {
+      box-shadow: 
+        0 4px 20px rgba(0, 194, 203, 0.35),
+        0 2px 6px rgba(0, 194, 203, 0.2),
+        inset 0 2px 6px rgba(255, 255, 255, 0.12),
+        inset 0 -1px 4px rgba(0, 194, 203, 0.08);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 
+        0 5px 28px rgba(0, 194, 203, 0.45),
+        0 3px 10px rgba(0, 194, 203, 0.28),
+        inset 0 3px 8px rgba(255, 255, 255, 0.16),
+        inset 0 -2px 6px rgba(0, 194, 203, 0.12);
+      transform: scale(1.02);
+    }
+  }
+  
+  /* Caustic patterns flowing in oval */
+  @keyframes oval-caustics {
+    0%, 100% {
+      transform: translate(0%, 0%) rotate(0deg);
+      opacity: 0.9;
+    }
+    33% {
+      transform: translate(3%, -2%) rotate(2deg);
+      opacity: 1;
+    }
+    66% {
+      transform: translate(-2%, 3%) rotate(-2deg);
+      opacity: 0.85;
+    }
+  }
+  
+  /* Surface shine animation */
+  @keyframes oval-shine {
+    0%, 100% {
+      opacity: 0.5;
+      transform: scaleX(0.95) translateY(0);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scaleX(1.05) translateY(-1px);
+    }
+  }
+
+  /* Money icon animation for tip button */
+  .money-pulse {
+    animation: money-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes money-pulse {
+    0%, 100% {
+      transform: scale(1) rotate(0deg);
+      filter: drop-shadow(0 0 0 transparent);
+    }
+    25% {
+      transform: scale(1.15) rotate(-5deg);
+      filter: drop-shadow(0 0 8px rgb(34 197 94 / 0.6));
+    }
+    50% {
+      transform: scale(1) rotate(0deg);
+      filter: drop-shadow(0 0 4px rgb(34 197 94 / 0.4));
+    }
+    75% {
+      transform: scale(1.15) rotate(5deg);
+      filter: drop-shadow(0 0 8px rgb(34 197 94 / 0.6));
+    }
+  }
+
+  /* Premium gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+  }
+
+  /* Premium shimmer effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--card)) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Audio waveform animation - bouncing bars */
+  @keyframes waveform-bounce {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+
+  .waveform-bar-animate {
+    animation: waveform-bounce 0.5s ease-in-out infinite;
+  }
+
+  /* Premium glow effect */
+  .glow {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3), 0 0 40px hsl(var(--primary) / 0.1);
+  }
+
+  .glow-sm {
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.2);
+  }
+
+  /* Premium hover lift */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px hsl(var(--foreground) / 0.1), 0 4px 10px -5px hsl(var(--foreground) / 0.05);
+  }
+
+  /* Premium button press */
+  .press-effect:active {
+    transform: scale(0.98);
+  }
+}
+
+/* AfuChat Premium Design System */
+
+@layer base {
+  :root {
+    /* Brand Cyan #00C2CB */
+    --primary: 183 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Accent - slightly lighter cyan */
+    --accent: 183 80% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* App Background - Premium warm white */
+    --background: 0 0% 98%;
+    
+    /* Text Colors */
+    --foreground: 220 20% 10%;
+    
+    /* Card/Post Background - Pure white with subtle warmth */
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
+    
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+    
+    /* Muted - Soft surfaces */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 46%;
+    
+    /* Secondary */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 15% 25%;
+    
+    /* Borders - Soft and refined */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 183 100% 40%;
+    
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    
+    --radius: 0.75rem;
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 20% 10%;
+    --sidebar-primary: 183 100% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 183 80% 50%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 183 100% 40%;
+  }
+
+  .dark {
+    /* AfuChat Brand Cyan #00C2CB */
+    --primary: 183 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Hover/Active state #00A9B1 */
+    --primary-hover: 183 100% 35%;
+    
+    /* Accent - Brand cyan */
+    --accent: 183 100% 40%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Pure Black Background */
+    --background: 0 0% 0%;
+    
+    /* Primary Text #FFFFFF */
+    --foreground: 0 0% 100%;
+    
+    /* Card/Surface - Pure black */
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    
+    /* Popover - Pure black */
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+    
+    /* Muted - Very subtle dark for inputs/surfaces */
+    --muted: 0 0% 6%;
+    --muted-foreground: 0 0% 60%;
+    
+    /* Secondary - Pure black */
+    --secondary: 0 0% 6%;
+    --secondary-foreground: 0 0% 75%;
+    
+    /* Borders - Subtle dark gray */
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 183 100% 40%;
+    
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    
+    /* Sidebar - Pure black */
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 183 100% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 183 100% 40%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 183 100% 40%;
+    
+    /* Soft accent background for subtle highlights */
+    --accent-soft: 183 100% 40% / 0.15;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
+  html, body {
+    @apply bg-background text-foreground antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.3125;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    letter-spacing: 0;
+  }
+  
+  html {
+    height: 100%;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    min-height: 100%;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure root element scrolls properly */
+  #root {
+    min-height: 100%;
+    overflow-y: visible;
+  }
+
+  /* Prevent injected iframes from blocking scrolling */
+  iframe[style*="display: none"],
+  iframe[width="0"],
+  iframe[height="0"] {
+    pointer-events: none !important;
+    position: absolute !important;
+  }
+
+  /* X/Twitter Style Typography System - Exact Match */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans;
+    letter-spacing: normal;
+  }
+
+  h1 {
+    @apply text-[23px] font-extrabold leading-7;
+  }
+
+  h2 {
+    @apply text-[20px] font-extrabold leading-6;
+  }
+
+  h3 {
+    @apply text-[17px] font-bold leading-[22px];
+  }
+
+  h4 {
+    @apply text-[15px] font-bold leading-5;
+  }
+
+  /* Body text - X style */
+  p {
+    @apply text-[15px] font-normal leading-5;
+  }
+
+  /* Profile display name - Large and bold like X profile page */
+  .profile-display-name {
+    @apply text-[20px] font-extrabold leading-6;
+  }
+
+  /* Display name in posts/feed - bold like X */
+  .display-name {
+    @apply text-[15px] font-bold leading-5;
+  }
+
+  /* Username/handle style - regular weight, muted */
+  .username {
+    @apply text-[15px] font-normal text-muted-foreground leading-5;
+  }
+
+  /* Post content style - X uses 17px for tweets */
+  .post-content {
+    @apply text-[17px] font-normal leading-[22px];
+    word-wrap: break-word;
+  }
+
+  /* Bio/description text - slightly larger */
+  .bio-text {
+    @apply text-[15px] font-normal leading-5;
+  }
+
+  /* Small metadata/engagement text */
+  .meta-text {
+    @apply text-[13px] font-normal text-muted-foreground leading-4;
+  }
+
+  /* Tab/Navigation text */
+  .nav-text {
+    @apply text-[15px] font-bold leading-5;
+  }
+
+  /* Button text - X uses bold */
+  .btn-text {
+    @apply text-[15px] font-bold leading-5;
+  }
+
+  /* Stats text (Following, Followers count) */
+  .stats-text {
+    @apply text-[14px] font-normal leading-4;
+  }
+
+  .stats-number {
+    @apply text-[14px] font-bold leading-4;
+  }
+
+  /* Bold text utility for headers */
+  .heading {
+    @apply font-extrabold tracking-tight;
+  }
+
+  /* X-style icon sizing - larger and more visible */
+  svg {
+    min-width: 20px;
+    min-height: 20px;
+  }
+
+  /* Action icons in posts/feeds */
+  .action-icon {
+    @apply w-[22px] h-[22px];
+  }
+
+  /* Navigation icons */
+  .nav-icon {
+    @apply w-6 h-6;
+  }
+
+  /* Avatar sizing */
+  .avatar-sm {
+    @apply w-10 h-10;
+  }
+
+  .avatar-md {
+    @apply w-12 h-12;
+  }
+
+  .avatar-lg {
+    @apply w-14 h-14;
+  }
+  
+  /* Remove all click/tap markers and outlines */
+  button, a, input, textarea, select {
+    -webkit-tap-highlight-color: transparent;
+    outline: none !important;
+  }
+  
+  button:focus, a:focus, input:focus, textarea:focus, select:focus {
+    outline: none !important;
+  }
+  
+  button:active, a:active {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Performance: reduce animations on low-end devices */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  
+  /* Optimize rendering */
+  img, video {
+    @apply gpu-accelerated;
+  }
+}
+
+/* Desktop Layout Utilities */
+@layer utilities {
+  /* Desktop content container - centered with max width */
+  .desktop-container {
+    @apply max-w-7xl mx-auto;
+  }
+
+  /* Three column desktop layout */
+  .desktop-grid {
+    @apply grid grid-cols-1;
+  }
+
+  @media (min-width: 1024px) {
+    .desktop-grid {
+      grid-template-columns: 280px 1fr 320px;
+      gap: 0;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .desktop-grid {
+      grid-template-columns: 280px minmax(0, 680px) 320px;
+      gap: 1rem;
+    }
+  }
+
+  /* Sticky sidebar */
+  .sidebar-sticky {
+    @apply sticky top-16;
+    max-height: calc(100vh - 4rem);
+  }
+
+  /* Card containment - prevents content overflow */
+  .card-contained {
+    @apply overflow-hidden;
+    contain: layout style;
+  }
+
+  /* Professional shadow for elevated cards */
+  .shadow-professional {
+    box-shadow: 
+      0 1px 2px hsl(var(--foreground) / 0.04),
+      0 2px 4px hsl(var(--foreground) / 0.02),
+      0 4px 8px hsl(var(--foreground) / 0.01);
+  }
+
+  /* Desktop feed container */
+  .feed-container {
+    @apply max-w-2xl mx-auto;
+  }
+
+  /* Widget card style */
+  .widget-card {
+    @apply bg-card rounded-xl border border-border/50 overflow-hidden;
+  }
+}
+
+/* Premium UI Components */
+
+/* Status indicators */
+.status-indicator {
+  @apply inline-block w-2 h-2 rounded-full;
+}
+
+.status-sent {
+  @apply bg-muted-foreground;
+}
+
+.status-delivered {
+  @apply bg-primary;
+}
+
+.status-read {
+  @apply bg-accent;
+}
+
+/* Premium chat background */
+.telegram-bg {
+  background-color: hsl(var(--background));
+  background-image: 
+    radial-gradient(ellipse at 20% 20%, hsl(var(--primary) / 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, hsl(var(--accent) / 0.03) 0%, transparent 50%);
+}
+
+/* Premium card shadow system */
+.card-shadow {
+  box-shadow: 
+    0 1px 3px hsl(var(--foreground) / 0.04),
+    0 4px 12px hsl(var(--foreground) / 0.03);
+}
+
+.card-shadow-lg {
+  box-shadow: 
+    0 2px 8px hsl(var(--foreground) / 0.04),
+    0 8px 32px hsl(var(--foreground) / 0.06);
+}
+
+/* Premium divider */
+.divider {
+  @apply h-px w-full bg-gradient-to-r from-transparent via-border to-transparent;
+}
+
+/* Fullscreen support */
+:fullscreen {
+  background-color: hsl(var(--background));
+}
+
+/* Selection color */
+::selection {
+  background-color: hsl(var(--primary) / 0.2);
+  color: inherit;
+}
+
+/* Scrollbar styling for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Hide all scrollbars on mobile devices */
+@media (max-width: 768px) {
+  * {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+  
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+
+/* ==========================================
+   Telegram Mini App Styles
+   ========================================== */
+
+/* Telegram CSS Variables - defaults before JS sets real values */
+:root {
+  --tg-viewport-height: 100vh;
+  --tg-viewport-stable-height: 100vh;
+  --tg-safe-top: 0px;
+  --tg-safe-bottom: 0px;
+  --tg-safe-left: 0px;
+  --tg-safe-right: 0px;
+}
+
+/* Telegram Mini App container */
+html.telegram-mini-app {
+  height: var(--tg-viewport-stable-height, 100vh);
+  overflow: hidden;
+}
+
+html.telegram-mini-app body {
+  height: var(--tg-viewport-stable-height, 100vh);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Disable desktop blocker in Telegram */
+html.telegram-mini-app .desktop-blocker {
+  display: none !important;
+}
+
+/* Telegram haptic feedback visual cue */
+html.telegram-mini-app button:active,
+html.telegram-mini-app [role="button"]:active {
+  transform: scale(0.97);
+  transition: transform 0.08s ease;
+}
+
+/* Telegram safe area fallbacks via env() */
+html.telegram-mini-app {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+/* Optimize scrolling for Telegram WebView */
+html.telegram-mini-app .scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Hide scrollbar in Telegram for cleaner native look */
+html.telegram-mini-app ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+html.telegram-mini-app * {
+  scrollbar-width: none;
+}
+
+/* Touch optimization for Telegram — exclude inputs & textareas */
+html.telegram-mini-app *:not(input):not(textarea):not([contenteditable="true"]) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection in interactive elements (not text inputs) */
+html.telegram-mini-app button,
+html.telegram-mini-app a,
+html.telegram-mini-app [role="button"],
+html.telegram-mini-app input[type="button"],
+html.telegram-mini-app input[type="submit"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Ensure text inputs are fully interactive */
+html.telegram-mini-app input[type="text"],
+html.telegram-mini-app input[type="search"],
+html.telegram-mini-app input[type="email"],
+html.telegram-mini-app input[type="password"],
+html.telegram-mini-app input[type="number"],
+html.telegram-mini-app input[type="tel"],
+html.telegram-mini-app input[type="url"],
+html.telegram-mini-app input:not([type]),
+html.telegram-mini-app textarea,
+html.telegram-mini-app [contenteditable="true"] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
+  touch-action: manipulation !important;
+}
+
+/* Telegram-specific: softer active state for nav items (matches native feel) */
+html.telegram-mini-app .nav-glass-active {
+  /* Use Telegram's accent for the glow, inherits from --primary which is mapped to button_color */
+  box-shadow:
+    0 4px 16px hsl(var(--primary) / 0.25),
+    0 2px 4px hsl(var(--primary) / 0.15),
+    inset 0 1px 4px hsl(0 0% 100% / 0.1);
+}
+
+/* Telegram-specific: use Telegram's bottom bar color if available */
+html.telegram-mini-app nav {
+  background-color: hsl(var(--background));
+}
+
+/* Telegram: remove all decorative borders for a cleaner native feel */
+html.telegram-mini-app .border-b,
+html.telegram-mini-app .border-t,
+html.telegram-mini-app .border-border,
+html.telegram-mini-app [class*="border-border"] {
+  border-color: transparent !important;
+}
+
+/* Telegram: keep only intentional card/section separators via subtle background shifts */
+html.telegram-mini-app .border {
+  border-color: transparent !important;
+}
+
+/* Telegram: restore borders only where truly needed (inputs, explicit outlines) */
+html.telegram-mini-app input,
+html.telegram-mini-app textarea,
+html.telegram-mini-app select {
+  border-color: hsl(var(--input)) !important;
+}
+
+/* Telegram: ensure cards have no visible borders */
+html.telegram-mini-app [class*="rounded"] {
+  border-color: transparent;
+}
