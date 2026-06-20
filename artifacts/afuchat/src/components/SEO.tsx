@@ -1,4 +1,8 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+
+const SITE_NAME = 'AfuChat';
+const SITE_URL = 'https://afuchat.com';
+const DEFAULT_IMAGE = 'https://storage.googleapis.com/gpt-engineer-file-uploads/whhFMyYxVrYCuMq4BfursQL7NCK2/social-images/social-1762461646897-1000016150.jpg';
 
 interface SEOProps {
   title?: string;
@@ -10,54 +14,44 @@ interface SEOProps {
 }
 
 export const SEO = ({
-  title = "AfuChat — Social Network, Messaging, Shopping & AI Assistant Platform",
-  description = "Join AfuChat, the ultimate social media platform combining posting, instant messaging, online shopping, and AI chat. Connect with friends, share moments, chat privately, discover products, and get AI assistance all in one app. Free to join, easy to use, mobile-friendly social networking.",
-  keywords = "social media, social network, messaging app, instant messaging, chat app, online shopping, AI assistant, post photos, share updates, connect with friends, social networking, mobile chat, group chat, private messaging, online community, social platform, buy and sell, marketplace, e-commerce, AI chatbot",
-  image = "https://storage.googleapis.com/gpt-engineer-file-uploads/whhFMyYxVrYCuMq4BfursQL7NCK2/social-images/social-1762461646897-1000016150.jpg",
-  url = window.location.href,
-  type = "website"
+  title = `${SITE_NAME} — Social Super-App: Post, Chat, Shop & AI`,
+  description = 'Join AfuChat — the all-in-one social super-app. Post like X, chat like Telegram, send gifts, shop, and use built-in AI. Fast, private, and data-friendly.',
+  keywords = 'social media, social network, messaging app, chat, online shopping, AI assistant, post photos, share updates, connect, community, marketplace, gifts, e-commerce, AI chatbot, super app',
+  image = DEFAULT_IMAGE,
+  url,
+  type = 'website',
 }: SEOProps) => {
-  useEffect(() => {
-    // Update document title
-    document.title = title;
+  const resolvedUrl = url
+    ? (url.startsWith('http') ? url : `${SITE_URL}${url}`)
+    : SITE_URL;
+  const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
 
-    // Helper function to update or create meta tag
-    const updateMetaTag = (name: string, content: string, isProperty = false) => {
-      const attribute = isProperty ? 'property' : 'name';
-      let element = document.querySelector(`meta[${attribute}="${name}"]`);
-      
-      if (!element) {
-        element = document.createElement('meta');
-        element.setAttribute(attribute, name);
-        document.head.appendChild(element);
-      }
-      
-      element.setAttribute('content', content);
-    };
+  return (
+    <Helmet>
+      <title>{fullTitle}</title>
+      <meta name="description" content={description} />
+      <meta name="keywords" content={keywords} />
+      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+      <meta name="googlebot" content="index, follow" />
+      <link rel="canonical" href={resolvedUrl} />
 
-    // Basic meta tags
-    updateMetaTag('description', description);
-    updateMetaTag('keywords', keywords);
+      {/* Open Graph */}
+      <meta property="og:title" content={fullTitle} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content={image} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:url" content={resolvedUrl} />
+      <meta property="og:type" content={type} />
+      <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:locale" content="en_US" />
 
-    // Open Graph tags
-    updateMetaTag('og:title', title, true);
-    updateMetaTag('og:description', description, true);
-    updateMetaTag('og:image', image, true);
-    updateMetaTag('og:url', url, true);
-    updateMetaTag('og:type', type, true);
-    updateMetaTag('og:site_name', 'AfuChat', true);
-
-    // Twitter Card tags
-    updateMetaTag('twitter:card', 'summary_large_image');
-    updateMetaTag('twitter:title', title);
-    updateMetaTag('twitter:description', description);
-    updateMetaTag('twitter:image', image);
-
-    // Additional SEO tags
-    updateMetaTag('robots', 'index, follow');
-    updateMetaTag('googlebot', 'index, follow');
-    updateMetaTag('application-name', 'AfuChat');
-  }, [title, description, keywords, image, url, type]);
-
-  return null;
+      {/* Twitter / X Card */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={fullTitle} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={image} />
+      <meta name="twitter:site" content="@afuchat" />
+    </Helmet>
+  );
 };

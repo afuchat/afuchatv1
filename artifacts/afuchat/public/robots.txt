@@ -1,41 +1,73 @@
 # AfuChat Robots.txt
 # https://afuchat.com
-# Last updated: 2026-03-08
+# Last updated: 2026-06-20
 
+# ── Default: all crawlers welcome on public content ──────────────────────────
 User-agent: *
 Allow: /
-Allow: /feed
-Allow: /home
-Allow: /post/
 Allow: /search
-Allow: /shop
 Allow: /gifts
-Allow: /games
+Allow: /shop
+Allow: /marketplace
+Allow: /events
+Allow: /shorts
+Allow: /mini-programs
+Allow: /post/
+Allow: /@
+Allow: /premium
+Allow: /terms
+Allow: /privacy
+Allow: /support
 
-# Block non-content paths
-Disallow: /api/
+# Block private/auth/admin paths
 Disallow: /auth/
+Disallow: /api/
 Disallow: /_/
-Disallow: /admin/
+Disallow: /admin
 Disallow: /settings
 Disallow: /checkout
-Disallow: /complete-profile
-Disallow: /change-password
-Disallow: /onboarding
 Disallow: /wallet
 Disallow: /transfer
+Disallow: /security
+Disallow: /qr-code
+Disallow: /verification-request
+Disallow: /complete-profile
+Disallow: /chats
+Disallow: /chat/
+Disallow: /notifications
+Disallow: /creator-earnings
+Disallow: /affiliate-dashboard
+Disallow: /orders
+Disallow: /order/
+Disallow: /moments
 
-# Block query parameters that create duplicates
+# Block tracking query params
 Disallow: /*?*ref=
 Disallow: /*?*utm_
 
-# Allow social media crawlers full access
+# ── Search engines ────────────────────────────────────────────────────────────
 User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Googlebot-Image
 Allow: /
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 2
 
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: Baiduspider
+Allow: /
+
+# ── Social / link-preview crawlers ───────────────────────────────────────────
 User-agent: Twitterbot
 Allow: /
 
@@ -48,5 +80,78 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-# Sitemap location
+User-agent: TelegramBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+# ── AI training & inference crawlers ─────────────────────────────────────────
+# OpenAI (ChatGPT, GPT-4, browsing)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic (Claude)
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# Google AI (Gemini / Bard training)
+User-agent: Google-Extended
+Allow: /
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+
+# Meta AI (Llama)
+User-agent: meta-externalagent
+Allow: /
+
+# Common Crawl (source for many AI datasets)
+User-agent: CCBot
+Allow: /
+
+# Diffbot (AI data extraction)
+User-agent: Diffbot
+Allow: /
+
+# ByteDance / TikTok AI
+User-agent: Bytespider
+Allow: /
+
+# You.com AI
+User-agent: YouBot
+Allow: /
+
+# Cohere AI
+User-agent: cohere-ai
+Allow: /
+
+# Apple (Siri, Apple Intelligence)
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Amazon Alexa / Wayback Machine
+User-agent: ia_archiver
+Allow: /
+
+# ── Sitemap ───────────────────────────────────────────────────────────────────
 Sitemap: https://afuchat.com/sitemap.xml

@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import '@/types/telegram.d.ts';
 import { supabase } from '@/integrations/supabase/client';
 import { Toaster } from "@/components/ui/toaster";
@@ -313,6 +314,7 @@ const AppWithMaintenance = () => {
 };
 
 const App = () => (
+  <HelmetProvider>
   <div className="select-none">
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -340,6 +342,7 @@ const App = () => (
       </QueryClientProvider>
     </ErrorBoundary>
   </div>
+  </HelmetProvider>
 );
 
 export default App;

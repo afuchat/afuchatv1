@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import NewPostModal from '@/components/ui/NewPostModal';
+import { SEOHead } from '@/components/SEOHead';
 
 type FeedTab = 'for-you' | 'following';
 
@@ -90,6 +91,18 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOHead
+        title="Home Feed"
+        description="Your AfuChat social feed — posts, stories, and updates from people you follow. Discover trending content, send gifts, and connect with the world."
+        url="/"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: 'AfuChat Home Feed',
+          description: 'Real-time social feed with posts, stories, gifts, and AI-powered content discovery.',
+          url: 'https://afuchat.com/',
+        }}
+      />
       {/* Stories */}
       <div className="px-4 pt-3 pb-2 border-b border-border/30">
         <StoriesBar />
