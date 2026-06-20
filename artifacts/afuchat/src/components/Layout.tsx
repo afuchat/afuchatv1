@@ -1,19 +1,20 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, Suspense, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Home, Search, Bell, MessageSquare, Gift, Wallet, ShoppingBag,
   Sparkles, Music, Grid3x3, Crown, Shield, User, Settings,
-  Calendar, TrendingUp, DollarSign, Star, LogOut, Plus, X
+  Calendar, TrendingUp, DollarSign, Star, Plus
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/components/Logo';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import NewPostModal from '@/components/ui/NewPostModal';
+import { prefetch } from '@/lib/prefetch';
 
 interface LayoutProps {
   children: ReactNode;
@@ -86,6 +87,7 @@ function NavLink({
     <Link
       to={item.path}
       onClick={onClick}
+      onMouseEnter={() => prefetch(item.path)}
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group relative',
         active
@@ -119,6 +121,28 @@ function NavLink({
 
 function NavDivider() {
   return <div className="my-1.5 border-t border-border/40" />;
+}
+
+function PageSkeleton() {
+  return (
+    <div className="w-full p-4 space-y-4 animate-pulse">
+      <div className="h-6 bg-muted rounded-xl w-2/5" />
+      <div className="rounded-2xl overflow-hidden">
+        <div className="h-14 bg-muted" />
+        <div className="h-48 bg-muted/60 mt-1" />
+        <div className="h-8 bg-muted/40 mt-1" />
+      </div>
+      <div className="rounded-2xl overflow-hidden">
+        <div className="h-14 bg-muted" />
+        <div className="h-40 bg-muted/60 mt-1" />
+        <div className="h-8 bg-muted/40 mt-1" />
+      </div>
+      <div className="rounded-2xl overflow-hidden">
+        <div className="h-14 bg-muted" />
+        <div className="h-8 bg-muted/40 mt-1" />
+      </div>
+    </div>
+  );
 }
 
 type LayoutProfile = {
@@ -354,7 +378,9 @@ export default function Layout({ children, hideNav = false }: LayoutProps) {
         'min-h-screen'
       )}>
         <div className="w-full max-w-2xl mx-auto px-0 md:px-4 md:py-4">
-          {children}
+          <Suspense fallback={<PageSkeleton />}>
+            {children}
+          </Suspense>
         </div>
       </main>
 
@@ -369,6 +395,7 @@ export default function Layout({ children, hideNav = false }: LayoutProps) {
               <Link
                 key={tab.path}
                 to={tab.path}
+                onMouseEnter={() => prefetch(tab.path)}
                 className={cn(
                   'flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors min-w-0 flex-1',
                   active ? 'text-primary' : 'text-muted-foreground'

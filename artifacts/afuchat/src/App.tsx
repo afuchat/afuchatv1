@@ -16,9 +16,7 @@ import AfuAIModal from "./components/afuai/AfuAIModal";
 import { SettingsSheet } from "./components/SettingsSheet";
 import { CombinedRouteGuard } from "./components/CombinedRouteGuard";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { CustomLoader } from '@/components/ui/CustomLoader';
-import { LoadingBar } from '@/components/LoadingBar';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { ScrollToTop } from './components/ScrollToTop';
 import Layout from "./components/Layout";
 
@@ -170,16 +168,6 @@ const ReferralHandler = ({ username }: { username?: string }) => {
   );
 };
 
-const Loader = () => (
-  <motion.div
-    className="flex items-center justify-center h-full min-h-[50vh]"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-  >
-    <CustomLoader size="lg" text="Loading..." />
-  </motion.div>
-);
 
 const AppRoutes = () => {
   useDailyLogin();
@@ -193,8 +181,7 @@ const AppRoutes = () => {
   return (
     <>
       <ScrollToTop />
-      <LoadingBar />
-      <Suspense fallback={<Loader />}>
+      <Suspense fallback={null}>
         <Routes>
           {/* ── Root ── */}
           <Route path="/" element={<CombinedRouteGuard><Layout><Home /></Layout></CombinedRouteGuard>} />
@@ -339,9 +326,7 @@ const App = () => (
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <TelegramProvider>
                       <AfuAIProvider>
-                        <AnimatePresence mode="wait">
-                          <AppWithMaintenance />
-                        </AnimatePresence>
+                        <AppWithMaintenance />
                         <AfuAIModal />
                         <SettingsSheet />
                       </AfuAIProvider>
