@@ -54,11 +54,11 @@ export const PinnedGiftsDisplay = ({ userId, className = '' }: PinnedGiftsDispla
 
   if (pinnedGifts.length === 0) return null;
 
-  // Positions for 1-3 gifts
+  // Positions for up to 3 gifts — corners of the avatar so they never cover the face
   const positions = [
-    { top: '-15%', left: '50%', transform: 'translate(-50%, -50%)' },
-    { top: '12%', right: '-15%', transform: 'translate(50%, -50%)' },
-    { top: '12%', left: '-15%', transform: 'translate(-50%, -50%)' },
+    { bottom: '-6px', right: '-6px' },   // bottom-right
+    { bottom: '-6px', left: '-6px' },    // bottom-left
+    { top: '-6px', right: '-6px' },      // top-right
   ];
 
   return (
@@ -69,7 +69,7 @@ export const PinnedGiftsDisplay = ({ userId, className = '' }: PinnedGiftsDispla
           return (
             <motion.div
               key={pinnedGift.id}
-              className="absolute pointer-events-auto z-0 cursor-pointer"
+              className="absolute pointer-events-auto z-10 cursor-pointer"
               style={position}
               initial={{ scale: 0, opacity: 0, rotate: -180 }}
               animate={{ 
@@ -84,7 +84,7 @@ export const PinnedGiftsDisplay = ({ userId, className = '' }: PinnedGiftsDispla
                 damping: 20
               }}
               whileHover={{ 
-                scale: 1.3, 
+                scale: 1.25, 
                 rotate: 15,
                 transition: { type: 'spring', stiffness: 400, damping: 10 }
               }}
@@ -99,7 +99,7 @@ export const PinnedGiftsDisplay = ({ userId, className = '' }: PinnedGiftsDispla
                 giftName={pinnedGift.gift.name}
                 emoji={pinnedGift.gift.emoji}
                 rarity={pinnedGift.gift.rarity}
-                size="sm"
+                size="xs"
                 className="pointer-events-none"
               />
             </motion.div>
