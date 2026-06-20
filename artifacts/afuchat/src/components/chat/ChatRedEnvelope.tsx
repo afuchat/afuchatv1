@@ -24,7 +24,7 @@ export const ChatRedEnvelope = ({ envelope, onClaim }: ChatRedEnvelopeProps) => 
         .from('red_envelope_claims')
         .select('amount')
         .eq('red_envelope_id', envelope.id)
-        .eq('claimer_id', user?.id)
+        .eq('claimer_id', user!.id)
         .single();
       return data;
     },

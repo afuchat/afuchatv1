@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 interface LabelType {
   id: string;
   name: string;
-  color: string;
+  color: string | null;
 }
 
 interface ManageLabelsDialogProps {
@@ -206,7 +206,7 @@ export const ManageLabelsDialog = ({ isOpen, onClose }: ManageLabelsDialogProps)
                     >
                       <Badge
                         style={{
-                          backgroundColor: label.color,
+                          backgroundColor: label.color ?? undefined,
                           color: 'white',
                         }}
                         className="text-sm"

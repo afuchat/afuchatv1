@@ -94,7 +94,7 @@ export const SecuritySettings = () => {
   const unlinkTelegram = async () => {
     if (!user) return;
     try {
-      await supabase.from('telegram_users').update({ is_linked: false, telegram_id: null, telegram_username: null }).eq('user_id', user.id);
+      await (supabase.from('telegram_users') as any).update({ is_linked: false, telegram_id: null, telegram_username: null }).eq('user_id', user.id);
       setTelegramLinked(false);
       setTelegramLinkCode(null);
       toast.success('Telegram unlinked');
@@ -106,7 +106,7 @@ export const SecuritySettings = () => {
   const handlePrivacyToggle = async (field: string, value: boolean) => {
     if (!user) return;
     try {
-      await supabase.from('profiles').update({ [field]: value }).eq('id', user.id);
+      await (supabase.from('profiles') as any).update({ [field]: value }).eq('id', user.id);
       toast.success('Settings updated');
     } catch (error) {
       toast.error('Failed to update settings');

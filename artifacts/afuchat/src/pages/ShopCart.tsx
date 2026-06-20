@@ -60,7 +60,7 @@ export default function ShopCart() {
         supabase
           .from('merchants')
           .select('id, name, commission_rate')
-          .eq('id', merchantId)
+          .eq('id', merchantId!)
           .single()
       ]);
 

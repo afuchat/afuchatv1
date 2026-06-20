@@ -37,7 +37,7 @@ export const PesapalPaymentDialog = ({ open, onOpenChange, onSuccess }: PesapalP
       const { data } = await supabase
         .from('profiles')
         .select('country')
-        .eq('id', user?.id)
+        .eq('id', user!.id)
         .single();
       return data;
     },

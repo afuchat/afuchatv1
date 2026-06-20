@@ -141,9 +141,9 @@ export const SearchSuggestions = memo(function SearchSuggestions({
               id: user.id,
               text: user.display_name || user.handle,
               subtext: `@${user.handle}`,
-              avatarUrl: user.avatar_url,
-              isVerified: user.is_verified,
-              isOrgVerified: user.is_organization_verified,
+              avatarUrl: user.avatar_url ?? undefined,
+              isVerified: user.is_verified ?? undefined,
+              isOrgVerified: user.is_organization_verified ?? undefined,
             }));
             allSuggestions.push(...userSuggestions);
           }

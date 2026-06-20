@@ -18,10 +18,10 @@ interface Product {
   name: string;
   description: string | null;
   price: number;
-  stock: number;
+  stock: number | null;
   category: string | null;
   image_url: string | null;
-  merchant_id: string;
+  merchant_id: string | null;
 }
 
 interface Merchant {
@@ -78,7 +78,7 @@ export default function ProductDetail() {
       const { data: productData, error: productError } = await supabase
         .from('merchant_products')
         .select('id, name, description, price, stock, category, image_url, merchant_id')
-        .eq('id', productId)
+        .eq('id', productId!)
         .single();
 
       if (productError || !productData) {
@@ -104,9 +104,9 @@ export default function ProductDetail() {
       const { data: relatedData } = await supabase
         .from('merchant_products')
         .select('id, name, description, price, stock, category, image_url, merchant_id')
-        .eq('merchant_id', productData.merchant_id)
+        .eq('merchant_id', productData.merchant_id!)
         .eq('is_available', true)
-        .neq('id', productId)
+        .neq('id', productId!)
         .limit(6);
 
       if (relatedData) {
@@ -119,7 +119,7 @@ export default function ProductDetail() {
           .from('shopping_cart')
           .select('quantity')
           .eq('user_id', user.id)
-          .eq('product_id', productId)
+          .eq('product_id', productId!)
           .single();
 
         if (cartData) {
@@ -247,7 +247,7 @@ export default function ProductDetail() {
               <Package className="h-24 w-24 text-muted-foreground" />
             </div>
           )}
-          {product.stock < 5 && product.stock > 0 && (
+          {(product.stock ?? 0) < 5 && (product.stock ?? 0) > 0 && (
             <Badge variant="destructive" className="absolute top-4 right-4">
               Only {product.stock} left
             </Badge>
@@ -312,13 +312,13 @@ export default function ProductDetail() {
           {/* Stock Info */}
           <div className="flex items-center gap-2 text-sm">
             <Package className="h-4 w-4 text-muted-foreground" />
-            <span className={product.stock > 10 ? 'text-green-600' : product.stock > 0 ? 'text-orange-500' : 'text-destructive'}>
-              {product.stock > 10 ? 'In Stock' : product.stock > 0 ? `Only ${product.stock} left` : 'Out of Stock'}
+            <span className={(product.stock ?? 0) > 10 ? 'text-green-600' : (product.stock ?? 0) > 0 ? 'text-orange-500' : 'text-destructive'}>
+              {(product.stock ?? 0) > 10 ? 'In Stock' : (product.stock ?? 0) > 0 ? `Only ${product.stock} left` : 'Out of Stock'}
             </span>
           </div>
 
           {/* Quantity Selector */}
-          {product.stock > 0 && (
+          {(product.stock ?? 0) > 0 && (
             <div className="flex items-center gap-4">
               <span className="font-medium">Quantity:</span>
               <div className="flex items-center gap-3">
@@ -334,8 +334,8 @@ export default function ProductDetail() {
                 <Button 
                   size="icon" 
                   variant="outline"
-                  onClick={() => setQuantity(Math.min(product.stock - cartQuantity, quantity + 1))}
-                  disabled={quantity >= product.stock - cartQuantity}
+                  onClick={() => setQuantity(Math.min((product.stock ?? 0) - cartQuantity, quantity + 1))}
+                  disabled={quantity >= (product.stock ?? 0) - cartQuantity}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -379,7 +379,7 @@ export default function ProductDetail() {
         </motion.div>
 
         {/* Fixed Bottom Add to Cart */}
-        {product.stock > 0 && (
+        {(product.stock ?? 0) > 0 && (
           <motion.div
             initial={{ y: 100 }}
             animate={{ y: 0 }}

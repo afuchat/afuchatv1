@@ -89,7 +89,7 @@ export const ProfileViewsSheet = ({ isOpen, onClose }: ProfileViewsSheetProps) =
         
         const followMap: Record<string, boolean> = {};
         follows?.forEach(f => {
-          followMap[f.following_id] = true;
+          if (f.following_id) followMap[f.following_id] = true;
         });
         setFollowingMap(followMap);
       }

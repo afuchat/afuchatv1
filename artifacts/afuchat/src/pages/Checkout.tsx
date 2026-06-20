@@ -84,7 +84,7 @@ export default function Checkout() {
         supabase
           .from('merchants')
           .select('id, name, commission_rate, user_id')
-          .eq('id', merchantId)
+          .eq('id', merchantId!)
           .single()
       ]);
 

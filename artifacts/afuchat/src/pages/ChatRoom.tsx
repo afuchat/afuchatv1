@@ -656,11 +656,11 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
     const { data } = await supabase
       .from('chats')
       .select('name, is_group, is_channel, description, avatar_url, created_by')
-      .eq('id', chatId)
+      .eq('id', chatId!)
       .single();
     
     if (data) {
-      setChatInfo(data);
+      setChatInfo(data as any);
       let cachedData: any = { chatInfo: data };
       
       // Check if current user is member and admin for groups
@@ -668,7 +668,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         const { data: memberData } = await supabase
           .from('chat_members')
           .select('is_admin')
-          .eq('chat_id', chatId)
+          .eq('chat_id', chatId!)
           .eq('user_id', user.id)
           .maybeSingle();
         
@@ -690,15 +690,15 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         const { data: members } = await supabase
           .from('chat_members')
           .select('user_id')
-          .eq('chat_id', chatId)
-          .neq('user_id', user.id)
+          .eq('chat_id', chatId!)
+          .neq('user_id', user.id as string)
           .limit(1);
         
         if (members && members.length > 0) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('id, display_name, handle, avatar_url, last_seen, show_online_status, is_verified, is_organization_verified, is_affiliate, affiliated_business_id, is_warned, warning_reason')
-            .eq('id', members[0].user_id)
+            .eq('id', members[0].user_id!)
             .single();
           
           if (profile) {
@@ -747,7 +747,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           profiles(display_name, avatar_url)
         )
       `)
-      .eq('chat_id', chatId)
+      .eq('chat_id', chatId!)
       .order('sent_at', { ascending: true });
 
     if (error) {
@@ -827,7 +827,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         *,
         sender:profiles!red_envelopes_sender_id_fkey(display_name, avatar_url)
       `)
-      .eq('chat_id', chatId)
+      .eq('chat_id', chatId!)
       .order('created_at', { ascending: true });
 
     if (data) {
@@ -844,7 +844,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         receiver:profiles!gift_transactions_receiver_id_fkey(display_name, avatar_url),
         gift:gifts!gift_transactions_gift_id_fkey(name, emoji, rarity, description)
       `)
-      .eq('chat_id', chatId)
+      .eq('chat_id', chatId!)
       .order('created_at', { ascending: true });
 
     if (data) {
@@ -1540,7 +1540,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       const { error } = await supabase
         .from('chat_members')
         .delete()
-        .eq('chat_id', chatId)
+        .eq('chat_id', chatId!)
         .eq('user_id', user.id);
 
       if (error) throw error;
@@ -1620,7 +1620,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         const { error } = await supabase
           .from('messages')
           .delete()
-          .eq('chat_id', chatId)
+          .eq('chat_id', chatId!)
           .eq('sender_id', user.id);
 
         if (error) throw error;

@@ -95,7 +95,7 @@ export default function CreatorEarnings() {
       const { data, error } = await supabase
         .from('profiles')
         .select('country, missed_earnings_total, hide_on_leaderboard, is_admin, withdrawal_phone, withdrawal_network')
-        .eq('id', user?.id)
+        .eq('id', user!.id)
         .single();
       if (error) throw error;
       return data;
@@ -129,7 +129,7 @@ export default function CreatorEarnings() {
       const { error } = await supabase
         .from('profiles')
         .update({ hide_on_leaderboard: enabled })
-        .eq('id', user?.id);
+        .eq('id', user!.id);
       
       if (error) throw error;
       toast.success(enabled ? 'Your identity is now hidden on the leaderboard' : 'Your identity is now visible on the leaderboard');
@@ -228,7 +228,7 @@ export default function CreatorEarnings() {
     queryKey: ['creator-eligibility', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('check_creator_eligibility', {
-        p_user_id: user?.id
+        p_user_id: user!.id
       });
       if (error) throw error;
       return data as unknown as Eligibility;
@@ -243,7 +243,7 @@ export default function CreatorEarnings() {
       const { data, error } = await supabase
         .from('profiles')
         .select('available_balance_ugx')
-        .eq('id', user?.id)
+        .eq('id', user!.id)
         .single();
       if (error) throw error;
       return data?.available_balance_ugx || 0;
@@ -304,7 +304,7 @@ export default function CreatorEarnings() {
       const { data, error } = await supabase
         .from('creator_earnings')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user!.id)
         .order('earned_date', { ascending: false })
         .limit(30);
       if (error) throw error;
@@ -320,7 +320,7 @@ export default function CreatorEarnings() {
       const { data, error } = await supabase
         .from('creator_withdrawals')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user!.id)
         .order('requested_at', { ascending: false })
         .limit(10);
       if (error) throw error;
@@ -342,7 +342,7 @@ export default function CreatorEarnings() {
       const { data: posts, error: postsError } = await supabase
         .from('posts')
         .select('id, content, created_at, view_count')
-        .eq('author_id', user?.id)
+        .eq('author_id', user!.id)
         .order('created_at', { ascending: false })
         .limit(50);
       
@@ -404,7 +404,7 @@ export default function CreatorEarnings() {
           const total_engagement_score = (total_views * 1) + (total_likes * 3) + (total_replies * 5);
 
           // Calculate days since post was created
-          const createdDate = new Date(post.created_at);
+          const createdDate = new Date(post.created_at ?? '');
           const daysActive = Math.max(1, Math.ceil((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)));
 
           // Estimate total earnings (assuming consistent daily share)
@@ -472,7 +472,7 @@ export default function CreatorEarnings() {
           withdrawal_phone: phoneNumber, 
           withdrawal_network: network 
         })
-        .eq('id', user?.id);
+        .eq('id', user!.id);
 
       const { data, error } = await supabase.rpc('request_creator_withdrawal', {
         p_amount_ugx: amount,

@@ -84,8 +84,8 @@ export const TipButton = ({
       const { data, error } = await supabase.rpc('send_tip', {
         p_receiver_id: receiverId,
         p_xp_amount: tipAmount,
-        p_post_id: postId || null,
-        p_message: message || null,
+        p_post_id: postId || undefined,
+        p_message: message || undefined,
       });
 
       if (error) throw error;

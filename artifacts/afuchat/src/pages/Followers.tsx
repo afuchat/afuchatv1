@@ -153,7 +153,7 @@ export default function Followers({ handleOverride }: { handleOverride?: string 
 
       if (followingError) throw followingError;
 
-      const ids = new Set(followingData?.map((f) => f.following_id) || []);
+      const ids = new Set((followingData?.map((f) => f.following_id).filter((id): id is string => id !== null)) || []);
       setFollowingIds(ids);
 
       // Get who is following the current user (to determine "Follow Back")
@@ -164,7 +164,7 @@ export default function Followers({ handleOverride }: { handleOverride?: string 
 
       if (followerError) throw followerError;
 
-      const followerIdsSet = new Set(followerData?.map((f) => f.follower_id) || []);
+      const followerIdsSet = new Set((followerData?.map((f) => f.follower_id).filter((id): id is string => id !== null)) || []);
       setFollowerIds(followerIdsSet);
     } catch (error) {
       console.error("Error fetching following status:", error);

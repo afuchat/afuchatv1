@@ -63,7 +63,7 @@ export function AdminUserManagement({ users, onRefresh }: AdminUserManagementPro
         case 'warn':
           const { data: warnResult } = await supabase.rpc('admin_warn_user', {
             p_user_id: userId,
-            p_reason: reason || null
+            p_reason: reason || undefined
           });
           const warnData = warnResult as { success: boolean; message: string } | null;
           if (warnData?.success) {
@@ -86,7 +86,7 @@ export function AdminUserManagement({ users, onRefresh }: AdminUserManagementPro
         case 'ban':
           const { data: banResult } = await supabase.rpc('admin_ban_user', {
             p_user_id: userId,
-            p_reason: reason || null
+            p_reason: reason || undefined
           });
           const banData = banResult as { success: boolean; message: string } | null;
           if (banData?.success) {

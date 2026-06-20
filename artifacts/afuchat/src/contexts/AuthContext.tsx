@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             p_session_token: session.access_token,
             p_device_name: deviceName,
             p_browser: browser,
-            p_expires_at: session.expires_at ? new Date(session.expires_at * 1000).toISOString() : null
+            p_expires_at: session.expires_at ? new Date(session.expires_at * 1000).toISOString() : undefined
           }).then()
         ]);
       } catch {
@@ -135,8 +135,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (Object.keys(updateData).length > 0) {
                   // Wait a moment for profile to be created by trigger
                   setTimeout(async () => {
-                    const { error } = await supabase
-                      .from('profiles')
+                    const { error } = await (supabase
+                      .from('profiles') as any)
                       .update(updateData)
                       .eq('id', session.user.id);
                     
@@ -169,8 +169,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     updateData.is_business_mode = userMetadata.is_business_mode;
                   }
                   
-                  await supabase
-                    .from('profiles')
+                  await (supabase
+                    .from('profiles') as any)
                     .update(updateData)
                     .eq('id', session.user.id);
                 }

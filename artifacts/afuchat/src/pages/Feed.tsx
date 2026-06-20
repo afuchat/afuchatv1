@@ -72,16 +72,16 @@ interface Post {
   quoted_post?: {
     id: string;
     content: string;
-    created_at: string;
-    author_id: string;
+    created_at: string | null;
+    author_id: string | null;
     image_url?: string | null;
-    post_images?: Array<{ image_url: string; display_order: number; alt_text?: string }>;
+    post_images?: Array<{ image_url: string; display_order: number; alt_text?: string | null }>;
     is_developer?: boolean;
     profiles: {
       display_name: string;
       handle: string;
-      is_verified: boolean;
-      is_organization_verified: boolean;
+      is_verified: boolean | null;
+      is_organization_verified: boolean | null;
       avatar_url?: string | null;
     };
   } | null;
@@ -96,9 +96,9 @@ interface Post {
   profiles: {
     display_name: string;
     handle: string;
-    is_verified: boolean;
-    is_organization_verified: boolean;
-    is_affiliate: boolean;
+    is_verified: boolean | null;
+    is_organization_verified: boolean | null;
+    is_affiliate: boolean | null;
     is_business_mode?: boolean;
     avatar_url?: string | null;
     affiliated_business_id?: string | null;
@@ -135,9 +135,9 @@ interface Reply {
   profiles: {
     display_name: string;
     handle: string;
-    is_verified: boolean;
-    is_organization_verified: boolean;
-    is_affiliate: boolean;
+    is_verified: boolean | null;
+    is_organization_verified: boolean | null;
+    is_affiliate: boolean | null;
     is_business_mode?: boolean;
     avatar_url?: string | null;
     affiliated_business_id?: string | null;
@@ -195,7 +195,7 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
   
   // First process mentions, then process hashtags and links (including plain domains like dev-write.netlify.app)
   const combinedRegex = /(@[a-zA-Z0-9_-]+|#\w+|https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?)/g;
-  const parts: (string | JSX.Element)[] = [];
+  const parts: (string | React.ReactElement)[] = [];
   let lastIndex = 0;
   
   const matches = Array.from(safeContent.matchAll(combinedRegex));
@@ -397,8 +397,8 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: {
                     
                     <VerifiedBadge 
                       isVerified={reply.profiles.is_verified || reply.is_developer}
-                      isOrgVerified={reply.profiles.is_organization_verified}
-                      isAffiliate={reply.profiles.is_affiliate}
+                      isOrgVerified={reply.profiles.is_organization_verified ?? undefined}
+                      isAffiliate={reply.profiles.is_affiliate ?? undefined}
                       isDeveloper={reply.is_developer}
                       affiliateBusinessLogo={reply.profiles.affiliated_business?.avatar_url}
                       affiliateBusinessName={reply.profiles.affiliated_business?.display_name}
@@ -996,8 +996,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               )}
               <VerifiedBadge 
                 isVerified={post.profiles.is_verified || post.is_developer}
-                isOrgVerified={post.profiles.is_organization_verified}
-                isAffiliate={post.profiles.is_affiliate}
+                isOrgVerified={post.profiles.is_organization_verified ?? undefined}
+                isAffiliate={post.profiles.is_affiliate ?? undefined}
                 isDeveloper={post.is_developer}
                 affiliateBusinessLogo={post.profiles.affiliated_business?.avatar_url}
                 affiliateBusinessName={post.profiles.affiliated_business?.display_name}
@@ -1028,13 +1028,13 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             <img src={aiSparkIcon} alt="AI" className="h-5 w-5 select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
           </button>
           <PostActionsSheet
-            post={post}
+            post={post as any}
             user={user}
             navigate={navigate}
             onDelete={onDeletePost}
             onReport={onReportPost}
             onEdit={onEditPost}
-            onQuote={onQuotePost}
+            onQuote={onQuotePost as any}
             onHidePost={onHidePost}
           />
         </div>
@@ -1062,7 +1062,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         {/* Quoted Post */}
         {post.quoted_post && (
           <div className="px-3 pt-2">
-            <QuotedPostCard quotedPost={post.quoted_post} />
+            <QuotedPostCard quotedPost={post.quoted_post as any} />
           </div>
         )}
       </div>
@@ -1217,8 +1217,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                             </span>
                             <VerifiedBadge 
                               isVerified={reply.profiles.is_verified || reply.is_developer}
-                              isOrgVerified={reply.profiles.is_organization_verified}
-                              isAffiliate={reply.profiles.is_affiliate}
+                              isOrgVerified={reply.profiles.is_organization_verified ?? undefined}
+                              isAffiliate={reply.profiles.is_affiliate ?? undefined}
                               isDeveloper={reply.is_developer}
                               size="sm"
                               userId={reply.author_id}
@@ -1936,16 +1936,21 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
         const mappedPost: Post = {
           ...newPost,
+          author_id: newPost.author_id ?? '',
+          post_images: ((newPost as any).post_images ?? []).map((img: any) => ({ ...img, alt_text: img.alt_text ?? undefined })),
+          created_at: newPost.created_at ?? new Date().toISOString(),
+          updated_at: (newPost as any).updated_at ?? new Date().toISOString(),
           profiles: newPost.profiles ? {
             ...newPost.profiles,
-            verification_source: newPost.profiles.verification_source as 'manual' | 'premium' | null
+            verification_source: newPost.profiles.verification_source as 'manual' | 'premium' | null,
+            show_online_status: (newPost.profiles as any).show_online_status ?? undefined,
           } : { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, is_affiliate: false, verification_source: null },
           replies: [],
           reply_count: 0,
           like_count: 0,
           view_count: newPost.view_count || 0,
           has_liked: false,
-          quoted_post: quotedPost,
+          quoted_post: quotedPost as any,
         };
         
         // Add to top of feed immediately
@@ -2220,8 +2225,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           .eq('follower_id', user.id)
           .limit(100); // Limit to reduce data
 
-        if (followingData?.length > 0) {
-          const followingIds = followingData.map((f) => f.following_id);
+        if ((followingData?.length ?? 0) > 0) {
+          const followingIds = followingData!.map((f) => f.following_id);
           const { data } = await supabase
             .from('posts')
             .select(`
@@ -2430,20 +2435,20 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         }
         return shuffled;
       };
-      const finalPosts = user ? sortPosts(mappedPosts) : shuffleArray(mappedPosts);
+      const finalPosts = user ? sortPosts(mappedPosts as any) : shuffleArray(mappedPosts);
       
       // Following posts stay chronological (already sorted by created_at desc)
       const finalFollowingPosts = mappedFollowingPosts;
       
       if (isInitial) {
-        setPosts(finalPosts);
-        setFollowingPosts(finalFollowingPosts);
+        setPosts(finalPosts as any);
+        setFollowingPosts(finalFollowingPosts as any);
       } else {
         // For pagination, append only NEW posts (deduplicate by id)
-        setPosts(prev => {
+        setPosts((prev: Post[]) => {
           const existingIds = new Set(prev.map(p => p.id));
-          const newUniquePosts = finalPosts.filter(p => !existingIds.has(p.id));
-          return [...prev, ...newUniquePosts];
+          const newUniquePosts = (finalPosts as any[]).filter((p: any) => !existingIds.has(p.id));
+          return [...prev, ...newUniquePosts] as Post[];
         });
         setFollowingPosts(prev => {
           const existingIds = new Set(prev.map(p => p.id));
@@ -2563,8 +2568,10 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             const updatePost = (currentPosts: Post[]): Post[] =>
               currentPosts.map((p) =>
                 p.id === payload.new.id
-                  ? {
+                  ? ({
                       ...updatedPost,
+                      created_at: (updatedPost as any).created_at ?? new Date().toISOString(),
+                      updated_at: (updatedPost as any).updated_at ?? new Date().toISOString(),
                       profiles: updatedPost.profiles ? {
                         ...updatedPost.profiles,
                         verification_source: updatedPost.profiles.verification_source as 'manual' | 'premium' | null
@@ -2573,7 +2580,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                       reply_count: p.reply_count,
                       like_count: p.like_count,
                       has_liked: p.has_liked,
-                    }
+                    } as Post)
                   : p
               );
             
@@ -2870,7 +2877,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     refresh: manualRefresh 
   } = usePullToRefresh({
     onRefresh: handlePullRefresh,
-    containerRef: feedContainerRef,
+    containerRef: feedContainerRef as React.RefObject<HTMLElement>,
     threshold: 80,
     disabled: false,
   });
@@ -3159,8 +3166,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             profiles: {
               display_name: quotePost.profiles.display_name,
               handle: quotePost.profiles.handle,
-              is_verified: quotePost.profiles.is_verified,
-              is_organization_verified: quotePost.profiles.is_organization_verified,
+              is_verified: quotePost.profiles.is_verified ?? false,
+              is_organization_verified: quotePost.profiles.is_organization_verified ?? false,
               avatar_url: quotePost.profiles.avatar_url,
             },
           }}

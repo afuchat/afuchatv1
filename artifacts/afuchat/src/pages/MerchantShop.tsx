@@ -19,7 +19,7 @@ interface Product {
   name: string;
   description: string | null;
   price: number;
-  stock: number;
+  stock: number | null;
   category: string | null;
   image_url: string | null;
 }
@@ -86,7 +86,7 @@ export default function MerchantShop() {
       const { data: merchantData } = await supabase
         .from('merchants')
         .select('id, name, description, logo_url, user_id')
-        .eq('id', merchantId)
+        .eq('id', merchantId!)
         .single();
 
       if (merchantData) {
@@ -96,7 +96,7 @@ export default function MerchantShop() {
       const { data: productsData } = await supabase
         .from('merchant_products')
         .select('id, name, description, price, stock, category, image_url')
-        .eq('merchant_id', merchantId)
+        .eq('merchant_id', merchantId!)
         .eq('is_available', true)
         .order('name');
 
@@ -470,7 +470,7 @@ export default function MerchantShop() {
                       <Package className="h-12 w-12 text-muted-foreground" />
                     </div>
                   )}
-                  {product.stock < 5 && product.stock > 0 && (
+                  {(product.stock ?? 0) < 5 && (product.stock ?? 0) > 0 && (
                     <Badge variant="destructive" className="absolute top-2 right-2 text-xs">
                       {product.stock} left
                     </Badge>
@@ -498,7 +498,7 @@ export default function MerchantShop() {
                         variant="outline" 
                         className="h-7 w-7"
                         onClick={() => updateCart(product.id, (cart.get(product.id) || 0) + 1)}
-                        disabled={(cart.get(product.id) || 0) >= product.stock}
+                        disabled={(cart.get(product.id) || 0) >= (product.stock ?? 0)}
                       >
                         <Plus className="h-3 w-3" />
                       </Button>

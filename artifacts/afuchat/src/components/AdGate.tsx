@@ -24,6 +24,7 @@ export const AdGate = ({ onAdWatched, gameName }: AdGateProps) => {
       // Ad finished watching
       handleAdComplete();
     }
+    return undefined;
   }, [adWatching, countdown]);
 
   const handleWatchAd = () => {

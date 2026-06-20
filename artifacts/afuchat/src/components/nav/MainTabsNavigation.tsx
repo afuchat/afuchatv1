@@ -14,7 +14,7 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 const HomePage = lazy(() => import('@/pages/Home'));
 const SearchPage = lazy(() => import('@/pages/Search'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
-const DesktopChats = lazy(() => import('@/pages/DesktopChats'));
+const DesktopChats = lazy(() => import('@/pages/Chats'));
 
 interface MainTabsNavigationProps {
   children?: React.ReactNode;
@@ -121,7 +121,7 @@ export const MainTabsNavigation = ({ children, chatScrollHide = false }: MainTab
         messagesWithStatus?.forEach(msg => {
           const userReadStatus = msg.message_status?.find((s: any) => s.user_id === user.id);
           if (!userReadStatus || !userReadStatus.read_at) {
-            unreadChatIds.add(msg.chat_id);
+            if (msg.chat_id) unreadChatIds.add(msg.chat_id);
           }
         });
         setUnreadChats(unreadChatIds.size);

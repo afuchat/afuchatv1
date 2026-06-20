@@ -16,9 +16,9 @@ interface Profile {
   handle: string;
   display_name: string;
   avatar_url: string | null;
-  is_verified: boolean;
-  is_organization_verified: boolean;
-  is_business_mode: boolean;
+  is_verified: boolean | null;
+  is_organization_verified: boolean | null;
+  is_business_mode: boolean | null;
   affiliated_business_id: string | null;
 }
 
@@ -72,7 +72,7 @@ export const SelectRecipientDialog = ({
         .limit(15);
 
       if (followingData && followingData.length > 0) {
-        const followingIds = followingData.map(f => f.following_id);
+        const followingIds = followingData.map(f => f.following_id).filter((id): id is string => id !== null);
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('*')
@@ -184,7 +184,7 @@ export const SelectRecipientDialog = ({
                     <p className="font-bold text-foreground truncate">
                       {selectedProfile.display_name}
                     </p>
-                    <VerifiedBadge isVerified={selectedProfile.is_verified} isOrgVerified={selectedProfile.is_organization_verified} size="sm" />
+                    <VerifiedBadge isVerified={selectedProfile.is_verified ?? undefined} isOrgVerified={selectedProfile.is_organization_verified ?? undefined} size="sm" />
                   </div>
                   <p className="text-sm text-muted-foreground truncate">
                     @{selectedProfile.handle}
@@ -253,7 +253,7 @@ export const SelectRecipientDialog = ({
                         <p className="font-semibold truncate text-sm">
                           {profile.display_name}
                         </p>
-                        <VerifiedBadge isVerified={profile.is_verified} isOrgVerified={profile.is_organization_verified} size="sm" />
+                        <VerifiedBadge isVerified={profile.is_verified ?? undefined} isOrgVerified={profile.is_organization_verified ?? undefined} size="sm" />
                         {profile.affiliated_business_id && <AffiliatedBadge size="sm" />}
                       </div>
                       <p className="text-xs text-muted-foreground truncate">

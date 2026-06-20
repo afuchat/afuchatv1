@@ -102,7 +102,7 @@ const AffiliateDashboard = () => {
         businessHandle: business.handle,
         businessLogo: business.avatar_url,
         businessWebsite: business.website_url,
-        affiliatedDate: request.reviewed_at || request.requested_at,
+        affiliatedDate: request.reviewed_at ?? request.requested_at ?? '',
         commission_rate: request.commission_rate,
         payment_terms: request.payment_terms,
         total_earnings: 0 // Will be implemented later

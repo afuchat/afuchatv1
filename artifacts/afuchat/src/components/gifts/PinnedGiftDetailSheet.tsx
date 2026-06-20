@@ -21,7 +21,7 @@ interface GiftDetails {
   rarity: string;
   description: string | null;
   base_xp_cost: number;
-  created_at: string;
+  created_at: string | null;
   total_sent: number;
   price_multiplier: number;
   current_price: number;
@@ -220,7 +220,7 @@ export const PinnedGiftDetailSheet = ({ giftId, open, onOpenChange }: PinnedGift
               <div className="flex items-center justify-between p-4">
                 <span className="text-muted-foreground font-medium">Created</span>
                 <span className="font-semibold">
-                  {new Date(gift.created_at).toLocaleDateString('en-US', { 
+                  {new Date(gift.created_at!).toLocaleDateString('en-US', { 
                     month: 'short', 
                     day: 'numeric', 
                     year: 'numeric' 

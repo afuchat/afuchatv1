@@ -26,7 +26,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const callbackRef = useRef(callback);
 
   // Keep callback ref updated
@@ -66,7 +66,7 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
   delay: number
 ): T {
   const lastRan = useRef<number>(0);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const callbackRef = useRef(callback);
 
   useEffect(() => {

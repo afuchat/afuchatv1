@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface Achievement {
   id: string;
   achievement_type: string;
-  earned_at: string;
+  earned_at: string | null;
   metadata: any;
 }
 
@@ -29,8 +29,8 @@ interface AchievementDefinition {
 }
 
 interface UserData {
-  profile_completion_rewarded: boolean;
-  login_streak: number;
+  profile_completion_rewarded: boolean | null;
+  login_streak: number | null;
   referral_count: number;
   post_count: number;
   display_name: string | null;
@@ -62,9 +62,9 @@ const ACHIEVEMENT_CONFIG: Record<string, AchievementDefinition> = {
     requirement: '7 day login streak',
     color: 'bg-orange-500',
     getProgress: (userData) => ({
-      current: Math.min(userData.login_streak, 7),
+      current: Math.min(userData.login_streak ?? 0, 7),
       required: 7,
-      percentage: (Math.min(userData.login_streak, 7) / 7) * 100,
+      percentage: (Math.min(userData.login_streak ?? 0, 7) / 7) * 100,
     }),
   },
   '30_day_streak': {
@@ -74,9 +74,9 @@ const ACHIEVEMENT_CONFIG: Record<string, AchievementDefinition> = {
     requirement: '30 day login streak',
     color: 'bg-red-500',
     getProgress: (userData) => ({
-      current: Math.min(userData.login_streak, 30),
+      current: Math.min(userData.login_streak ?? 0, 30),
       required: 30,
-      percentage: (Math.min(userData.login_streak, 30) / 30) * 100,
+      percentage: (Math.min(userData.login_streak ?? 0, 30) / 30) * 100,
     }),
   },
   '5_referrals': {
@@ -274,7 +274,7 @@ export const AchievementBadges = ({ userId }: AchievementBadgesProps) => {
                   {/* Earned date for unlocked achievements */}
                   {isEarned && earnedData && (
                     <Badge variant="outline" className="mt-2 text-xs">
-                      {new Date(earnedData.earned_at).toLocaleDateString()}
+                      {new Date(earnedData.earned_at!).toLocaleDateString()}
                     </Badge>
                   )}
                 </div>

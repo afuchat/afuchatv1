@@ -75,7 +75,7 @@ export function AdminWithdrawalsPanel() {
       const { data, error } = await supabase.rpc('admin_process_withdrawal', {
         p_withdrawal_id: id,
         p_action: action,
-        p_notes: null
+        p_notes: undefined
       });
       if (error) throw error;
       return data as unknown as { success: boolean; message: string };

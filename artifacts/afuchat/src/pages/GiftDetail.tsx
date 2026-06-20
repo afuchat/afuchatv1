@@ -21,7 +21,7 @@ interface Gift {
   season: string | null;
   available_from: string | null;
   available_until: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 interface GiftStats {
@@ -249,7 +249,7 @@ const GiftDetail = () => {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">
-                    Added {new Date(gift.created_at).toLocaleDateString()}
+                    Added {new Date(gift.created_at ?? '').toLocaleDateString()}
                   </span>
                 </div>
                 {gift.season && (

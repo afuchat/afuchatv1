@@ -434,7 +434,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
                                     value={newPost}
                                     onChange={handleTextChange}
                                     placeholder={wallTarget ? `Write something on ${wallTarget.display_name}'s wall...` : "What's happening?"}
-                                    textareaRef={textareaRef}
+                                    textareaRef={textareaRef as any}
                                 />
 
                                 {/* Quoted Post Preview */}

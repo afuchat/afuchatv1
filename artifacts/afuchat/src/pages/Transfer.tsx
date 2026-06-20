@@ -53,7 +53,7 @@ const Transfer = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('xp, display_name')
-        .eq('id', user?.id)
+        .eq('id', user!.id)
         .single();
       if (error) throw error;
       return data;
@@ -137,7 +137,7 @@ const Transfer = () => {
       const { data, error } = await supabase.rpc('process_xp_transfer', {
         p_receiver_id: receiverProfile.id,
         p_amount: nexaAmount,
-        p_message: message.trim() || null
+        p_message: message.trim() || undefined
       });
 
       if (error) throw error;

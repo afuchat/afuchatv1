@@ -112,6 +112,7 @@ export const useNexa = () => {
       return result;
     } catch (error) {
       console.error('Error checking daily login:', error);
+      return undefined;
     }
   }, [user]);
 
@@ -137,6 +138,7 @@ export const useNexa = () => {
       return result;
     } catch (error) {
       console.error('Error checking profile completion:', error);
+      return undefined;
     }
   }, [user]);
 
@@ -177,6 +179,7 @@ export const useNexa = () => {
       toast.error('Conversion failed', {
         description: 'Please try again later',
       });
+      return undefined;
     }
   }, [user]);
 

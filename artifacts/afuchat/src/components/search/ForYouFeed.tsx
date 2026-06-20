@@ -110,7 +110,7 @@ async function fetchTrendingPosts(pageNum: number): Promise<TrendingPost[]> {
 
   const likeCountMap = new Map<string, number>();
   (acks || []).forEach(ack => {
-    likeCountMap.set(ack.post_id, (likeCountMap.get(ack.post_id) || 0) + 1);
+    if (ack.post_id) likeCountMap.set(ack.post_id, (likeCountMap.get(ack.post_id) || 0) + 1);
   });
 
   const { data: replies } = await supabase
@@ -120,7 +120,7 @@ async function fetchTrendingPosts(pageNum: number): Promise<TrendingPost[]> {
 
   const replyCountMap = new Map<string, number>();
   (replies || []).forEach(reply => {
-    replyCountMap.set(reply.post_id, (replyCountMap.get(reply.post_id) || 0) + 1);
+    if (reply.post_id) replyCountMap.set(reply.post_id, (replyCountMap.get(reply.post_id) || 0) + 1);
   });
 
   const result: TrendingPost[] = [];

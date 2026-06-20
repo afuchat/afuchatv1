@@ -31,7 +31,7 @@ interface UserListing {
   currency: string;
   country: string;
   category: string | null;
-  images: string[];
+  images: string[] | null;
   view_count: number;
   created_at: string;
   acoin_price: number;
@@ -99,7 +99,7 @@ export function UserListings() {
       const { data, error } = await query;
 
       if (error) throw error;
-      setListings(data || []);
+      setListings((data || []) as any);
     } catch (error) {
       console.error('Error fetching listings:', error);
     } finally {

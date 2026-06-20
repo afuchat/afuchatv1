@@ -108,8 +108,8 @@ interface Post {
                 profiles: {
                         display_name: string;
                         handle: string;
-                        is_verified: boolean;
-                        is_organization_verified: boolean;
+                        is_verified: boolean | null;
+                        is_organization_verified: boolean | null;
                         avatar_url?: string | null;
                 };
         } | null;
@@ -531,7 +531,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
                         };
                 });
 
-                setAffiliatedUsers(usersWithDates);
+                setAffiliatedUsers(usersWithDates as any);
         }, []);
 
         const fetchProfile = useCallback(async () => {
@@ -616,7 +616,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 
                                 if (affiliationData) {
                                         // Use reviewed_at (when approved) or fallback to requested_at
-                                        profileData.affiliation_date = affiliationData.reviewed_at || affiliationData.requested_at;
+                                        profileData.affiliation_date = affiliationData.reviewed_at || affiliationData.requested_at || undefined;
                                 }
                         }
                 }
@@ -757,7 +757,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
                                                 post_images(image_url, display_order, alt_text),
                                                 profiles(display_name, handle, is_verified, is_organization_verified, avatar_url)
                                         `)
-                                        .in('id', quotedPostIds);
+                                        .in('id', quotedPostIds.filter((id): id is string => id !== null));
                                 
                                 // Fetch developer status for quoted post authors
                                 const quotedAuthorIds = (quotedPostsData || []).map((qp: any) => qp.author_id);
@@ -1387,7 +1387,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
                                                 ) : (
                                                         <>
                                                                 <StoryAvatar 
-                                                                        userId={profileId}
+                                                                        userId={profileId!}
                                                                         avatarUrl={profile.avatar_url}
                                                                         name={profile.display_name}
                                                                         size="xl"
@@ -1395,7 +1395,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
                                                                         isBusiness={profile?.is_business_mode}
                                                                         enableLightbox={true}
                                                                 />
-                                                                <PinnedGiftsDisplay userId={profileId} />
+                                                                <PinnedGiftsDisplay userId={profileId!} />
                                                                 <OnlineStatus lastSeen={profile.last_seen} showOnlineStatus={profile.show_online_status} />
                                                         </>
                                                 )}
@@ -1413,7 +1413,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
                                                                 )}
                                                                 {isFollowing && profile?.tipping_enabled && (
                                                                         <TipButton
-                                                                                receiverId={profileId}
+                                                                                receiverId={profileId!}
                                                                                 receiverName={profile.display_name}
                                                                                 variant="outline"
                                                                                 size="default"
@@ -1551,7 +1551,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
                                                                         </div>
                                                                 )}
                                                                 
-                                                                <UserPremiumBadge userId={profileId} />
+                                                                <UserPremiumBadge userId={profileId!} />
                                                         </div>
                                         ) : (profile.is_verified || profile.is_organization_verified || profile.is_business_mode || isDeveloper) ? (
                                                 <div className="flex items-center gap-1">
@@ -1594,7 +1594,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
                                                                 </div>
                                                         )}
                                                         
-                                                        <UserPremiumBadge userId={profileId} />
+                                                        <UserPremiumBadge userId={profileId!} />
                                                 </div>
                                                 ) : (
                                                         <div className="flex items-center gap-1">
@@ -1604,7 +1604,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
                                                                                 <BusinessBadge />
                                                                         </div>
                                                                 )}
-                                                                <UserPremiumBadge userId={profileId} />
+                                                                <UserPremiumBadge userId={profileId!} />
                                                         </div>
                                                 )}
 
@@ -1845,7 +1845,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
                                                                                                         </div>
                                                                                                 )}
                                                                                                 {post.quoted_post && (
-                                                                                                        <QuotedPostCard quotedPost={post.quoted_post} />
+                                                                                                        <QuotedPostCard quotedPost={post.quoted_post as any} />
                                                                                                 )}
                                                                                                 {post.content && post.content.length >= 150 && (
                                                                                                         <AIPostSummary postContent={post.content} postId={post.id} />

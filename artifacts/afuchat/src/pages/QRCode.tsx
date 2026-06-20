@@ -18,7 +18,7 @@ const QRCode = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', user!.id)
         .single();
 
       if (error) throw error;
@@ -98,7 +98,7 @@ const QRCode = () => {
           <CardHeader className="text-center">
             <div className="flex flex-col items-center gap-4 mb-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={profile.avatar_url} />
+                <AvatarImage src={profile.avatar_url ?? undefined} />
                 <AvatarFallback>{profile.display_name[0]}</AvatarFallback>
               </Avatar>
               <div>

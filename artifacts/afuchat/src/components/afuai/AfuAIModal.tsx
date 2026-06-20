@@ -183,7 +183,7 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
   const createPost = async (content: string) => {
     if (!user) return;
     const watermarkedContent = content.trim() + AI_WATERMARK;
-    const { error } = await supabase.from('posts').insert({
+    const { error } = await (supabase.from('posts') as any).insert({
       author_id: user.id,
       content: watermarkedContent,
       post_type: 'text',
@@ -263,8 +263,8 @@ const AfuAIModal = ({ isPage = false }: { isPage?: boolean }) => {
         const assistantMsg: Message = {
           role: 'assistant',
           content: data?.reply || "Here's the image I generated!",
-          imageUrl: data?.images?.[0],
-          thought: currentThinking,
+          imageUrl: (data?.images?.[0] ?? undefined) as string | undefined,
+          thought: currentThinking ?? undefined,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, assistantMsg]);

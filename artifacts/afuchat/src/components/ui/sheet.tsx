@@ -82,6 +82,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
           document.body.style.touchAction = '';
         };
       }
+      return undefined;
     }, [isBottom]);
 
     const handleTouchMove = (e: React.TouchEvent) => {

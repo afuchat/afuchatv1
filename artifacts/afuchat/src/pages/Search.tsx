@@ -701,7 +701,7 @@ const Search = () => {
         
         const countMap = new Map<string, number>();
         memberCounts?.forEach(m => {
-          countMap.set(m.chat_id, (countMap.get(m.chat_id) || 0) + 1);
+          if (m.chat_id) countMap.set(m.chat_id, (countMap.get(m.chat_id) || 0) + 1);
         });
 
         let memberGroupIds = new Set<string>();
@@ -711,7 +711,7 @@ const Search = () => {
             .select('chat_id')
             .eq('user_id', user.id)
             .in('chat_id', groupIds);
-          memberGroupIds = new Set(userMemberships?.map(m => m.chat_id) || []);
+          memberGroupIds = new Set((userMemberships?.map(m => m.chat_id).filter((id): id is string => id !== null)) || []);
         }
 
         groupsWithMembership = groupData.map((g: any) => ({

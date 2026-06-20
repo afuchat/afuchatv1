@@ -44,6 +44,7 @@ export const UnclaimedRedEnvelopeBanner = () => {
       }, 5000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [envelopes.length]);
 
   // Countdown timer for current envelope

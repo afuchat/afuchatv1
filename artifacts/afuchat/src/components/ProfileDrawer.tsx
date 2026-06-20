@@ -89,10 +89,10 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
     display_name: string;
     handle: string;
     avatar_url: string | null;
-    is_verified: boolean;
-    is_organization_verified: boolean;
+    is_verified: boolean | null;
+    is_organization_verified: boolean | null;
     is_business_mode: boolean;
-    is_affiliate: boolean;
+    is_affiliate: boolean | null;
   } | null>(null);
   const [followCounts, setFollowCounts] = useState({ followers: 0, following: 0 });
   const [isAdmin, setIsAdmin] = useState(false);
@@ -425,8 +425,8 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
                 <div className="flex items-center gap-1">
                   <h2 className="text-xl font-bold">{profile.display_name}</h2>
                   <VerifiedBadge
-                    isVerified={profile.is_verified}
-                    isOrgVerified={profile.is_organization_verified}
+                    isVerified={profile.is_verified ?? undefined}
+                    isOrgVerified={profile.is_organization_verified ?? undefined}
                     size="md"
                   />
                 </div>

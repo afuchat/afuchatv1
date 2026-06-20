@@ -105,8 +105,8 @@ interface Reply {
   author: {
     display_name: string;
     handle: string;
-    is_verified: boolean;
-    is_organization_verified: boolean;
+    is_verified: boolean | null;
+    is_organization_verified: boolean | null;
     avatar_url: string | null;
     is_warned?: boolean;
     warning_reason?: string | null;
@@ -118,9 +118,9 @@ interface Reply {
 interface Post {
   id: string;
   content: string;
-  created_at: string;
+  created_at: string | null;
   image_url: string | null;
-  post_images?: Array<{ image_url: string; display_order: number; alt_text?: string }>;
+  post_images?: Array<{ image_url: string; display_order: number; alt_text?: string | null }>;
   post_link_previews?: Array<{
     url: string;
     title?: string | null;
@@ -131,29 +131,28 @@ interface Post {
   quoted_post?: {
     id: string;
     content: string;
-    created_at: string;
-    author_id: string;
+    created_at: string | null;
+    author_id: string | null;
     image_url?: string | null;
-    post_images?: Array<{ image_url: string; display_order: number; alt_text?: string }>;
+    post_images?: Array<{ image_url: string; display_order: number; alt_text?: string | null }>;
     is_developer?: boolean;
     profiles: {
       display_name: string;
       handle: string;
-      is_verified: boolean;
-      is_organization_verified: boolean;
+      is_verified: boolean | null;
+      is_organization_verified: boolean | null;
       avatar_url?: string | null;
     };
   } | null;
   likes_count: number;
   replies_count: number;
   view_count: number;
-  
   author: {
     id: string; 
     display_name: string;
     handle: string;
-    is_verified: boolean;
-    is_organization_verified: boolean;
+    is_verified: boolean | null;
+    is_organization_verified: boolean | null;
     is_warned?: boolean;
     warning_reason?: string | null;
     avatar_url?: string | null;
@@ -224,7 +223,7 @@ const PostDetail = () => {
         const { error } = await supabase
           .from('post_acknowledgments')
           .delete()
-          .eq('post_id', postId)
+          .eq('post_id', postId!)
           .eq('user_id', user.id);
         if (error) throw error;
       } else {
@@ -235,7 +234,7 @@ const PostDetail = () => {
       }
 
       // Sync with the true count from DB
-      const { data: counts } = await supabase.rpc('get_post_like_counts', { post_ids: [postId] });
+      const { data: counts } = await supabase.rpc('get_post_like_counts', { post_ids: [postId!] });
       if (Array.isArray(counts) && counts[0]?.like_count != null) {
         setPost((prev) => (prev ? { ...prev, likes_count: Number(counts[0].like_count) } : prev));
       }
@@ -387,7 +386,7 @@ const PostDetail = () => {
           const { data: devData } = await supabase
             .from('developer_roles')
             .select('user_id')
-            .eq('user_id', quotedPostData.author_id)
+            .eq('user_id', quotedPostData.author_id!)
             .maybeSingle();
           
           quotedPost = {
@@ -404,7 +403,7 @@ const PostDetail = () => {
         image_url: postData.image_url || null,
         post_images: postData.post_images || [],
         post_link_previews: postData.post_link_previews || [],
-        quoted_post: quotedPost,
+        quoted_post: quotedPost as any,
         likes_count: likesCount,
         replies_count: repliesCount,
         view_count: postData.view_count || 0,
@@ -414,7 +413,7 @@ const PostDetail = () => {
           handle: postData.profiles.handle,
           is_verified: postData.profiles.is_verified,
           is_organization_verified: postData.profiles.is_organization_verified,
-          is_warned: postData.profiles.is_warned,
+          is_warned: postData.profiles.is_warned ?? undefined,
           warning_reason: postData.profiles.warning_reason,
           avatar_url: postData.profiles.avatar_url,
         },
@@ -535,7 +534,7 @@ const PostDetail = () => {
     const { data } = await supabase
       .from('post_replies')
       .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url, is_warned, warning_reason)')
-      .eq('post_id', postId);
+      .eq('post_id', postId!);
     
     if (data) {
       const mappedReplies: Reply[] = data.map((r: any) => ({
@@ -643,8 +642,8 @@ const PostDetail = () => {
                     {post.author.display_name}
                   </span>
                   <VerifiedBadge 
-                    isVerified={post.author.is_verified} 
-                    isOrgVerified={post.author.is_organization_verified} 
+                    isVerified={post.author.is_verified ?? undefined} 
+                    isOrgVerified={post.author.is_organization_verified ?? undefined} 
                   />
                   {post.author.is_warned && (
                     <WarningBadge size="sm" reason={post.author.warning_reason} variant="post" />
@@ -687,7 +686,7 @@ const PostDetail = () => {
 
             {/* Quoted Post */}
             {post.quoted_post && (
-              <QuotedPostCard quotedPost={post.quoted_post} className="mb-4" />
+              <QuotedPostCard quotedPost={post.quoted_post as any} className="mb-4" />
             )}
             
             {post.post_link_previews && post.post_link_previews.length > 0 && (
@@ -719,7 +718,7 @@ const PostDetail = () => {
 
             {/* TIME & DATE */}
             <p className="text-sm text-muted-foreground border-b border-border pb-3 mb-3">
-              {formatDate(post.created_at)}
+              {formatDate(post.created_at ?? '')}
             </p>
 
             {/* STATS SECTION - Interactive buttons */}
@@ -789,7 +788,7 @@ const PostDetail = () => {
             const { data } = await supabase
               .from('post_replies')
               .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url, is_warned, warning_reason)')
-              .eq('post_id', postId);
+              .eq('post_id', postId!);
             
             if (data) {
               const mappedReplies: Reply[] = data.map((r: any) => ({
@@ -831,7 +830,7 @@ const PostDetail = () => {
               {replies.map(reply => (
                 <NestedReplyItem
                   key={reply.id}
-                  reply={reply}
+                  reply={reply as any}
                   postId={postId || ''}
                   depth={0}
                   onTranslate={handleTranslateReply}
@@ -850,7 +849,7 @@ const PostDetail = () => {
                     const { data } = await supabase
                       .from('post_replies')
                       .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url, is_warned, warning_reason)')
-                      .eq('post_id', postId);
+                      .eq('post_id', postId!);
                     
                     if (data) {
                       const mappedReplies: Reply[] = data.map((r: any) => ({

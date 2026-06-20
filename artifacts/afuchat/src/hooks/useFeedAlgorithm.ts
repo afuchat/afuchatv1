@@ -3,7 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { categorizeContent, ContentCategory } from '@/lib/contentCategorization';
 
-// User interaction weights for scoring
+// Engagement weights (raw score formula: likes*W_LIKE + comments*W_COMMENT + views*W_VIEW)
+const ENGAGEMENT_WEIGHTS = {
+  like: 3,
+  comment: 5,
+  repost: 4,
+  view: 0.1,
+} as const;
+
+// Interaction learning weights (how much each action updates user interest model)
 const INTERACTION_WEIGHTS = {
   like: 3,
   comment: 5,
@@ -12,11 +20,26 @@ const INTERACTION_WEIGHTS = {
   follow: 10,
 };
 
-// Decay factor for time-based relevance (posts older than this lose relevance)
-const TIME_DECAY_HOURS = 72;
+// Scoring point caps per dimension
+const SCORE_CAPS = {
+  engagement: 30,       // up from 10 — engagement is now the dominant signal
+  recency: 15,          // time freshness
+  categoryMatch: 20,    // content-category alignment
+  profileInterest: 25,  // onboarding interest alignment
+  authorAffinity: 15,   // affinity for known authors
+  verifiedBoost: 5,     // blue-check bonus
+  trending: 20,         // velocity bonus for rapidly rising posts
+  diversity: -15,       // same-author repetition penalty
+  random: 8,            // reduced randomness — let signal dominate
+};
+
+// Recency half-life: score halves every N hours
+const RECENCY_HALF_LIFE_HOURS = 36;
+
+// Trending detection: posts that gained significant engagement within this window are boosted
+const TRENDING_WINDOW_HOURS = 6;
 
 // Map onboarding interests to content categories
-// This ensures posts matching user's selected interests get priority
 const INTEREST_TO_CATEGORY_MAP: Record<string, ContentCategory[]> = {
   art: ['lifestyle', 'entertainment'],
   music: ['entertainment'],
@@ -33,7 +56,7 @@ interface UserInterests {
   categories: Record<ContentCategory, number>;
   authors: Record<string, number>;
   hashtags: Record<string, number>;
-  profileInterests: string[]; // User's selected interests from onboarding
+  profileInterests: string[];
   lastUpdated: number;
 }
 
@@ -49,6 +72,8 @@ interface PostScore {
     diversityPenalty: number;
     randomFactor: number;
     profileInterestBoost: number;
+    trendingBoost: number;
+    unlikedBoost: number;
   };
 }
 
@@ -72,12 +97,93 @@ const DEFAULT_INTERESTS: UserInterests = {
 const getCacheKey = (userId: string) => `userFeedInterests:${userId}`;
 const CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
+/**
+ * Compute a Wilson score lower bound for engagement confidence.
+ * Posts with many interactions get a tighter estimate; posts with few get penalized.
+ * Returns a value in [0, 1].
+ */
+function wilsonEngagementScore(positiveEvents: number, totalImpressions: number): number {
+  if (totalImpressions === 0) return 0;
+  const z = 1.645; // 95% confidence
+  const p = positiveEvents / totalImpressions;
+  const n = totalImpressions;
+  const numerator = p + (z * z) / (2 * n) - z * Math.sqrt((p * (1 - p) + (z * z) / (4 * n)) / n);
+  const denominator = 1 + (z * z) / n;
+  return Math.max(0, numerator / denominator);
+}
+
+/**
+ * Engagement score formula:
+ * raw = likes * 3 + comments * 5 + reposts * 4 + views * 0.1
+ * Normalized with log scale so viral posts don't dominate infinitely.
+ * Wilson confidence applied to anchor sparse-data posts lower.
+ * Returns 0-30 points.
+ */
+function computeEngagementScore(
+  likeCount: number,
+  replyCount: number,
+  viewCount: number,
+  repostCount: number = 0,
+): number {
+  const rawScore =
+    likeCount * ENGAGEMENT_WEIGHTS.like +
+    replyCount * ENGAGEMENT_WEIGHTS.comment +
+    repostCount * ENGAGEMENT_WEIGHTS.repost +
+    viewCount * ENGAGEMENT_WEIGHTS.view;
+
+  // Log-scale normalization so a post with 1000 likes isn't astronomically ahead of 100
+  const logNormalized = rawScore > 0 ? Math.log1p(rawScore) / Math.log1p(1000) : 0;
+
+  // Wilson confidence: penalize posts with very few impressions
+  const positiveSignals = likeCount + replyCount + repostCount;
+  const totalSignals = Math.max(viewCount, positiveSignals * 10, 1);
+  const confidence = wilsonEngagementScore(positiveSignals, totalSignals);
+
+  // Blend log-normalized score with confidence
+  const blended = logNormalized * 0.7 + confidence * 0.3;
+
+  return Math.min(blended * SCORE_CAPS.engagement, SCORE_CAPS.engagement);
+}
+
+/**
+ * Recency score with exponential half-life decay.
+ * A post loses half its recency score every RECENCY_HALF_LIFE_HOURS hours.
+ * Returns 0-15 points.
+ */
+function computeRecencyScore(createdAt: string): number {
+  const ageHours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+  const halfLifeDecay = Math.exp(-Math.LN2 * (ageHours / RECENCY_HALF_LIFE_HOURS));
+  return Math.max(0, halfLifeDecay * SCORE_CAPS.recency);
+}
+
+/**
+ * Trending boost: posts that are recent AND have high engagement relative to their age
+ * get an extra boost. This surfaces breaking/viral content fast.
+ * Returns 0-20 points.
+ */
+function computeTrendingBoost(
+  createdAt: string,
+  likeCount: number,
+  replyCount: number,
+  viewCount: number,
+): number {
+  const ageHours = Math.max(0.25, (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60));
+  if (ageHours > TRENDING_WINDOW_HOURS) return 0;
+
+  // Velocity = engagement events per hour since posting
+  const engagementTotal = likeCount + replyCount * 2;
+  const velocity = engagementTotal / ageHours;
+
+  // Normalize: consider 50 engagement events/hour as "very trending"
+  const normalizedVelocity = Math.min(velocity / 50, 1);
+  return normalizedVelocity * SCORE_CAPS.trending;
+}
+
 export function useFeedAlgorithm() {
   const { user } = useAuth();
 
   const [interests, setInterests] = useState<UserInterests>(() => ({
     ...DEFAULT_INTERESTS,
-    // Force first-time learning per user unless we restore from cache
     lastUpdated: 0,
   }));
 
@@ -95,7 +201,6 @@ export function useFeedAlgorithm() {
       const cached = localStorage.getItem(getCacheKey(user.id));
       if (cached) {
         const parsed = JSON.parse(cached) as UserInterests;
-        // If cache is fresh, restore; otherwise keep lastUpdated=0 to trigger re-learn
         if (parsed?.lastUpdated && Date.now() - parsed.lastUpdated < CACHE_TTL) {
           setInterests(parsed);
           return;
@@ -111,12 +216,10 @@ export function useFeedAlgorithm() {
   // Learn from user's past interactions and profile interests
   const learnUserInterests = useCallback(async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
-      // Fetch user's recent interactions and profile in parallel
       const [likesData, repliesData, viewsData, followsData, profileData] = await Promise.all([
-        // Likes from last 30 days
         supabase
           .from('post_acknowledgments')
           .select(`
@@ -128,8 +231,7 @@ export function useFeedAlgorithm() {
           .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
           .order('created_at', { ascending: false })
           .limit(100),
-        
-        // Comments from last 30 days
+
         supabase
           .from('post_replies')
           .select(`
@@ -141,8 +243,7 @@ export function useFeedAlgorithm() {
           .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
           .order('created_at', { ascending: false })
           .limit(50),
-        
-        // Post views from last 14 days
+
         supabase
           .from('post_views')
           .select(`
@@ -154,15 +255,13 @@ export function useFeedAlgorithm() {
           .gte('viewed_at', new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString())
           .order('viewed_at', { ascending: false })
           .limit(200),
-        
-        // Who user follows
+
         supabase
           .from('follows')
           .select('following_id')
           .eq('follower_id', user.id)
           .limit(200),
-        
-        // User's profile interests from onboarding
+
         supabase
           .from('profiles')
           .select('interests')
@@ -170,7 +269,6 @@ export function useFeedAlgorithm() {
           .single(),
       ]);
 
-      // Get user's profile interests
       const profileInterests: string[] = (profileData.data?.interests as string[]) || [];
 
       const newInterests: UserInterests = {
@@ -181,14 +279,13 @@ export function useFeedAlgorithm() {
         lastUpdated: Date.now(),
       };
 
-      // PRIORITY: Apply strong boost for user's selected interests from onboarding
-      // This ensures posts matching their interests always appear first
-      const PROFILE_INTEREST_BOOST = 15; // Strong boost for profile interests
+      // Strong boost for user's selected onboarding interests
+      const PROFILE_INTEREST_BOOST = 15;
       profileInterests.forEach((interest) => {
         const mappedCategories = INTEREST_TO_CATEGORY_MAP[interest];
         if (mappedCategories) {
           mappedCategories.forEach((category) => {
-            newInterests.categories[category] = 
+            newInterests.categories[category] =
               (newInterests.categories[category] || 0) + PROFILE_INTEREST_BOOST;
           });
         }
@@ -199,19 +296,17 @@ export function useFeedAlgorithm() {
         if (like.posts?.content) {
           const categories = categorizeContent(like.posts.content);
           categories.forEach(cat => {
-            newInterests.categories[cat.category] = 
+            newInterests.categories[cat.category] =
               (newInterests.categories[cat.category] || 0) + (INTERACTION_WEIGHTS.like * cat.confidence / 100);
           });
-          
-          // Extract hashtags
           const hashtags = like.posts.content.match(/#\w+/g) || [];
           hashtags.forEach((tag: string) => {
-            newInterests.hashtags[tag.toLowerCase()] = 
+            newInterests.hashtags[tag.toLowerCase()] =
               (newInterests.hashtags[tag.toLowerCase()] || 0) + INTERACTION_WEIGHTS.like;
           });
         }
         if (like.posts?.author_id) {
-          newInterests.authors[like.posts.author_id] = 
+          newInterests.authors[like.posts.author_id] =
             (newInterests.authors[like.posts.author_id] || 0) + INTERACTION_WEIGHTS.like;
         }
       });
@@ -221,12 +316,12 @@ export function useFeedAlgorithm() {
         if (reply.posts?.content) {
           const categories = categorizeContent(reply.posts.content);
           categories.forEach(cat => {
-            newInterests.categories[cat.category] = 
+            newInterests.categories[cat.category] =
               (newInterests.categories[cat.category] || 0) + (INTERACTION_WEIGHTS.comment * cat.confidence / 100);
           });
         }
         if (reply.posts?.author_id) {
-          newInterests.authors[reply.posts.author_id] = 
+          newInterests.authors[reply.posts.author_id] =
             (newInterests.authors[reply.posts.author_id] || 0) + INTERACTION_WEIGHTS.comment;
         }
       });
@@ -236,25 +331,25 @@ export function useFeedAlgorithm() {
         if (view.posts?.content) {
           const categories = categorizeContent(view.posts.content);
           categories.forEach(cat => {
-            newInterests.categories[cat.category] = 
+            newInterests.categories[cat.category] =
               (newInterests.categories[cat.category] || 0) + (INTERACTION_WEIGHTS.view * cat.confidence / 100);
           });
         }
       });
 
-      // Process follows (highest weight for authors)
+      // Process follows (highest author weight)
       (followsData.data || []).forEach((follow: any) => {
         if (follow.following_id) {
-          newInterests.authors[follow.following_id] = 
+          newInterests.authors[follow.following_id] =
             (newInterests.authors[follow.following_id] || 0) + INTERACTION_WEIGHTS.follow;
         }
       });
 
-      // Normalize category scores
+      // Normalize category scores to 0-10
       const maxCategoryScore = Math.max(...Object.values(newInterests.categories));
       if (maxCategoryScore > 0) {
         Object.keys(newInterests.categories).forEach((cat) => {
-          newInterests.categories[cat as ContentCategory] = 
+          newInterests.categories[cat as ContentCategory] =
             (newInterests.categories[cat as ContentCategory] / maxCategoryScore) * 10;
         });
       }
@@ -270,7 +365,7 @@ export function useFeedAlgorithm() {
     }
   }, [user]);
 
-  // Calculate post score based on user interests
+  // Score a single post using the engagement-first algorithm
   const scorePost = useCallback((post: {
     id: string;
     content: string;
@@ -281,8 +376,8 @@ export function useFeedAlgorithm() {
     view_count: number;
     has_liked?: boolean;
     profiles: {
-      is_verified: boolean;
-      is_organization_verified: boolean;
+      is_verified: boolean | null;
+      is_organization_verified: boolean | null;
     };
   }, randomSeed: number): PostScore => {
     const factors = {
@@ -293,29 +388,41 @@ export function useFeedAlgorithm() {
       verifiedBoost: 0,
       diversityPenalty: 0,
       randomFactor: 0,
+      profileInterestBoost: 0,
+      trendingBoost: 0,
       unlikedBoost: 0,
-      profileInterestBoost: 0, // NEW: Boost for posts matching user's onboarding interests
     };
 
-    // NEW: Strong boost for posts user hasn't liked yet (0-30 points)
-    // This ensures users see fresh content they haven't interacted with
-    if (!post.has_liked) {
-      factors.unlikedBoost = 30;
-    }
+    // 1. ENGAGEMENT SCORE (0-30 pts) — primary ranking signal
+    //    Formula: likes*3 + comments*5 + reposts*4 + views*0.1, log-normalized + Wilson confidence
+    factors.engagementScore = computeEngagementScore(
+      post.like_count,
+      post.reply_count,
+      post.view_count,
+    );
 
-    // 1. Category match score (0-20 points) - includes learned behavior
+    // 2. TRENDING BOOST (0-20 pts) — extra boost for posts rapidly gaining engagement
+    factors.trendingBoost = computeTrendingBoost(
+      post.created_at,
+      post.like_count,
+      post.reply_count,
+      post.view_count,
+    );
+
+    // 3. RECENCY SCORE (0-15 pts) — exponential half-life decay
+    factors.recencyScore = computeRecencyScore(post.created_at);
+
+    // 4. CATEGORY MATCH (0-20 pts) — content-category alignment with user model
     const categories = categorizeContent(post.content);
     categories.forEach(cat => {
       const userInterest = interests.categories[cat.category] || 1;
       factors.categoryMatch += (cat.confidence / 100) * userInterest * 2;
     });
-    factors.categoryMatch = Math.min(factors.categoryMatch, 20);
+    factors.categoryMatch = Math.min(factors.categoryMatch, SCORE_CAPS.categoryMatch);
 
-    // 2. Profile interest boost (0-25 points) - prioritize posts matching onboarding interests
-    // This ensures the user's selected interests are always reflected in their feed
+    // 5. PROFILE INTEREST BOOST (0-25 pts) — onboarding interest alignment
     if (interests.profileInterests.length > 0) {
       categories.forEach(cat => {
-        // Check if this category maps to any of user's selected interests
         for (const [interest, mappedCategories] of Object.entries(INTEREST_TO_CATEGORY_MAP)) {
           if (interests.profileInterests.includes(interest) && mappedCategories.includes(cat.category)) {
             factors.profileInterestBoost += (cat.confidence / 100) * 25;
@@ -323,37 +430,32 @@ export function useFeedAlgorithm() {
           }
         }
       });
-      factors.profileInterestBoost = Math.min(factors.profileInterestBoost, 25);
+      factors.profileInterestBoost = Math.min(factors.profileInterestBoost, SCORE_CAPS.profileInterest);
     }
 
-    // 2. Author affinity (0-15 points) - reduced
+    // 6. AUTHOR AFFINITY (0-15 pts) — prefer authors user has interacted with
     const authorScore = interests.authors[post.author_id] || 0;
-    factors.authorAffinity = Math.min(authorScore * 1.5, 15);
+    factors.authorAffinity = Math.min(authorScore * 1.5, SCORE_CAPS.authorAffinity);
 
-    // 3. Engagement score (0-10 points) - reduced
-    const engagementRatio = (post.like_count * 2 + post.reply_count * 3) / Math.max(post.view_count, 1);
-    factors.engagementScore = Math.min(engagementRatio * 50, 10);
-
-    // 4. Recency score (0-10 points) - favor newer posts
-    const ageHours = (Date.now() - new Date(post.created_at).getTime()) / (1000 * 60 * 60);
-    factors.recencyScore = Math.max(0, 10 * Math.exp(-ageHours / TIME_DECAY_HOURS));
-
-    // 5. Verified boost (0-5 points)
+    // 7. VERIFIED BOOST (0-5 pts)
     if (post.profiles.is_verified || post.profiles.is_organization_verified) {
-      factors.verifiedBoost = 5;
+      factors.verifiedBoost = SCORE_CAPS.verifiedBoost;
     }
 
-    // 6. Diversity penalty - reduce score if we've shown this author recently
+    // 8. UNLIKED BOOST — show fresh content the user hasn't engaged with
+    if (!post.has_liked) {
+      factors.unlikedBoost = 10;
+    }
+
+    // 9. DIVERSITY PENALTY — reduce score if we've shown this author recently
     if (recentlyShownAuthors.current.has(post.author_id)) {
-      factors.diversityPenalty = -15;
+      factors.diversityPenalty = SCORE_CAPS.diversity; // negative
     }
 
-    // 7. Random factor for variety (0-20 points) - ensures posts aren't always in same order
-    // Use post id hash combined with seed for consistent-per-session but varied ordering
+    // 10. RANDOM FACTOR (0-8 pts) — reduced: let engagement signal dominate
     const postHash = post.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    factors.randomFactor = ((postHash * randomSeed) % 100) / 5; // 0-20 points
+    factors.randomFactor = ((postHash * randomSeed) % 100) / (100 / SCORE_CAPS.random);
 
-    // Calculate final score
     const score = Object.values(factors).reduce((sum, val) => sum + val, 0);
 
     return {
@@ -363,7 +465,7 @@ export function useFeedAlgorithm() {
     };
   }, [interests]);
 
-  // Sort posts by personalized score with variety
+  // Sort posts by engagement-first personalized score with diversity
   const sortPosts = useCallback(<T extends {
     id: string;
     content: string;
@@ -374,27 +476,23 @@ export function useFeedAlgorithm() {
     view_count: number;
     has_liked?: boolean;
     profiles: {
-      is_verified: boolean;
-      is_organization_verified: boolean;
+      is_verified: boolean | null;
+      is_organization_verified: boolean | null;
     };
   }>(posts: T[]): T[] => {
-    // Reset recently shown authors for new sort
     recentlyShownAuthors.current.clear();
 
-    // Generate fresh random seed on each sort for variety
-    // This ensures users see different post orderings each time they refresh
     const sessionSeed = Math.floor(Math.random() * 1000) + 1;
 
-    // Score all posts with randomization
     const scoredPosts = posts.map(post => ({
       post,
       ...scorePost(post, sessionSeed),
     }));
 
-    // Sort by score descending
+    // Sort by score descending (engagement-first)
     scoredPosts.sort((a, b) => b.score - a.score);
 
-    // Apply diversity: limit consecutive posts from same author
+    // Apply diversity: spread posts from the same author
     const result: T[] = [];
     const authorPositions = new Map<string, number[]>();
     const minGapBetweenSameAuthor = 4;
@@ -402,8 +500,7 @@ export function useFeedAlgorithm() {
     for (const { post } of scoredPosts) {
       const positions = authorPositions.get(post.author_id) || [];
       const lastPosition = positions[positions.length - 1];
-      
-      // Check if we can add this post at current position
+
       if (lastPosition === undefined || result.length - lastPosition >= minGapBetweenSameAuthor) {
         result.push(post);
         positions.push(result.length - 1);
@@ -412,7 +509,7 @@ export function useFeedAlgorithm() {
       }
     }
 
-    // Add remaining posts that were skipped due to diversity rules
+    // Append any posts skipped due to diversity rules
     for (const { post } of scoredPosts) {
       if (!result.find(p => p.id === post.id)) {
         result.push(post);
@@ -420,9 +517,9 @@ export function useFeedAlgorithm() {
     }
 
     return result;
-  }, [scorePost, user]);
+  }, [scorePost]);
 
-  // Record an interaction for learning
+  // Record an interaction for real-time interest learning
   const recordInteraction = useCallback((
     type: 'like' | 'comment' | 'view' | 'share',
     postContent: string,
@@ -431,28 +528,24 @@ export function useFeedAlgorithm() {
     setInterests(prev => {
       const weight = INTERACTION_WEIGHTS[type];
       const newInterests = { ...prev };
-      
-      // Update category scores
+
       const categories = categorizeContent(postContent);
       categories.forEach(cat => {
-        newInterests.categories[cat.category] = 
+        newInterests.categories[cat.category] =
           (newInterests.categories[cat.category] || 0) + (weight * cat.confidence / 100);
       });
 
-      // Update author affinity
-      newInterests.authors[authorId] = 
+      newInterests.authors[authorId] =
         (newInterests.authors[authorId] || 0) + weight;
 
-      // Update hashtags
       const hashtags = postContent.match(/#\w+/g) || [];
       hashtags.forEach((tag: string) => {
-        newInterests.hashtags[tag.toLowerCase()] = 
+        newInterests.hashtags[tag.toLowerCase()] =
           (newInterests.hashtags[tag.toLowerCase()] || 0) + weight;
       });
 
       newInterests.lastUpdated = Date.now();
-      
-      // Debounced save to localStorage
+
       setTimeout(() => {
         if (user) {
           localStorage.setItem(getCacheKey(user.id), JSON.stringify(newInterests));
@@ -461,11 +554,10 @@ export function useFeedAlgorithm() {
 
       return newInterests;
     });
-  }, []);
+  }, [user]);
 
-  // Learn interests on mount if user is logged in
+  // Learn interests on mount / when user changes
   useEffect(() => {
-    // If we don't have fresh cached interests for this user, learn immediately
     if (user && (interests.lastUpdated === 0 || Date.now() - interests.lastUpdated > CACHE_TTL)) {
       learnUserInterests();
     }

@@ -19,7 +19,7 @@ interface UserListing {
   currency: string;
   country: string;
   category: string | null;
-  images: string[];
+  images: string[] | null;
   view_count: number;
   created_at: string;
   acoin_price: number;
@@ -89,7 +89,7 @@ export function UserListingCard({ listing, onPurchaseSuccess }: UserListingCardP
 
         if (sharedChat) {
           // Send intro message about the listing
-          await supabase.from('messages').insert({
+          await (supabase.from('messages') as any).insert({
             chat_id: sharedChat.chat_id,
             sender_id: user.id,
             content: `Hi! I'm interested in your listing: "${listing.title}" (${formatPrice(listing.price, listing.currency)})`,
@@ -120,7 +120,7 @@ export function UserListingCard({ listing, onPurchaseSuccess }: UserListingCardP
 
       // Send intro message
       const messageContent = `Hi! I'm interested in your listing: "${listing.title}" (${formatPrice(listing.price, listing.currency)})`;
-      await supabase.from('messages').insert({
+      await (supabase.from('messages') as any).insert({
         chat_id: newChat.id,
         sender_id: user.id,
         content: messageContent,

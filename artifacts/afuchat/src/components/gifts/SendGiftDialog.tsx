@@ -24,8 +24,8 @@ interface GiftItem {
   emoji: string;
   base_xp_cost: number;
   rarity: string;
-  description: string;
-  season?: string;
+  description: string | null;
+  season?: string | null;
   available_from?: string;
   available_until?: string;
 }
@@ -106,7 +106,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
       .select('gift_id, price_multiplier, total_sent, last_sale_price');
 
     if (giftsData) {
-      setGifts(giftsData);
+      setGifts(giftsData as any);
     }
 
     if (statsData) {
@@ -223,7 +223,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
         const { data, error } = await supabase.rpc('send_gift_combo', {
           p_gift_ids: giftIds,
           p_receiver_id: receiverId,
-          p_message: null,
+          p_message: undefined,
         });
 
         console.log('send_gift_combo response:', { data, error });
@@ -297,7 +297,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger, chatId, onGi
         const { data, error } = await supabase.rpc('send_gift', {
           p_gift_id: selectedGift.id,
           p_receiver_id: receiverId,
-          p_message: null,
+          p_message: undefined,
         });
 
         if (error) throw error;

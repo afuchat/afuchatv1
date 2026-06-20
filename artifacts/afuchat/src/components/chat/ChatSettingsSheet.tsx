@@ -115,6 +115,7 @@ export const ChatSettingsSheet = ({ isOpen, onClose, defaultTab = 'appearance' }
 
       return () => clearTimeout(timeoutId);
     }
+    return undefined;
   }, [bubbleStyle, fontSize, sounds, autoDownload, mediaQuality, chatLock, readReceipts, loading]);
 
   return (

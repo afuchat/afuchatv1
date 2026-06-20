@@ -333,7 +333,7 @@ const AdminDashboard = () => {
     const { data } = await supabase.from('merchants')
       .select('id, name, api_endpoint, is_active, last_sync_at')
       .order('created_at', { ascending: false });
-    setMerchants(data || []);
+    setMerchants((data || []) as any);
   };
 
   const syncMerchantProducts = async (merchantId: string) => {

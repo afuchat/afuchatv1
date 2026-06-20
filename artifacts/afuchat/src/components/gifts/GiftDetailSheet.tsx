@@ -29,7 +29,7 @@ interface Gift {
   season: string | null;
   available_from: string | null;
   available_until: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 interface GiftStats {
@@ -280,7 +280,7 @@ export const GiftDetailSheet = ({ giftId, open, onOpenChange, recipientId, recip
                   <div className="flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-muted-foreground">
-                      Added {new Date(gift.created_at).toLocaleDateString()}
+                      Added {new Date(gift.created_at!).toLocaleDateString()}
                     </span>
                   </div>
                   {gift.season && (

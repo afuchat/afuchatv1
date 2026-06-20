@@ -37,14 +37,14 @@ export const NotificationsSettings = () => {
 
   const loadPreferences = async () => {
     try {
-      const { data, error } = await supabase.from('notification_preferences').select('*').eq('user_id', user?.id).single();
+      const { data, error } = await supabase.from('notification_preferences').select('*').eq('user_id', user!.id).single();
       if (error && error.code !== 'PGRST116') throw error;
       if (data) {
-        setEmailEnabled(data.email_enabled); setEmailMessages(data.email_messages);
-        setEmailLikes(data.email_likes); setEmailFollows(data.email_follows);
-        setEmailGifts(data.email_gifts); setEmailMentions(data.email_mentions);
-        setEmailReplies(data.email_replies); setEmailDigestFrequency(data.email_digest_frequency);
-        setQuietHoursEnabled(data.quiet_hours_enabled);
+        setEmailEnabled(data.email_enabled ?? false); setEmailMessages(data.email_messages ?? false);
+        setEmailLikes(data.email_likes ?? false); setEmailFollows(data.email_follows ?? false);
+        setEmailGifts(data.email_gifts ?? false); setEmailMentions(data.email_mentions ?? false);
+        setEmailReplies(data.email_replies ?? false); setEmailDigestFrequency(data.email_digest_frequency ?? '');
+        setQuietHoursEnabled(data.quiet_hours_enabled ?? false);
         setQuietHoursStart(data.quiet_hours_start?.slice(0, 5) || '22:00');
         setQuietHoursEnd(data.quiet_hours_end?.slice(0, 5) || '08:00');
       }

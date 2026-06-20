@@ -61,7 +61,7 @@ export const MiniProgramCheckout = ({
       const { data, error } = await supabase
         .from('profiles')
         .select('acoin, display_name')
-        .eq('id', user?.id)
+        .eq('id', user!.id)
         .single();
       if (error) throw error;
       return data;

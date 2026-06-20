@@ -119,7 +119,7 @@ export function useStableCallback<T extends (...args: any[]) => any>(callback: T
  */
 export function useBatchedUpdates() {
   const pendingUpdates = useRef<(() => void)[]>([]);
-  const rafId = useRef<number>();
+  const rafId = useRef<number | undefined>(undefined);
   
   const scheduleUpdate = useCallback((update: () => void) => {
     pendingUpdates.current.push(update);

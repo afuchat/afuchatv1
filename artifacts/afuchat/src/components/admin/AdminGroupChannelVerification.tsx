@@ -72,7 +72,7 @@ export const AdminGroupChannelVerification = () => {
 
         if (membersData) {
           membersData.forEach(m => {
-            memberCounts[m.chat_id] = (memberCounts[m.chat_id] || 0) + 1;
+            if (m.chat_id) memberCounts[m.chat_id] = (memberCounts[m.chat_id] || 0) + 1;
           });
         }
       }

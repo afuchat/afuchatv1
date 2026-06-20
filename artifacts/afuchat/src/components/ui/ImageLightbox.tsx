@@ -84,8 +84,8 @@ export const ImageLightbox = ({
     moved: false,
   });
 
-  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const animFrameRef = useRef<number>();
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const animFrameRef = useRef<number | null>(null);
 
   // --- Helpers ---
   const applyTransform = useCallback(() => {

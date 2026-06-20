@@ -228,9 +228,10 @@ const AIMessageContent: React.FC<AIMessageContentProps> = ({ content, isUser }) 
                 React.isValidElement(child) && child.type === 'code'
             );
             if (codeElement) {
-              const className = codeElement.props.className || '';
+              const props = codeElement.props as any;
+              const className = props.className || '';
               const language = className.replace('language-', '');
-              const codeContent = String(codeElement.props.children || '').trim();
+              const codeContent = String(props.children || '').trim();
               return <CodeBlock code={codeContent} language={language} />;
             }
             return <pre className="bg-zinc-950 rounded-lg p-4 overflow-x-auto">{children}</pre>;

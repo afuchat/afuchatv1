@@ -49,7 +49,7 @@ interface MiniProgram {
   description: string | null;
   icon_url: string | null;
   developer_id: string;
-  developer_email?: string;
+  developer_email?: string | null;
   category: string;
   url?: string | null;
   install_count: number;
@@ -429,7 +429,7 @@ const MiniPrograms = () => {
         .order('install_count', { ascending: false });
 
       if (error) throw error;
-      setMiniPrograms(data || []);
+      setMiniPrograms((data || []) as any);
     } catch (error) {
       console.error('Error fetching mini programs:', error);
     } finally {
@@ -522,16 +522,16 @@ const MiniPrograms = () => {
       name: app.name,
       icon: app.icon_url || undefined,
       isBuiltIn: false,
-      url: app.url,
+      url: app.url ?? undefined,
     });
     setRecentApps(getRecentApps());
     
     setEmbeddedApp({
       name: app.name,
-      url: app.url,
+      url: app.url ?? '',
       icon: app.icon_url || undefined,
       appId: app.id,
-      developerEmail: app.developer_email,
+      developerEmail: app.developer_email ?? undefined,
       privacyUrl: app.privacy_url,
       termsUrl: app.terms_url,
       isBuiltIn: false,

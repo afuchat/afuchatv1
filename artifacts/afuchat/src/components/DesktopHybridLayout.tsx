@@ -80,6 +80,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
         supabase.removeChannel(channel);
       };
     }
+    return undefined;
   }, [user]);
 
   const fetchNotificationCount = async () => {

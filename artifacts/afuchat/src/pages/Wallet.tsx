@@ -54,7 +54,7 @@ const Wallet = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', user!.id)
         .single();
 
       if (error) throw error;
@@ -88,19 +88,19 @@ const Wallet = () => {
         supabase
           .from('red_envelopes')
           .select('*')
-          .eq('sender_id', user?.id)
+          .eq('sender_id', user!.id)
           .order('created_at', { ascending: false })
           .limit(50),
         supabase
           .from('red_envelope_claims')
           .select('*, envelope:red_envelopes(*, sender:profiles(display_name, handle))')
-          .eq('claimer_id', user?.id)
+          .eq('claimer_id', user!.id)
           .order('claimed_at', { ascending: false })
           .limit(50),
         supabase
           .from('acoin_transactions')
           .select('*')
-          .eq('user_id', user?.id)
+          .eq('user_id', user!.id)
           .order('created_at', { ascending: false })
           .limit(50)
       ]);

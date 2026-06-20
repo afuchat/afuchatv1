@@ -28,16 +28,16 @@ export const ActivityLog = () => {
   const loadActivityLog = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_activity_log').select('*').eq('user_id', user?.id)
+        .from('user_activity_log').select('*').eq('user_id', user!.id)
         .order('created_at', { ascending: false }).limit(50);
       if (error) throw error;
-      setActivities(data || []);
+      setActivities((data || []) as any);
       const now = new Date();
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const totalXP = data?.reduce((s, a) => s + (a.xp_earned || 0), 0) || 0;
-      const todayXP = data?.filter(a => new Date(a.created_at) >= todayStart).reduce((s, a) => s + (a.xp_earned || 0), 0) || 0;
-      const weekXP = data?.filter(a => new Date(a.created_at) >= weekStart).reduce((s, a) => s + (a.xp_earned || 0), 0) || 0;
+      const todayXP = data?.filter(a => new Date(a.created_at ?? '') >= todayStart).reduce((s, a) => s + (a.xp_earned || 0), 0) || 0;
+      const weekXP = data?.filter(a => new Date(a.created_at ?? '') >= weekStart).reduce((s, a) => s + (a.xp_earned || 0), 0) || 0;
       setStats({ totalXP, todayXP, weekXP });
     } catch (error) { console.error('Error loading activity log:', error); }
     finally { setLoading(false); }

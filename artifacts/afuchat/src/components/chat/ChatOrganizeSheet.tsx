@@ -32,14 +32,14 @@ interface ChatOrganizeSheetProps {
 interface FolderType {
   id: string;
   name: string;
-  color: string;
-  icon: string;
+  color: string | null;
+  icon: string | null;
 }
 
 interface LabelType {
   id: string;
   name: string;
-  color: string;
+  color: string | null;
 }
 
 export const ChatOrganizeSheet = ({ isOpen, onClose, chatId, chatName }: ChatOrganizeSheetProps) => {
@@ -287,7 +287,7 @@ export const ChatOrganizeSheet = ({ isOpen, onClose, chatId, chatName }: ChatOrg
                         </div>
                         <div
                           className="h-4 w-4 rounded-full"
-                          style={{ backgroundColor: folder.color }}
+                          style={{ backgroundColor: folder.color ?? undefined }}
                         />
                       </button>
                     );
@@ -320,9 +320,9 @@ export const ChatOrganizeSheet = ({ isOpen, onClose, chatId, chatName }: ChatOrg
                       >
                         <Badge
                           style={{
-                            backgroundColor: isAssigned ? label.color : 'transparent',
-                            color: isAssigned ? 'white' : label.color,
-                            borderColor: label.color,
+                            backgroundColor: isAssigned ? (label.color ?? undefined) : 'transparent',
+                            color: isAssigned ? 'white' : (label.color ?? undefined),
+                            borderColor: label.color ?? undefined,
                           }}
                           className="border-2 cursor-pointer hover:scale-105 transition-transform"
                         >

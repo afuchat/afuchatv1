@@ -48,7 +48,7 @@ export const useNotificationPreferences = () => {
       const { data, error } = await supabase
         .from('notification_preferences')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user!.id)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
@@ -56,7 +56,7 @@ export const useNotificationPreferences = () => {
       if (data) {
         setPreferences({
           ...defaultPreferences,
-          ...data,
+          ...(data as any),
           email_digest_frequency: data.email_digest_frequency as 'instant' | 'daily' | 'weekly' | 'never',
         });
       }
@@ -72,7 +72,7 @@ export const useNotificationPreferences = () => {
       const { error } = await supabase
         .from('notification_preferences')
         .upsert({
-          user_id: user?.id,
+          user_id: user!.id,
           ...preferences,
           ...updates,
           updated_at: new Date().toISOString(),

@@ -22,8 +22,8 @@ interface SuggestedUser {
   display_name: string;
   handle: string;
   avatar_url: string | null;
-  is_verified: boolean;
-  is_organization_verified: boolean;
+  is_verified: boolean | null;
+  is_organization_verified: boolean | null;
 }
 
 interface DesktopRightSidebarProps {
@@ -115,7 +115,7 @@ export const DesktopRightSidebar = ({ className, variant = 'full' }: DesktopRigh
         .eq('follower_id', user.id);
 
       if (data) {
-        setFollowingIds(new Set(data.map(f => f.following_id)));
+        setFollowingIds(new Set(data.map(f => f.following_id).filter((id): id is string => id !== null)));
       }
     } catch (error) {
       console.error('Error fetching following status:', error);
@@ -266,8 +266,8 @@ export const DesktopRightSidebar = ({ className, variant = 'full' }: DesktopRigh
                         {suggestedUser.display_name}
                       </Link>
                       <VerifiedBadge 
-                        isVerified={suggestedUser.is_verified}
-                        isOrgVerified={suggestedUser.is_organization_verified}
+                        isVerified={suggestedUser.is_verified ?? undefined}
+                        isOrgVerified={suggestedUser.is_organization_verified ?? undefined}
                         size="sm"
                       />
                     </div>

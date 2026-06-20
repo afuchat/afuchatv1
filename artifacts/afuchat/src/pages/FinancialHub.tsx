@@ -32,8 +32,8 @@ interface Transaction {
     name: string;
     avatar: string;
   };
-  message?: string;
-  created_at: string;
+  message?: string | null;
+  created_at: string | null;
 }
 
 interface GradeInfo {
@@ -219,7 +219,7 @@ const FinancialHub = () => {
         ...tips,
         ...redEnvelopes,
         ...gifts
-      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      ].sort((a, b) => new Date(b.created_at ?? '').getTime() - new Date(a.created_at ?? '').getTime());
 
       setTransactions(allTransactions);
     } catch (error) {
@@ -843,7 +843,7 @@ const FinancialHub = () => {
                                   </p>
                                 )}
                                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                                  {format(new Date(transaction.created_at), 'MMM d, yyyy • h:mm a')}
+                                  {format(new Date(transaction.created_at ?? ''), 'MMM d, yyyy • h:mm a')}
                                 </p>
                               </div>
                               <div className="text-right shrink-0">

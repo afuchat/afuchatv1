@@ -18,8 +18,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 interface FolderType {
   id: string;
   name: string;
-  color: string;
-  icon: string;
+  color: string | null;
+  icon: string | null;
 }
 
 interface ManageFoldersDialogProps {
@@ -215,7 +215,7 @@ export const ManageFoldersDialog = ({ isOpen, onClose }: ManageFoldersDialogProp
                           <p className="font-medium">{folder.name}</p>
                           <div
                             className="h-2 w-12 rounded-full mt-1"
-                            style={{ backgroundColor: folder.color }}
+                            style={{ backgroundColor: folder.color ?? undefined }}
                           />
                         </div>
                       </div>

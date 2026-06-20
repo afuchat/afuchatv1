@@ -114,7 +114,7 @@ export default function OrderDetail() {
           buyer:profiles!merchant_orders_buyer_id_fkey(display_name, handle, avatar_url),
           merchant:merchants(name, user_id)
         `)
-        .eq('order_number', orderNumber)
+        .eq('order_number', orderNumber!)
         .single();
 
       if (orderData) {

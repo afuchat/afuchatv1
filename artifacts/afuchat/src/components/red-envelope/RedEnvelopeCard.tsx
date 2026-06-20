@@ -38,7 +38,7 @@ export const RedEnvelopeCard = ({ envelope, onClaim }: RedEnvelopeCardProps) => 
         .from('red_envelope_claims')
         .select('amount')
         .eq('red_envelope_id', envelope.id)
-        .eq('claimer_id', user?.id)
+        .eq('claimer_id', user!.id)
         .single();
       
       return data;
@@ -56,7 +56,7 @@ export const RedEnvelopeCard = ({ envelope, onClaim }: RedEnvelopeCardProps) => 
       const { count, error } = await supabase
         .from('red_envelope_claims')
         .select('*', { count: 'exact', head: true })
-        .eq('claimer_id', user?.id)
+        .eq('claimer_id', user!.id)
         .gte('claimed_at', today.toISOString());
       
       return count || 0;

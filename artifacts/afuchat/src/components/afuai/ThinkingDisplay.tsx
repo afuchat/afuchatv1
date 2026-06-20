@@ -94,6 +94,7 @@ export const ThinkingDisplay: React.FC<ThinkingDisplayProps> = ({
         return () => clearTimeout(nextTimer);
       }
     }
+    return undefined;
   }, [isStreaming, currentStepIndex, currentCharIndex, steps, typingSpeed]);
 
   // Smooth finalize — keeps every typed character, just adds checkmarks + final text

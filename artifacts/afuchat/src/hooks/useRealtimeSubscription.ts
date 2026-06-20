@@ -144,7 +144,7 @@ export function useDebouncedRealtimeUpdates<T>(
 ) {
   const dataRef = useRef(initialData);
   const pendingUpdates = useRef<Map<string, { type: 'upsert' | 'delete'; data?: T }>>(new Map());
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const setDataRef = useRef<((data: T[]) => void) | null>(null);
 
   const processUpdates = useCallback(() => {

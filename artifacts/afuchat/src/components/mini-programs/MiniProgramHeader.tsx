@@ -19,7 +19,7 @@ export const MiniProgramHeader = ({ rightContent }: MiniProgramHeaderProps) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('avatar_url, display_name')
-        .eq('id', user?.id)
+        .eq('id', user!.id)
         .single();
       if (error) throw error;
       return data;

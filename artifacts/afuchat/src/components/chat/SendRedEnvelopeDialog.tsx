@@ -35,7 +35,7 @@ export const SendRedEnvelopeDialog = ({ chatId, onSuccess }: SendRedEnvelopeDial
       const { data } = await supabase
         .from('profiles')
         .select('xp')
-        .eq('id', user?.id)
+        .eq('id', user!.id)
         .single();
       return data;
     },
@@ -84,7 +84,7 @@ export const SendRedEnvelopeDialog = ({ chatId, onSuccess }: SendRedEnvelopeDial
       const { data, error } = await supabase.rpc('create_red_envelope', {
         p_total_amount: amount,
         p_recipient_count: count,
-        p_message: message.trim() || null,
+        p_message: message.trim() || undefined,
         p_envelope_type: envelopeType,
         p_chat_id: chatId
       });

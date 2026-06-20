@@ -60,7 +60,7 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
         .eq('follower_id', user.id);
 
       if (followData && followData.length > 0) {
-        const followingIds = followData.map(f => f.following_id);
+        const followingIds = followData.map(f => f.following_id).filter((id): id is string => id !== null);
         
         const { data: profilesData } = await supabase
           .from('profiles')
@@ -68,7 +68,7 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
           .in('id', followingIds)
           .order('display_name');
 
-        setUsers(profilesData || []);
+        setUsers((profilesData || []) as any);
       } else {
         setUsers([]);
       }
@@ -91,7 +91,7 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
         .or(`display_name.ilike.%${searchQuery}%,handle.ilike.%${searchQuery}%`)
         .limit(20);
 
-      setUsers(data || []);
+      setUsers((data || []) as any);
     } catch (error) {
       console.error('Error searching users:', error);
     } finally {
@@ -115,7 +115,7 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
       onClose();
       navigate(`/chat/${chatId}`);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat error details:', {
         message: error.message,
         code: error.code,

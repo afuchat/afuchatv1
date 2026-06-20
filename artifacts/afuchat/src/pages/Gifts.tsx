@@ -114,14 +114,14 @@ const Gifts = () => {
           if (giftMap.has(giftId)) {
             const existing = giftMap.get(giftId)!;
             existing.received_count++;
-            if (transaction.created_at > existing.last_received) {
-              existing.last_received = transaction.created_at;
+            if ((transaction.created_at ?? '') > existing.last_received) {
+              existing.last_received = transaction.created_at ?? '';
             }
           } else {
             giftMap.set(giftId, {
               gift: transaction.gifts as unknown as Gift,
               received_count: 1,
-              last_received: transaction.created_at
+              last_received: transaction.created_at ?? ''
             });
           }
         }

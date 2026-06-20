@@ -108,8 +108,9 @@ const SwipeableSheet = ({
     }
   };
 
+  const DrawerRoot = Drawer.Root as any;
   return (
-    <Drawer.Root
+    <DrawerRoot
       open={open}
       onOpenChange={onOpenChange}
       direction={getDirection()}
@@ -175,7 +176,7 @@ const SwipeableSheet = ({
           )}
         </Drawer.Content>
       </Drawer.Portal>
-    </Drawer.Root>
+    </DrawerRoot>
   );
 };
 

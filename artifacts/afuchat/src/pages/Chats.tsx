@@ -213,7 +213,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
 
         const messagesByChat = new Map<string, any>();
         allMessages.data?.forEach(msg => {
-          if (!messagesByChat.has(msg.chat_id)) {
+          if (msg.chat_id && !messagesByChat.has(msg.chat_id)) {
             messagesByChat.set(msg.chat_id, msg);
           }
         });
@@ -223,7 +223,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
           // Check if current user has read status for this message
           const userReadStatus = msg.message_status?.find((s: any) => s.user_id === user.id);
           const isUnread = !userReadStatus || !userReadStatus.read_at;
-          if (isUnread) {
+          if (isUnread && msg.chat_id) {
             unreadByChat.set(msg.chat_id, (unreadByChat.get(msg.chat_id) || 0) + 1);
           }
         });
@@ -254,7 +254,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
           }
 
           let chatData: Chat = {
-            ...member.chats,
+            ...(member.chats as any),
             last_message_content: '',
             updated_at: lastMessage?.sent_at || member.chats.updated_at,
             is_read: lastMessage ? (lastMessage.sender_id === user.id || !!lastMessage.read_at) : true,
@@ -396,7 +396,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
 
         const messagesByChat = new Map<string, any>();
         allMessages.data?.forEach(msg => {
-          if (!messagesByChat.has(msg.chat_id)) {
+          if (msg.chat_id && !messagesByChat.has(msg.chat_id)) {
             messagesByChat.set(msg.chat_id, msg);
           }
         });
@@ -405,7 +405,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
         allUnreadCounts.data?.forEach(msg => {
           const userReadStatus = msg.message_status?.find((s: any) => s.user_id === user.id);
           const isUnread = !userReadStatus || !userReadStatus.read_at;
-          if (isUnread) {
+          if (isUnread && msg.chat_id) {
             unreadByChat.set(msg.chat_id, (unreadByChat.get(msg.chat_id) || 0) + 1);
           }
         });
@@ -433,7 +433,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
           }
 
           let chatData: Chat = {
-            ...member.chats,
+            ...(member.chats as any),
             last_message_content: '',
             updated_at: lastMessage?.sent_at || member.chats.updated_at,
             is_read: lastMessage ? (lastMessage.sender_id === user.id || !!lastMessage.read_at) : true,
@@ -615,7 +615,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
                       avatarUrl={chat.other_user?.avatar_url}
                       name={chatName}
                       size={48}
-                      isBusiness={chat.other_user?.is_business_mode}
+                      isBusiness={chat.other_user?.is_business_mode ?? undefined}
                       enableLightbox={true}
                     />
                   )}

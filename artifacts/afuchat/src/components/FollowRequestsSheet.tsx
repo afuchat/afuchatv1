@@ -19,8 +19,8 @@ interface FollowRequest {
     display_name: string;
     handle: string;
     avatar_url: string | null;
-    is_verified: boolean;
-    is_organization_verified: boolean;
+    is_verified: boolean | null;
+    is_organization_verified: boolean | null;
   };
 }
 
@@ -188,8 +188,8 @@ export const FollowRequestsSheet = ({ open, onOpenChange }: FollowRequestsSheetP
                   <div className="flex items-center gap-1">
                     <span className="font-semibold truncate">{request.requester.display_name}</span>
                     <VerifiedBadge 
-                      isVerified={request.requester.is_verified} 
-                      isOrgVerified={request.requester.is_organization_verified} 
+                      isVerified={request.requester.is_verified ?? undefined} 
+                      isOrgVerified={request.requester.is_organization_verified ?? undefined} 
                     />
                   </div>
                   <p className="text-sm text-muted-foreground">@{request.requester.handle}</p>

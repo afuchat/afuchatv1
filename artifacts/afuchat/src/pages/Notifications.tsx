@@ -552,7 +552,7 @@ const Notifications = () => {
           ]);
           const am = new Map((actors.data || []).map(a => [a.id, a]));
           const pm = new Map((posts.data || []).map(p => [p.id, p]));
-          processed = raw.map(n => ({ ...n, actor: am.get(n.actor_id) || { display_name: 'Unknown', handle: 'unknown' }, post: n.post_id ? pm.get(n.post_id) : undefined })) as Notification[];
+          processed = raw.map(n => ({ ...n, actor: am.get(n.actor_id ?? '') || { display_name: 'Unknown', handle: 'unknown' }, post: n.post_id ? pm.get(n.post_id) : undefined })) as Notification[];
         }
         const [frResult, fResult] = await Promise.all([
           supabase.from('follow_requests').select('id, requester_id, status, created_at').eq('target_id', user.id).eq('status', 'pending').order('created_at', { ascending: false }),

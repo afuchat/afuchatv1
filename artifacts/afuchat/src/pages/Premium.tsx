@@ -33,7 +33,7 @@ interface UserSubscription {
   plan_id: string;
   started_at: string;
   expires_at: string;
-  is_active: boolean;
+  is_active: boolean | null;
   acoin_paid: number;
   subscription_plans?: {
     name: string;
@@ -223,7 +223,7 @@ export default function Premium() {
       .maybeSingle();
 
     if (subData) {
-      setCurrentSubscription(subData);
+      setCurrentSubscription(subData as any);
     }
 
     setLoading(false);
