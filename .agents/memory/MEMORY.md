@@ -1,0 +1,1 @@
+- [AfuChat welcome image optimization](afuchat-welcome-images.md) — onboarding images compressed + base64-inlined; never revert to file imports

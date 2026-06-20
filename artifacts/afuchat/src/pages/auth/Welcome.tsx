@@ -8,11 +8,13 @@ import { ArrowRight, MessageCircle, Gift, Sparkles, Newspaper, Crown, Loader2, M
 import { useIsTelegram } from '@/hooks/useIsTelegram';
 import { toast } from 'sonner';
 
-import welcomeHero from '@/assets/onboarding/welcome-hero.jpg';
-import featureChat from '@/assets/onboarding/feature-chat.jpg';
-import featureFeed from '@/assets/onboarding/feature-feed.jpg';
-import featureGifts from '@/assets/onboarding/feature-gifts.jpg';
-import featurePremium from '@/assets/onboarding/feature-premium.jpg';
+import {
+  welcomeHero,
+  featureChat,
+  featureFeed,
+  featureGifts,
+  featurePremium,
+} from '@/assets/onboarding/images';
 
 const slides = [
   { id: 'welcome', image: welcomeHero, icon: Sparkles, title: 'Welcome to AfuChat', description: 'Your social universe. Chat, share, earn, and explore — all in one place.' },
