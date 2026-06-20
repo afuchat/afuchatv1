@@ -43,7 +43,7 @@ export const ChatGift = ({ gift, isOwn }: ChatGiftProps) => {
       case 'epic':
         return 'from-purple-500/20 to-violet-600/20 border-purple-500/30';
       case 'rare':
-        return 'from-blue-500/20 to-cyan-600/20 border-blue-500/30';
+        return 'from-blue-500/20 to-primary/20 border-blue-500/30';
       case 'uncommon':
         return 'from-green-500/20 to-emerald-600/20 border-green-500/30';
       default:

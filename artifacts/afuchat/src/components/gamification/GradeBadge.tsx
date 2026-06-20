@@ -23,7 +23,7 @@ const GRADE_CONFIG: Record<Grade, { color: string; symbol: string; glow: string 
   'Newcomer': { color: 'text-gray-500', symbol: '🟢', glow: 'shadow-gray-500/50' },
   'Active Chatter': { color: 'text-blue-500', symbol: '🔵', glow: 'shadow-blue-500/50' },
   'Community Builder': { color: 'text-purple-500', symbol: '🟣', glow: 'shadow-purple-500/50' },
-  'Rising Star': { color: 'text-cyan-500', symbol: '⭐', glow: 'shadow-cyan-500/50' },
+  'Rising Star': { color: 'text-primary', symbol: '⭐', glow: 'shadow-primary/50' },
   'Influencer': { color: 'text-pink-500', symbol: '💫', glow: 'shadow-pink-500/50' },
   'Elite Creator': { color: 'text-yellow-500', symbol: '🟡', glow: 'shadow-yellow-500/50' },
   'Champion': { color: 'text-orange-500', symbol: '🏆', glow: 'shadow-orange-500/50' },

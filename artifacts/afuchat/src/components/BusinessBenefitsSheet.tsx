@@ -70,7 +70,7 @@ export const BusinessBenefitsSheet = ({ open, onOpenChange }: BusinessBenefitsSh
       icon: CheckCircle,
       title: 'Unlimited Features',
       description: 'Access all premium features and priority support',
-      color: 'text-cyan-600'
+      color: 'text-primary'
     }
   ];
 

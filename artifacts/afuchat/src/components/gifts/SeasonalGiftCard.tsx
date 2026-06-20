@@ -21,7 +21,7 @@ const getRarityGradient = (rarity: string) => {
     case 'epic':
       return 'from-purple-500/30 via-violet-400/20 to-purple-600/30';
     case 'rare':
-      return 'from-blue-500/30 via-cyan-400/20 to-blue-600/30';
+      return 'from-blue-500/30 via-primary/20 to-blue-600/30';
     case 'uncommon':
       return 'from-green-500/30 via-emerald-400/20 to-green-600/30';
     default:

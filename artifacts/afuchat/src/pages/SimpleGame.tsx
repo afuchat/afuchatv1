@@ -209,7 +209,7 @@ const SimpleGame = () => {
       case 'golden':
         return 'from-yellow-400 via-amber-400 to-orange-400';
       default:
-        return 'from-blue-400 via-cyan-400 to-blue-500';
+        return 'from-blue-400 via-primary to-blue-500';
     }
   };
 

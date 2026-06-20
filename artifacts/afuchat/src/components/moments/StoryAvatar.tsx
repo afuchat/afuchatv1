@@ -117,7 +117,7 @@ export const StoryAvatar = memo(({
   const avatarWithRing = hasActiveStories && showStoryRing ? (
     <div
       className={cn(
-        'bg-gradient-to-tr from-cyan-400 to-teal-500 cursor-pointer transition-all duration-200 hover:scale-105',
+        'bg-gradient-to-tr from-primary to-teal-500 cursor-pointer transition-all duration-200 hover:scale-105',
         isBusiness ? 'rounded-lg' : 'rounded-full',
         ringMap[size],
         className

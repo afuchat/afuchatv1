@@ -48,7 +48,7 @@ const grades: GradeInfo[] = [
   { name: 'Bronze', minXp: 0, maxXp: 999, color: 'from-amber-600 to-amber-800', icon: '🥉' },
   { name: 'Silver', minXp: 1000, maxXp: 4999, color: 'from-gray-400 to-gray-600', icon: '🥈' },
   { name: 'Gold', minXp: 5000, maxXp: 19999, color: 'from-yellow-400 to-yellow-600', icon: '🥇' },
-  { name: 'Platinum', minXp: 20000, maxXp: 49999, color: 'from-cyan-400 to-cyan-600', icon: '💎' },
+  { name: 'Platinum', minXp: 20000, maxXp: 49999, color: 'from-primary to-primary', icon: '💎' },
   { name: 'Diamond', minXp: 50000, maxXp: 99999, color: 'from-purple-400 to-purple-600', icon: '💠' },
   { name: 'Master', minXp: 100000, maxXp: Infinity, color: 'from-rose-400 to-rose-600', icon: '👑' },
 ];
@@ -742,13 +742,13 @@ const FinancialHub = () => {
           </Card>
 
           <Card 
-            className="cursor-pointer hover:border-cyan-500/40 transition-all group"
+            className="cursor-pointer hover:border-primary/40 transition-all group"
             onClick={() => navigate('/leaderboard')}
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 group-hover:scale-110 transition-transform">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-primary to-primary group-hover:scale-110 transition-transform">
                     <Trophy className="h-5 w-5 text-white" />
                   </div>
                   <div>

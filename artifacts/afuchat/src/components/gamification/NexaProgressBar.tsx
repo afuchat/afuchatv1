@@ -39,8 +39,8 @@ const GRADE_THRESHOLDS = [
     grade: 'Rising Star' as Grade, 
     min: 20000, 
     max: 75000, 
-    gradient: 'from-cyan-400 via-cyan-500 to-cyan-600',
-    glow: 'shadow-cyan-500/40',
+    gradient: 'from-primary via-primary to-primary',
+    glow: 'shadow-primary/40',
     shimmerSpeed: 1.4
   },
   { 

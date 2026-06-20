@@ -620,11 +620,11 @@ html.telegram-mini-app [role="button"]:has(> .lucide-chevron-left) {
 @layer base {
   :root {
     /* Brand Cyan #00C2CB */
-    --primary: 183 100% 40%;
+    --primary: 208 100% 56%;
     --primary-foreground: 0 0% 100%;
     
-    /* Accent - slightly lighter cyan */
-    --accent: 183 80% 50%;
+    /* Accent - Brand blue */
+    --accent: 208 80% 63%;
     --accent-foreground: 0 0% 100%;
     
     /* App Background - Premium warm white */
@@ -652,7 +652,7 @@ html.telegram-mini-app [role="button"]:has(> .lucide-chevron-left) {
     /* Borders - Soft and refined */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 183 100% 40%;
+    --ring: 208 100% 56%;
     
     /* Destructive */
     --destructive: 0 84% 60%;
@@ -671,24 +671,24 @@ html.telegram-mini-app [role="button"]:has(> .lucide-chevron-left) {
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 20% 10%;
-    --sidebar-primary: 183 100% 40%;
+    --sidebar-primary: 208 100% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 183 80% 50%;
+    --sidebar-accent: 208 80% 63%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 183 100% 40%;
+    --sidebar-ring: 208 100% 56%;
   }
 
   .dark {
     /* AfuChat Brand Cyan #00C2CB */
-    --primary: 183 100% 40%;
+    --primary: 208 100% 56%;
     --primary-foreground: 0 0% 100%;
     
     /* Hover/Active state #00A9B1 */
-    --primary-hover: 183 100% 35%;
+    --primary-hover: 208 100% 50%;
     
-    /* Accent - Brand cyan */
-    --accent: 183 100% 40%;
+    /* Accent - Brand blue */
+    --accent: 208 100% 56%;
     --accent-foreground: 0 0% 100%;
     
     /* Pure Black Background */
@@ -716,7 +716,7 @@ html.telegram-mini-app [role="button"]:has(> .lucide-chevron-left) {
     /* Borders - Subtle dark gray */
     --border: 0 0% 12%;
     --input: 0 0% 12%;
-    --ring: 183 100% 40%;
+    --ring: 208 100% 56%;
     
     /* Destructive */
     --destructive: 0 72% 51%;
@@ -733,15 +733,15 @@ html.telegram-mini-app [role="button"]:has(> .lucide-chevron-left) {
     /* Sidebar - Pure black */
     --sidebar-background: 0 0% 0%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 183 100% 40%;
+    --sidebar-primary: 208 100% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 183 100% 40%;
+    --sidebar-accent: 208 100% 56%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 183 100% 40%;
+    --sidebar-ring: 208 100% 56%;
     
     /* Soft accent background for subtle highlights */
-    --accent-soft: 183 100% 40% / 0.15;
+    --accent-soft: 208 100% 56% / 0.15;
   }
 }
 

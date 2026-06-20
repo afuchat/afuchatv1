@@ -1,4 +1,4 @@
-import platformIcon from '@/assets/ai-chat-icon.ico';
+import { afuLogo } from '@/assets/logo';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -14,7 +14,7 @@ const Logo = ({ size = 'md', className = '' }: LogoProps) => {
 
   return (
     <img
-      src={platformIcon}
+      src={afuLogo}
       alt="AfuChat"
       className={`${sizeClasses[size]} ${className} object-contain pointer-events-none select-none`}
       draggable={false}

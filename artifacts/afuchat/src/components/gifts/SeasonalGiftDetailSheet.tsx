@@ -50,7 +50,7 @@ const getRarityConfig = (rarity: string) => {
       };
     case 'rare':
       return {
-        gradient: 'from-blue-500 via-cyan-400 to-blue-600',
+        gradient: 'from-blue-500 via-primary to-blue-600',
         glow: 'shadow-[0_0_40px_rgba(59,130,246,0.4)]',
         badge: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
         accent: 'text-blue-400',

@@ -1,1 +1,2 @@
 - [AfuChat welcome image optimization](afuchat-welcome-images.md) — onboarding images compressed + base64-inlined; never revert to file imports
+- [AfuChat brand color](afuchat-brand-color.md) — primary is #1f95ff (HSL 208 100% 56%), not cyan; logo is base64 in src/assets/logo.ts

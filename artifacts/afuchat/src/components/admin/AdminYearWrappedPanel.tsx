@@ -293,7 +293,7 @@ export const AdminYearWrappedPanel = () => {
                     <div className="text-xs text-muted-foreground">Nexa Earned</div>
                   </div>
                   <div className="text-center p-3 bg-background rounded-lg">
-                    <div className="text-2xl font-bold text-cyan-500">{previewStats.daysActive}</div>
+                    <div className="text-2xl font-bold text-primary">{previewStats.daysActive}</div>
                     <div className="text-xs text-muted-foreground">Days Active</div>
                   </div>
                 </div>

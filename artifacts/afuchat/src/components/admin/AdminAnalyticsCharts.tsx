@@ -371,7 +371,7 @@ export function AdminAnalyticsCharts({ data, timeRange }: AdminAnalyticsChartsPr
         />
         <FeatureChart
           title="Posts Created"
-          icon={<FileText className="h-4 w-4 text-cyan-500" />}
+          icon={<FileText className="h-4 w-4 text-primary" />}
           data={data.posts}
           dateField="created_at"
           color="hsl(183, 100%, 40%)"

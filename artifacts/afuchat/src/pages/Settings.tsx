@@ -45,7 +45,7 @@ const settingsSections = [
     group: 'Activity & Data',
     items: [
       { value: 'notifications' as SettingsTab, label: 'Notifications', description: 'Push, email & quiet hours', icon: Bell, color: 'bg-pink-500' },
-      { value: 'activity' as SettingsTab, label: 'Activity Log', description: 'Recent activity & Nexa earnings', icon: Activity, color: 'bg-cyan-500' },
+      { value: 'activity' as SettingsTab, label: 'Activity Log', description: 'Recent activity & Nexa earnings', icon: Activity, color: 'bg-primary' },
       { value: 'data' as SettingsTab, label: 'Data & Privacy', description: 'Export data & account deletion', icon: Database, color: 'bg-orange-500' },
     ]
   }

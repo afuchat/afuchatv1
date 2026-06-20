@@ -229,7 +229,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                     {/* My Story avatar - only show if user has posted a story */}
                     {currentUserHasStory && (
                       <div className="relative z-30">
-                        <div className="p-[1.5px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
+                        <div className="p-[1.5px] rounded-full bg-gradient-to-br from-primary via-teal-400 to-green-500">
                           {currentUserProfile?.avatar_url ? (
                             <img
                               src={currentUserProfile.avatar_url}
@@ -254,7 +254,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                         className="relative"
                         style={{ zIndex: 20 - index }}
                       >
-                        <div className="p-[1.5px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
+                        <div className="p-[1.5px] rounded-full bg-gradient-to-br from-primary via-teal-400 to-green-500">
                           {storyUser.avatar_url ? (
                             <img
                               src={storyUser.avatar_url}
@@ -309,7 +309,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                     className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1"
                   >
                     <div className="relative">
-                      <div className={currentUserHasStory ? "p-[2px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500" : ""}>
+                      <div className={currentUserHasStory ? "p-[2px] rounded-full bg-gradient-to-br from-primary via-teal-400 to-green-500" : ""}>
                         {currentUserProfile?.avatar_url ? (
                           <img
                             src={currentUserProfile.avatar_url}
@@ -343,7 +343,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                       onClick={(e) => handleStoryClick(storyUser.user_id, e)}
                       className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1"
                     >
-                      <div className="p-[2px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
+                      <div className="p-[2px] rounded-full bg-gradient-to-br from-primary via-teal-400 to-green-500">
                         {storyUser.avatar_url ? (
                           <img
                             src={storyUser.avatar_url}
