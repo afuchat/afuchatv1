@@ -1,0 +1,6 @@
+{
+  "buildCommand": "pnpm --filter @workspace/afuchat run build",
+  "outputDirectory": "artifacts/afuchat/dist/public",
+  "installCommand": "pnpm install",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
