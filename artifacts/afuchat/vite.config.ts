@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 // PORT and BASE_PATH are required for the dev server but not for production builds
 // (e.g. Vercel sets neither — it just runs `vite build`)
@@ -22,10 +21,10 @@ export default defineConfig({
   base: basePath,
   plugins: [
     react(),
-    runtimeErrorOverlay(),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
       ? [
+          (await import("@replit/vite-plugin-runtime-error-modal")).default(),
           await import("@replit/vite-plugin-cartographer").then((m) =>
             m.cartographer({
               root: path.resolve(import.meta.dirname, ".."),
