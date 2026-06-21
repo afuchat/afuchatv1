@@ -32,6 +32,14 @@ export const useProfileCheck = (): ProfileCheckResult => {
       return;
     }
 
+    // Safety timeout — if Supabase hangs, don't block the app forever
+    const profileTimeout = setTimeout(() => {
+      if (isMountedRef.current) {
+        setData({ isBanned: false, hasCountry: true, hasDateOfBirth: true, profileComplete: true });
+        setLoading(false);
+      }
+    }, 6000);
+
     const cacheKey = `${CACHE_KEY_PREFIX}${userId}`;
     
     // Check cache first (only if not forcing refresh)
@@ -42,6 +50,7 @@ export const useProfileCheck = (): ProfileCheckResult => {
           const { data: cachedData, timestamp } = JSON.parse(cached);
           // Only use cache if profile is complete AND not banned AND cache is fresh
           if (cachedData.profileComplete && !cachedData.isBanned && Date.now() - timestamp < CACHE_DURATION) {
+            clearTimeout(profileTimeout);
             if (isMountedRef.current) {
               setData(cachedData);
               setLoading(false);
@@ -122,6 +131,7 @@ export const useProfileCheck = (): ProfileCheckResult => {
         });
       }
     } finally {
+      clearTimeout(profileTimeout);
       if (isMountedRef.current) {
         setLoading(false);
       }

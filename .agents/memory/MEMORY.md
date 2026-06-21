@@ -1,2 +1,3 @@
 - [AfuChat rebuild patterns](afuchat-rebuild.md) — Layout/Feed rebuilt from scratch; data efficiency patterns; TS type workarounds for outdated generated types
 - [AfuChat Supabase queries](afuchat-supabase.md) — Correct query patterns, column names, FK join syntax for posts/profiles/stories/chats
+- [AfuChat Vercel spinner fix](afuchat-vercel-spinner.md) — Infinite spinner on Vercel caused by auth/profile loading never resolving; fix pattern documented

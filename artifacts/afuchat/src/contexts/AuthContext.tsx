@@ -64,6 +64,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Safety timeout — if auth never resolves (Supabase unreachable, network hang),
+    // force loading=false after 5 s so the app is never permanently stuck on a spinner.
+    const authTimeout = setTimeout(() => {
+      if (isMounted) {
+        setLoading(false);
+      }
+    }, 5000);
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -97,6 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
               
               if (isMounted) {
+                clearTimeout(authTimeout);
                 setSession(null);
                 setUser(null);
                 setLoading(false);
@@ -109,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
         
+        clearTimeout(authTimeout);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -219,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         if (!isMounted) return;
-        
+        clearTimeout(authTimeout);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -230,11 +240,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       .catch((error) => {
         console.error('Error getting session:', error);
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          clearTimeout(authTimeout);
+          setLoading(false);
+        }
       });
 
     return () => {
       isMounted = false;
+      clearTimeout(authTimeout);
       subscription.unsubscribe();
     };
   }, []);
